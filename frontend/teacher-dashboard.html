@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>استوديو المدرس | خطوة</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .dropzone-box {
+    border: 2px dashed var(--line);
+    border-radius: var(--radius);
+    padding: 24px 20px;
+    text-align: center;
+    background: var(--bg-raised);
+    cursor: pointer;
+    transition: all .2s ease;
+  }
+  .dropzone-box:hover {
+    border-color: var(--gold-border);
+    background: rgba(200, 160, 80, 0.04);
+  }
+  .dropzone-box.dragover {
+    border-color: var(--gold-light);
+    background: rgba(200, 160, 80, 0.08);
+  }
+  .progress-wrap {
+    margin-top: 14px;
+    background: var(--bg);
+    border: 1px solid var(--line-soft);
+    border-radius: 6px;
+    padding: 12px 14px;
+  }
+  .progress-bar-bg {
+    height: 8px;
+    background: var(--line-soft);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 6px;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--gold), var(--gold-light));
+    transition: width 0.15s ease;
+  }
+  .question-card {
+    background: var(--bg-raised);
+    border: 1px solid var(--line-soft);
+    border-radius: 6px;
+    padding: 14px 16px;
+    position: relative;
+  }
+  .question-card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .option-row {
+    display: grid;
+    grid-template-columns: 28px 1fr auto;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .option-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 1px solid var(--line-soft);
+    font-size: .8rem;
+    font-weight: 700;
+    color: var(--gold-light);
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="container nav-inner">
+    <a href="index.html" class="brand"><span class="brand-mark">خ</span>خطوة</a>
+    <div class="breadcrumb" style="margin:0;"><a href="courses.html">الكورسات</a><span class="sep">›</span> استوديو المدرس</div>
+    <div class="nav-cta">
+      <a href="profile.html" class="user-line" id="navUserLine">
+        <span class="avatar" id="navAvatar">م</span>
+        <span>
+          <span class="name" id="navName">المدرس</span>
+          <span class="role" id="navRole">مدرس معتمد</span>
+        </span>
+      </a>
+    </div>
+  </div>
+</nav>
+
+<div class="container" style="padding-top:36px;padding-bottom:60px;">
+
+  <!-- Header & Actions -->
+  <div class="page-head">
+    <div>
+      <h1 id="teacherGreeting">استوديو إدارة المحتوى</h1>
+      <p class="page-sub" style="margin:4px 0 0;">أنشئ كورساتك التعليمية، ارفع فيديوهات المحاضرات مباشرة، وضع امتحانات مخصصة مع التصحيح التلقائي.</p>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;">
+      <a href="courses.html" class="btn btn-line btn-sm">👁️ تصفح كطالب</a>
+      <button class="btn btn-primary btn-sm" id="openCreateCourseModalBtn">＋ إنشاء كورس جديد</button>
+    </div>
+  </div>
+
+  <!-- Analytics Stats -->
+  <div class="stats-row" style="grid-template-columns:repeat(4,1fr);margin-bottom:32px;">
+    <div class="stat-card">
+      <div class="label">الكورسات المتاحة</div>
+      <div class="val" id="statCoursesCount">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">إجمالي المحاضرات</div>
+      <div class="val" id="statLecturesCount">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">الطلاب المشتركين</div>
+      <div class="val" id="statStudentsCount">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">تخزين الفيديوهات</div>
+      <div class="val" style="font-size:1.1rem;color:var(--gold-light);">Google Drive ☁️</div>
+    </div>
+  </div>
+
+  <!-- Tab Navigation -->
+  <div class="tab-row" style="margin-bottom:24px;">
+    <button class="tab active" data-target="tab-my-courses">كورساتي ومحاضراتي (<span id="coursesBadge">0</span>)</button>
+    <button class="tab" data-target="tab-enrolled-students">الطلاب المشتركين (<span id="studentsBadge">0</span>)</button>
+  </div>
+
+  <!-- Panel: My Courses -->
+  <div class="tab-panel" id="tab-my-courses">
+    <div id="coursesListContainer" style="display:flex;flex-direction:column;gap:16px;">
+      <!-- Dynamically filled with courses -->
+    </div>
+  </div>
+
+  <!-- Panel: Enrolled Students -->
+  <div class="tab-panel" id="tab-enrolled-students" style="display:none;">
+    <div style="background:var(--bg-raised);border:1px solid var(--line-soft);border-radius:var(--radius);overflow:hidden;">
+      <table style="width:100%;border-collapse:collapse;text-align:start;font-size:.88rem;">
+        <thead>
+          <tr style="background:var(--bg);border-bottom:1px solid var(--line-soft);color:var(--ink-dim);">
+            <th style="padding:12px 16px;">اسم الطالب</th>
+            <th style="padding:12px 16px;">الكورس</th>
+            <th style="padding:12px 16px;">تاريخ الاشتراك</th>
+            <th style="padding:12px 16px;">المحاضرات المكتملة</th>
+            <th style="padding:12px 16px;">نسبة التقدم</th>
+          </tr>
+        </thead>
+        <tbody id="enrolledStudentsBody">
+          <!-- Dynamically filled -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- =========================================================
+     MODAL: Create New Course
+     ========================================================= -->
+<div class="modal-backdrop" id="createCourseModal">
+  <div class="modal-window">
+    <div class="modal-header">
+      <h3>إنشاء كورس جديد</h3>
+      <button type="button" class="modal-close" id="closeCreateCourseBtn">&times;</button>
+    </div>
+    <form id="createCourseForm">
+      <div class="modal-body">
+        <div class="field">
+          <label for="cTitle">عنوان الكورس / المادة</label>
+          <input type="text" id="cTitle" placeholder="مثال: برمجة الويب المتقدمة — الثانوية العامة" required>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="cSubject">المادة الدراسية</label>
+            <select id="cSubject" required>
+              <option value="الفيزياء">الفيزياء</option>
+              <option value="الكيمياء">الكيمياء</option>
+              <option value="الأحياء">الأحياء</option>
+              <option value="الرياضيات">الرياضيات</option>
+              <option value="اللغة العربية">اللغة العربية</option>
+              <option value="اللغة الإنجليزية">اللغة الإنجليزية</option>
+              <option value="الحاسب الآلي والبرمجة">الحاسب الآلي والبرمجة</option>
+              <option value="التاريخ">التاريخ</option>
+              <option value="الجغرافيا">الجغرافيا</option>
+              <option value="الفلسفة">الفلسفة</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="cGrade">المرحلة الدراسية</label>
+            <select id="cGrade" required>
+              <option value="الصف الأول الثانوي">الصف الأول الثانوي</option>
+              <option value="الصف الثاني الثانوي">الصف الثاني الثانوي</option>
+              <option value="الصف الثالث الثانوي">الصف الثالث الثانوي</option>
+              <option value="المرحلة الإعدادية">المرحلة الإعدادية</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="cPoints">تكلفة الاشتراك بالكورس (نقاط)</label>
+            <input type="number" id="cPoints" value="30" min="0" required>
+          </div>
+          <div class="field">
+            <label for="cTeacherName">اسم المدرس المعروض</label>
+            <input type="text" id="cTeacherName" placeholder="اسم المدرس أو الأستاذ">
+          </div>
+        </div>
+        <div class="field">
+          <label for="cDesc">وصف الكورس ومحتواه</label>
+          <textarea id="cDesc" rows="3" style="width:100%;padding:10px;border-radius:var(--radius);background:var(--bg-raised);border:1px solid var(--line-soft);color:var(--ink);font-family:inherit;" placeholder="شرح مبسط لما سيتعلمه الطالب في هذا الكورس..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-line btn-sm" id="cancelCreateCourseBtn">إلغاء</button>
+        <button type="submit" class="btn btn-primary btn-sm">حفظ ونشر الكورس</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- =========================================================
+     MODAL: Add Lecture + Direct Video Upload + Exam Builder
+     ========================================================= -->
+<div class="modal-backdrop" id="addLectureModal">
+  <div class="modal-window wide" style="max-width:640px;max-height:90vh;overflow-y:auto;">
+    <div class="modal-header">
+      <h3 id="addLectureModalTitle">إضافة محاضرة جديدة</h3>
+      <button type="button" class="modal-close" id="closeAddLectureBtn">&times;</button>
+    </div>
+    <form id="addLectureForm">
+      <input type="hidden" id="lecCourseId">
+      <div class="modal-body">
+        <div class="field">
+          <label for="lTitle">عنوان المحاضرة</label>
+          <input type="text" id="lTitle" placeholder="مثال: المحاضرة 1: مقدمة وشرح المفاهيم" required>
+        </div>
+
+        <!-- Direct Video File Upload Area -->
+        <div class="field">
+          <label>رفع ملف فيديو المحاضرة من جهازك (Google Drive)</label>
+          <div class="dropzone-box" id="videoDropzone" onclick="document.getElementById('lVideoFile').click()">
+            <div id="dropzonePrompt">
+              <div style="font-size:2.2rem;margin-bottom:8px;">🎥</div>
+              <p style="margin:0;font-weight:600;color:var(--ink);font-size:.95rem;">اضغط لاختيار فيديو من جهازك أو اسحب الملف وأفلته هنا</p>
+              <span class="hint" style="margin-top:6px;display:block;">يدعم صيغ MP4, MKV, WebM, MOV — يُحفظ الفيديو تلقائيًا في Google Drive</span>
+            </div>
+            <div id="fileSelectedCard" style="display:none;background:var(--bg);border:1px solid var(--gold-border);border-radius:6px;padding:12px 16px;text-align:right;">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div>
+                  <span style="font-size:1.3rem;margin-inline-end:8px;">🎬</span>
+                  <b id="selectedFileName" style="color:var(--ink);font-size:.9rem;">video.mp4</b>
+                  <span id="selectedFileSize" style="color:var(--ink-dim);font-size:.8rem;margin-inline-start:8px;">(15 MB)</span>
+                </div>
+                <button type="button" class="btn btn-text btn-sm" style="color:var(--err);" onclick="event.stopPropagation(); clearSelectedVideo();">✕ إلغاء الملف</button>
+              </div>
+            </div>
+            <input type="file" id="lVideoFile" accept="video/mp4,video/webm,video/mkv,video/quicktime,video/*" style="display:none;" onchange="handleVideoFileSelected(this)">
+          </div>
+
+          <!-- Dynamic Progress Bar -->
+          <div class="progress-wrap" id="uploadProgressWrap" style="display:none;">
+            <div style="display:flex;justify-content:space-between;font-size:.82rem;">
+              <span id="uploadStatusText" style="color:var(--gold-light);font-weight:600;">☁️ جاري الرفع إلى Google Drive...</span>
+              <span id="uploadPercentText" style="font-weight:700;color:var(--gold-light);">0%</span>
+            </div>
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" id="uploadProgressBar"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="lDuration">مدة المحاضرة التقديرية (بالدقائق)</label>
+            <input type="number" id="lDuration" value="45" min="1">
+          </div>
+          <div class="field">
+            <label for="lPoints">تكلفة فتح الحصة منفردة (نقاط)</label>
+            <input type="number" id="lPoints" value="10" min="0">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="lDesc">ملاحظات وملخص المحاضرة</label>
+          <textarea id="lDesc" rows="2" style="width:100%;padding:10px;border-radius:var(--radius);background:var(--bg-raised);border:1px solid var(--line-soft);color:var(--ink);font-family:inherit;" placeholder="أهم النقاط التي تتناولها المحاضرة وملاحظات المذاكرة..."></textarea>
+        </div>
+
+        <!-- =========================================================
+             EXAM BUILDER SECTION: Teacher Choice & Custom Questions
+             ========================================================= -->
+        <div style="border:1px solid var(--line-soft);border-radius:6px;padding:16px;margin-top:16px;background:var(--bg);">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <label style="margin:0;cursor:pointer;display:flex;align-items:center;gap:10px;font-weight:600;color:var(--ink);user-select:none;">
+              <input type="checkbox" id="enableQuizCheck" onchange="toggleQuizBuilder(this.checked)" style="width:18px;height:18px;accent-color:var(--gold);">
+              <span>📝 إضافة امتحان / تدريب إلكتروني لهذه المحاضرة</span>
+            </label>
+            <span class="tag tag-ok" id="quizQuestionsCountBadge" style="display:none;font-size:.75rem;">0 أسئلة مضافة</span>
+          </div>
+
+          <div id="quizBuilderContainer" style="display:none;margin-top:16px;border-top:1px solid var(--line-soft);padding-top:16px;">
+            <p style="font-size:.82rem;color:var(--ink-dim);margin-bottom:14px;">
+              أضف أسئلة الامتحان وحدد الخيارات الأربعة والإجابة الصحيحة لكل سؤال ليتم تصحيح إجابات الطلاب تلقائياً:
+            </p>
+
+            <div id="questionsContainer" style="display:flex;flex-direction:column;gap:14px;">
+              <!-- Dynamic Question Cards Inserted Here -->
+            </div>
+
+            <button type="button" class="btn btn-line btn-sm" onclick="addNewQuestionCard()" style="margin-top:14px;width:100%;">
+              ＋ إضافة سؤال جديد
+            </button>
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-line btn-sm" id="cancelAddLectureBtn">إلغاء</button>
+        <button type="submit" class="btn btn-primary btn-sm" id="submitAddLectureBtn">حفظ المحاضرة ونشرها</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Toast notification -->
+<div class="toast" id="appToast"></div>
+
+<script src="js/api.js"></script>
+<script src="js/main.js"></script>
+<script>
+  let currentTeacherId = null;
+  let selectedVideoFile = null;
+  let questionsList = [];
+
+  function showToast(msg) {
+    const toast = document.getElementById('appToast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3800);
+  }
+
+  function handleVideoFileSelected(input) {
+    if (input.files && input.files[0]) {
+      selectedVideoFile = input.files[0];
+      const mb = (selectedVideoFile.size / (1024 * 1024)).toFixed(1);
+      document.getElementById('selectedFileName').textContent = selectedVideoFile.name;
+      document.getElementById('selectedFileSize').textContent = `(${mb} MB)`;
+      document.getElementById('dropzonePrompt').style.display = 'none';
+      document.getElementById('fileSelectedCard').style.display = 'block';
+    }
+  }
+
+  function clearSelectedVideo() {
+    selectedVideoFile = null;
+    document.getElementById('lVideoFile').value = '';
+    document.getElementById('dropzonePrompt').style.display = 'block';
+    document.getElementById('fileSelectedCard').style.display = 'none';
+    document.getElementById('uploadProgressWrap').style.display = 'none';
+    document.getElementById('uploadProgressBar').style.width = '0%';
+  }
+
+  // Setup drag & drop on video box
+  const dropzone = document.getElementById('videoDropzone');
+  dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('dragover'); });
+  dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+  dropzone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropzone.classList.remove('dragover');
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const file = e.dataTransfer.files[0];
+      if (file.type.startsWith('video/') || /\.(mp4|mkv|webm|mov)$/i.test(file.name)) {
+        document.getElementById('lVideoFile').files = e.dataTransfer.files;
+        handleVideoFileSelected(document.getElementById('lVideoFile'));
+      } else {
+        alert('يرجى اختيار ملف فيديو صالح (MP4, MKV, WebM, MOV)');
+      }
+    }
+  });
+
+  // ─── Quiz & Exam Builder Logic ──────────────────────────────────────────────
+
+  function toggleQuizBuilder(isEnabled) {
+    const container = document.getElementById('quizBuilderContainer');
+    const badge = document.getElementById('quizQuestionsCountBadge');
+    container.style.display = isEnabled ? 'block' : 'none';
+    badge.style.display = isEnabled ? 'inline-block' : 'none';
+
+    if (isEnabled && questionsList.length === 0) {
+      addNewQuestionCard();
+    }
+  }
+
+  function addNewQuestionCard() {
+    const qIndex = questionsList.length + 1;
+    const qId = 'q_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 4);
+
+    questionsList.push({
+      id: qId,
+      text: '',
+      optionA: '',
+      optionB: '',
+      optionC: '',
+      optionD: '',
+      correctOption: 'A'
+    });
+
+    renderQuestionsList();
+  }
+
+  function deleteQuestionCard(index) {
+    questionsList.splice(index, 1);
+    renderQuestionsList();
+  }
+
+  function updateQuestionField(index, field, value) {
+    if (questionsList[index]) {
+      questionsList[index][field] = value;
+    }
+  }
+
+  function renderQuestionsList() {
+    const container = document.getElementById('questionsContainer');
+    const badge = document.getElementById('quizQuestionsCountBadge');
+    badge.textContent = `${questionsList.length} أسئلة مضافة`;
+
+    if (questionsList.length === 0) {
+      container.innerHTML = `<p style="color:var(--ink-faint);font-size:.84rem;text-align:center;padding:12px;">لم تتم إضافة أسئلة بعد. اضغط "إضافة سؤال جديد" بالأسفل.</p>`;
+      return;
+    }
+
+    container.innerHTML = questionsList.map((q, idx) => `
+      <div class="question-card">
+        <div class="question-card-head">
+          <b style="color:var(--gold-light);font-size:.9rem;">السؤال رقم ${idx + 1}</b>
+          <button type="button" class="btn btn-text btn-sm" style="color:var(--err);padding:2px 6px;" onclick="deleteQuestionCard(${idx})">✕ حذف السؤال</button>
+        </div>
+
+        <div class="field" style="margin-bottom:12px;">
+          <input type="text" placeholder="اكتب نص السؤال هنا..." value="${escapeHtml(q.text)}" oninput="updateQuestionField(${idx}, 'text', this.value)" required style="font-weight:600;">
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <!-- Option A -->
+          <div class="option-row">
+            <span class="option-badge">أ</span>
+            <input type="text" placeholder="الخيار (أ)" value="${escapeHtml(q.optionA)}" oninput="updateQuestionField(${idx}, 'optionA', this.value)" required>
+            <label style="display:flex;align-items:center;gap:4px;font-size:.8rem;cursor:pointer;user-select:none;">
+              <input type="radio" name="correct_${q.id}" value="A" ${q.correctOption === 'A' ? 'checked' : ''} onchange="updateQuestionField(${idx}, 'correctOption', 'A')">
+              <span style="color:${q.correctOption === 'A' ? 'var(--ok)' : 'var(--ink-dim)'};font-weight:${q.correctOption === 'A' ? '700' : 'normal'};">صحيح</span>
+            </label>
+          </div>
+
+          <!-- Option B -->
+          <div class="option-row">
+            <span class="option-badge">ب</span>
+            <input type="text" placeholder="الخيار (ب)" value="${escapeHtml(q.optionB)}" oninput="updateQuestionField(${idx}, 'optionB', this.value)" required>
+            <label style="display:flex;align-items:center;gap:4px;font-size:.8rem;cursor:pointer;user-select:none;">
+              <input type="radio" name="correct_${q.id}" value="B" ${q.correctOption === 'B' ? 'checked' : ''} onchange="updateQuestionField(${idx}, 'correctOption', 'B')">
+              <span style="color:${q.correctOption === 'B' ? 'var(--ok)' : 'var(--ink-dim)'};font-weight:${q.correctOption === 'B' ? '700' : 'normal'};">صحيح</span>
+            </label>
+          </div>
+
+          <!-- Option C -->
+          <div class="option-row">
+            <span class="option-badge">ج</span>
+            <input type="text" placeholder="الخيار (ج)" value="${escapeHtml(q.optionC)}" oninput="updateQuestionField(${idx}, 'optionC', this.value)" required>
+            <label style="display:flex;align-items:center;gap:4px;font-size:.8rem;cursor:pointer;user-select:none;">
+              <input type="radio" name="correct_${q.id}" value="C" ${q.correctOption === 'C' ? 'checked' : ''} onchange="updateQuestionField(${idx}, 'correctOption', 'C')">
+              <span style="color:${q.correctOption === 'C' ? 'var(--ok)' : 'var(--ink-dim)'};font-weight:${q.correctOption === 'C' ? '700' : 'normal'};">صحيح</span>
+            </label>
+          </div>
+
+          <!-- Option D -->
+          <div class="option-row">
+            <span class="option-badge">د</span>
+            <input type="text" placeholder="الخيار (د)" value="${escapeHtml(q.optionD)}" oninput="updateQuestionField(${idx}, 'optionD', this.value)" required>
+            <label style="display:flex;align-items:center;gap:4px;font-size:.8rem;cursor:pointer;user-select:none;">
+              <input type="radio" name="correct_${q.id}" value="D" ${q.correctOption === 'D' ? 'checked' : ''} onchange="updateQuestionField(${idx}, 'correctOption', 'D')">
+              <span style="color:${q.correctOption === 'D' ? 'var(--ok)' : 'var(--ink-dim)'};font-weight:${q.correctOption === 'D' ? '700' : 'normal'};">صحيح</span>
+            </label>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function renderTeacherDashboard() {
+    const user = window.KhatwaAPI.getUser();
+    if (user) {
+      currentTeacherId = user.id;
+      document.getElementById('teacherGreeting').textContent = `أهلًا بك، ${user.name || user.displayName || user.username}`;
+      document.getElementById('navName').textContent = user.name || user.displayName || user.username;
+      document.getElementById('navRole').textContent = user.specialty ? `مدرس — ${user.specialty}` : 'مدرس معتمد';
+      document.getElementById('navAvatar').textContent = (user.name || user.username || 'م').charAt(0);
+    }
+
+    const stats = window.KhatwaAPI.courses.getTeacherStats(currentTeacherId);
+    document.getElementById('statCoursesCount').textContent = stats.totalCourses;
+    document.getElementById('statLecturesCount').textContent = stats.totalLectures;
+    document.getElementById('statStudentsCount').textContent = stats.totalStudents;
+    document.getElementById('coursesBadge').textContent = stats.totalCourses;
+    document.getElementById('studentsBadge').textContent = stats.totalStudents;
+
+    // Render courses
+    const container = document.getElementById('coursesListContainer');
+    if (stats.courses.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="icon">📚</div>
+          <h3>لم تقم بإنشاء أي كورسات بعد</h3>
+          <p>اضغط على زر "إنشاء كورس جديد" بالأعلى لنشر أول كورس لك ورفع المحاضرات والامتحانات.</p>
+          <button class="btn btn-primary btn-sm" onclick="document.getElementById('createCourseModal').classList.add('show')">＋ إنشاء أول كورس الآن</button>
+        </div>
+      `;
+    } else {
+      let html = '';
+      stats.courses.forEach(course => {
+        const lecCount = course.lectures ? course.lectures.length : 0;
+        html += `
+          <div class="card" style="display:grid;grid-template-columns:1fr auto auto auto;gap:20px;align-items:start;">
+            <div>
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                <span class="tag tag-ok">${escapeHtml(course.subject)}</span>
+                <h3 style="margin:0;font-size:1.15rem;">${escapeHtml(course.title)}</h3>
+              </div>
+              <span class="meta">${escapeHtml(course.grade || 'المرحلة الثانوية')} · ${lecCount} محاضرات · ${course.pointCost} نقطة</span>
+              <p style="color:var(--ink-dim);font-size:.84rem;margin-top:6px;max-width:500px;">${escapeHtml(course.description || '')}</p>
+              
+              <!-- Lectures list inside course -->
+              ${lecCount > 0 ? `
+                <div style="margin-top:14px;background:var(--bg);border-radius:4px;padding:10px 14px;border:1px solid var(--line-soft);">
+                  <b style="font-size:.82rem;color:var(--gold-light);display:block;margin-bottom:8px;">المحاضرات المرفوعة (${lecCount}):</b>
+                  <ul style="font-size:.82rem;color:var(--ink-dim);display:flex;flex-direction:column;gap:6px;">
+                    ${course.lectures.map((l, idx) => `
+                      <li style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px dashed var(--line-soft);">
+                        <span>
+                          <b>${idx + 1}.</b> ${escapeHtml(l.title)} (${l.duration} دقيقة)
+                          ${l.hasVideo || l.driveFileId ? `<span class="tag tag-ok" style="font-size:.7rem;padding:2px 6px;margin-inline-start:4px;">☁️ فيديو</span>` : ''}
+                          ${l.quizQuestions && l.quizQuestions.length > 0 
+                            ? `<span class="tag tag-warn" style="font-size:.7rem;padding:2px 6px;margin-inline-start:4px;">📝 امتحان (${l.quizQuestions.length} أسئلة)</span>` 
+                            : `<span style="font-size:.72rem;color:var(--ink-faint);margin-inline-start:6px;">(بدون امتحان)</span>`}
+                        </span>
+                        <div style="display:flex;gap:6px;align-items:center;">
+                          <a href="lesson.html?courseId=${course.id}&lessonId=${l.id}" class="btn btn-text btn-sm" style="padding:0 6px;">معاينة</a>
+                          <button class="btn btn-text btn-sm" style="color:var(--err);padding:0 6px;" onclick="handleDeleteLecture('${course.id}', '${l.id}')">حذف</button>
+                        </div>
+                      </li>
+                    `).join('')}
+                  </ul>
+                </div>
+              ` : ''}
+            </div>
+
+            <div style="padding-top:4px;">
+              <span class="tag tag-warn">${lecCount} محاضرات</span>
+            </div>
+
+            <div style="padding-top:4px;">
+              <span class="points-tag" style="font-size:.78rem;padding:4px 10px;">${course.pointCost} نقطة</span>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <button class="btn btn-primary btn-sm" onclick="openAddLectureModal('${course.id}', '${escapeHtml(course.title)}')">＋ إضافة محاضرة & فيديو</button>
+              <a href="subject.html?id=${course.id}" class="btn btn-line btn-sm">👁️ معاينة الكورس</a>
+              <button class="btn btn-text btn-sm" style="color:var(--err);" onclick="handleDeleteCourse('${course.id}')">حذف الكورس</button>
+            </div>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    // Render enrolled students
+    const tbody = document.getElementById('enrolledStudentsBody');
+    if (stats.enrollments.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="5" style="text-align:center;color:var(--ink-faint);padding:30px;">
+            لا يوجد طلاب مسجلين في كورساتك حتى الآن.
+          </td>
+        </tr>
+      `;
+    } else {
+      tbody.innerHTML = stats.enrollments.map(e => {
+        const course = stats.courses.find(c => c.id === e.courseId);
+        const total = course && course.lectures ? course.lectures.length : 1;
+        const comp = (e.completedLectureIds || []).length;
+        const pct = Math.round((comp / total) * 100);
+        return `
+          <tr>
+            <td><b>${escapeHtml(e.studentName || 'طالب')}</b></td>
+            <td>${escapeHtml(e.courseTitle || (course ? course.title : 'كورس'))}</td>
+            <td>${new Date(e.enrolledAt).toLocaleDateString('ar-EG')}</td>
+            <td>${comp} من ${total}</td>
+            <td><span class="tag ${pct === 100 ? 'tag-ok' : 'tag-warn'}">${pct}%</span></td>
+          </tr>
+        `;
+      }).join('');
+    }
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  // Course Modal Actions
+  const createCourseModal = document.getElementById('createCourseModal');
+  document.getElementById('openCreateCourseModalBtn').addEventListener('click', () => createCourseModal.classList.add('show'));
+  document.getElementById('closeCreateCourseBtn').addEventListener('click', () => createCourseModal.classList.remove('show'));
+  document.getElementById('cancelCreateCourseBtn').addEventListener('click', () => createCourseModal.classList.remove('show'));
+
+  document.getElementById('createCourseForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const title = document.getElementById('cTitle').value.trim();
+    const subject = document.getElementById('cSubject').value;
+    const grade = document.getElementById('cGrade').value;
+    const pointCost = document.getElementById('cPoints').value;
+    const teacherName = document.getElementById('cTeacherName').value.trim();
+    const description = document.getElementById('cDesc').value.trim();
+
+    window.KhatwaAPI.courses.create({
+      title,
+      subject,
+      grade,
+      pointCost,
+      teacherName: teacherName || undefined,
+      description
+    });
+
+    createCourseModal.classList.remove('show');
+    document.getElementById('createCourseForm').reset();
+    showToast('تم إنشاء الكورس بنجاح وبات متاحًا للطلاب على المنصة!');
+    renderTeacherDashboard();
+  });
+
+  // Lecture Modal Actions
+  const addLectureModal = document.getElementById('addLectureModal');
+  window.openAddLectureModal = function(courseId, courseTitle) {
+    document.getElementById('lecCourseId').value = courseId;
+    document.getElementById('addLectureModalTitle').textContent = `إضافة محاضرة إلى: ${courseTitle}`;
+    clearSelectedVideo();
+    questionsList = [];
+    document.getElementById('enableQuizCheck').checked = false;
+    toggleQuizBuilder(false);
+    addLectureModal.classList.add('show');
+  };
+  document.getElementById('closeAddLectureBtn').addEventListener('click', () => addLectureModal.classList.remove('show'));
+  document.getElementById('cancelAddLectureBtn').addEventListener('click', () => addLectureModal.classList.remove('show'));
+
+  document.getElementById('addLectureForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const courseId = document.getElementById('lecCourseId').value;
+    const title = document.getElementById('lTitle').value.trim();
+    const duration = document.getElementById('lDuration').value;
+    const pointCost = document.getElementById('lPoints').value;
+    const description = document.getElementById('lDesc').value.trim();
+
+    const isQuizEnabled = document.getElementById('enableQuizCheck').checked;
+    const finalQuizQuestions = isQuizEnabled 
+      ? questionsList.filter(q => q.text.trim().length > 0 && q.optionA.trim().length > 0 && q.optionB.trim().length > 0)
+      : [];
+
+    const submitBtn = document.getElementById('submitAddLectureBtn');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'جاري حفظ المحاضرة...';
+
+    const progressWrap = document.getElementById('uploadProgressWrap');
+    const progressBar = document.getElementById('uploadProgressBar');
+    const progressText = document.getElementById('uploadPercentText');
+    const statusText = document.getElementById('uploadStatusText');
+
+    if (selectedVideoFile) {
+      progressWrap.style.display = 'block';
+      progressBar.style.width = '20%';
+      progressText.textContent = '20%';
+      statusText.textContent = '☁️ جاري الرفع إلى Google Drive...';
+    }
+
+    try {
+      const result = await window.KhatwaAPI.courses.uploadLectureWithVideo(
+        courseId,
+        {
+          title,
+          duration,
+          pointCost,
+          description,
+          quizQuestions: finalQuizQuestions
+        },
+        selectedVideoFile,
+        (percent) => {
+          progressBar.style.width = `${percent}%`;
+          progressText.textContent = `${percent}%`;
+          if (percent >= 100) {
+            statusText.textContent = '✓ اكتمل الرفع وحفظ الفيديو في Google Drive!';
+          }
+        }
+      );
+
+      // Short pause so the user sees the 100% completion state
+      await new Promise(r => setTimeout(r, 400));
+
+      addLectureModal.classList.remove('show');
+      document.getElementById('addLectureForm').reset();
+      clearSelectedVideo();
+      questionsList = [];
+
+      showToast(result.isGoogleDrive 
+        ? '✓ تم رفع الفيديو وحفظه في Google Drive ونشر المحاضرة بنجاح!' 
+        : '✓ تم رفع المحاضرة ونشرها بنجاح!');
+      renderTeacherDashboard();
+    } catch (err) {
+      alert('حدث خطأ أثناء رفع المحاضرة: ' + err.message);
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'حفظ المحاضرة ونشرها';
+    }
+  });
+
+  window.handleDeleteCourse = function(courseId) {
+    if (confirm('هل أنت متأكد من رغبتك في حذف هذا الكورس وجميع محاضراته؟')) {
+      window.KhatwaAPI.courses.delete(courseId);
+      showToast('تم حذف الكورس بنجاح.');
+      renderTeacherDashboard();
+    }
+  };
+
+  window.handleDeleteLecture = function(courseId, lectureId) {
+    if (confirm('هل أنت متأكد من رغبتك في حذف هذه المحاضرة؟')) {
+      window.KhatwaAPI.courses.deleteLecture(courseId, lectureId);
+      showToast('تم حذف المحاضرة.');
+      renderTeacherDashboard();
+    }
+  };
+
+  // Tabs switching
+  document.querySelectorAll('.tab-row .tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab-row .tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'none');
+      tab.classList.add('active');
+      const target = document.getElementById(tab.getAttribute('data-target'));
+      if (target) target.style.display = 'block';
+    });
+  });
+
+  document.addEventListener('DOMContentLoaded', () => {
+    renderTeacherDashboard();
+  });
+</script>
+</body>
+</html>

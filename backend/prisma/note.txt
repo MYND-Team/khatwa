@@ -1,0 +1,1 @@
+// PointRequest model added to both prisma schemas

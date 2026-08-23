@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>طلب شحن نقاط | خطوة</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .upload-dropzone {
+    border: 2px dashed var(--line);
+    border-radius: var(--radius);
+    padding: 24px 16px;
+    text-align: center;
+    background: var(--bg-raised);
+    cursor: pointer;
+    transition: all .2s ease;
+  }
+  .upload-dropzone:hover {
+    border-color: var(--gold-border);
+    background: rgba(200, 160, 80, 0.04);
+  }
+  .preview-wrap {
+    margin-top: 12px;
+    display: none;
+    background: var(--bg);
+    border: 1px solid var(--gold-border);
+    border-radius: 6px;
+    padding: 10px 14px;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .preview-thumb {
+    width: 44px;
+    height: 44px;
+    object-fit: cover;
+    border-radius: 4px;
+    border: 1px solid var(--line-soft);
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="container nav-inner">
+    <a href="index.html" class="brand"><span class="brand-mark">خ</span>خطوة</a>
+    <div class="breadcrumb" style="margin:0;"><a href="points.html">النقاط</a><span class="sep">›</span> طلب شحن</div>
+    <div class="nav-cta">
+      <a href="profile.html" class="user-line" id="navUserLine">
+        <span class="avatar" id="navAvatar">ط</span>
+        <span>
+          <span class="name" id="navName">الطالب</span>
+          <span class="role" id="navRole">طالب</span>
+        </span>
+      </a>
+    </div>
+  </div>
+</nav>
+
+<div class="container" style="padding-top:36px;padding-bottom:60px;max-width:760px;">
+
+  <div class="page-head" style="margin-bottom:24px;">
+    <div>
+      <h1>طلب شحن نقاط المحفظة</h1>
+      <p class="page-sub" style="margin:4px 0 0;">حوّل المبلغ المطلوب وارفع صورة إثبات التحويل، وسيقوم فريق المتابعة بمراجعتها وشحن النقاط فورًا.</p>
+    </div>
+    <a href="points.html" class="btn btn-line btn-sm">العودة للمحفظة</a>
+  </div>
+
+  <!-- Instruction Box -->
+  <div style="background:var(--bg-raised);border:1px solid var(--gold-border);border-radius:var(--radius);padding:18px 20px;margin-bottom:24px;">
+    <h4 style="margin:0 0 8px;color:var(--gold-light);display:flex;align-items:center;gap:8px;">
+      <span>📱</span> خطوات التحويل والشحن:
+    </h4>
+    <ol style="margin:0;padding-inline-start:20px;font-size:.88rem;color:var(--ink-dim);line-height:1.7;">
+      <li>حوّل المبلغ المطلوب عبر <b>فودافون كاش</b> أو <b>إنستاباي (InstaPay)</b> إلى الرقم: <b style="color:var(--gold-light);font-size:1rem;direction:ltr;display:inline-block;">01000000000</b></li>
+      <li>خذ لقطة شاشة (Screenshot) واضحة لرسالة أو إشعار التحويل الناجح.</li>
+      <li>أدخل عدد النقاط المطلوبة وارفع صورة الإيصال بالأسفل، ثم اضغط <b>إرسال الطلب</b>.</li>
+    </ol>
+  </div>
+
+  <!-- Request Form Card -->
+  <div class="card" id="requestFormCard" style="margin-bottom:32px;">
+    <form id="rpForm">
+      <div class="field-row">
+        <div class="field">
+          <label for="points">عدد النقاط المطلوبة</label>
+          <input type="number" id="points" placeholder="مثال: 50" min="1" required oninput="updateCalculation(this.value)">
+        </div>
+        <div class="field">
+          <label>المبلغ المطلوب تحويله</label>
+          <div style="padding:10px 14px;background:var(--bg);border:1px solid var(--line-soft);border-radius:var(--radius);font-weight:700;color:var(--gold-light);font-size:1.1rem;">
+            <span id="amountOut">0</span> جنيه مصري
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>صورة إثبات التحويل (Screenshot / إيصال الدفع)</label>
+        <div class="upload-dropzone" id="receiptDropzone" onclick="document.getElementById('receiptFile').click()">
+          <div id="dropzonePrompt">
+            <div style="font-size:2rem;margin-bottom:6px;">🧾</div>
+            <p style="margin:0;font-weight:600;font-size:.9rem;color:var(--ink);">اضغط لاختيار صورة الإيصال أو اسحب الصورة هنا</p>
+            <span style="font-size:.78rem;color:var(--ink-faint);display:block;margin-top:4px;">يدعم صور JPG, PNG, WebP (بحد أقصى 10MB)</span>
+          </div>
+          <input type="file" id="receiptFile" accept="image/*" style="display:none;" onchange="handleReceiptFile(this)" required>
+        </div>
+
+        <div class="preview-wrap" id="receiptPreviewWrap">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <img id="receiptPreviewImg" class="preview-thumb" src="" alt="معاينة">
+            <div>
+              <b id="receiptFileName" style="font-size:.85rem;color:var(--ink);display:block;">receipt.jpg</b>
+              <span id="receiptFileSize" style="font-size:.75rem;color:var(--ink-dim);">—</span>
+            </div>
+          </div>
+          <button type="button" class="btn btn-text btn-sm" style="color:var(--err);" onclick="clearSelectedReceipt()">✕ تغيير الصورة</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="notes">ملاحظات إضافية (اختياري)</label>
+        <input type="text" id="notes" placeholder="مثال: تم التحويل من محفظة رقم 01012345678 باسم...">
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block" id="submitRpBtn" style="padding:12px;">
+        🚀 إرسال طلب الشحن للمراجعة
+      </button>
+    </form>
+  </div>
+
+  <!-- My Point Requests History -->
+  <div class="block">
+    <div class="block-head" style="display:flex;justify-content:space-between;align-items:center;">
+      <h3 style="margin:0;">طلبات الشحن السابقة</h3>
+      <button class="btn btn-text btn-sm" onclick="loadMyRequests()">تحديث 🔄</button>
+    </div>
+    <div id="myRequestsContainer">
+      <!-- Dynamically filled -->
+    </div>
+  </div>
+
+</div>
+
+<!-- Toast notification -->
+<div class="toast" id="appToast"></div>
+
+<script src="js/api.js"></script>
+<script src="js/main.js"></script>
+<script>
+  let selectedReceiptFile = null;
+
+  function showToast(msg) {
+    const toast = document.getElementById('appToast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3800);
+  }
+
+  function updateCalculation(val) {
+    const pts = Number(val) || 0;
+    document.getElementById('amountOut').textContent = pts * 10;
+  }
+
+  function handleReceiptFile(input) {
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      if (!file.type.startsWith('image/')) {
+        alert('يرجى اختيار ملف صورة صالح (JPG, PNG, WebP)');
+        return;
+      }
+      selectedReceiptFile = file;
+      document.getElementById('receiptFileName').textContent = file.name;
+      document.getElementById('receiptFileSize').textContent = `(${(file.size / (1024 * 1024)).toFixed(2)} MB)`;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        document.getElementById('receiptPreviewImg').src = e.target.result;
+        document.getElementById('dropzonePrompt').style.display = 'none';
+        document.getElementById('receiptPreviewWrap').style.display = 'flex';
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  function clearSelectedReceipt() {
+    selectedReceiptFile = null;
+    document.getElementById('receiptFile').value = '';
+    document.getElementById('dropzonePrompt').style.display = 'block';
+    document.getElementById('receiptPreviewWrap').style.display = 'none';
+  }
+
+  // Setup drag & drop
+  const dropzone = document.getElementById('receiptDropzone');
+  dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.style.borderColor = 'var(--gold-light)'; });
+  dropzone.addEventListener('dragleave', () => { dropzone.style.borderColor = 'var(--line)'; });
+  dropzone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropzone.style.borderColor = 'var(--line)';
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      document.getElementById('receiptFile').files = e.dataTransfer.files;
+      handleReceiptFile(document.getElementById('receiptFile'));
+    }
+  });
+
+  async function loadMyRequests() {
+    const container = document.getElementById('myRequestsContainer');
+    try {
+      const requests = await window.KhatwaAPI.pointRequests.getMyRequests();
+      if (!requests || requests.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state" style="padding:24px;text-align:center;color:var(--ink-dim);">
+            <div style="font-size:1.8rem;margin-bottom:8px;">💳</div>
+            <p style="margin:0;font-weight:600;">لا توجد طلبات شحن سابقة</p>
+            <span style="font-size:.82rem;color:var(--ink-faint);">أدخل عدد النقاط وارفع الإيصال بالأعلى لإنشاء أول طلب شحن.</span>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = `
+        <table class="plain">
+          <thead>
+            <tr>
+              <th>تاريخ الطلب</th>
+              <th>النقاط المطلوبة</th>
+              <th>المبلغ</th>
+              <th>الحالة</th>
+              <th>النقاط المشحونة</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${requests.map(r => {
+              const d = r.createdAt ? new Date(r.createdAt).toLocaleDateString('ar-EG', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
+              let statusBadge = '<span class="tag tag-warn">⏳ قيد المراجعة</span>';
+              if (r.status === 'APPROVED') {
+                statusBadge = '<span class="tag tag-ok">✓ تم الشحن والموافقة</span>';
+              } else if (r.status === 'REJECTED') {
+                statusBadge = `<span class="tag tag-err" title="${escapeHtml(r.rejectionReason || '')}">✕ تم الرفض</span>`;
+              }
+              return `
+                <tr>
+                  <td>${d}</td>
+                  <td><b>${r.requestedPoints} نقطة</b></td>
+                  <td>${r.requestedPoints * 10} ج.م</td>
+                  <td>${statusBadge}</td>
+                  <td><b>${r.grantedPoints !== null && r.grantedPoints !== undefined ? `+${r.grantedPoints} نقطة` : '—'}</b></td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      `;
+    } catch (e) {
+      container.innerHTML = `<p style="color:var(--err);font-size:.85rem;text-align:center;">تعذر تحميل الطلبات: ${e.message}</p>`;
+    }
+  }
+
+  document.getElementById('rpForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const pts = Number(document.getElementById('points').value) || 0;
+    const notes = document.getElementById('notes').value.trim();
+
+    if (!selectedReceiptFile) {
+      alert('يرجى اختيار صورة إثبات التحويل أولاً');
+      return;
+    }
+
+    if (pts < 1) {
+      alert('يرجى إدخال عدد نقاط صحيح');
+      return;
+    }
+
+    const btn = document.getElementById('submitRpBtn');
+    btn.disabled = true;
+    btn.textContent = 'جاري إرسال الطلب ورفع الإيصال...';
+
+    try {
+      await window.KhatwaAPI.pointRequests.submit({
+        requestedPoints: pts,
+        notes,
+        screenshot: selectedReceiptFile
+      });
+
+      showToast('✓ تم إرسال طلب الشحن بنجاح! سيتم الشحن بعد مراجعة الإيصال فورًا.');
+      document.getElementById('rpForm').reset();
+      clearSelectedReceipt();
+      updateCalculation(0);
+      await loadMyRequests();
+    } catch (err) {
+      alert('حدث خطأ أثناء إرسال الطلب: ' + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '🚀 إرسال طلب الشحن للمراجعة';
+    }
+  });
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    window.KhatwaAPI.syncNav();
+    loadMyRequests();
+  });
+</script>
+</body>
+</html>

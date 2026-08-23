@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>الواجب الإلكتروني | خطوة</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<nav class="nav">
+  <div class="container nav-inner">
+    <a href="index.html" class="brand"><span class="brand-mark">خ</span>خطوة</a>
+    <div class="breadcrumb" style="margin:0;">
+      <a href="courses.html" id="hwBreadCourse">الكورسات</a>
+      <span class="sep">›</span>
+      <span id="hwBreadTitle">الواجب الإلكتروني</span>
+    </div>
+    <div class="nav-cta">
+      <a href="dashboard.html" class="btn btn-text btn-sm">لوحة التحكم</a>
+    </div>
+  </div>
+</nav>
+
+<div class="exam-shell" id="hwShell">
+  <div id="hwActiveView">
+    <div class="exam-top">
+      <h1 id="hwHeadTitle">الواجب الإلكتروني للمحاضرة</h1>
+    </div>
+    <p style="color:var(--ink-dim);font-size:.88rem;margin-bottom:24px;">حل أسئلة الواجب والتدريبات لتثبيت المفاهيم وتقييم فهمك للدرس.</p>
+
+    <div class="exam-progress">
+      <div class="progress-label"><span id="hwStepText">سؤال 1 من 1</span><span></span></div>
+      <div class="progress"><span id="hwBarFill" style="width:0%;"></span></div>
+    </div>
+
+    <form id="hwForm">
+      <div id="hwQuestionsContainer">
+        <!-- Dynamically rendered -->
+      </div>
+
+      <div class="exam-nav">
+        <button type="button" class="btn btn-line exam-prev" id="hwPrevBtn" disabled>السؤال السابق</button>
+        <button type="button" class="btn btn-primary exam-next" id="hwNextBtn">السؤال التالي</button>
+        <button type="submit" class="btn btn-primary exam-submit" id="hwSubmitBtn" style="display:none;">تسليم الواجب</button>
+      </div>
+    </form>
+  </div>
+
+  <div id="hwEmptyView" style="display:none;text-align:center;padding:40px 20px;">
+    <div style="font-size:3rem;margin-bottom:12px;">📚</div>
+    <h2>لا يوجد واجب مضاف لهذه المحاضرة</h2>
+    <p style="color:var(--ink-dim);font-size:.9rem;max-width:400px;margin:8px auto 24px;">المدرس لم يقم بربط واجب بهذه المحاضرة. يمكنك متابعة باقي دروس الكورس.</p>
+    <a href="courses.html" id="hwBackBtn" class="btn btn-primary btn-sm">رجوع للكورس</a>
+  </div>
+
+  <div id="hwDoneView" style="display:none;">
+    <div class="result-hero">
+      <p class="kicker" id="hwResultKicker">تم تسليم الواجب</p>
+      <div class="score" id="hwScoreText">0 / 0</div>
+      <p id="hwResultMsg">تم تسجيل إجاباتك بنجاح في سجل الأنشطة والتقييمات.</p>
+      <div class="hero-actions" style="justify-content:center;margin-top:26px;gap:12px;">
+        <a href="dashboard.html" class="btn btn-primary">لوحة التحكم</a>
+        <a href="results.html" class="btn btn-line">عرض كل النتائج</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/main.js"></script>
+<script>
+  function getQueryParam(param) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(param);
+  }
+
+  let activeQuestions = [];
+  let currentQIndex = 0;
+  let currentCourse = null;
+  let currentLecture = null;
+
+  function initHomework() {
+    const courseId = getQueryParam('courseId');
+    const lessonId = getQueryParam('lessonId');
+
+    const allCourses = window.KhatwaAPI.courses.getAll();
+    currentCourse = courseId ? window.KhatwaAPI.courses.getById(courseId) : allCourses[0];
+
+    if (currentCourse) {
+      document.getElementById('hwBreadCourse').textContent = currentCourse.title;
+      document.getElementById('hwBreadCourse').href = `subject.html?id=${currentCourse.id}`;
+      document.getElementById('hwBackBtn').href = `subject.html?id=${currentCourse.id}`;
+
+      const lectures = currentCourse.lectures || [];
+      currentLecture = lectures.find(l => l.id === lessonId) || lectures[0];
+    }
+
+    if (currentLecture && currentLecture.quizQuestions && currentLecture.quizQuestions.length > 0) {
+      activeQuestions = currentLecture.quizQuestions;
+      document.getElementById('hwHeadTitle').textContent = `واجب: ${currentLecture.title}`;
+      document.getElementById('hwBreadTitle').textContent = `واجب: ${currentLecture.title}`;
+      renderHwQuestions();
+    } else {
+      document.getElementById('hwActiveView').style.display = 'none';
+      document.getElementById('hwEmptyView').style.display = 'block';
+    }
+  }
+
+  function renderHwQuestions() {
+    const container = document.getElementById('hwQuestionsContainer');
+    container.innerHTML = activeQuestions.map((q, idx) => `
+      <div class="q-block" id="hwQ_${idx}" style="${idx === 0 ? '' : 'display:none;'}">
+        <p class="q-text" style="font-size:1.05rem;font-weight:600;margin-bottom:16px;">
+          <span style="color:var(--gold-light);">س ${idx + 1}:</span> ${escapeHtml(q.text)}
+        </p>
+
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <label class="opt">
+            <input type="radio" name="hq_${q.id}" value="A">
+            <span class="letter">أ</span>
+            <span>${escapeHtml(q.optionA)}</span>
+          </label>
+          <label class="opt">
+            <input type="radio" name="hq_${q.id}" value="B">
+            <span class="letter">ب</span>
+            <span>${escapeHtml(q.optionB)}</span>
+          </label>
+          ${q.optionC ? `
+            <label class="opt">
+              <input type="radio" name="hq_${q.id}" value="C">
+              <span class="letter">ج</span>
+              <span>${escapeHtml(q.optionC)}</span>
+            </label>
+          ` : ''}
+          ${q.optionD ? `
+            <label class="opt">
+              <input type="radio" name="hq_${q.id}" value="D">
+              <span class="letter">د</span>
+              <span>${escapeHtml(q.optionD)}</span>
+            </label>
+          ` : ''}
+        </div>
+      </div>
+    `).join('');
+
+    updateProgress();
+  }
+
+  function updateProgress() {
+    const total = activeQuestions.length;
+    document.getElementById('hwStepText').textContent = `سؤال ${currentQIndex + 1} من ${total}`;
+    const pct = Math.round(((currentQIndex + 1) / total) * 100);
+    document.getElementById('hwBarFill').style.width = `${pct}%`;
+
+    document.getElementById('hwPrevBtn').disabled = currentQIndex === 0;
+
+    if (currentQIndex === total - 1) {
+      document.getElementById('hwNextBtn').style.display = 'none';
+      document.getElementById('hwSubmitBtn').style.display = 'inline-block';
+    } else {
+      document.getElementById('hwNextBtn').style.display = 'inline-block';
+      document.getElementById('hwSubmitBtn').style.display = 'none';
+    }
+  }
+
+  function showQuestion(index) {
+    document.querySelectorAll('.q-block').forEach((el, idx) => {
+      el.style.display = idx === index ? 'block' : 'none';
+    });
+    currentQIndex = index;
+    updateProgress();
+  }
+
+  document.getElementById('hwNextBtn').addEventListener('click', () => {
+    if (currentQIndex < activeQuestions.length - 1) {
+      showQuestion(currentQIndex + 1);
+    }
+  });
+
+  document.getElementById('hwPrevBtn').addEventListener('click', () => {
+    if (currentQIndex > 0) {
+      showQuestion(currentQIndex - 1);
+    }
+  });
+
+  document.getElementById('hwForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const user = window.KhatwaAPI.getUser();
+    const studentId = user ? user.id : 'student-default';
+
+    let score = 0;
+    activeQuestions.forEach(q => {
+      const selected = document.querySelector(`input[name="hq_${q.id}"]:checked`)?.value;
+      if (selected && selected === q.correctOption) {
+        score += 1;
+      }
+    });
+
+    const total = activeQuestions.length;
+    const passed = score >= Math.ceil(total * 0.5);
+
+    const title = currentLecture ? `واجب: ${currentLecture.title}` : 'واجب الحصة';
+
+    window.KhatwaAPI.store.saveQuizAttempt(studentId, {
+      title,
+      score,
+      totalQuestions: total,
+      passed
+    });
+
+    document.getElementById('hwScoreText').textContent = `${score} / ${total}`;
+    document.getElementById('hwResultKicker').textContent = passed ? '✓ تم اجتياز الواجب بنجاح!' : 'تم تسليم الواجب';
+    document.getElementById('hwResultMsg').textContent = `حققت ${score} من إجمالي ${total} أسئلة وتم تسجيل درجتك.`;
+
+    document.getElementById('hwActiveView').style.display = 'none';
+    document.getElementById('hwDoneView').style.display = 'block';
+  });
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  document.addEventListener('DOMContentLoaded', initHomework);
+</script>
+</body>
+</html>

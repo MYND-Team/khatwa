@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تسجيل الدخول | خطوة</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<nav class="nav">
+  <div class="container nav-inner">
+    <a href="index.html" class="brand"><span class="brand-mark">خ</span>خطوة</a>
+    <ul class="nav-links">
+      <li><a href="index.html">الرئيسية</a></li>
+      <li><a href="courses.html">تصفح الكورسات</a></li>
+      <li><a href="help.html">الأسئلة الشائعة</a></li>
+    </ul>
+    <div class="nav-cta"><a href="signup.html" class="btn btn-line">إنشاء حساب</a></div>
+    <button class="nav-toggle">القائمة</button>
+  </div>
+</nav>
+
+<div class="auth-wrap">
+  <div class="auth-box">
+    <div class="auth-head">
+      <div class="brand"><span class="brand-mark">خ</span>خطوة</div>
+      <h1>تسجيل الدخول</h1>
+      <p>ادخل بيانات حسابك لمتابعة حصصك أو إدارة كورساتك</p>
+    </div>
+
+    <div class="alert" id="loginAlert"></div>
+
+    <form id="loginForm">
+      <div class="field">
+        <label for="username">اسم المستخدم</label>
+        <input type="text" id="username" placeholder="اسم المستخدم" required autocomplete="username">
+      </div>
+      <div class="field">
+        <label for="password">كلمة المرور</label>
+        <div class="pw-wrap">
+          <input type="password" id="password" placeholder="••••••••" required autocomplete="current-password">
+          <button type="button" class="pw-toggle">إظهار</button>
+        </div>
+      </div>
+      <div class="form-links">
+        <label style="display:flex;align-items:center;gap:8px;font-weight:600;">
+          <input type="checkbox" style="accent-color:var(--gold);" checked> تذكرني
+        </label>
+        <a href="help.html">نسيت كلمة المرور؟</a>
+      </div>
+      <button type="submit" id="loginSubmitBtn" class="btn btn-primary btn-block">دخول</button>
+    </form>
+
+    <div class="auth-switch">ليس لديك حساب؟ <a href="signup.html">أنشئ حسابًا جديدًا</a></div>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/main.js"></script>
+<script>
+  document.getElementById('loginForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('loginSubmitBtn');
+    const alertBox = document.getElementById('loginAlert');
+    const u = document.getElementById('username').value.trim();
+    const p = document.getElementById('password').value;
+
+    if (!u || !p) return;
+
+    btn.disabled = true;
+    const origText = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner"></span> جارٍ التحقق...';
+    alertBox.classList.remove('show');
+
+    try {
+      const res = await window.KhatwaAPI.auth.login(u, p);
+      const user = res.data?.user || window.KhatwaAPI.getUser();
+      const role = user?.role || 'STUDENT';
+
+      if (role === 'TEACHER' || role === 'STAFF' || role === 'ADMIN') {
+        window.location.href = 'teacher-dashboard.html';
+      } else {
+        window.location.href = 'dashboard.html';
+      }
+    } catch (err) {
+      alertBox.textContent = err.message || 'اسم المستخدم أو كلمة المرور غير صحيحة.';
+      alertBox.classList.add('show');
+      btn.disabled = false;
+      btn.innerHTML = origText;
+    }
+  });
+</script>
+</body>
+</html>

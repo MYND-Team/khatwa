@@ -1,0 +1,31 @@
+# ─── Dependencies ────────────────────────────────────────────────────────────
+node_modules/
+
+# ─── Build output ────────────────────────────────────────────────────────────
+dist/
+
+# ─── Environment / secrets ───────────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+
+# IMPORTANT: Service account key files and all secrets must NEVER be committed.
+secrets/
+
+# ─── Logs ────────────────────────────────────────────────────────────────────
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ─── OS / Editor ─────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# ─── Prisma generated ────────────────────────────────────────────────────────
+src/generated/
+
+# ─── TypeScript cache ────────────────────────────────────────────────────────
+*.tsbuildinfo

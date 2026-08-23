@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>متابعة الطالب | خطوة</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<nav class="nav">
+  <div class="container nav-inner">
+    <a href="index.html" class="brand"><span class="brand-mark">خ</span>خطوة</a>
+    <div class="breadcrumb" style="margin:0;"><a href="teacher-dashboard.html">لوحة المدرس</a><span class="sep">›</span> <span id="breadStudentName">متابعة الطالب</span></div>
+    <div class="nav-cta">
+      <div class="user-line" id="navUserLine">
+        <span class="avatar" id="navAvatar">م</span>
+        <span><span class="name" id="navName">المدرس</span></span>
+      </div>
+    </div>
+    <button class="nav-toggle">القائمة</button>
+  </div>
+</nav>
+
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="side-group">
+      <h6>لوحة المعلم</h6>
+      <a href="teacher-dashboard.html" class="side-link">استوديو الكورسات</a>
+      <a href="student-monitor.html" class="side-link active">متابعة طالب</a>
+      <a href="courses.html" class="side-link">تصفح المنصة</a>
+      <a href="#" class="side-link" id="logoutBtn" style="color:var(--err);">تسجيل الخروج</a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page-head">
+      <div>
+        <h1 id="monStudentName">متابعة أداء الطالب</h1>
+        <span class="page-sub" id="monStudentSub" style="margin:6px 0 0;">المرحلة الثانوية</span>
+      </div>
+      <span class="tag tag-ok">مسجل</span>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat-cell"><b id="monPoints">0</b><span>رصيد النقاط</span></div>
+      <div class="stat-cell"><b id="monCompleted">0</b><span>حصص مكتملة</span></div>
+      <div class="stat-cell"><b id="monAvgScore">—</b><span>متوسط الامتحانات</span></div>
+    </div>
+
+    <div class="block">
+      <div class="block-head"><h3>أداء الامتحانات والواجبات</h3></div>
+      <div id="monTableContainer">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-head"><h3>آخر نشاط مسجل</h3></div>
+      <div class="row-list" id="monActivityList">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/main.js"></script>
+<script>
+  function renderStudentMonitor() {
+    const params = new URLSearchParams(window.location.search);
+    const studentId = params.get('id');
+
+    // Get user info
+    let targetStudent = null;
+    if (studentId) {
+      const storedUsersRaw = localStorage.getItem('khatwa_store_users');
+      if (storedUsersRaw) {
+        try {
+          const users = JSON.parse(storedUsersRaw);
+          targetStudent = users.find(u => u.id === studentId || u.username === studentId);
+        } catch (e) {}
+      }
+    }
+
+    if (!targetStudent) {
+      targetStudent = window.KhatwaAPI.getUser();
+    }
+
+    const name = targetStudent ? (targetStudent.name || targetStudent.username) : 'الطالب';
+    document.getElementById('breadStudentName').textContent = name;
+    document.getElementById('monStudentName').textContent = name;
+    document.getElementById('monStudentSub').textContent = `${targetStudent?.grade || 'المرحلة الثانوية'} · هاتف: ${targetStudent?.studentPhoneNumber || targetStudent?.phone || '—'} · ولي الأمر: ${targetStudent?.parentPhoneNumber || targetStudent?.parentPhone || '—'}`;
+
+    const stats = window.KhatwaAPI.store.getStudentStats(targetStudent?.id);
+    document.getElementById('monPoints').textContent = typeof targetStudent?.pointsBalance === 'number' ? targetStudent.pointsBalance : stats.pointsBalance;
+    document.getElementById('monCompleted').textContent = stats.completedLectures;
+    document.getElementById('monAvgScore').textContent = stats.averageScore;
+
+    // Table
+    const tableContainer = document.getElementById('monTableContainer');
+    const attempts = stats.quizAttempts || [];
+    if (attempts.length === 0) {
+      tableContainer.innerHTML = `
+        <div class="empty-state" style="padding:24px;text-align:center;color:var(--ink-dim);">
+          <p style="margin:0;">لا توجد امتحانات مسجلة لهذا الطالب حتى الآن.</p>
+        </div>
+      `;
+    } else {
+      tableContainer.innerHTML = `
+        <table class="plain">
+          <thead><tr><th>الامتحان / الاختبار</th><th>النتيجة</th><th>التاريخ</th></tr></thead>
+          <tbody>
+            ${attempts.map(a => `
+              <tr>
+                <td><b>${escapeHtml(a.quizTitle)}</b></td>
+                <td><span class="tag tag-${a.passed !== false ? 'ok' : 'err'}">${a.score} / ${a.totalQuestions}</span></td>
+                <td>${a.submittedAt ? new Date(a.submittedAt).toLocaleDateString('ar-EG', { year:'numeric', month:'short', day:'numeric' }) : '—'}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+
+    // Activity
+    const actList = document.getElementById('monActivityList');
+    const activities = window.KhatwaAPI.store.getActivities(targetStudent?.id);
+    if (!activities || activities.length === 0) {
+      actList.innerHTML = `
+        <div class="row-item">
+          <span style="color:var(--ink-faint);">لا يوجد نشاط مسجل حتى الآن.</span>
+        </div>
+      `;
+    } else {
+      actList.innerHTML = activities.slice(0, 6).map(a => `
+        <div class="row-item">
+          <div class="ri-main">
+            <div class="ri-text">
+              <b>${escapeHtml(a.text)}</b>
+              <span>${a.timestamp ? new Date(a.timestamp).toLocaleDateString('ar-EG', { month:'short', day:'numeric' }) : ''}</span>
+            </div>
+          </div>
+          <span class="tag tag-ok">✓</span>
+        </div>
+      `).join('');
+    }
+
+    window.KhatwaAPI.syncNav();
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  document.addEventListener('DOMContentLoaded', renderStudentMonitor);
+</script>
+</body>
+</html>

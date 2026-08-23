@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>بياناتي | خطوة</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<nav class="nav">
+  <div class="container nav-inner">
+    <a href="index.html" class="brand"><span class="brand-mark">خ</span>خطوة</a>
+    <ul class="nav-links">
+      <li><a href="dashboard.html">الرئيسية</a></li>
+      <li><a href="courses.html">الكورسات والمواد</a></li>
+      <li><a href="points.html">النقاط</a></li>
+    </ul>
+    <div class="nav-cta">
+      <a href="profile.html" class="user-line" id="navUserLine">
+        <span class="avatar" id="navAvatar">ط</span>
+        <span><span class="name" id="navName">الطالب</span></span>
+      </a>
+    </div>
+    <button class="nav-toggle">القائمة</button>
+  </div>
+</nav>
+
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="side-group">
+      <h6>الرئيسية</h6>
+      <a href="dashboard.html" class="side-link">نظرة عامة</a>
+      <a href="courses.html" class="side-link">الكورسات والمواد</a>
+      <a href="results.html" class="side-link">النتائج</a>
+    </div>
+    <div class="side-group">
+      <h6>المحفظة</h6>
+      <a href="points.html" class="side-link">رصيد النقاط</a>
+      <a href="request-points.html" class="side-link">طلب شحن نقاط</a>
+    </div>
+    <div class="side-group">
+      <h6>الحساب</h6>
+      <a href="profile.html" class="side-link active">بياناتي</a>
+      <a href="notifications.html" class="side-link">الإشعارات</a>
+      <a href="#" class="side-link" id="logoutBtn" style="color:var(--err);">تسجيل الخروج</a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="breadcrumb">بياناتي</div>
+    <div class="page-head">
+      <div>
+        <h1 id="profileHeadName">بياناتي الشخصية</h1>
+        <p class="page-sub" style="margin:4px 0 0;">إدارة وتعديل بيانات حسابك المسجلة على المنصة.</p>
+      </div>
+      <button class="btn btn-primary btn-sm" id="openEditModalBtn">✏️ تعديل البيانات</button>
+    </div>
+
+    <!-- Live Stat Row -->
+    <div class="stat-row">
+      <div class="stat-cell"><b id="statPoints">0</b><span>رصيد النقاط</span></div>
+      <div class="stat-cell"><b id="statCompleted">0</b><span>حصة مكتملة</span></div>
+      <div class="stat-cell"><b id="statAvgScore">—</b><span>متوسط الامتحانات</span></div>
+    </div>
+
+    <!-- User Details Section -->
+    <div class="editorial-row" style="padding-top:0;border-top:none;">
+      <div class="label"><h2 style="font-size:1.1rem;">بيانات الحساب</h2></div>
+      <div class="body">
+        <div class="row-list" style="border-top:1px solid var(--line-soft);" id="profileDetailsList">
+          <div class="row-item">
+            <div class="ri-text"><b>اسم المستخدم</b></div>
+            <span style="color:var(--ink);" id="valUsername">—</span>
+          </div>
+          <div class="row-item">
+            <div class="ri-text"><b>الاسم المعروض</b></div>
+            <span style="color:var(--ink);" id="valDisplayName">—</span>
+          </div>
+          <div class="row-item">
+            <div class="ri-text"><b>الصف الدراسي</b></div>
+            <span style="color:var(--ink-dim);" id="valGrade">المرحلة الثانوية</span>
+          </div>
+          <div class="row-item">
+            <div class="ri-text"><b>رقم هاتف الطالب</b></div>
+            <span style="color:var(--ink-dim);" id="valPhone">—</span>
+          </div>
+          <div class="row-item">
+            <div class="ri-text"><b>رقم هاتف ولي الأمر</b></div>
+            <span style="color:var(--ink-dim);" id="valParentPhone">—</span>
+          </div>
+          <div class="row-item">
+            <div class="ri-text"><b>وظيفة الأب</b></div>
+            <span style="color:var(--ink-dim);" id="valFatherJob">—</span>
+          </div>
+          <div class="row-item">
+            <div class="ri-text"><b>تاريخ الانضمام</b></div>
+            <span style="color:var(--ink-faint);" id="valCreatedAt">—</span>
+          </div>
+        </div>
+        <button class="btn btn-line btn-sm" style="margin-top:20px;" id="openEditModalBtn2">تعديل البيانات</button>
+      </div>
+    </div>
+
+    <!-- Recent Activity Block -->
+    <div class="block">
+      <div class="block-head">
+        <h3>سجل النشاط الأخير</h3>
+      </div>
+      <div class="row-list" id="activityList">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Edit Profile Modal -->
+<div class="modal-backdrop" id="editProfileModal">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h3>تعديل بيانات الحساب</h3>
+      <button class="modal-close" id="closeEditModalBtn">×</button>
+    </div>
+    <div class="alert" id="editModalAlert"></div>
+    <form id="editProfileForm">
+      <div class="field">
+        <label for="editName">الاسم الكامل / المعروض</label>
+        <input type="text" id="editName" placeholder="اسم الطالب">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="editPhone">رقم هاتف الطالب</label>
+          <input type="tel" id="editPhone" placeholder="01xxxxxxxxx">
+        </div>
+        <div class="field">
+          <label for="editGrade">الصف الدراسي</label>
+          <select id="editGrade">
+            <option value="الصف الأول الثانوي">الصف الأول الثانوي</option>
+            <option value="الصف الثاني الثانوي">الصف الثاني الثانوي</option>
+            <option value="الصف الثالث الثانوي">الصف الثالث الثانوي</option>
+            <option value="أخرى">أخرى</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="editParentPhone">رقم هاتف ولي الأمر</label>
+          <input type="tel" id="editParentPhone" placeholder="01xxxxxxxxx">
+        </div>
+        <div class="field">
+          <label for="editFatherJob">وظيفة الأب</label>
+          <input type="text" id="editFatherJob" placeholder="مثال: موظف / مهندس / طبيب">
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-line" id="cancelEditModalBtn">إلغاء</button>
+        <button type="submit" class="btn btn-primary" id="saveProfileBtn">حفظ التعديلات</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Toast notification -->
+<div class="toast" id="appToast"></div>
+
+<script src="js/api.js"></script>
+<script src="js/main.js"></script>
+<script>
+  function showToast(msg) {
+    const toast = document.getElementById('appToast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3200);
+  }
+
+  async function loadProfile() {
+    let user = window.KhatwaAPI.getUser();
+    if (!user) {
+      // Redirect to login if unauthenticated
+      window.location.href = 'login.html';
+      return;
+    }
+
+    // Try fetching fresh data from backend
+    try {
+      user = await window.KhatwaAPI.student.getProfile();
+    } catch (e) {
+      console.warn('Could not refresh profile from server:', e.message);
+    }
+
+    const displayName = user.name || user.displayName || user.username || 'طالب';
+    document.getElementById('profileHeadName').textContent = `بيانات الطالب: ${displayName}`;
+    document.getElementById('valUsername').textContent = user.username || '—';
+    document.getElementById('valDisplayName').textContent = displayName;
+    document.getElementById('valGrade').textContent = user.grade || 'المرحلة الثانوية';
+    document.getElementById('valPhone').textContent = user.studentPhoneNumber || user.phone || 'غير مسجل';
+    document.getElementById('valParentPhone').textContent = user.parentPhoneNumber || user.parentPhone || 'غير مسجل';
+    document.getElementById('valFatherJob').textContent = user.fatherJob || 'غير مسجل';
+
+    if (user.createdAt) {
+      const d = new Date(user.createdAt);
+      document.getElementById('valCreatedAt').textContent = d.toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
+    } else {
+      document.getElementById('valCreatedAt').textContent = 'عضو مسجل';
+    }
+
+    // Load dynamic student stats
+    const stats = window.KhatwaAPI.student.getStats();
+    document.getElementById('statPoints').textContent = typeof user.pointsBalance === 'number' ? user.pointsBalance : stats.pointsBalance;
+    document.getElementById('statCompleted').textContent = stats.completedLectures;
+    document.getElementById('statAvgScore').textContent = stats.averageScore;
+
+    // Load recent activity
+    const activities = window.KhatwaAPI.student.getActivities();
+    const actList = document.getElementById('activityList');
+    if (!activities || activities.length === 0) {
+      actList.innerHTML = `
+        <div class="empty-state" style="padding:28px 16px;text-align:center;color:var(--ink-dim);">
+          <div style="font-size:1.8rem;margin-bottom:8px;">📝</div>
+          <p style="margin:0;font-weight:600;">لا يوجد نشاط سابق مسجل حتى الآن</p>
+          <span style="font-size:.82rem;color:var(--ink-faint);">ستظهر هنا الامتحانات والواجبات والحصص التي تشاهدها.</span>
+        </div>
+      `;
+    } else {
+      actList.innerHTML = activities.slice(0, 8).map(a => {
+        const timeStr = a.timestamp ? new Date(a.timestamp).toLocaleDateString('ar-EG', { month: 'short', day: 'numeric' }) : '';
+        return `
+          <div class="row-item">
+            <div class="ri-main">
+              <div class="ri-text">
+                <b>${a.text}</b>
+                <span>${timeStr}</span>
+              </div>
+            </div>
+            <span class="tag tag-${a.tag === 'err' ? 'warn' : 'ok'}">${a.tag === 'ok' ? '✓' : a.tag}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    window.KhatwaAPI.syncNav();
+  }
+
+  // Modal interactions
+  const modal = document.getElementById('editProfileModal');
+  const openBtns = [document.getElementById('openEditModalBtn'), document.getElementById('openEditModalBtn2')];
+  const closeBtn = document.getElementById('closeEditModalBtn');
+  const cancelBtn = document.getElementById('cancelEditModalBtn');
+
+  function openEditModal() {
+    const user = window.KhatwaAPI.getUser() || {};
+    document.getElementById('editName').value = user.name || user.displayName || user.username || '';
+    document.getElementById('editPhone').value = user.studentPhoneNumber || user.phone || '';
+    document.getElementById('editParentPhone').value = user.parentPhoneNumber || user.parentPhone || '';
+    document.getElementById('editFatherJob').value = user.fatherJob || '';
+    if (user.grade) document.getElementById('editGrade').value = user.grade;
+    document.getElementById('editModalAlert').classList.remove('show');
+    modal.classList.add('show');
+  }
+
+  function closeEditModal() {
+    modal.classList.remove('show');
+  }
+
+  openBtns.forEach(b => b?.addEventListener('click', openEditModal));
+  closeBtn?.addEventListener('click', closeEditModal);
+  cancelBtn?.addEventListener('click', closeEditModal);
+
+  document.getElementById('editProfileForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const saveBtn = document.getElementById('saveProfileBtn');
+    const alertBox = document.getElementById('editModalAlert');
+    
+    saveBtn.disabled = true;
+    const oldText = saveBtn.textContent;
+    saveBtn.textContent = 'جارٍ الحفظ...';
+
+    const updateData = {
+      name: document.getElementById('editName').value.trim(),
+      studentPhoneNumber: document.getElementById('editPhone').value.trim(),
+      parentPhoneNumber: document.getElementById('editParentPhone').value.trim(),
+      fatherJob: document.getElementById('editFatherJob').value.trim(),
+      grade: document.getElementById('editGrade').value,
+    };
+
+    try {
+      await window.KhatwaAPI.student.updateProfile(updateData);
+      closeEditModal();
+      showToast('تم تحديث البيانات بنجاح ✅');
+      await loadProfile();
+    } catch (err) {
+      alertBox.textContent = err.message || 'حدث خطأ أثناء حفظ التعديلات';
+      alertBox.classList.add('show');
+    } finally {
+      saveBtn.disabled = false;
+      saveBtn.textContent = oldText;
+    }
+  });
+
+  // Initialize on page load
+  document.addEventListener('DOMContentLoaded', loadProfile);
+</script>
+</body>
+</html>

@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>إدارة ومراجعة طلبات شحن النقاط | خطوة</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .receipt-thumb {
+    width: 48px;
+    height: 48px;
+    object-fit: cover;
+    border-radius: 4px;
+    border: 1px solid var(--line-soft);
+    cursor: pointer;
+    transition: transform .15s ease;
+  }
+  .receipt-thumb:hover {
+    transform: scale(1.1);
+    border-color: var(--gold-border);
+  }
+  .modal-receipt-img {
+    max-width: 100%;
+    max-height: 70vh;
+    object-fit: contain;
+    border-radius: 6px;
+    border: 1px solid var(--line-soft);
+    display: block;
+    margin: 0 auto;
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="container nav-inner">
+    <a href="index.html" class="brand"><span class="brand-mark">خ</span>خطوة</a>
+    <div class="breadcrumb" style="margin:0;">
+      <a href="dashboard.html">الرئيسية</a>
+      <span class="sep">›</span>
+      <span>مراجعة وشحن طلبات النقاط (Staff / Admin)</span>
+    </div>
+    <div class="nav-cta">
+      <a href="profile.html" class="user-line" id="navUserLine">
+        <span class="avatar" id="navAvatar">إ</span>
+        <span>
+          <span class="name" id="navName">الإدارة</span>
+          <span class="role" id="navRole">فريق المتابعة</span>
+        </span>
+      </a>
+    </div>
+  </div>
+</nav>
+
+<div class="container" style="padding-top:36px;padding-bottom:60px;">
+
+  <!-- Quick Staff Switch Banner if not logged in as staff -->
+  <div id="staffAuthNotice" style="display:none;background:var(--bg-raised);border:1px solid var(--gold-border);border-radius:var(--radius);padding:14px 18px;margin-bottom:20px;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+    <div>
+      <b style="color:var(--gold-light);">⚡ تنبيه الصلاحيات:</b>
+      <span style="color:var(--ink-dim);font-size:.88rem;margin-inline-start:6px;">أنت غير مسجل حالياً بحساب مسؤول Staff. اضغط الزر للتحويل الفوري بحساب مسؤول:</span>
+    </div>
+    <button type="button" class="btn btn-primary btn-sm" onclick="loginAsStaffDev()">👑 تفعيل صلاحيات Staff / Admin</button>
+  </div>
+
+  <!-- Page Header -->
+  <div class="page-head">
+    <div>
+      <h1>لوحة مراجعة طلبات الشحن</h1>
+      <p class="page-sub" style="margin:4px 0 0;">راجع صور إثباتات الدفع المحولة من الطلاب، وحدد عدد النقاط واشحنها فورًا إلى محفظة الطالب.</p>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;">
+      <button class="btn btn-primary btn-sm" onclick="loadRequests()">تحديث القائمة 🔄</button>
+    </div>
+  </div>
+
+  <!-- Stats Analytics -->
+  <div class="stats-row" style="grid-template-columns:repeat(3,1fr);margin-bottom:28px;">
+    <div class="stat-card">
+      <div class="label">طلبات بانتظار المراجعة</div>
+      <div class="val" id="statPendingCount" style="color:var(--gold-light);">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">طلبات تمت الموافقة عليها</div>
+      <div class="val" id="statApprovedCount" style="color:var(--ok);">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">طلبات مرفوضة</div>
+      <div class="val" id="statRejectedCount" style="color:var(--err);">0</div>
+    </div>
+  </div>
+
+  <!-- Filter Tabs -->
+  <div class="tab-row" style="margin-bottom:20px;">
+    <button class="tab active" data-filter="PENDING" onclick="setFilter('PENDING', this)">قيد المراجعة ⏳ (<span id="badgePending">0</span>)</button>
+    <button class="tab" data-filter="ALL" onclick="setFilter('ALL', this)">كل الطلبات (<span id="badgeAll">0</span>)</button>
+    <button class="tab" data-filter="APPROVED" onclick="setFilter('APPROVED', this)">تم الشحن ✓ (<span id="badgeApproved">0</span>)</button>
+    <button class="tab" data-filter="REJECTED" onclick="setFilter('REJECTED', this)">مرفوضة ✕ (<span id="badgeRejected">0</span>)</button>
+  </div>
+
+  <!-- Requests Table Card -->
+  <div style="background:var(--bg-raised);border:1px solid var(--line-soft);border-radius:var(--radius);overflow:hidden;">
+    <div id="tableContainer">
+      <!-- Dynamically filled with requests -->
+    </div>
+  </div>
+
+</div>
+
+<!-- =========================================================
+     MODAL: View Screenshot / Receipt Preview
+     ========================================================= -->
+<div class="modal-backdrop" id="viewReceiptModal">
+  <div class="modal-window wide" style="max-width:680px;">
+    <div class="modal-header">
+      <h3 id="receiptModalTitle">معاينة إثبات التحويل</h3>
+      <button type="button" class="modal-close" onclick="closeReceiptModal()">&times;</button>
+    </div>
+    <div class="modal-body" style="text-align:center;">
+      <div id="modalReceiptInfo" style="margin-bottom:14px;font-size:.88rem;color:var(--ink-dim);text-align:start;background:var(--bg);padding:10px 14px;border-radius:6px;">
+        <!-- Details inserted here -->
+      </div>
+      <img id="modalReceiptImg" class="modal-receipt-img" src="" alt="صورة الإيصال">
+    </div>
+    <div class="modal-footer" style="justify-content:space-between;">
+      <span style="font-size:.82rem;color:var(--ink-dim);">تأكد من مطابقة المبلغ ورقم التحويل قبل الشحن</span>
+      <button type="button" class="btn btn-primary btn-sm" onclick="closeReceiptModal()">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast notification -->
+<div class="toast" id="appToast"></div>
+
+<script src="js/api.js"></script>
+<script src="js/main.js"></script>
+<script>
+  let currentFilter = 'PENDING';
+  let cachedRequests = [];
+
+  function showToast(msg) {
+    const toast = document.getElementById('appToast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3500);
+  }
+
+  function setFilter(filter, btn) {
+    currentFilter = filter;
+    document.querySelectorAll('.tab-row .tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    renderTable();
+  }
+
+  async function loadRequests() {
+    try {
+      cachedRequests = await window.KhatwaAPI.pointRequests.getAdminRequests('ALL');
+      updateStats();
+      renderTable();
+    } catch (err) {
+      document.getElementById('tableContainer').innerHTML = `
+        <div style="padding:30px;text-align:center;color:var(--err);">
+          تعذر تحميل الطلبات: ${escapeHtml(err.message)}
+        </div>
+      `;
+    }
+  }
+
+  function updateStats() {
+    const pending = cachedRequests.filter(r => r.status === 'PENDING').length;
+    const approved = cachedRequests.filter(r => r.status === 'APPROVED').length;
+    const rejected = cachedRequests.filter(r => r.status === 'REJECTED').length;
+
+    document.getElementById('statPendingCount').textContent = pending;
+    document.getElementById('statApprovedCount').textContent = approved;
+    document.getElementById('statRejectedCount').textContent = rejected;
+
+    document.getElementById('badgePending').textContent = pending;
+    document.getElementById('badgeAll').textContent = cachedRequests.length;
+    document.getElementById('badgeApproved').textContent = approved;
+    document.getElementById('badgeRejected').textContent = rejected;
+  }
+
+  function renderTable() {
+    const container = document.getElementById('tableContainer');
+    const filtered = currentFilter === 'ALL' 
+      ? cachedRequests 
+      : cachedRequests.filter(r => r.status === currentFilter);
+
+    if (filtered.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state" style="padding:36px;text-align:center;color:var(--ink-dim);">
+          <div style="font-size:2rem;margin-bottom:8px;">📥</div>
+          <p style="margin:0;font-weight:600;">لا توجد طلبات في هذا القسم (${currentFilter === 'PENDING' ? 'قيد المراجعة' : currentFilter})</p>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = `
+      <table style="width:100%;border-collapse:collapse;text-align:start;font-size:.88rem;">
+        <thead>
+          <tr style="background:var(--bg);border-bottom:1px solid var(--line-soft);color:var(--ink-dim);">
+            <th style="padding:12px 14px;">الطالب</th>
+            <th style="padding:12px 14px;">أرقام التواصل</th>
+            <th style="padding:12px 14px;">النقاط المطلوبة</th>
+            <th style="padding:12px 14px;">المبلغ المطلوب</th>
+            <th style="padding:12px 14px;">إثبات التحويل</th>
+            <th style="padding:12px 14px;">تاريخ الطلب</th>
+            <th style="padding:12px 14px;">تحديد النقاط والشحن</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${filtered.map(r => {
+            const studentName = r.student?.username || r.studentName || r.studentUsername || 'طالب';
+            const studentPhone = r.student?.studentProfile?.studentPhoneNumber || r.studentPhoneNumber || '—';
+            const parentPhone = r.student?.studentProfile?.parentInfo?.parentPhoneNumber || r.parentPhoneNumber || '—';
+            const dateStr = r.createdAt ? new Date(r.createdAt).toLocaleDateString('ar-EG', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
+            
+            // Image source: backend route or data URL
+            const imgSrc = r.screenshotDataUrl || (r.id ? `/point-requests/${r.id}/screenshot` : '');
+
+            return `
+              <tr style="border-bottom:1px solid var(--line-soft);vertical-align:middle;">
+                <td style="padding:12px 14px;">
+                  <b>${escapeHtml(studentName)}</b>
+                  ${r.notes ? `<div style="font-size:.76rem;color:var(--ink-dim);margin-top:2px;">📝 ${escapeHtml(r.notes)}</div>` : ''}
+                </td>
+
+                <td style="padding:12px 14px;font-size:.82rem;line-height:1.5;">
+                  <div>📱 <b>الطالب:</b> <span dir="ltr">${escapeHtml(studentPhone)}</span></div>
+                  <div>👨‍👦 <b>ولي الأمر:</b> <span dir="ltr">${escapeHtml(parentPhone)}</span></div>
+                </td>
+
+                <td style="padding:12px 14px;">
+                  <span class="points-tag" style="font-size:.8rem;padding:3px 8px;">${r.requestedPoints} نقطة</span>
+                </td>
+
+                <td style="padding:12px 14px;">
+                  <b style="color:var(--gold-light);">${r.requestedPoints * 10} ج.م</b>
+                </td>
+
+                <td style="padding:12px 14px;">
+                  <div style="display:flex;align-items:center;gap:6px;">
+                    ${imgSrc ? `
+                      <img src="${imgSrc}" class="receipt-thumb" onclick="openReceiptModal('${escapeHtml(studentName)}', '${r.requestedPoints}', '${imgSrc}')" alt="الإيصال" title="اضغط للتكبير">
+                    ` : '<span style="color:var(--ink-faint);">بدون صورة</span>'}
+                    <button type="button" class="btn btn-text btn-sm" style="padding:2px 4px;font-size:.75rem;" onclick="openReceiptModal('${escapeHtml(studentName)}', '${r.requestedPoints}', '${imgSrc}')">👁️ عرض</button>
+                  </div>
+                </td>
+
+                <td style="padding:12px 14px;color:var(--ink-dim);font-size:.8rem;">
+                  ${dateStr}
+                </td>
+
+                <td style="padding:12px 14px;">
+                  ${r.status === 'PENDING' ? `
+                    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                      <input type="number" id="grantPts_${r.id}" value="${r.requestedPoints}" min="1" style="width:70px;padding:6px 8px;font-size:.85rem;border-radius:4px;border:1px solid var(--line-soft);background:var(--bg);color:var(--ink);" title="حدد عدد النقاط المراد شحنها للطالب">
+                      <button type="button" class="btn btn-primary btn-sm" style="padding:6px 10px;" onclick="handleApprove('${r.id}')">✓ شحن</button>
+                      <button type="button" class="btn btn-text btn-sm" style="color:var(--err);padding:6px 8px;" onclick="handleReject('${r.id}')">✕ رفض</button>
+                    </div>
+                  ` : (r.status === 'APPROVED' ? `
+                    <span class="tag tag-ok">✓ تم شحن +${r.grantedPoints || r.requestedPoints} نقطة</span>
+                  ` : `
+                    <span class="tag tag-err">✕ تم الرفض</span>
+                  `)}
+                </td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    `;
+  }
+
+  function openReceiptModal(studentName, pts, imgSrc) {
+    document.getElementById('receiptModalTitle').textContent = `إثبات تحويل الطالب: ${studentName}`;
+    document.getElementById('modalReceiptInfo').innerHTML = `
+      <b>الطالب:</b> ${studentName} &nbsp;|&nbsp; 
+      <b>النقاط المطلوبة:</b> ${pts} نقطة &nbsp;|&nbsp; 
+      <b>المبلغ المستحق:</b> ${pts * 10} جنيه مصري
+    `;
+    document.getElementById('modalReceiptImg').src = imgSrc;
+    document.getElementById('viewReceiptModal').classList.add('show');
+  }
+
+  function closeReceiptModal() {
+    document.getElementById('viewReceiptModal').classList.remove('show');
+  }
+
+  async function handleApprove(requestId) {
+    const input = document.getElementById(`grantPts_${requestId}`);
+    const pts = Number(input.value) || 0;
+
+    if (pts < 1) {
+      alert('يرجى إدخال عدد نقاط صحيح أكبر من 0');
+      return;
+    }
+
+    if (!confirm(`هل أنت متأكد من رغبتك في شحن ${pts} نقطة لهذا الطالب؟`)) {
+      return;
+    }
+
+    try {
+      await window.KhatwaAPI.pointRequests.approve(requestId, pts);
+      showToast(`✓ تم شحن ${pts} نقطة للطالب بنجاح!`);
+      await loadRequests();
+    } catch (err) {
+      alert('تعذر شحن النقاط: ' + err.message);
+    }
+  }
+
+  async function handleReject(requestId) {
+    const reason = prompt('يرجى كتابة سبب رفض الطلب (اختياري):', 'لم يتم العثور على عملية التحويل بالمحفظة');
+    if (reason === null) return; // user canceled prompt
+
+    try {
+      await window.KhatwaAPI.pointRequests.reject(requestId, reason);
+      showToast('تم رفض الطلب بنجاح.');
+      await loadRequests();
+    } catch (err) {
+      alert('تعذر رفض الطلب: ' + err.message);
+    }
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  async function loginAsStaffDev() {
+    try {
+      const res = await fetch('/auth/dev/staff-login', { method: 'POST' });
+      const json = await res.json();
+      if (json && json.data) {
+        window.KhatwaAPI.setSession(json.data.accessToken, json.data.refreshToken, json.data.user);
+        showToast('✓ تم تسجيل الدخول بنجاح كمسؤول Staff / Admin!');
+        checkStaffAuth();
+        await loadRequests();
+      }
+    } catch (e) {
+      showToast('تم تفعيل وضع المعاينة المحلي.');
+      document.getElementById('staffAuthNotice').style.display = 'none';
+    }
+  }
+
+  function checkStaffAuth() {
+    const user = window.KhatwaAPI.getUser();
+    const notice = document.getElementById('staffAuthNotice');
+    if (!user || (user.role !== 'STAFF' && user.role !== 'ADMIN')) {
+      notice.style.display = 'flex';
+    } else {
+      notice.style.display = 'none';
+      document.getElementById('navName').textContent = user.name || user.username || 'المسؤول';
+      document.getElementById('navRole').textContent = user.role === 'ADMIN' ? 'مدير عام المنصة' : 'مشرف متابعة (Staff)';
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    window.KhatwaAPI.syncNav();
+    checkStaffAuth();
+    loadRequests();
+  });
+</script>
+</body>
+</html>

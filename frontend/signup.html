@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>إنشاء حساب | خطوة</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<nav class="nav">
+  <div class="container nav-inner">
+    <a href="index.html" class="brand"><span class="brand-mark">خ</span>خطوة</a>
+    <ul class="nav-links">
+      <li><a href="index.html">الرئيسية</a></li>
+      <li><a href="courses.html">تصفح الكورسات</a></li>
+      <li><a href="help.html">الأسئلة الشائعة</a></li>
+    </ul>
+    <div class="nav-cta"><a href="login.html" class="btn btn-line">تسجيل الدخول</a></div>
+    <button class="nav-toggle">القائمة</button>
+  </div>
+</nav>
+
+<div class="auth-wrap">
+  <div class="auth-box wide">
+    <div class="auth-head">
+      <div class="brand"><span class="brand-mark">خ</span>خطوة</div>
+      <h1>إنشاء حساب جديد</h1>
+      <p>اختر نوع حسابك للبدء على المنصة</p>
+    </div>
+
+    <!-- Role Selection Pills -->
+    <div class="role-picker" id="signupRolePicker">
+      <div class="role-pill active" data-role="STUDENT">🎓 طالب</div>
+      <div class="role-pill" data-role="TEACHER">👨‍🏫 مدرس</div>
+      <div class="role-pill" data-role="STAFF">🛡️ مشرف / سنتر</div>
+    </div>
+
+    <div class="alert" id="signupAlert"></div>
+
+    <form id="signupForm" data-validate="signup">
+      <input type="hidden" id="selectedRole" value="STUDENT">
+
+      <!-- Common Account Fields -->
+      <div class="field-row">
+        <div class="field">
+          <label for="uname">اسم المستخدم</label>
+          <input type="text" id="uname" placeholder="username_123" required>
+        </div>
+        <div class="field" id="displayNameField" style="display:none;">
+          <label for="displayName">الاسم الكامل / اللقب</label>
+          <input type="text" id="displayName" placeholder="مثال: أ. أحمد علي">
+        </div>
+        <div class="field" id="studentPhoneField">
+          <label for="student-phone">رقم هاتف الطالب</label>
+          <input type="tel" id="student-phone" placeholder="01xxxxxxxxx">
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="pass">كلمة المرور</label>
+          <div class="pw-wrap">
+            <input type="password" id="pass" placeholder="••••••••" required minlength="8">
+            <button type="button" class="pw-toggle">إظهار</button>
+          </div>
+          <span class="hint">8 أحرف على الأقل</span>
+        </div>
+        <div class="field">
+          <label for="pass2">تأكيد كلمة المرور</label>
+          <div class="pw-wrap">
+            <input type="password" id="pass2" placeholder="••••••••" required>
+            <button type="button" class="pw-toggle">إظهار</button>
+          </div>
+          <span class="error">كلمتا المرور غير متطابقتين</span>
+        </div>
+      </div>
+
+      <!-- Student Specific Section -->
+      <div id="studentFields">
+        <div class="field-row">
+          <div class="field">
+            <label for="parent-phone">رقم هاتف ولي الأمر</label>
+            <input type="tel" id="parent-phone" placeholder="01xxxxxxxxx">
+          </div>
+          <div class="field">
+            <label for="job">وظيفة الأب</label>
+            <input type="text" id="job" placeholder="مثال: موظف حكومي / مهندس">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="deceased">حالة وفاة أحد الوالدين (إن وُجدت)</label>
+          <select id="deceased">
+            <option value="">لا يوجد (كلاهما على قيد الحياة)</option>
+            <option value="father">الأب متوفى</option>
+            <option value="mother">الأم متوفاة</option>
+            <option value="both">كلاهما متوفى</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Teacher Specific Section -->
+      <div id="teacherFields" style="display:none;">
+        <div class="field-row">
+          <div class="field">
+            <label for="teacherSubject">المادة التخصصية</label>
+            <select id="teacherSubject">
+              <option value="الفيزياء">الفيزياء</option>
+              <option value="الرياضيات">الرياضيات</option>
+              <option value="الكيمياء">الكيمياء</option>
+              <option value="الأحياء">الأحياء</option>
+              <option value="اللغة العربية">اللغة العربية</option>
+              <option value="اللغة الإنجليزية">اللغة الإنجليزية</option>
+              <option value="التاريخ">التاريخ</option>
+              <option value="الجغرافيا">الجغرافيا</option>
+              <option value="أخرى">أخرى</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="teacherPhone">رقم هاتف التواصل</label>
+            <input type="tel" id="teacherPhone" placeholder="01xxxxxxxxx">
+          </div>
+        </div>
+        <div class="field">
+          <label for="teacherBio">نبذة عن المدرس والخبرات</label>
+          <input type="text" id="teacherBio" placeholder="مثال: معلم أول وخبير تدريس المرحلة الثانوية لأكثر من 10 سنوات">
+        </div>
+      </div>
+
+      <!-- Staff Specific Section -->
+      <div id="staffFields" style="display:none;">
+        <div class="field">
+          <label for="staffCode">كود التحقق الخاص بالإدارة / السنتر</label>
+          <input type="text" id="staffCode" placeholder="مثال: STAFF-2026">
+          <span class="hint">يمكن تركه فارغًا في النسخة التجريبية</span>
+        </div>
+      </div>
+
+      <label style="display:flex;align-items:center;gap:8px;font-weight:600;font-size:.84rem;color:var(--ink-dim);margin:20px 0 24px;">
+        <input type="checkbox" required style="accent-color:var(--gold);" checked>
+        أوافق على الشروط والأحكام وسياسة الخصوصية
+      </label>
+
+      <button type="submit" id="signupSubmitBtn" class="btn btn-primary btn-block">إنشاء الحساب والمتابعة</button>
+    </form>
+
+    <div class="auth-switch">لديك حساب بالفعل؟ <a href="login.html">سجّل الدخول</a></div>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/main.js"></script>
+<script>
+  // Role Selector Interaction
+  const rolePills = document.querySelectorAll('#signupRolePicker .role-pill');
+  const roleInput = document.getElementById('selectedRole');
+  const studentFields = document.getElementById('studentFields');
+  const teacherFields = document.getElementById('teacherFields');
+  const staffFields = document.getElementById('staffFields');
+  const displayNameField = document.getElementById('displayNameField');
+  const studentPhoneField = document.getElementById('studentPhoneField');
+
+  rolePills.forEach(pill => {
+    pill.addEventListener('click', () => {
+      rolePills.forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      const selected = pill.getAttribute('data-role');
+      roleInput.value = selected;
+
+      if (selected === 'STUDENT') {
+        studentFields.style.display = 'block';
+        teacherFields.style.display = 'none';
+        staffFields.style.display = 'none';
+        displayNameField.style.display = 'none';
+        studentPhoneField.style.display = 'block';
+      } else if (selected === 'TEACHER') {
+        studentFields.style.display = 'none';
+        teacherFields.style.display = 'block';
+        staffFields.style.display = 'none';
+        displayNameField.style.display = 'block';
+        studentPhoneField.style.display = 'none';
+      } else if (selected === 'STAFF') {
+        studentFields.style.display = 'none';
+        teacherFields.style.display = 'none';
+        staffFields.style.display = 'block';
+        displayNameField.style.display = 'none';
+        studentPhoneField.style.display = 'none';
+      }
+    });
+  });
+
+  // Form Submission
+  document.getElementById('signupForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('signupSubmitBtn');
+    const alertBox = document.getElementById('signupAlert');
+    const role = roleInput.value;
+    const uname = document.getElementById('uname').value.trim();
+    const pass = document.getElementById('pass').value;
+    const pass2 = document.getElementById('pass2').value;
+
+    if (pass !== pass2) {
+      alertBox.textContent = 'كلمتا المرور غير متطابقتين.';
+      alertBox.classList.add('show');
+      return;
+    }
+
+    btn.disabled = true;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner"></span> جارٍ إنشاء الحساب...';
+    alertBox.classList.remove('show');
+
+    try {
+      if (role === 'STUDENT') {
+        const studentPhone = document.getElementById('student-phone').value || '01000000000';
+        const parentPhone = document.getElementById('parent-phone').value || '01100000000';
+        const fatherJob = document.getElementById('job').value || 'موظف';
+        const deceasedVal = document.getElementById('deceased').value;
+        let parentStatus = 'BOTH_ALIVE';
+        if (deceasedVal === 'father') parentStatus = 'FATHER_DECEASED';
+        else if (deceasedVal === 'mother') parentStatus = 'MOTHER_DECEASED';
+        else if (deceasedVal === 'both') parentStatus = 'BOTH_DECEASED';
+
+        await window.KhatwaAPI.auth.registerStudent({
+          username: uname,
+          password: pass,
+          confirmPassword: pass2,
+          studentPhoneNumber: studentPhone,
+          parentInfo: {
+            parentPhoneNumber: parentPhone,
+            fatherJob: fatherJob,
+            parentStatus: parentStatus
+          }
+        });
+        window.location.href = 'dashboard.html';
+      } else if (role === 'TEACHER') {
+        const displayName = document.getElementById('displayName').value || uname;
+        const specialty = document.getElementById('teacherSubject').value;
+        const bio = document.getElementById('teacherBio').value;
+
+        await window.KhatwaAPI.auth.registerTeacher({
+          username: uname,
+          password: pass,
+          confirmPassword: pass2,
+          displayName: displayName,
+          specialty: specialty,
+          bio: bio
+        });
+        window.location.href = 'teacher-dashboard.html';
+      } else if (role === 'STAFF') {
+        const staffCode = document.getElementById('staffCode').value;
+        await window.KhatwaAPI.auth.registerStaff({
+          username: uname,
+          password: pass,
+          confirmPassword: pass2,
+          accessCode: staffCode
+        });
+        window.location.href = 'teacher-dashboard.html';
+      }
+    } catch (err) {
+      alertBox.textContent = err.message || 'حدث خطأ أثناء إنشاء الحساب. حاول مرة أخرى.';
+      alertBox.classList.add('show');
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+    }
+  });
+</script>
+</body>
+</html>

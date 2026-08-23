@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>النقاط | خطوة</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<nav class="nav">
+  <div class="container nav-inner">
+    <a href="index.html" class="brand"><span class="brand-mark">خ</span>خطوة</a>
+    <ul class="nav-links">
+      <li><a href="dashboard.html">الرئيسية</a></li>
+      <li><a href="courses.html">الكورسات والمواد</a></li>
+      <li><a href="points.html" class="active">النقاط</a></li>
+    </ul>
+    <div class="nav-cta">
+      <a href="profile.html" class="user-line" id="navUserLine">
+        <span class="avatar" id="navAvatar">ط</span>
+        <span>
+          <span class="name" id="navName">الطالب</span>
+          <span class="role" id="navRole">طالب</span>
+        </span>
+      </a>
+    </div>
+    <button class="nav-toggle">القائمة</button>
+  </div>
+</nav>
+
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="side-group">
+      <h6>الرئيسية</h6>
+      <a href="dashboard.html" class="side-link">نظرة عامة</a>
+      <a href="courses.html" class="side-link">الكورسات والمواد</a>
+      <a href="results.html" class="side-link">النتائج</a>
+    </div>
+    <div class="side-group">
+      <h6>المحفظة</h6>
+      <a href="points.html" class="side-link active">رصيد النقاط</a>
+      <a href="request-points.html" class="side-link">طلب شحن نقاط</a>
+    </div>
+    <div class="side-group">
+      <h6>الحساب</h6>
+      <a href="profile.html" class="side-link">بياناتي</a>
+      <a href="notifications.html" class="side-link">الإشعارات</a>
+      <a href="#" class="side-link" id="logoutBtn" style="color:var(--err);">تسجيل الخروج</a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="breadcrumb">النقاط</div>
+    <div class="page-head">
+      <div>
+        <h1>محفظة النقاط</h1>
+        <p class="page-sub" style="margin:4px 0 0;">تُستخدم النقاط للاشتراك في المواد والمحاضرات المدفوعة وفتح الامتحانات.</p>
+      </div>
+    </div>
+
+    <!-- Balance Hero Block -->
+    <div class="balance-block" style="margin-bottom:28px;">
+      <div>
+        <span style="font-size:.85rem;color:var(--ink-dim);display:block;margin-bottom:4px;">الرصيد المتاح حاليًا</span>
+        <div class="amount"><span id="pointsBalanceVal">0</span> <span>نقطة</span></div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <a href="request-points.html" class="btn btn-primary">💳 طلب شحن نقاط وإرفاق إيصال التحويل</a>
+      </div>
+    </div>
+
+    <!-- My Recharge Requests Section -->
+    <div class="block" style="margin-bottom:28px;">
+      <div class="block-head" style="display:flex;justify-content:space-between;align-items:center;">
+        <h3>طلبات الشحن وحالة المراجعة</h3>
+        <a href="request-points.html" class="btn btn-line btn-sm">＋ طلب شحن جديد</a>
+      </div>
+      <div id="requestsTableContainer">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+    <!-- Points Transactions History -->
+    <div class="block">
+      <div class="block-head"><h3>سجل استخدام وحركات النقاط</h3></div>
+      <div id="transactionsTableContainer">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Toast notification -->
+<div class="toast" id="appToast"></div>
+
+<script src="js/api.js"></script>
+<script src="js/main.js"></script>
+<script>
+  function showToast(msg) {
+    const toast = document.getElementById('appToast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3200);
+  }
+
+  async function loadPointsPage() {
+    let user = window.KhatwaAPI.getUser();
+    if (!user) {
+      window.location.href = 'login.html';
+      return;
+    }
+
+    try {
+      user = await window.KhatwaAPI.student.getProfile();
+    } catch (e) {}
+
+    const balance = typeof user.pointsBalance === 'number' ? user.pointsBalance : 0;
+    document.getElementById('pointsBalanceVal').textContent = balance;
+
+    // Load user's recharge requests
+    const reqContainer = document.getElementById('requestsTableContainer');
+    try {
+      const requests = await window.KhatwaAPI.pointRequests.getMyRequests();
+      if (!requests || requests.length === 0) {
+        reqContainer.innerHTML = `
+          <div class="empty-state" style="padding:20px 16px;text-align:center;color:var(--ink-dim);">
+            <p style="margin:0;">لم تقم بطلب شحن نقاط بعد.</p>
+            <a href="request-points.html" class="btn btn-line btn-sm" style="margin-top:10px;">إرسال أول طلب شحن</a>
+          </div>
+        `;
+      } else {
+        reqContainer.innerHTML = `
+          <table class="plain">
+            <thead><tr><th>التاريخ</th><th>النقاط المطلوبة</th><th>المبلغ</th><th>الحالة</th><th>النقاط المشحونة</th></tr></thead>
+            <tbody>
+              ${requests.map(r => {
+                const d = r.createdAt ? new Date(r.createdAt).toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
+                let statusBadge = '<span class="tag tag-warn">⏳ قيد المراجعة</span>';
+                if (r.status === 'APPROVED') statusBadge = '<span class="tag tag-ok">✓ تم الشحن بنجاح</span>';
+                else if (r.status === 'REJECTED') statusBadge = `<span class="tag tag-err">✕ مرفوض (${escapeHtml(r.rejectionReason || '')})</span>`;
+
+                return `
+                  <tr>
+                    <td>${d}</td>
+                    <td><b>${r.requestedPoints} نقطة</b></td>
+                    <td>${r.requestedPoints * 10} ج.م</td>
+                    <td>${statusBadge}</td>
+                    <td><b>${r.grantedPoints !== null && r.grantedPoints !== undefined ? `+${r.grantedPoints} نقطة` : '—'}</b></td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        `;
+      }
+    } catch (e) {}
+
+    // Load recent activities related to points
+    const activities = window.KhatwaAPI.student.getActivities();
+    const pointActivities = activities.filter(a => a.text && (a.text.includes('نقطة') || a.text.includes('شحن') || a.text.includes('اشتركت')));
+    
+    const container = document.getElementById('transactionsTableContainer');
+    if (pointActivities.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state" style="padding:24px 16px;text-align:center;color:var(--ink-dim);">
+          <div style="font-size:1.6rem;margin-bottom:8px;">💳</div>
+          <p style="margin:0;font-weight:600;">لا توجد معاملات نقاط سابقة حتى الآن</p>
+          <span style="font-size:.82rem;color:var(--ink-faint);">ستظهر هنا عمليات الشحن واستخدام النقاط في الكورسات.</span>
+        </div>
+      `;
+    } else {
+      container.innerHTML = `
+        <table class="plain">
+          <thead><tr><th>التاريخ</th><th>البيان</th><th>الحالة</th></tr></thead>
+          <tbody>
+            ${pointActivities.map(a => {
+              const d = a.timestamp ? new Date(a.timestamp).toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric' }) : '—';
+              return `
+                <tr>
+                  <td>${d}</td>
+                  <td><b>${escapeHtml(a.text)}</b></td>
+                  <td><span class="tag tag-ok">مكتمل</span></td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+
+    window.KhatwaAPI.syncNav();
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  document.addEventListener('DOMContentLoaded', loadPointsPage);
+</script>
+</body>
+</html>

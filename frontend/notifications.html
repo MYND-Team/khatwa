@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>الإشعارات | خطوة</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<nav class="nav">
+  <div class="container nav-inner">
+    <a href="index.html" class="brand"><span class="brand-mark">خ</span>خطوة</a>
+    <ul class="nav-links">
+      <li><a href="dashboard.html">الرئيسية</a></li>
+      <li><a href="courses.html">الكورسات والمواد</a></li>
+      <li><a href="notifications.html" class="active">الإشعارات</a></li>
+    </ul>
+    <div class="nav-cta">
+      <a href="profile.html" class="user-line" id="navUserLine">
+        <span class="avatar" id="navAvatar">ط</span>
+        <span>
+          <span class="name" id="navName">الطالب</span>
+          <span class="role" id="navRole">طالب</span>
+        </span>
+      </a>
+    </div>
+    <button class="nav-toggle">القائمة</button>
+  </div>
+</nav>
+
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="side-group">
+      <h6>الرئيسية</h6>
+      <a href="dashboard.html" class="side-link">نظرة عامة</a>
+      <a href="courses.html" class="side-link">الكورسات والمواد</a>
+      <a href="results.html" class="side-link">النتائج</a>
+    </div>
+    <div class="side-group">
+      <h6>المحفظة</h6>
+      <a href="points.html" class="side-link">رصيد النقاط</a>
+      <a href="request-points.html" class="side-link">طلب شحن نقاط</a>
+    </div>
+    <div class="side-group">
+      <h6>الحساب</h6>
+      <a href="profile.html" class="side-link">بياناتي</a>
+      <a href="notifications.html" class="side-link active">الإشعارات</a>
+      <a href="#" class="side-link" id="logoutBtn" style="color:var(--err);">تسجيل الخروج</a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="breadcrumb">الإشعارات</div>
+    <div class="page-head">
+      <div>
+        <h1>مركز الإشعارات والتنبيهات</h1>
+        <p class="page-sub" style="margin:4px 0 0;">آخر التنبيهات الخاصة بحسابك وحصصك الدراسية.</p>
+      </div>
+      <button class="btn btn-text btn-sm" id="markAllReadBtn">تعليم الكل كمقروء</button>
+    </div>
+
+    <div class="row-list" style="border-top:1px solid var(--line-soft);" id="notifListContainer">
+      <!-- Rendered dynamically -->
+    </div>
+  </main>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/main.js"></script>
+<script>
+  function renderNotifications() {
+    const user = window.KhatwaAPI.getUser();
+    if (!user) {
+      window.location.href = 'login.html';
+      return;
+    }
+
+    const activities = window.KhatwaAPI.student.getActivities();
+    const container = document.getElementById('notifListContainer');
+
+    if (!activities || activities.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state" style="padding:32px 16px;text-align:center;color:var(--ink-dim);">
+          <div style="font-size:1.8rem;margin-bottom:8px;">🔔</div>
+          <p style="margin:0;font-weight:600;">لا توجد إشعارات جديدة حالياً</p>
+          <span style="font-size:.82rem;color:var(--ink-faint);">ستصلك تنبيهات عند نشر حصص جديدة، أو تسجيل نتائجك.</span>
+        </div>
+      `;
+    } else {
+      container.innerHTML = activities.map(a => {
+        const timeStr = a.timestamp ? new Date(a.timestamp).toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+        return `
+          <div class="notif-item">
+            <div class="ntext">
+              <b>${escapeHtml(a.text)}</b>
+              <span>إشعار تلقائي من نظام منصة خطوة</span>
+            </div>
+            <time>${timeStr}</time>
+          </div>
+        `;
+      }).join('');
+    }
+
+    document.getElementById('markAllReadBtn')?.addEventListener('click', () => {
+      document.querySelectorAll('.notif-item').forEach(n => n.classList.remove('unread'));
+    });
+
+    window.KhatwaAPI.syncNav();
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  document.addEventListener('DOMContentLoaded', renderNotifications);
+</script>
+</body>
+</html>

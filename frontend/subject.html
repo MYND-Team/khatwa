@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تفاصيل الكورس | خطوة</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<nav class="nav">
+  <div class="container nav-inner">
+    <a href="index.html" class="brand"><span class="brand-mark">خ</span>خطوة</a>
+    <ul class="nav-links">
+      <li><a href="dashboard.html">الرئيسية</a></li>
+      <li><a href="courses.html" class="active">الكورسات والمواد</a></li>
+      <li><a href="points.html">النقاط</a></li>
+    </ul>
+    <div class="nav-cta">
+      <a href="profile.html" class="user-line" id="navUserLine">
+        <span class="avatar" id="navAvatar">ط</span>
+        <span>
+          <span class="name" id="navName">الطالب</span>
+          <span class="role" id="navRole">طالب</span>
+        </span>
+      </a>
+    </div>
+    <button class="nav-toggle">القائمة</button>
+  </div>
+</nav>
+
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="side-group">
+      <h6>الرئيسية</h6>
+      <a href="dashboard.html" class="side-link">نظرة عامة</a>
+      <a href="courses.html" class="side-link active">الكورسات والمواد</a>
+      <a href="results.html" class="side-link">النتائج</a>
+    </div>
+    <div class="side-group">
+      <h6>المحفظة</h6>
+      <a href="points.html" class="side-link">رصيد النقاط</a>
+      <a href="request-points.html" class="side-link">طلب شحن نقاط</a>
+    </div>
+    <div class="side-group">
+      <h6>الحساب</h6>
+      <a href="profile.html" class="side-link">بياناتي</a>
+      <a href="#" class="side-link" id="logoutBtn" style="color:var(--err);">تسجيل الخروج</a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="breadcrumb">
+      <a href="courses.html">الكورسات</a>
+      <span class="sep">›</span>
+      <span id="courseBreadcrumbTitle">تفاصيل الكورس</span>
+    </div>
+
+    <div class="page-head">
+      <div>
+        <h1 id="courseHeaderTitle">عنوان الكورس</h1>
+        <p class="page-sub" style="margin:6px 0 0;" id="courseHeaderSubtitle">المدرس · المرحلة</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <span class="points-tag" id="coursePointsTag">0 نقطة</span>
+        <button id="enrollActionBtn" class="btn btn-primary btn-sm" style="display:none;">اشتراك الآن</button>
+      </div>
+    </div>
+
+    <div style="max-width:440px;margin-bottom:36px;">
+      <div class="progress-label">
+        <span>تقدمك في الكورس</span>
+        <span id="courseProgressRatio">0 / 0</span>
+      </div>
+      <div class="progress"><span id="courseProgressBar" style="width:0%;"></span></div>
+    </div>
+
+    <div class="block">
+      <div class="block-head">
+        <h3>محتوى الكورس والمحاضرات</h3>
+      </div>
+
+      <div id="lessonsContainer">
+        <!-- Dynamically rendered lecture rows -->
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/main.js"></script>
+<script>
+  function getQueryParam(param) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(param);
+  }
+
+  function renderCourseDetails() {
+    const user = window.KhatwaAPI.getUser();
+    const studentId = user ? user.id : 'student-default';
+    let courseId = getQueryParam('id');
+
+    if (user) {
+      document.getElementById('navName').textContent = user.name || user.username;
+      document.getElementById('navRole').textContent = user.role === 'TEACHER' ? 'مدرس' : 'طالب';
+      document.getElementById('navAvatar').textContent = (user.name || user.username || 'ط').charAt(0);
+    }
+
+    const allCourses = window.KhatwaAPI.courses.getAll();
+    let course = null;
+
+    if (courseId) {
+      course = window.KhatwaAPI.courses.getById(courseId);
+    }
+    if (!course && allCourses.length > 0) {
+      course = allCourses[0];
+      courseId = course.id;
+    }
+
+    if (!course) {
+      document.querySelector('.main').innerHTML = `
+        <div class="empty-state">
+          <div class="em-mark">🔍</div>
+          <h3>لم يتم العثور على الكورس المطلوب</h3>
+          <p>ربما تم حذفه أو لم يعد متاحًا.</p>
+          <a href="courses.html" class="btn btn-primary btn-sm">العودة لقائمة الكورسات</a>
+        </div>
+      `;
+      return;
+    }
+
+    document.title = `${course.title} | خطوة`;
+    document.getElementById('courseBreadcrumbTitle').textContent = course.title;
+    document.getElementById('courseHeaderTitle').textContent = course.title;
+    document.getElementById('courseHeaderSubtitle').textContent = `${course.teacherName} · ${course.subject} (${course.grade || 'المرحلة الثانوية'})`;
+    document.getElementById('coursePointsTag').textContent = `${course.pointCost} نقطة`;
+
+    const isEnrolled = window.KhatwaAPI.courses.isEnrolled(course.id, studentId);
+    const enrollBtn = document.getElementById('enrollActionBtn');
+    if (!isEnrolled) {
+      enrollBtn.style.display = 'inline-flex';
+      enrollBtn.onclick = function() {
+        window.KhatwaAPI.courses.enroll(course.id);
+        renderCourseDetails();
+      };
+    } else {
+      enrollBtn.style.display = 'none';
+    }
+
+    // Progress calculation
+    const lectures = course.lectures || [];
+    const myEnrolledCourses = window.KhatwaAPI.courses.getMyCourses(studentId);
+    const thisEnrollment = myEnrolledCourses.find(c => c.id === course.id);
+    const completedIds = thisEnrollment ? (thisEnrollment.completedLectureIds || []) : [];
+    const completedCount = completedIds.length;
+    const totalCount = lectures.length;
+    const progressPct = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+
+    document.getElementById('courseProgressRatio').textContent = `${completedCount} من ${totalCount} حصة مكتملة (${progressPct}%)`;
+    document.getElementById('courseProgressBar').style.width = `${progressPct}%`;
+
+    const container = document.getElementById('lessonsContainer');
+    if (lectures.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="em-mark">⏳</div>
+          <h3>المدرس لم يرفع محاضرات في هذا الكورس بعد</h3>
+          <p>سيتم رفع المحاضرات والفيديوهات ومواد الشرح قريبًا.</p>
+        </div>
+      `;
+    } else {
+      container.innerHTML = lectures.map((lec, idx) => {
+        const isDone = completedIds.includes(lec.id);
+        const isAvailable = isEnrolled || idx === 0;
+
+        return `
+          <div class="lesson-row ${isDone ? 'done' : (!isAvailable ? 'locked' : '')}">
+            <span class="lnum">${isDone ? '✓' : (idx + 1)}</span>
+            <div class="ltext">
+              <b>${escapeHtml(lec.title)}</b>
+              <span>${escapeHtml(lec.description || `مدة المحاضرة: ${lec.duration} دقيقة`)}</span>
+            </div>
+            ${isDone ? `
+              <a href="lesson.html?courseId=${course.id}&lessonId=${lec.id}" class="btn btn-text btn-sm">مراجعة المحاضرة</a>
+            ` : (isAvailable ? `
+              <a href="lesson.html?courseId=${course.id}&lessonId=${lec.id}" class="btn btn-primary btn-sm">ابدأ المحاضرة</a>
+            ` : `
+              <span class="tag tag-locked">مقفلة</span>
+            `)}
+          </div>
+        `;
+      }).join('');
+    }
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  document.getElementById('logoutBtn')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    window.KhatwaAPI.auth.logout();
+  });
+
+  document.addEventListener('DOMContentLoaded', renderCourseDetails);
+</script>
+</body>
+</html>

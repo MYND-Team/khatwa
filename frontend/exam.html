@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>الامتحان الإلكتروني | خطوة</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .q-block {
+    margin-bottom: 24px;
+    animation: fadeIn .25s ease;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="container nav-inner">
+    <a href="index.html" class="brand"><span class="brand-mark">خ</span>خطوة</a>
+    <div class="breadcrumb" style="margin:0;">
+      <a href="courses.html" id="examBreadCourse">الكورسات</a>
+      <span class="sep">›</span>
+      <span id="examBreadTitle">الامتحان الإلكتروني</span>
+    </div>
+    <div class="nav-cta">
+      <a href="dashboard.html" class="btn btn-text btn-sm">لوحة التحكم</a>
+    </div>
+  </div>
+</nav>
+
+<div class="exam-shell" id="examShell">
+  <!-- Exam Active View -->
+  <div id="examActiveView">
+    <div class="exam-top">
+      <h1 id="examHeadTitle">الامتحان الإلكتروني للمحاضرة</h1>
+      <p style="color:var(--ink-dim);font-size:.88rem;margin-top:4px;" id="examSubtitle">أجب عن الأسئلة التالية للتأكد من استيعابك لمحتوى الحصة.</p>
+    </div>
+
+    <div class="exam-progress" id="examProgressWrap">
+      <div class="progress-label"><span id="progressStepText">سؤال 1 من 1</span><span></span></div>
+      <div class="progress"><span id="progressBarFill" style="width:0%;"></span></div>
+    </div>
+
+    <form id="examForm">
+      <div id="questionsRenderContainer">
+        <!-- Dynamically rendered questions -->
+      </div>
+
+      <div class="exam-nav" id="examNavButtons">
+        <button type="button" class="btn btn-line exam-prev" id="prevQuestionBtn" disabled>السؤال السابق</button>
+        <button type="button" class="btn btn-primary exam-next" id="nextQuestionBtn">السؤال التالي</button>
+        <button type="submit" class="btn btn-primary exam-submit" id="submitExamBtn" style="display:none;">تسليم الامتحان</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Empty State View: No Exam for this lecture -->
+  <div id="examEmptyView" style="display:none;text-align:center;padding:40px 20px;">
+    <div style="font-size:3rem;margin-bottom:12px;">📝</div>
+    <h2>لا يوجد امتحان مضاف لهذه المحاضرة</h2>
+    <p style="color:var(--ink-dim);font-size:.9rem;max-width:400px;margin:8px auto 24px;">المدرس لم يقم بإضافة امتحان إلكتروني لهذه المحاضرة. يمكنك متابعة المحاضرات الأخرى أو مراجعة نتائجك.</p>
+    <div style="display:flex;gap:10px;justify-content:center;">
+      <a href="courses.html" id="backToCourseBtn" class="btn btn-primary btn-sm">رجوع للكورس</a>
+      <a href="dashboard.html" class="btn btn-line btn-sm">لوحة التحكم</a>
+    </div>
+  </div>
+
+  <!-- Exam Results View -->
+  <div id="examDoneView" style="display:none;">
+    <div class="result-hero">
+      <p class="kicker" id="resultKicker">تم تسليم الامتحان</p>
+      <div class="score" id="resultScoreText">0 / 0</div>
+      <p id="resultMsg">تم تسجيل إجاباتك بنجاح وحساب النتيجة في سجل درجاتك.</p>
+      <div class="hero-actions" style="justify-content:center;margin-top:26px;gap:12px;">
+        <a href="dashboard.html" class="btn btn-primary">الذهاب للوحة التحكم</a>
+        <a href="results.html" class="btn btn-line">عرض سجل النتائج</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/main.js"></script>
+<script>
+  function getQueryParam(param) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(param);
+  }
+
+  let activeQuestions = [];
+  let currentQIndex = 0;
+  let currentCourse = null;
+  let currentLecture = null;
+
+  function initExam() {
+    const courseId = getQueryParam('courseId');
+    const lessonId = getQueryParam('lessonId');
+
+    const allCourses = window.KhatwaAPI.courses.getAll();
+    currentCourse = courseId ? window.KhatwaAPI.courses.getById(courseId) : allCourses[0];
+
+    if (currentCourse) {
+      document.getElementById('examBreadCourse').textContent = currentCourse.title;
+      document.getElementById('examBreadCourse').href = `subject.html?id=${currentCourse.id}`;
+      document.getElementById('backToCourseBtn').href = `subject.html?id=${currentCourse.id}`;
+
+      const lectures = currentCourse.lectures || [];
+      currentLecture = lectures.find(l => l.id === lessonId) || lectures[0];
+    }
+
+    if (currentLecture && currentLecture.quizQuestions && currentLecture.quizQuestions.length > 0) {
+      activeQuestions = currentLecture.quizQuestions;
+      document.getElementById('examHeadTitle').textContent = `امتحان: ${currentLecture.title}`;
+      document.getElementById('examBreadTitle').textContent = `امتحان: ${currentLecture.title}`;
+      document.getElementById('examSubtitle').textContent = `امتحان إلكتروني خاص بـ ${currentCourse.title} — إعداد: ${currentCourse.teacherName || 'مدرس المادة'}`;
+      
+      renderExamQuestions();
+    } else {
+      // No exam found
+      document.getElementById('examActiveView').style.display = 'none';
+      document.getElementById('examEmptyView').style.display = 'block';
+    }
+  }
+
+  function renderExamQuestions() {
+    const container = document.getElementById('questionsRenderContainer');
+    container.innerHTML = activeQuestions.map((q, idx) => `
+      <div class="q-block" id="qBlock_${idx}" style="${idx === 0 ? '' : 'display:none;'}">
+        <p class="q-text" style="font-size:1.05rem;font-weight:600;margin-bottom:16px;">
+          <span style="color:var(--gold-light);">س ${idx + 1}:</span> ${escapeHtml(q.text)}
+        </p>
+
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <label class="opt">
+            <input type="radio" name="q_${q.id}" value="A">
+            <span class="letter">أ</span>
+            <span>${escapeHtml(q.optionA)}</span>
+          </label>
+          <label class="opt">
+            <input type="radio" name="q_${q.id}" value="B">
+            <span class="letter">ب</span>
+            <span>${escapeHtml(q.optionB)}</span>
+          </label>
+          ${q.optionC ? `
+            <label class="opt">
+              <input type="radio" name="q_${q.id}" value="C">
+              <span class="letter">ج</span>
+              <span>${escapeHtml(q.optionC)}</span>
+            </label>
+          ` : ''}
+          ${q.optionD ? `
+            <label class="opt">
+              <input type="radio" name="q_${q.id}" value="D">
+              <span class="letter">د</span>
+              <span>${escapeHtml(q.optionD)}</span>
+            </label>
+          ` : ''}
+        </div>
+      </div>
+    `).join('');
+
+    updateProgress();
+  }
+
+  function updateProgress() {
+    const total = activeQuestions.length;
+    document.getElementById('progressStepText').textContent = `سؤال ${currentQIndex + 1} من ${total}`;
+    const pct = Math.round(((currentQIndex + 1) / total) * 100);
+    document.getElementById('progressBarFill').style.width = `${pct}%`;
+
+    document.getElementById('prevQuestionBtn').disabled = currentQIndex === 0;
+
+    if (currentQIndex === total - 1) {
+      document.getElementById('nextQuestionBtn').style.display = 'none';
+      document.getElementById('submitExamBtn').style.display = 'inline-block';
+    } else {
+      document.getElementById('nextQuestionBtn').style.display = 'inline-block';
+      document.getElementById('submitExamBtn').style.display = 'none';
+    }
+  }
+
+  function showQuestion(index) {
+    document.querySelectorAll('.q-block').forEach((el, idx) => {
+      el.style.display = idx === index ? 'block' : 'none';
+    });
+    currentQIndex = index;
+    updateProgress();
+  }
+
+  document.getElementById('nextQuestionBtn').addEventListener('click', () => {
+    if (currentQIndex < activeQuestions.length - 1) {
+      showQuestion(currentQIndex + 1);
+    }
+  });
+
+  document.getElementById('prevQuestionBtn').addEventListener('click', () => {
+    if (currentQIndex > 0) {
+      showQuestion(currentQIndex - 1);
+    }
+  });
+
+  document.getElementById('examForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const user = window.KhatwaAPI.getUser();
+    const studentId = user ? user.id : 'student-default';
+
+    let score = 0;
+    activeQuestions.forEach(q => {
+      const selected = document.querySelector(`input[name="q_${q.id}"]:checked`)?.value;
+      if (selected && selected === q.correctOption) {
+        score += 1;
+      }
+    });
+
+    const total = activeQuestions.length;
+    const passed = score >= Math.ceil(total * 0.5);
+
+    const examTitle = currentLecture 
+      ? `امتحان: ${currentLecture.title}` 
+      : (currentCourse ? `امتحان: ${currentCourse.title}` : 'امتحان الحصة');
+
+    window.KhatwaAPI.store.saveQuizAttempt(studentId, {
+      title: examTitle,
+      score: score,
+      totalQuestions: total,
+      passed: passed
+    });
+
+    document.getElementById('resultScoreText').textContent = `${score} / ${total}`;
+    document.getElementById('resultKicker').textContent = passed ? '✓ مبروك، اجتزت الامتحان بنجاح!' : 'تم تسليم الامتحان';
+    document.getElementById('resultMsg').textContent = passed 
+      ? `أحسنت! حققت نسبة نجاح ${Math.round((score/total)*100)}% وتم حفظ النتيجة في سجلك.` 
+      : `حققت ${score} من ${total}. يمكنك مراجعة المحاضرة وإعادة المحاولة لتحسين درجتك.`;
+
+    document.getElementById('examActiveView').style.display = 'none';
+    document.getElementById('examDoneView').style.display = 'block';
+  });
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  document.addEventListener('DOMContentLoaded', initExam);
+</script>
+</body>
+</html>

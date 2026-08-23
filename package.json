@@ -1,0 +1,24 @@
+{
+  "name": "khatwa-platform",
+  "version": "1.0.0",
+  "description": "Khatwa Educational Platform — Full Stack Application",
+  "scripts": {
+    "dev": "npm --prefix backend run dev",
+    "build": "npm --prefix backend run build",
+    "start": "npm --prefix backend start",
+    "test": "npm --prefix backend test",
+    "seed": "npm --prefix backend run seed",
+    "prisma:generate": "npm --prefix backend run prisma:generate",
+    "prisma:push": "npm --prefix backend run prisma:push",
+    "prisma:migrate": "npm --prefix backend run prisma:migrate"
+  },
+  "keywords": [
+    "khatwa",
+    "education",
+    "platform",
+    "backend",
+    "frontend"
+  ],
+  "author": "",
+  "license": "ISC"
+}

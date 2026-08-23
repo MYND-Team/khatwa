@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نتائجي | خطوة</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<nav class="nav">
+  <div class="container nav-inner">
+    <a href="index.html" class="brand"><span class="brand-mark">خ</span>خطوة</a>
+    <ul class="nav-links">
+      <li><a href="dashboard.html">الرئيسية</a></li>
+      <li><a href="courses.html">الكورسات والمواد</a></li>
+      <li><a href="points.html">النقاط</a></li>
+    </ul>
+    <div class="nav-cta">
+      <a href="profile.html" class="user-line" id="navUserLine">
+        <span class="avatar" id="navAvatar">ط</span>
+        <span>
+          <span class="name" id="navName">الطالب</span>
+          <span class="role" id="navRole">طالب</span>
+        </span>
+      </a>
+    </div>
+    <button class="nav-toggle">القائمة</button>
+  </div>
+</nav>
+
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="side-group">
+      <h6>الرئيسية</h6>
+      <a href="dashboard.html" class="side-link">نظرة عامة</a>
+      <a href="courses.html" class="side-link">الكورسات والمواد</a>
+      <a href="results.html" class="side-link active">النتائج</a>
+    </div>
+    <div class="side-group">
+      <h6>المحفظة</h6>
+      <a href="points.html" class="side-link">رصيد النقاط</a>
+      <a href="request-points.html" class="side-link">طلب شحن نقاط</a>
+    </div>
+    <div class="side-group">
+      <h6>الحساب</h6>
+      <a href="profile.html" class="side-link">بياناتي</a>
+      <a href="notifications.html" class="side-link">الإشعارات</a>
+      <a href="#" class="side-link" id="logoutBtn" style="color:var(--err);">تسجيل الخروج</a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="breadcrumb">النتائج</div>
+    <div class="page-head">
+      <div>
+        <h1 id="resultsHeadTitle">سجل النتائج والتقييمات</h1>
+        <p class="page-sub" style="margin:4px 0 0;">سجل الامتحانات والواجبات المنجزة عبر المواد الدراسية.</p>
+      </div>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat-cell"><b id="statAvgScore">—</b><span>متوسط الامتحانات</span></div>
+      <div class="stat-cell"><b id="statCompletedLectures">0</b><span>حصة مكتملة</span></div>
+      <div class="stat-cell"><b id="statTotalExams">0</b><span>امتحانات مؤداة</span></div>
+    </div>
+
+    <!-- By Subject / Course -->
+    <div class="block">
+      <div class="block-head"><h3>التقدم حسب الكورس</h3></div>
+      <div class="row-list" id="resultsSubjectList">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+    <!-- Recent Exam Attempts Table -->
+    <div class="block">
+      <div class="block-head"><h3>سجل الامتحانات والواجبات</h3></div>
+      <div id="resultsTableContainer">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/main.js"></script>
+<script>
+  function renderResults() {
+    const user = window.KhatwaAPI.getUser();
+    if (!user) {
+      window.location.href = 'login.html';
+      return;
+    }
+
+    const studentName = user.name || user.displayName || user.username || 'الطالب';
+    document.getElementById('resultsHeadTitle').textContent = `نتائج الطالب: ${studentName}`;
+
+    const stats = window.KhatwaAPI.student.getStats();
+    const attempts = stats.quizAttempts || [];
+    const enrolled = stats.enrolledCourses || [];
+
+    document.getElementById('statAvgScore').textContent = stats.averageScore;
+    document.getElementById('statCompletedLectures').textContent = stats.completedLectures;
+    document.getElementById('statTotalExams').textContent = attempts.length;
+
+    // Render Subjects
+    const subjectList = document.getElementById('resultsSubjectList');
+    if (enrolled.length === 0) {
+      subjectList.innerHTML = `
+        <div class="row-item">
+          <div class="ri-main">
+            <span style="color:var(--ink-faint);">لا توجد كورسات مشتركة حالياً لمتابعة التقدم.</span>
+          </div>
+          <div class="ri-side">
+            <a href="courses.html" class="btn btn-line btn-sm">تصفح الكورسات</a>
+          </div>
+        </div>
+      `;
+    } else {
+      subjectList.innerHTML = enrolled.map(c => `
+        <div class="row-item">
+          <div class="ri-main">
+            <div class="ri-text">
+              <b>${escapeHtml(c.title)}</b>
+              <span>${escapeHtml(c.teacherName)} · ${c.completedCount} من ${c.totalLectures} حصة مكتملة</span>
+            </div>
+          </div>
+          <div class="ri-side" style="width:220px;">
+            <div class="progress-wrap" style="width:140px;">
+              <div class="progress"><span style="width:${c.progressPercent}%;"></span></div>
+            </div>
+            <span class="tag ${c.progressPercent >= 50 ? 'tag-ok' : 'tag-warn'}">${c.progressPercent}%</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Render Attempts Table
+    const tableContainer = document.getElementById('resultsTableContainer');
+    if (attempts.length === 0) {
+      tableContainer.innerHTML = `
+        <div class="empty-state" style="padding:28px 16px;text-align:center;color:var(--ink-dim);">
+          <div style="font-size:1.8rem;margin-bottom:8px;">📊</div>
+          <p style="margin:0;font-weight:600;">لا توجد امتحانات أو واجبات مكتملة حتى الآن</p>
+          <span style="font-size:.82rem;color:var(--ink-faint);">عند أدائك للامتحانات ستظهر الدرجات والتقارير هنا مباشرة.</span>
+        </div>
+      `;
+    } else {
+      tableContainer.innerHTML = `
+        <table class="plain">
+          <thead>
+            <tr>
+              <th>التاريخ</th>
+              <th>الامتحان / الاختبار</th>
+              <th>النتيجة</th>
+              <th>الحالة</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${attempts.map(a => {
+              const d = a.submittedAt ? new Date(a.submittedAt).toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric' }) : '—';
+              const passed = a.passed !== false;
+              return `
+                <tr>
+                  <td>${d}</td>
+                  <td><b>${escapeHtml(a.quizTitle)}</b></td>
+                  <td>${a.score} / ${a.totalQuestions}</td>
+                  <td><span class="tag tag-${passed ? 'ok' : 'err'}">${passed ? 'اجتياز بنجاح' : 'يحتاج إعادة'}</span></td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+
+    window.KhatwaAPI.syncNav();
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  document.addEventListener('DOMContentLoaded', renderResults);
+</script>
+</body>
+</html>

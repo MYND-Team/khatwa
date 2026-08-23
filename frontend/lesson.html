@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مشاهدة المحاضرة | خطوة</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+  /* ─── Security Video Container & Watermark ──────────────────────────────── */
+  .security-video-wrapper {
+    position: relative;
+    background: #050505;
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--line-soft);
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .dynamic-watermark {
+    position: absolute;
+    top: 25%;
+    left: 25%;
+    transform: translate(-50%, -50%);
+    color: rgba(255, 255, 255, 0.42);
+    font-size: 0.85rem;
+    font-weight: 700;
+    pointer-events: none;
+    z-index: 10;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.6);
+    background: rgba(0, 0, 0, 0.25);
+    padding: 4px 10px;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: top 2.5s ease-in-out, left 2.5s ease-in-out, opacity 0.5s ease;
+    white-space: nowrap;
+    letter-spacing: 0.5px;
+    direction: ltr;
+  }
+  .privacy-shield {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(8, 8, 12, 0.96);
+    backdrop-filter: blur(12px);
+    z-index: 25;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 20px;
+  }
+  .shield-icon {
+    font-size: 2.8rem;
+    margin-bottom: 12px;
+  }
+  .shield-title {
+    font-size: 1.15rem;
+    color: var(--gold-light);
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .shield-sub {
+    font-size: 0.84rem;
+    color: var(--ink-dim);
+    max-width: 380px;
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="container nav-inner">
+    <a href="index.html" class="brand"><span class="brand-mark">خ</span>خطوة</a>
+    <div class="breadcrumb" style="margin:0;">
+      <a href="courses.html">الكورسات</a>
+      <span class="sep">›</span>
+      <a href="courses.html" id="navCourseLink">المادة</a>
+      <span class="sep">›</span>
+      <span id="navLessonTitle">المحاضرة</span>
+    </div>
+    <div class="nav-cta">
+      <a href="profile.html" class="user-line" id="navUserLine">
+        <span class="avatar" id="navAvatar">ط</span>
+        <span>
+          <span class="name" id="navName">الطالب</span>
+          <span class="role" id="navRole">طالب</span>
+        </span>
+      </a>
+    </div>
+  </div>
+</nav>
+
+<div class="lesson-layout">
+  <div class="lesson-main">
+
+    <!-- Video Player Container with Dynamic DRM Shield & Watermark -->
+    <div id="videoContainer" style="margin-bottom:20px;">
+      <!-- Dynamically filled with protected HTML5 player -->
+    </div>
+
+    <div class="lesson-header" style="margin-bottom:20px;">
+      <div>
+        <h1 id="lessonMainTitle" style="font-size:1.45rem;margin-bottom:6px;">عنوان المحاضرة</h1>
+        <div class="meta" id="lessonMainMeta" style="color:var(--ink-dim);font-size:.85rem;">المدرس · المادة · 45 دقيقة</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span class="points-tag" id="lessonPointsTag" style="font-size:.8rem;padding:4px 10px;">10 نقاط</span>
+        <button class="btn btn-line btn-sm" id="completeLessonBtn">✓ إكمال المحاضرة</button>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="tab-row" style="margin-bottom:18px;">
+      <button class="tab active" data-target="tab-desc">شرح وملخص الحصة</button>
+      <button class="tab" data-target="tab-exam">امتحان الحصة</button>
+      <button class="tab" data-target="tab-hw">الواجب</button>
+    </div>
+
+    <!-- Description Tab -->
+    <div class="tab-panel" id="tab-desc">
+      <div style="border:1px solid var(--line-soft);border-radius:6px;padding:22px;background:var(--bg-raised);">
+        <h4 style="margin-bottom:10px;">ملاحظات ونقاط المحاضرة</h4>
+        <p id="lessonDescText" style="color:var(--ink-dim);line-height:1.7;font-size:.92rem;">
+          شرح تفصيلي للمفاهيم الأساسية، تطبيقات عملية وتدريبات نموذجية.
+        </p>
+      </div>
+    </div>
+
+    <!-- Exam Tab -->
+    <div class="tab-panel" id="tab-exam" style="display:none;">
+      <div style="border:1px solid var(--line-soft);border-radius:6px;padding:26px;margin-bottom:22px;background:var(--bg-raised);">
+        <h3 id="examTabHeading" style="margin-bottom:8px;">امتحان الحصة الإلكتروني</h3>
+        <p id="examTabDesc" style="color:var(--ink-dim);font-size:.9rem;margin-bottom:18px;">امتحان تدريبي للتأكد من استيعاب المفاهيم الأساسية وتطبيق ما تم شرحه.</p>
+        <a href="exam.html" id="startExamBtn" class="btn btn-primary">ابدأ الامتحان الآن</a>
+      </div>
+    </div>
+
+    <!-- Homework Tab -->
+    <div class="tab-panel" id="tab-hw" style="display:none;">
+      <div style="border:1px solid var(--line-soft);border-radius:6px;padding:26px;background:var(--bg-raised);">
+        <h3 id="hwTabHeading" style="margin-bottom:8px;">واجب المحاضرة الإلكتروني</h3>
+        <p id="hwTabDesc" style="color:var(--ink-dim);font-size:.9rem;margin-bottom:18px;">تدريبات وأسئلة إلكترونية لتقييم فهمك للدرس.</p>
+        <a href="homework.html" id="startHwBtn" class="btn btn-primary">بدء حل الواجب</a>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Course Playlist Sidebar -->
+  <aside class="playlist">
+    <h4 id="playlistHeading">محتوى الكورس</h4>
+    <div class="row-list" id="playlistItems" style="border-top:none;">
+      <!-- Dynamically filled with course lectures -->
+    </div>
+  </aside>
+</div>
+
+<!-- Toast notification -->
+<div class="toast" id="appToast"></div>
+
+<script src="js/api.js"></script>
+<script src="js/main.js"></script>
+<script>
+  let watermarkInterval = null;
+
+  function getQueryParam(param) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(param);
+  }
+
+  function showToast(msg) {
+    const toast = document.getElementById('appToast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3200);
+  }
+
+  function switchTab(targetId) {
+    document.querySelectorAll('.tab-row .tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'none');
+    
+    const targetTab = document.querySelector(`.tab-row .tab[data-target="${targetId}"]`);
+    const targetPanel = document.getElementById(targetId);
+    if (targetTab) targetTab.classList.add('active');
+    if (targetPanel) targetPanel.style.display = 'block';
+  }
+
+  document.querySelectorAll('.tab-row .tab').forEach(tab => {
+    tab.addEventListener('click', () => switchTab(tab.getAttribute('data-target')));
+  });
+
+  // ─── Floating Watermark Engine ──────────────────────────────────────────────
+  function startFloatingWatermark(student) {
+    if (watermarkInterval) clearInterval(watermarkInterval);
+
+    const mark = document.getElementById('videoSecurityWatermark');
+    if (!mark) return;
+
+    const name = student?.name || student?.displayName || student?.username || 'Student';
+    const phone = student?.studentPhoneNumber || student?.phone || '01XXXXXXXXX';
+    const markId = student?.id ? student.id.slice(-5) : 'KHW';
+
+    mark.textContent = `👤 ${name} | 📱 ${phone} | 🔒 ID:${markId}`;
+
+    function moveWatermark() {
+      // Pick random coordinates within bounds (15% - 80% to avoid clipping edges)
+      const top = Math.floor(Math.random() * 65) + 15;
+      const left = Math.floor(Math.random() * 65) + 15;
+      mark.style.top = `${top}%`;
+      mark.style.left = `${left}%`;
+    }
+
+    moveWatermark();
+    watermarkInterval = setInterval(moveWatermark, 4500);
+  }
+
+  // ─── Anti-Screen Capture & Hotkeys Shield ───────────────────────────────────
+  function initAntiPiracyShield() {
+    const shield = document.getElementById('privacyShieldOverlay');
+    const video = document.getElementById('protectedPlayer');
+
+    // Blur detection (switching tabs or recording overlay activation)
+    window.addEventListener('blur', () => {
+      if (video && !video.paused) {
+        video.pause();
+      }
+      if (shield) shield.style.display = 'flex';
+    });
+
+    window.addEventListener('focus', () => {
+      if (shield) shield.style.display = 'none';
+    });
+
+    // Disable Right-Click on whole page & video
+    document.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      showToast('🔒 النقر بزر الماوس الأيمن معطل لحماية المحتوى');
+      return false;
+    });
+
+    // Block developer inspection hotkeys & PrintScreen
+    document.addEventListener('keydown', (e) => {
+      // F12
+      if (e.key === 'F12' || e.keyCode === 123) {
+        e.preventDefault();
+        showToast('🔒 أدوات الفحص معطلة');
+        return false;
+      }
+      // Ctrl+Shift+I / Ctrl+Shift+J / Ctrl+Shift+C / Ctrl+U
+      if (e.ctrlKey && (e.shiftKey && ['I','i','J','j','C','c'].includes(e.key) || ['U','u','S','s'].includes(e.key))) {
+        e.preventDefault();
+        showToast('🔒 الاختصارات معطلة لحماية المحتوى');
+        return false;
+      }
+      // PrintScreen (clear clipboard)
+      if (e.key === 'PrintScreen' || e.keyCode === 44) {
+        try { navigator.clipboard.writeText(''); } catch(err){}
+        if (shield) {
+          shield.style.display = 'flex';
+          setTimeout(() => { if (shield) shield.style.display = 'none'; }, 1500);
+        }
+        showToast('🔒 تصوير الشاشة محظور');
+      }
+    });
+  }
+
+  function renderLessonPage() {
+    const user = window.KhatwaAPI.getUser();
+    const studentId = user ? user.id : 'student-default';
+    const courseId = getQueryParam('courseId');
+    const lessonId = getQueryParam('lessonId');
+
+    const allCourses = window.KhatwaAPI.courses.getAll();
+    if (allCourses.length === 0) {
+      document.querySelector('.lesson-layout').innerHTML = `
+        <div class="empty-state" style="margin:60px auto;text-align:center;max-width:500px;">
+          <div style="font-size:3rem;margin-bottom:12px;">📚</div>
+          <h2>لا توجد كورسات منشورة بعد</h2>
+          <p style="color:var(--ink-dim);margin:8px 0 20px;">لم يقم المدرس بنشر أي محاضرات في هذا القسم حتى الآن.</p>
+          <a href="courses.html" class="btn btn-primary">تصفح الكورسات</a>
+        </div>
+      `;
+      return;
+    }
+
+    const course = (courseId ? window.KhatwaAPI.courses.getById(courseId) : allCourses[0]) || allCourses[0];
+    const lectures = course.lectures || [];
+
+    let currentLecture = null;
+    if (lessonId) {
+      currentLecture = lectures.find(l => l.id === lessonId);
+    }
+    if (!currentLecture && lectures.length > 0) {
+      currentLecture = lectures[0];
+    }
+    if (!currentLecture) {
+      currentLecture = {
+        id: 'default-lec',
+        title: 'المحاضرة الأولى',
+        description: 'شرح تفصيلي للمفاهيم الأساسية وتطبيقات عملية.',
+        duration: 30,
+        pointCost: 10,
+        videoUrl: ''
+      };
+    }
+
+    document.title = `${currentLecture.title} | ${course.title} | خطوة`;
+    document.getElementById('navCourseLink').textContent = course.title;
+    document.getElementById('navCourseLink').href = `subject.html?id=${course.id}`;
+    document.getElementById('navLessonTitle').textContent = currentLecture.title;
+    document.getElementById('lessonMainTitle').textContent = currentLecture.title;
+    document.getElementById('lessonMainMeta').textContent = `${course.teacherName} · ${course.subject} · مدة ${currentLecture.duration || 35} دقيقة`;
+    document.getElementById('lessonPointsTag').textContent = `${currentLecture.pointCost || 10} نقاط`;
+    document.getElementById('lessonDescText').textContent = currentLecture.description || 'شرح تفصيلي للمحاضرة وتطبيقات عملية وحل نماذج وتدريبات.';
+
+    // Protected Video Player Frame
+    const videoContainer = document.getElementById('videoContainer');
+    if (currentLecture.videoUrl && currentLecture.videoUrl.includes('youtube')) {
+      videoContainer.innerHTML = `
+        <div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:var(--radius);border:1px solid var(--line-soft);">
+          <iframe src="${currentLecture.videoUrl}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </div>
+      `;
+    } else if (currentLecture.videoUrl || currentLecture.driveFileId) {
+      const src = currentLecture.videoUrl || `/student/lessons/${currentLecture.id}/stream`;
+      videoContainer.innerHTML = `
+        <div class="security-video-wrapper">
+          <!-- Dynamic Moving Anti-Piracy Watermark -->
+          <div id="videoSecurityWatermark" class="dynamic-watermark">
+            👤 الطالب | 📱 01XXXXXXXXX | 🔒 ID:KHW
+          </div>
+
+          <!-- Top Protection Badge -->
+          <div style="position:absolute;top:10px;right:12px;background:rgba(0,0,0,0.7);backdrop-filter:blur(6px);padding:4px 10px;border-radius:4px;font-size:.72rem;color:var(--gold-light);pointer-events:none;z-index:12;border:1px solid rgba(255,255,255,0.1);">
+            🔒 بث محمي — منصة خطوة
+          </div>
+
+          <!-- Privacy Shield Overlay (Triggers on blur/screen recording) -->
+          <div id="privacyShieldOverlay" class="privacy-shield">
+            <div class="shield-icon">🛡️</div>
+            <div class="shield-title">المحتوى محمي بحقوق الملكية</div>
+            <div class="shield-sub">تم إيقاف الفيديو مؤقتًا لحماية المحتوى. انقر هنا للعودة والمتابعة.</div>
+          </div>
+
+          <video id="protectedPlayer" controls playsinline controlsList="nodownload" disablePictureInPicture oncontextmenu="return false;" style="width:100%;max-height:540px;display:block;margin:0 auto;background:#000;">
+            <source src="${src}" type="video/mp4">
+            <source src="${src}" type="video/webm">
+            متصفحك لا يدعم تشغيل هذا الفيديو.
+          </video>
+        </div>
+      `;
+
+      // Start watermark & anti-piracy shield
+      startFloatingWatermark(user);
+      initAntiPiracyShield();
+    } else {
+      videoContainer.innerHTML = `
+        <div class="video-frame">
+          <div class="play"></div>
+          <span class="badge">فيديو المحاضرة — ${currentLecture.duration || 35} دقيقة</span>
+        </div>
+      `;
+    }
+
+    // Check completion
+    const myEnrolledCourses = window.KhatwaAPI.courses.getMyCourses(studentId);
+    const thisEnrollment = myEnrolledCourses.find(c => c.id === course.id);
+    const completedIds = thisEnrollment ? (thisEnrollment.completedLectureIds || []) : [];
+    const isDone = completedIds.includes(currentLecture.id);
+
+    const completeBtn = document.getElementById('completeLessonBtn');
+    if (isDone) {
+      completeBtn.textContent = '✓ مكتملة';
+      completeBtn.classList.remove('btn-primary');
+      completeBtn.classList.add('btn-line');
+      completeBtn.style.color = 'var(--ok)';
+      completeBtn.style.borderColor = 'var(--ok)';
+    } else {
+      completeBtn.textContent = '✓ إكمال المحاضرة';
+      completeBtn.classList.remove('btn-line');
+      completeBtn.classList.add('btn-primary');
+    }
+
+    // Setup Exam & Homework Tabs dynamically
+    const hasQuestions = currentLecture.quizQuestions && currentLecture.quizQuestions.length > 0;
+    const examTabBtn = document.querySelector('button[data-target="tab-exam"]');
+    const hwTabBtn = document.querySelector('button[data-target="tab-hw"]');
+    const startExamBtn = document.getElementById('startExamBtn');
+    const startHwBtn = document.getElementById('startHwBtn');
+
+    if (hasQuestions) {
+      const qCount = currentLecture.quizQuestions.length;
+      if (examTabBtn) examTabBtn.textContent = `امتحان الحصة (${qCount} أسئلة)`;
+      if (hwTabBtn) hwTabBtn.textContent = `الواجب (${qCount} أسئلة)`;
+
+      document.getElementById('examTabHeading').textContent = `امتحان: ${currentLecture.title}`;
+      document.getElementById('examTabDesc').textContent = `امتحان تدريبي تفاعلي يحتوي على ${qCount} أسئلة باختيارات متعددة وتصحيح فوري.`;
+      startExamBtn.href = `exam.html?courseId=${course.id}&lessonId=${currentLecture.id}`;
+      startExamBtn.style.display = 'inline-block';
+      startExamBtn.textContent = 'ابدأ الامتحان الآن';
+
+      document.getElementById('hwTabHeading').textContent = `واجب: ${currentLecture.title}`;
+      document.getElementById('hwTabDesc').textContent = `تدريب إلكتروني لتأكيد استيعاب مفاهيم الدرس (${qCount} أسئلة).`;
+      startHwBtn.href = `homework.html?courseId=${course.id}&lessonId=${currentLecture.id}`;
+      startHwBtn.style.display = 'inline-block';
+      startHwBtn.textContent = 'بدء حل الواجب';
+    } else {
+      if (examTabBtn) examTabBtn.textContent = `بدون امتحان`;
+      if (hwTabBtn) hwTabBtn.textContent = `بدون واجب`;
+
+      document.getElementById('examTabHeading').textContent = `لا يوجد امتحان لهذه المحاضرة`;
+      document.getElementById('examTabDesc').textContent = `المدرس لم يقم بإضافة امتحان إلكتروني لهذه المحاضرة، المحاضرة مخصصة للمشاهدة والتطبيق.`;
+      startExamBtn.style.display = 'none';
+
+      document.getElementById('hwTabHeading').textContent = `لا يوجد واجب لهذه المحاضرة`;
+      document.getElementById('hwTabDesc').textContent = `هذه المحاضرة لا تتضمن واجبًا إلكترونيًا.`;
+      startHwBtn.style.display = 'none';
+    }
+
+    completeBtn.onclick = function() {
+      window.KhatwaAPI.courses.completeLecture(course.id, currentLecture.id, studentId);
+      showToast('تم تسجيل إكمال المحاضرة وتحديث تقدمك!');
+      renderLessonPage();
+    };
+
+    // Render Playlist
+    document.getElementById('playlistHeading').textContent = `محتوى: ${course.title}`;
+    const playlistContainer = document.getElementById('playlistItems');
+    if (lectures.length === 0) {
+      playlistContainer.innerHTML = `<div style="color:var(--ink-faint);font-size:.84rem;padding:10px 0;">لا توجد محاضرات إضافية.</div>`;
+    } else {
+      playlistContainer.innerHTML = lectures.map((l, idx) => {
+        const done = completedIds.includes(l.id);
+        const isCurrent = l.id === currentLecture.id;
+        return `
+          <a href="lesson.html?courseId=${course.id}&lessonId=${l.id}" class="row-item" style="display:flex;text-decoration:none;background:${isCurrent ? 'rgba(var(--gold-rgb),.08)' : 'transparent'};border-radius:4px;margin-bottom:2px;padding:12px 6px;">
+            <div class="ri-main">
+              <span class="ri-idx">${idx + 1}</span>
+              <div class="ri-text">
+                <b style="color:${isCurrent ? 'var(--gold-light)' : 'var(--ink)'};">${escapeHtml(l.title)}</b>
+                <span>${l.duration} دقيقة</span>
+              </div>
+            </div>
+            ${done ? `<span class="tag tag-ok">✓</span>` : (isCurrent ? `<span class="tag tag-warn">الآن</span>` : `<span class="tag tag-locked">▶</span>`)}
+          </a>
+        `;
+      }).join('');
+    }
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  document.addEventListener('DOMContentLoaded', renderLessonPage);
+</script>
+</body>
+</html>
