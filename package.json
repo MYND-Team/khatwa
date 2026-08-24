@@ -2,10 +2,6 @@
   "name": "khatwa-platform",
   "version": "1.0.0",
   "description": "Khatwa Educational Platform — Full Stack Application",
-  "main": "api/index.ts",
-  "workspaces": [
-    "backend"
-  ],
   "scripts": {
     "dev": "npm --prefix backend run dev",
     "build": "npm --prefix backend run build",
