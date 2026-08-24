@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "installCommand": "npm --prefix backend install",
   "buildCommand": "npm run vercel-build",
   "cleanUrls": false,
   "trailingSlash": false,

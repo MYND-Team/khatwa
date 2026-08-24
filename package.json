@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "npm --prefix backend run dev",
     "build": "npm --prefix backend run build",
-    "vercel-build": "npm --prefix backend run prisma:generate && npm --prefix backend run build",
+    "vercel-build": "npm --prefix backend install && npm --prefix backend run prisma:generate && npm --prefix backend run build",
     "start": "npm --prefix backend start",
     "test": "npm --prefix backend test",
     "seed": "npm --prefix backend run seed",
