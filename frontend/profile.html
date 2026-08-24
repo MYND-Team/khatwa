@@ -189,8 +189,10 @@
       console.warn('Could not refresh profile from server:', e.message);
     }
 
-    const displayName = user.name || user.displayName || user.username || 'طالب';
-    document.getElementById('profileHeadName').textContent = `بيانات الطالب: ${displayName}`;
+    const displayName = user.name || user.displayName || user.username || (user.role === 'ADMIN' ? 'المدير العام' : 'طالب');
+    document.getElementById('profileHeadName').textContent = (user.role === 'ADMIN' || user.username === 'sameryasser-khatwa') 
+      ? `بيانات مسؤول المنصة: ${displayName}` 
+      : (user.role === 'TEACHER' ? `بيانات المدرس: ${displayName}` : `بيانات الطالب: ${displayName}`);
     document.getElementById('valUsername').textContent = user.username || '—';
     document.getElementById('valDisplayName').textContent = displayName;
     document.getElementById('valGrade').textContent = user.grade || 'المرحلة الثانوية';

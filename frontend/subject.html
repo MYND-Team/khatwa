@@ -103,7 +103,7 @@
 
     if (user) {
       document.getElementById('navName').textContent = user.name || user.username;
-      document.getElementById('navRole').textContent = user.role === 'TEACHER' ? 'مدرس' : 'طالب';
+      document.getElementById('navRole').textContent = user.role === 'ADMIN' ? 'مدير عام المنصة' : user.role === 'STAFF' ? 'مشرف' : user.role === 'TEACHER' ? 'مدرس' : 'طالب';
       document.getElementById('navAvatar').textContent = (user.name || user.username || 'ط').charAt(0);
     }
 

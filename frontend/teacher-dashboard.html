@@ -501,7 +501,7 @@
       currentTeacherId = user.id;
       document.getElementById('teacherGreeting').textContent = `أهلًا بك، ${user.name || user.displayName || user.username}`;
       document.getElementById('navName').textContent = user.name || user.displayName || user.username;
-      document.getElementById('navRole').textContent = user.specialty ? `مدرس — ${user.specialty}` : 'مدرس معتمد';
+      document.getElementById('navRole').textContent = (user.role === 'ADMIN' || user.username === 'sameryasser-khatwa') ? 'مدير عام المنصة' : (user.specialty ? `مدرس — ${user.specialty}` : 'مدرس معتمد');
       document.getElementById('navAvatar').textContent = (user.name || user.username || 'م').charAt(0);
     }
 

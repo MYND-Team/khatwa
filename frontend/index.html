@@ -160,7 +160,7 @@
         navCta.innerHTML = `
           <a href="${dest}" class="user-line">
             <span class="avatar">${(user.name || user.username || 'م').charAt(0)}</span>
-            <span><span class="name">${user.name || user.username}</span><span class="role">${role === 'TEACHER' ? 'مدرس' : role === 'STAFF' ? 'مشرف' : 'طالب'}</span></span>
+            <span><span class="name">${user.name || user.username}</span><span class="role">${role === 'ADMIN' ? 'مدير عام المنصة' : role === 'TEACHER' ? 'مدرس' : role === 'STAFF' ? 'مشرف' : 'طالب'}</span></span>
           </a>
           <a href="${dest}" class="btn btn-primary btn-sm">${label}</a>
         `;

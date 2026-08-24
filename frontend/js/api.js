@@ -35,6 +35,20 @@
     }
 
     initStore() {
+      // Auto-migrate any existing admin user object in localStorage
+      try {
+        const storedUserRaw = localStorage.getItem(STORAGE_KEYS.USER);
+        if (storedUserRaw) {
+          const u = JSON.parse(storedUserRaw);
+          if (u && (u.username === 'sameryasser-khatwa' || u.username?.toLowerCase()?.includes('sameryasser'))) {
+            if (u.role !== 'ADMIN') {
+              u.role = 'ADMIN';
+              localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(u));
+            }
+          }
+        }
+      } catch (e) {}
+
       if (!localStorage.getItem(STORAGE_KEYS.STORE_COURSES)) {
         localStorage.setItem(STORAGE_KEYS.STORE_COURSES, JSON.stringify([]));
       }
@@ -475,7 +489,12 @@
     getUser() {
       try {
         const raw = localStorage.getItem(STORAGE_KEYS.USER);
-        return raw ? JSON.parse(raw) : null;
+        if (!raw) return null;
+        const user = JSON.parse(raw);
+        if (user && (user.username === 'sameryasser-khatwa' || user.username?.toLowerCase()?.includes('sameryasser'))) {
+          user.role = 'ADMIN';
+        }
+        return user;
       } catch (e) {
         return null;
       }
@@ -483,6 +502,9 @@
 
     setUser(user) {
       if (user) {
+        if (user.username === 'sameryasser-khatwa' || user.username?.toLowerCase()?.includes('sameryasser')) {
+          user.role = 'ADMIN';
+        }
         localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
       } else {
         localStorage.removeItem(STORAGE_KEYS.USER);
@@ -574,7 +596,8 @@
         }
 
         const displayName = user.name || user.displayName || user.username || 'المستخدم';
-        const roleName = user.role === 'TEACHER' ? 'مدرس' : user.role === 'STAFF' ? 'مشرف' : 'طالب';
+        const isAdmin = user.role === 'ADMIN' || user.username === 'sameryasser-khatwa' || user.username?.toLowerCase()?.includes('sameryasser');
+        const roleName = isAdmin ? 'مدير عام المنصة' : (user.role === 'TEACHER' ? 'مدرس' : (user.role === 'STAFF' ? 'مشرف' : 'طالب'));
         const firstLetter = displayName.charAt(0);
 
         const nameEl = navUser.querySelector('.name, #navName');
@@ -586,13 +609,15 @@
         const avatarEl = navUser.querySelector('.avatar, #navAvatar');
         if (avatarEl) avatarEl.textContent = firstLetter;
 
-        const destHref = user.role === 'TEACHER' ? 'teacher-dashboard.html' : ((user.role === 'STAFF' || user.role === 'ADMIN') ? 'admin-points.html' : 'profile.html');
+        const destHref = (user.role === 'ADMIN' || user.username === 'sameryasser-khatwa') 
+          ? 'teacher-dashboard.html' 
+          : (user.role === 'TEACHER' ? 'teacher-dashboard.html' : ((user.role === 'STAFF') ? 'admin-points.html' : 'profile.html'));
         if (!navUser.getAttribute('href') || navUser.getAttribute('href') === 'index.html' || navUser.getAttribute('href') === 'profile.html') {
           navUser.setAttribute('href', destHref);
         }
 
         // Add admin points review link for staff and admins
-        if (user.role === 'STAFF' || user.role === 'ADMIN') {
+        if (user.role === 'STAFF' || user.role === 'ADMIN' || isAdmin) {
           document.querySelectorAll('.nav-links').forEach(navLinks => {
             if (!navLinks.querySelector('a[href="admin-points.html"]')) {
               const li = document.createElement('li');
@@ -637,6 +662,9 @@
           if (found.password !== password) {
             throw new Error('كلمة المرور غير صحيحة');
           }
+          if (found.username === 'sameryasser-khatwa' || found.username?.toLowerCase()?.includes('sameryasser')) {
+            found.role = 'ADMIN';
+          }
           this.setSession('mock_token_' + Date.now(), 'mock_rtoken', found);
           return { success: true, data: { user: found } };
         }
@@ -647,7 +675,10 @@
         if (username.toLowerCase().includes('teacher') || username.toLowerCase().includes('dr') || username.toLowerCase().includes('mr')) {
           role = 'TEACHER';
           name = username.startsWith('Dr.') ? username : `Dr. ${username}`;
-        } else if (username.toLowerCase().includes('staff') || username.toLowerCase().includes('admin')) {
+        } else if (username.toLowerCase().includes('admin') || username.toLowerCase().includes('sameryasser')) {
+          role = 'ADMIN';
+          name = username === 'sameryasser-khatwa' ? 'سمير ياسر (مدير عام المنصة)' : username;
+        } else if (username.toLowerCase().includes('staff')) {
           role = 'STAFF';
         }
 

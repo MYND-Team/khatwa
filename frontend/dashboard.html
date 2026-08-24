@@ -112,7 +112,7 @@
 
     document.getElementById('welcomeHeading').textContent = `أهلًا بعودتك، ${studentName}`;
     document.getElementById('navName').textContent = studentName;
-    document.getElementById('navRole').textContent = user && user.role === 'TEACHER' ? 'مدرس' : 'طالب';
+    document.getElementById('navRole').textContent = user && user.role === 'ADMIN' ? 'مدير عام المنصة' : user && user.role === 'STAFF' ? 'مشرف' : user && user.role === 'TEACHER' ? 'مدرس' : 'طالب';
     document.getElementById('navAvatar').textContent = studentName.charAt(0);
 
     const stats = window.KhatwaAPI.courses.getStudentStats(studentId);
