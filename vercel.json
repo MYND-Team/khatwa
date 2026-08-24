@@ -2,6 +2,7 @@
   "version": 2,
   "installCommand": "npm --prefix backend install",
   "buildCommand": "npm run vercel-build",
+  "outputDirectory": "frontend",
   "cleanUrls": false,
   "trailingSlash": false,
   "rewrites": [
@@ -13,13 +14,7 @@
     { "source": "/point-requests/:path*", "destination": "/api/index" },
     { "source": "/settings/:path*", "destination": "/api/index" },
     { "source": "/health", "destination": "/api/index" },
-    { "source": "/api/:path*", "destination": "/api/index" },
-    { "source": "/css/:path*", "destination": "/frontend/css/:path*" },
-    { "source": "/js/:path*", "destination": "/frontend/js/:path*" },
-    { "source": "/logo/:path*", "destination": "/frontend/logo/:path*" },
-    { "source": "/", "destination": "/frontend/index.html" },
-    { "source": "/:path*.html", "destination": "/frontend/:path*.html" },
-    { "source": "/:path*", "destination": "/frontend/:path*.html" }
+    { "source": "/api/:path*", "destination": "/api/index" }
   ],
   "headers": [
     {
