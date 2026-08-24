@@ -1,0 +1,40 @@
+{
+  "version": 2,
+  "buildCommand": "npm run vercel-build",
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "rewrites": [
+    { "source": "/auth/:path*", "destination": "/api/index" },
+    { "source": "/student/:path*", "destination": "/api/index" },
+    { "source": "/teacher/:path*", "destination": "/api/index" },
+    { "source": "/staff/:path*", "destination": "/api/index" },
+    { "source": "/admin/:path*", "destination": "/api/index" },
+    { "source": "/point-requests/:path*", "destination": "/api/index" },
+    { "source": "/settings/:path*", "destination": "/api/index" },
+    { "source": "/health", "destination": "/api/index" },
+    { "source": "/api/:path*", "destination": "/api/index" },
+    { "source": "/css/:path*", "destination": "/frontend/css/:path*" },
+    { "source": "/js/:path*", "destination": "/frontend/js/:path*" },
+    { "source": "/logo/:path*", "destination": "/frontend/logo/:path*" },
+    { "source": "/", "destination": "/frontend/index.html" },
+    { "source": "/:page.html", "destination": "/frontend/:page.html" },
+    { "source": "/((?!auth|student|teacher|staff|admin|point-requests|settings|health|api|css|js|logo).*\\.[^/]+$)", "destination": "/frontend/$1" },
+    { "source": "/((?!auth|student|teacher|staff|admin|point-requests|settings|health|api|css|js|logo).*)", "destination": "/frontend/$1.html" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
+        { "key": "X-XSS-Protection", "value": "1; mode=block" }
+      ]
+    },
+    {
+      "source": "/(css|js|logo)/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    }
+  ]
+}

@@ -2,9 +2,14 @@
   "name": "khatwa-platform",
   "version": "1.0.0",
   "description": "Khatwa Educational Platform — Full Stack Application",
+  "main": "api/index.ts",
+  "workspaces": [
+    "backend"
+  ],
   "scripts": {
     "dev": "npm --prefix backend run dev",
     "build": "npm --prefix backend run build",
+    "vercel-build": "npm --prefix backend run prisma:generate && npm --prefix backend run build",
     "start": "npm --prefix backend start",
     "test": "npm --prefix backend test",
     "seed": "npm --prefix backend run seed",
@@ -17,8 +22,9 @@
     "education",
     "platform",
     "backend",
-    "frontend"
+    "frontend",
+    "vercel"
   ],
-  "author": "",
+  "author": "MYND Team",
   "license": "ISC"
 }

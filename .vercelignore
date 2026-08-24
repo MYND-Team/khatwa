@@ -1,0 +1,29 @@
+# Dependencies
+node_modules
+*/node_modules
+
+# Local database & temp files
+*.db
+*.db-journal
+*.sqlite
+backend/dev.db
+backend/dev.db-journal
+backend/prisma/dev.db
+uploads
+*/uploads
+
+# Local secrets & environment
+backend/.env
+.env
+.env.local
+backend/secrets
+secrets
+*.pem
+*.key
+
+# Tests and documentation
+backend/src/test-suite.ts
+backend/src/manual-test-runner.ts
+backend/src/e2e-live-test.mjs
+*.pdf
+*.log
