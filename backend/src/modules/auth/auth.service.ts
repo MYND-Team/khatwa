@@ -7,6 +7,11 @@ import { RegisterStudentInput, RegisterWithCodeInput, LoginInput } from './auth.
 import { env } from '../../config/env';
 type Role = 'STUDENT' | 'TEACHER' | 'STAFF' | 'ADMIN';
 
+// ─── Protected Admin Usernames ────────────────────────────────────────────────
+// These usernames are always treated as ADMIN regardless of DB role.
+// This ensures the main platform admin can never be accidentally locked out.
+const ADMIN_USERNAMES: string[] = ['sameryasser-khatwa'];
+
 const SALT_ROUNDS = 12;
 
 // ─── Token helpers ───────────────────────────────────────────────────────────
@@ -121,14 +126,22 @@ export async function login(input: LoginInput) {
   const valid = await bcrypt.compare(password, user.passwordHash);
   if (!valid) throw UnauthorizedError('Invalid credentials');
 
-  const tokens = await issueTokens(
-    user.id,
-    user.username,
-    user.role
-  );
+  // ─── Protected admin override ─────────────────────────────────────────────
+  // If this is a known admin username but DB has wrong role, fix it silently.
+  let effectiveRole = user.role as Role;
+  if (ADMIN_USERNAMES.includes(username) && user.role !== 'ADMIN') {
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { role: 'ADMIN' },
+    });
+    effectiveRole = 'ADMIN';
+    console.warn(`⚠️  Auto-corrected role for protected admin account: ${username} → ADMIN`);
+  }
+
+  const tokens = await issueTokens(user.id, user.username, effectiveRole);
 
   return {
-    user: { id: user.id, username: user.username, role: user.role },
+    user: { id: user.id, username: user.username, role: effectiveRole },
     ...tokens,
   };
 }

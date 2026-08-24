@@ -15,6 +15,7 @@
     "prisma:push": "prisma db push",
     "prisma:studio": "prisma studio",
     "seed": "tsx prisma/seed.ts",
+    "fix:admin-role": "tsx scripts/fix-admin-role.ts",
     "google-drive:auth": "tsx scripts/auth-drive-oauth.ts",
     "google-drive:test": "tsx scripts/test-drive-oauth.ts"
   },
