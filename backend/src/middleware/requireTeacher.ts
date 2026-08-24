@@ -3,8 +3,8 @@ import { authenticate } from './auth';
 import { ForbiddenError } from '../utils/errors';
 
 /**
- * Guard: TEACHER role only.
- * Rejects any token that is not TEACHER.
+ * Guard: TEACHER or ADMIN role.
+ * Rejects any token that is not TEACHER or ADMIN.
  */
 export function requireTeacher(
   req: Request,
@@ -13,15 +13,14 @@ export function requireTeacher(
 ): void {
   authenticate(req, res, (err) => {
     if (err) return next(err);
-    if (req.user?.role !== 'TEACHER') {
-      return next(ForbiddenError('Access restricted to teachers'));
+    if (req.user?.role !== 'TEACHER' && req.user?.role !== 'ADMIN') {
+      return next(ForbiddenError('Access restricted to teachers and platform administrators'));
     }
     next();
   });
 }
 
-// Backward compatibility alias if needed
+// Backward compatibility aliases
 export const requireTeacherOnly = requireTeacher;
 export const requireTeacherOrAssistant = requireTeacher;
 export const requireTeacherOrEditableAssistant = requireTeacher;
-

@@ -1156,6 +1156,30 @@
         return this.store.rejectPointRequest(id, reason);
       }
     };
+
+    // ─── Super Admin Operations (Full Platform Access) ───────────────────────
+    admin = {
+      getAnalytics: () => this.request('/admin/analytics'),
+      getStudents: () => this.request('/admin/students'),
+      getStudentFullProfile: (id) => this.request(`/admin/students/${id}/full-profile`),
+      adjustStudentPoints: (id, amount, reason) => this.request(`/admin/students/${id}/adjust-points`, {
+        method: 'POST',
+        body: { amount, reason }
+      }),
+      toggleStudentActive: (id) => this.request(`/admin/students/${id}/toggle-active`, { method: 'PATCH' }),
+      getTeachers: () => this.request('/admin/teachers'),
+      toggleTeacherActive: (id) => this.request(`/admin/teachers/${id}/toggle-active`, { method: 'PATCH' }),
+      getAllCourses: () => this.request('/admin/courses'),
+      getVideoAccessLogs: () => this.request('/admin/video-access-logs'),
+      getPointRequests: () => this.request('/admin/point-requests'),
+      getAccessCodes: () => this.request('/admin/access-codes'),
+      createAccessCode: (points, expiresAt) => this.request('/admin/access-codes', {
+        method: 'POST',
+        body: { points, expiresAt }
+      }),
+      revokeAccessCode: (id) => this.request(`/admin/access-codes/${id}/revoke`, { method: 'PATCH' }),
+      regenerateAccessCode: (id) => this.request(`/admin/access-codes/${id}/regenerate`, { method: 'POST' }),
+    };
   }
 
   // Export to window
