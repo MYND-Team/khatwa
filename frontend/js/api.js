@@ -5,10 +5,16 @@
  */
 
 (function (window) {
-  const isSameOrigin = window.location.protocol.startsWith('http') && 
-    (window.location.port === '3000' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+  // API Base Resolution:
+  // In production (same-origin / HTTPS), uses window.location.origin unless overridden
+  // In local static server dev (e.g. Live Server port 5500/8080 or file://), routes to localhost:3000 backend
+  const isDirectFile = window.location.protocol === 'file:';
+  const isLocalStaticPort = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && 
+                            window.location.port !== '3000' && window.location.port !== '';
   
-  const DEFAULT_API_BASE = isSameOrigin ? window.location.origin : 'http://localhost:3000';
+  const DEFAULT_API_BASE = window.__KHATWA_API_BASE__ ||
+                           localStorage.getItem('khatwa_api_base') ||
+                           ((isDirectFile || isLocalStaticPort) ? 'http://localhost:3000' : window.location.origin);
 
   const STORAGE_KEYS = {
     ACCESS_TOKEN: 'khatwa_access_token',
