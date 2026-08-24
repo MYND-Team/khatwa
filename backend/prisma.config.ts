@@ -11,6 +11,6 @@ export default defineConfig({
     ? "./prisma/schema.sqlite.prisma"
     : "./prisma/schema.prisma",
   datasource: {
-    url: isSqlite ? "file:./dev.db" : dbUrl,
+    url: isSqlite ? "file:./dev.db" : (process.env.DIRECT_URL || dbUrl),
   },
 });
