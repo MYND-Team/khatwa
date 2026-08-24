@@ -609,15 +609,25 @@
         const avatarEl = navUser.querySelector('.avatar, #navAvatar');
         if (avatarEl) avatarEl.textContent = firstLetter;
 
-        const destHref = (user.role === 'ADMIN' || user.username === 'sameryasser-khatwa') 
-          ? 'teacher-dashboard.html' 
+        const destHref = isAdmin 
+          ? 'admin.html' 
           : (user.role === 'TEACHER' ? 'teacher-dashboard.html' : ((user.role === 'STAFF') ? 'admin-points.html' : 'profile.html'));
         if (!navUser.getAttribute('href') || navUser.getAttribute('href') === 'index.html' || navUser.getAttribute('href') === 'profile.html') {
           navUser.setAttribute('href', destHref);
         }
 
-        // Add admin points review link for staff and admins
-        if (user.role === 'STAFF' || user.role === 'ADMIN' || isAdmin) {
+        // Dedicated navigation for ADMIN
+        if (isAdmin) {
+          document.querySelectorAll('.nav-links').forEach(navLinks => {
+            navLinks.innerHTML = `
+              <li><a href="admin.html" class="${window.location.pathname.includes('admin.html') ? 'active' : ''}">📊 لوحة الإدارة</a></li>
+              <li><a href="teacher-dashboard.html" class="${window.location.pathname.includes('teacher-dashboard') ? 'active' : ''}">👨‍🏫 استوديو الكورسات</a></li>
+              <li><a href="admin-points.html" class="${window.location.pathname.includes('admin-points') ? 'active' : ''}">💳 مراجعة الشحن</a></li>
+            `;
+          });
+          // Hide student-only wallet indicators for admin
+          document.querySelectorAll('#studentPointsTag, .student-only').forEach(el => el.style.display = 'none');
+        } else if (user.role === 'STAFF') {
           document.querySelectorAll('.nav-links').forEach(navLinks => {
             if (!navLinks.querySelector('a[href="admin-points.html"]')) {
               const li = document.createElement('li');

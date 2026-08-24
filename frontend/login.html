@@ -79,8 +79,12 @@
       const user = res.data?.user || window.KhatwaAPI.getUser();
       const role = user?.role || 'STUDENT';
 
-      if (role === 'TEACHER' || role === 'STAFF' || role === 'ADMIN') {
+      if (role === 'ADMIN') {
+        window.location.href = 'admin.html';
+      } else if (role === 'TEACHER') {
         window.location.href = 'teacher-dashboard.html';
+      } else if (role === 'STAFF') {
+        window.location.href = 'admin-points.html';
       } else {
         window.location.href = 'dashboard.html';
       }

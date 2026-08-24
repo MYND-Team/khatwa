@@ -154,13 +154,13 @@
     if (user) {
       const navCta = document.getElementById('navCta');
       if (navCta) {
-        const role = user.role || 'STUDENT';
-        const dest = (role === 'TEACHER' || role === 'STAFF' || role === 'ADMIN') ? 'teacher-dashboard.html' : 'dashboard.html';
-        const label = (role === 'TEACHER' || role === 'STAFF') ? 'الاستوديو' : 'لوحتي';
+        const role = (user.role === 'ADMIN' || user.username === 'sameryasser-khatwa') ? 'ADMIN' : (user.role || 'STUDENT');
+        const dest = role === 'ADMIN' ? 'admin.html' : (role === 'TEACHER' ? 'teacher-dashboard.html' : (role === 'STAFF' ? 'admin-points.html' : 'dashboard.html'));
+        const label = role === 'ADMIN' ? '👑 لوحة الإدارة العامة' : (role === 'TEACHER' ? 'استوديو المعلم' : (role === 'STAFF' ? 'مراجعة الشحن' : 'لوحتي'));
         navCta.innerHTML = `
           <a href="${dest}" class="user-line">
-            <span class="avatar">${(user.name || user.username || 'م').charAt(0)}</span>
-            <span><span class="name">${user.name || user.username}</span><span class="role">${role === 'ADMIN' ? 'مدير عام المنصة' : role === 'TEACHER' ? 'مدرس' : role === 'STAFF' ? 'مشرف' : 'طالب'}</span></span>
+            <span class="avatar">${role === 'ADMIN' ? '👑' : (user.name || user.username || 'م').charAt(0)}</span>
+            <span><span class="name">${user.name || user.username}</span><span class="role" style="${role === 'ADMIN' ? 'color:var(--gold-light);font-weight:700;' : ''}">${role === 'ADMIN' ? 'مدير عام المنصة' : role === 'TEACHER' ? 'مدرس' : role === 'STAFF' ? 'مشرف' : 'طالب'}</span></span>
           </a>
           <a href="${dest}" class="btn btn-primary btn-sm">${label}</a>
         `;

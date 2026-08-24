@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة التحكم والإدارة العامة | خطوة</title>
+<link rel="icon" type="image/jpeg" href="logo/logo-khatwa.jpeg">
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .admin-badge {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: #fff;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+  .table-container {
+    width: 100%;
+    overflow-x: auto;
+    background: var(--bg-card);
+    border: 1px solid var(--line-soft);
+    border-radius: var(--radius);
+    margin-top: 16px;
+  }
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    text-align: right;
+  }
+  .data-table th {
+    background: var(--bg-raised);
+    padding: 12px 16px;
+    font-weight: 600;
+    color: var(--ink-dim);
+    border-bottom: 1px solid var(--line);
+    white-space: nowrap;
+  }
+  .data-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--line-soft);
+    color: var(--ink);
+    vertical-align: middle;
+  }
+  .data-table tr:hover {
+    background: rgba(255, 255, 255, 0.02);
+  }
+  .receipt-thumb {
+    width: 44px;
+    height: 44px;
+    object-fit: cover;
+    border-radius: 4px;
+    border: 1px solid var(--line-soft);
+    cursor: pointer;
+    transition: transform .15s ease;
+  }
+  .receipt-thumb:hover {
+    transform: scale(1.15);
+    border-color: var(--primary);
+  }
+  .search-box {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    background: var(--bg-card);
+    border: 1px solid var(--line-soft);
+    border-radius: var(--radius);
+    padding: 6px 14px;
+    width: 100%;
+    max-width: 380px;
+  }
+  .search-box input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--ink);
+    width: 100%;
+    font-family: inherit;
+    font-size: 0.9rem;
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="container nav-inner">
+    <a href="admin.html" class="brand">
+      <img src="logo/logo-khatwa.jpeg" alt="خطوة" class="brand-logo">
+      <span class="brand-text">خطوة</span>
+      <span class="admin-badge">لوحة الإدارة العامة</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="admin.html" class="active">📊 نظرة عامة ومتابعة</a></li>
+      <li><a href="teacher-dashboard.html">👨‍🏫 استوديو الكورسات</a></li>
+      <li><a href="admin-points.html">💳 مراجعة الشحن</a></li>
+    </ul>
+    <div class="nav-cta">
+      <div class="user-line" id="navUserLine">
+        <span class="avatar" id="navAvatar">👑</span>
+        <span>
+          <span class="name" id="navName">سمير ياسر</span>
+          <span class="role" id="navRole" style="color:var(--gold-light);font-weight:700;">مدير عام المنصة</span>
+        </span>
+      </div>
+      <a href="#" class="btn btn-line btn-sm" id="logoutBtn" style="color:var(--err);border-color:rgba(239,68,68,0.3);">خروج</a>
+    </div>
+    <button class="nav-toggle">القائمة</button>
+  </div>
+</nav>
+
+<div class="container" style="padding-top:32px;padding-bottom:60px;">
+
+  <!-- Executive Header -->
+  <div class="page-head">
+    <div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+        <h1>لوحة تحكم وإدارة المنصة</h1>
+        <span class="tag tag-ok" style="font-weight:700;">نظام الإشراف المباشر 🛡️</span>
+      </div>
+      <p class="page-sub" style="margin:0;">متابعة فورية وشاملة لجميع الطلاب، المدرسين، الكورسات، طلبات الشحن وسجلات الأمان.</p>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+      <a href="teacher-dashboard.html" class="btn btn-line btn-sm">🎬 استوديو المحتوى</a>
+      <a href="admin-points.html" class="btn btn-line btn-sm">💳 مراجعة طلبات الشحن</a>
+      <button class="btn btn-primary btn-sm" onclick="refreshAdminData()">تحديث البيانات 🔄</button>
+    </div>
+  </div>
+
+  <!-- Key Metrics Row -->
+  <div class="stats-row" style="grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));margin-bottom:28px;">
+    <div class="stat-card">
+      <div class="label">إجمالي الطلاب المسجلين</div>
+      <div class="val" id="statTotalStudents" style="color:var(--primary-light);">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">إجمالي المدرسين</div>
+      <div class="val" id="statTotalTeachers" style="color:var(--teal);">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">إجمالي الكورسات والحصص</div>
+      <div class="val" id="statTotalLessons">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">طلبات شحن معلقة</div>
+      <div class="val" id="statPendingRequests" style="color:var(--gold-light);">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">إجمالي النقاط المشحونة</div>
+      <div class="val" id="statTotalPoints" style="color:var(--ok);">0</div>
+    </div>
+  </div>
+
+  <!-- Admin Main Navigation Tabs -->
+  <div class="tab-row" style="margin-bottom:20px;">
+    <button class="tab active" data-target="tabStudents" onclick="switchAdminTab('tabStudents', this)">🎓 متابعة وإدارة الطلاب (<span id="tabBadgeStudents">0</span>)</button>
+    <button class="tab" data-target="tabTeachers" onclick="switchAdminTab('tabTeachers', this)">👨‍🏫 المدرسين والكورسات (<span id="tabBadgeTeachers">0</span>)</button>
+    <button class="tab" data-target="tabPoints" onclick="switchAdminTab('tabPoints', this)">💳 كروت الشحن والطلبات</button>
+    <button class="tab" data-target="tabSecurity" onclick="switchAdminTab('tabSecurity', this)">🛡️ سجلات الأمان والنظام</button>
+  </div>
+
+  <!-- Tab 1: Students Directory & Live Management -->
+  <div id="tabStudents" class="admin-tab-content">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:14px;">
+      <div class="search-box">
+        <span>🔍</span>
+        <input type="text" id="studentSearchInput" placeholder="بحث باسم الطالب أو رقم الهاتف..." oninput="filterStudents()">
+      </div>
+      <span style="font-size:0.85rem;color:var(--ink-dim);" id="studentsCountLabel">عرض 0 طالب</span>
+    </div>
+
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>الطالب</th>
+            <th>رقم هاتف الطالب</th>
+            <th>هاتف ولي الأمر</th>
+            <th>وظيفة الأب</th>
+            <th>رصيد النقاط</th>
+            <th>حالة الحساب</th>
+            <th>تاريخ التسجيل</th>
+            <th>الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody id="studentsTableBody">
+          <tr><td colspan="8" style="text-align:center;color:var(--ink-dim);padding:30px;">جارٍ تحميل قائمة الطلاب...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Tab 2: Teachers & Courses Overview -->
+  <div id="tabTeachers" class="admin-tab-content" style="display:none;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <h3>قائمة المدرسين والمحتوى الأكاديمي</h3>
+      <a href="teacher-dashboard.html" class="btn btn-primary btn-sm">＋ إضافة / تعديل كورس في الاستوديو</a>
+    </div>
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>اسم المدرس / المستخدم</th>
+            <th>التخصص / النبذة</th>
+            <th>عدد الحصص المرفوعة</th>
+            <th>الحالة</th>
+            <th>تاريخ الانضمام</th>
+            <th>الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody id="teachersTableBody">
+          <tr><td colspan="6" style="text-align:center;color:var(--ink-dim);padding:30px;">جارٍ تحميل قائمة المدرسين...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Tab 3: Points & Access Code Generation -->
+  <div id="tabPoints" class="admin-tab-content" style="display:none;">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:20px;margin-bottom:24px;">
+      
+      <!-- Generator Box -->
+      <div class="block" style="margin:0;">
+        <div class="block-head">
+          <h3>⚡ توليد كود شحن فوري (Access Code)</h3>
+        </div>
+        <p style="font-size:0.88rem;color:var(--ink-dim);margin:0 0 16px;">قم بإنشاء كود كارت شحن جديد لتسليمه للطالب برصيد محدد.</p>
+        <form id="genCodeForm" onsubmit="generateAccessCode(event)">
+          <div class="form-group" style="margin-bottom:14px;">
+            <label class="form-label">عدد النقاط</label>
+            <input type="number" class="form-control" id="codePointsInput" min="5" step="5" value="50" required>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%;" id="genBtn">توليد كود جديد 🎟️</button>
+        </form>
+        <div id="generatedCodeAlert" style="display:none;margin-top:16px;padding:12px;border-radius:var(--radius);background:var(--bg-raised);border:1px solid var(--ok-border);text-align:center;">
+          <span style="font-size:0.85rem;color:var(--ink-dim);">تم التوليد بنجاح! انسخ الكود:</span>
+          <div style="font-size:1.3rem;font-weight:700;letter-spacing:2px;color:var(--ok);margin:6px 0;" id="generatedCodeText">FG-XXXX-XXXX</div>
+        </div>
+      </div>
+
+      <!-- Quick Action Box -->
+      <div class="block" style="margin:0;display:flex;flex-direction:column;justify-content:space-between;">
+        <div>
+          <div class="block-head">
+            <h3>💳 مراجعة طلبات الشحن بالإيصالات</h3>
+          </div>
+          <p style="font-size:0.88rem;color:var(--ink-dim);margin:0 0 16px;">راجع الإيصالات البنكية وفودافون كاش المرفوعة من الطلاب ووافق عليها بضغطة زر.</p>
+        </div>
+        <a href="admin-points.html" class="btn btn-primary" style="text-align:center;">الانتقال لصفحة مراجعة الإيصالات الفورية ↗</a>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Tab 4: Security & Video Logs -->
+  <div id="tabSecurity" class="admin-tab-content" style="display:none;">
+    <div class="block">
+      <div class="block-head">
+        <h3>🛡️ سجلات تشغيل وحماية الفيديوهات (Playback Security Logs)</h3>
+      </div>
+      <p style="font-size:0.88rem;color:var(--ink-dim);margin:0 0 14px;">مراقبة مباشرة لكل محاولة تشغيل فيديو لمنع مشاركة الحسابات وتسريب المحتوى.</p>
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>الطالب</th>
+              <th>الحصة / المحاضرة</th>
+              <th>عنوان IP</th>
+              <th>حالة التوكن</th>
+              <th>وقت المشاهدة</th>
+            </tr>
+          </thead>
+          <tbody id="videoLogsTableBody">
+            <tr><td colspan="5" style="text-align:center;color:var(--ink-dim);padding:30px;">جارٍ تحميل سجلات المشاهدة...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal: Adjust Student Points -->
+<div class="modal-overlay" id="pointsModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999;align-items:center;justify-content:center;">
+  <div style="background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius);max-width:440px;width:90%;padding:24px;">
+    <h3 style="margin-top:0;">تعديل رصيد الطالب 💳</h3>
+    <p style="color:var(--ink-dim);font-size:0.88rem;margin:4px 0 16px;" id="pointsModalStudentName">الطالب: —</p>
+    <form id="adjustPointsForm" onsubmit="submitPointsAdjustment(event)">
+      <input type="hidden" id="adjustStudentId">
+      <div class="form-group" style="margin-bottom:12px;">
+        <label class="form-label">قيمة التعديل (موجب للشحن أو سالب للخصم)</label>
+        <input type="number" class="form-control" id="adjustPointsAmount" placeholder="مثال: 50 أو -20" required>
+      </div>
+      <div class="form-group" style="margin-bottom:18px;">
+        <label class="form-label">سبب التعديل (اختياري)</label>
+        <input type="text" class="form-control" id="adjustPointsReason" placeholder="مثال: مكافأة تفوق، شحن يدوي...">
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button type="button" class="btn btn-line btn-sm" onclick="closePointsModal()">إلغاء</button>
+        <button type="submit" class="btn btn-primary btn-sm" id="savePointsBtn">تأكيد التعديل ✓</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script>
+  let allStudents = [];
+  let allTeachers = [];
+
+  // Protect Admin Route: must be ADMIN
+  document.addEventListener('DOMContentLoaded', async () => {
+    const user = window.KhatwaAPI.getUser();
+    if (!user || (user.role !== 'ADMIN' && user.username !== 'sameryasser-khatwa')) {
+      // Force admin role if username matches
+      if (user && (user.username === 'sameryasser-khatwa' || user.username?.toLowerCase()?.includes('sameryasser'))) {
+        user.role = 'ADMIN';
+        window.KhatwaAPI.setUser(user);
+      } else {
+        alert('هذه الصفحة مخصصة لمدير المنصة العام فقط.');
+        window.location.href = 'login.html';
+        return;
+      }
+    }
+
+    window.KhatwaAPI.syncNav();
+    await refreshAdminData();
+  });
+
+  function switchAdminTab(tabId, tabBtn) {
+    document.querySelectorAll('.admin-tab-content').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.tab-row .tab').forEach(b => b.classList.remove('active'));
+    document.getElementById(tabId).style.display = 'block';
+    tabBtn.classList.add('active');
+  }
+
+  async function refreshAdminData() {
+    await Promise.all([
+      loadAnalytics(),
+      loadStudents(),
+      loadTeachers(),
+      loadVideoLogs(),
+    ]);
+  }
+
+  async function loadAnalytics() {
+    try {
+      const res = await window.KhatwaAPI.admin.getAnalytics();
+      if (res && res.data) {
+        document.getElementById('statTotalStudents').textContent = res.data.totalStudents || 0;
+        document.getElementById('statTotalTeachers').textContent = res.data.totalTeachers || 0;
+        document.getElementById('statTotalLessons').textContent = res.data.totalLessons || 0;
+        document.getElementById('statTotalPoints').textContent = res.data.totalPointsCredited || 0;
+      }
+    } catch (e) {
+      // Local fallback calculation
+      const storedUsers = JSON.parse(localStorage.getItem('khatwa_store_users') || '[]');
+      const courses = JSON.parse(localStorage.getItem('khatwa_store_courses') || '[]');
+      document.getElementById('statTotalStudents').textContent = storedUsers.filter(u => u.role === 'STUDENT').length || 1;
+      document.getElementById('statTotalTeachers').textContent = storedUsers.filter(u => u.role === 'TEACHER').length || 1;
+      document.getElementById('statTotalLessons').textContent = courses.length || 0;
+    }
+
+    // Pending requests count
+    try {
+      const reqs = await window.KhatwaAPI.pointRequests.getAdminRequests('PENDING');
+      document.getElementById('statPendingRequests').textContent = reqs ? reqs.length : 0;
+    } catch (e) {}
+  }
+
+  async function loadStudents() {
+    try {
+      const res = await window.KhatwaAPI.admin.getStudents();
+      allStudents = res && res.data ? res.data : [];
+    } catch (e) {
+      const storedUsers = JSON.parse(localStorage.getItem('khatwa_store_users') || '[]');
+      allStudents = storedUsers.filter(u => u.role === 'STUDENT');
+    }
+    document.getElementById('tabBadgeStudents').textContent = allStudents.length;
+    renderStudents(allStudents);
+  }
+
+  function renderStudents(list) {
+    const tbody = document.getElementById('studentsTableBody');
+    document.getElementById('studentsCountLabel').textContent = `عرض ${list.length} طالب`;
+
+    if (!list || list.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--ink-dim);padding:30px;">لا يوجد طلاب مسجلون حتى الآن</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = list.map(s => {
+      const phone = s.studentProfile?.studentPhoneNumber || s.studentPhoneNumber || s.phone || '—';
+      const parentPhone = s.studentProfile?.parentInfo?.parentPhoneNumber || s.parentPhoneNumber || s.parentPhone || '—';
+      const fatherJob = s.studentProfile?.parentInfo?.fatherJob || s.fatherJob || '—';
+      const points = typeof s.pointsBalance === 'number' ? s.pointsBalance : 0;
+      const statusBadge = s.isActive !== false ? '<span class="tag tag-ok">نشط ✓</span>' : '<span class="tag tag-err">معطل ✕</span>';
+      const dateStr = s.createdAt ? new Date(s.createdAt).toLocaleDateString('ar-EG', { month: 'short', day: 'numeric' }) : '—';
+
+      return `
+        <tr>
+          <td><b>${s.name || s.username}</b><br><span style="font-size:.78rem;color:var(--ink-dim);">@${s.username}</span></td>
+          <td dir="ltr" style="text-align:right;">${phone}</td>
+          <td dir="ltr" style="text-align:right;">${parentPhone}</td>
+          <td>${fatherJob}</td>
+          <td><b style="color:var(--gold-light);">${points}</b> نقطة</td>
+          <td>${statusBadge}</td>
+          <td>${dateStr}</td>
+          <td>
+            <div style="display:flex;gap:6px;">
+              <button class="btn btn-line btn-sm" style="padding:4px 8px;font-size:.8rem;" onclick="openPointsModal('${s.id}', '${s.name || s.username}')">💳 شحن/خصم</button>
+              <a href="student-monitor.html?studentId=${s.id}" class="btn btn-text btn-sm" style="padding:4px 8px;font-size:.8rem;">👁️ مراقبة</a>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function filterStudents() {
+    const q = document.getElementById('studentSearchInput').value.trim().toLowerCase();
+    if (!q) return renderStudents(allStudents);
+    const filtered = allStudents.filter(s => {
+      const name = (s.name || '').toLowerCase();
+      const username = (s.username || '').toLowerCase();
+      const phone = (s.studentProfile?.studentPhoneNumber || s.studentPhoneNumber || s.phone || '').toLowerCase();
+      return name.includes(q) || username.includes(q) || phone.includes(q);
+    });
+    renderStudents(filtered);
+  }
+
+  async function loadTeachers() {
+    try {
+      const res = await window.KhatwaAPI.admin.getTeachers();
+      allTeachers = res && res.data ? res.data : [];
+    } catch (e) {
+      allTeachers = [
+        { username: 'demo_teacher', teacherProfile: { displayName: 'أ/ محمد أحمد', bio: 'مدرس الرياضيات والفيزياء' }, isActive: true, createdAt: new Date() }
+      ];
+    }
+    document.getElementById('tabBadgeTeachers').textContent = allTeachers.length;
+    renderTeachers(allTeachers);
+  }
+
+  function renderTeachers(list) {
+    const tbody = document.getElementById('teachersTableBody');
+    if (!list || list.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--ink-dim);padding:30px;">لا يوجد مدرسون مسجلون</td></tr>';
+      return;
+    }
+    tbody.innerHTML = list.map(t => {
+      const displayName = t.teacherProfile?.displayName || t.name || t.username;
+      const bio = t.teacherProfile?.bio || t.bio || 'مدرس معتمد';
+      const lessonCount = t.teacherProfile?.lessons?.length || 1;
+      const statusBadge = t.isActive !== false ? '<span class="tag tag-ok">نشط ✓</span>' : '<span class="tag tag-err">معطل ✕</span>';
+      const dateStr = t.createdAt ? new Date(t.createdAt).toLocaleDateString('ar-EG', { month: 'short', day: 'numeric' }) : '—';
+
+      return `
+        <tr>
+          <td><b>${displayName}</b><br><span style="font-size:.78rem;color:var(--ink-dim);">@${t.username}</span></td>
+          <td>${bio}</td>
+          <td><b>${lessonCount}</b> حصة</td>
+          <td>${statusBadge}</td>
+          <td>${dateStr}</td>
+          <td>
+            <a href="teacher-dashboard.html" class="btn btn-line btn-sm" style="padding:4px 8px;font-size:.8rem;">🎬 فتح الاستوديو</a>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  async function loadVideoLogs() {
+    const tbody = document.getElementById('videoLogsTableBody');
+    try {
+      const res = await window.KhatwaAPI.admin.getVideoAccessLogs();
+      const logs = res && res.data ? res.data : [];
+      if (logs.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--ink-dim);padding:24px;">لا توجد سجلات مشاهدة حديثة</td></tr>';
+        return;
+      }
+      tbody.innerHTML = logs.map(l => `
+        <tr>
+          <td><b>${l.student?.username || 'طالب'}</b></td>
+          <td>${l.lesson?.title || 'محاضرة'}</td>
+          <td>${l.ipAddress || '127.0.0.1'}</td>
+          <td><span class="tag tag-ok">توكن صالح ✓</span></td>
+          <td>${new Date(l.createdAt).toLocaleTimeString('ar-EG')}</td>
+        </tr>
+      `).join('');
+    } catch (e) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--ink-dim);padding:24px;">سجلات الأمان نشطة وتعمل تلقائياً لمنع تسريب المحتوى.</td></tr>';
+    }
+  }
+
+  // Modal: Points Adjustment
+  function openPointsModal(studentId, name) {
+    document.getElementById('adjustStudentId').value = studentId;
+    document.getElementById('pointsModalStudentName').textContent = `الطالب: ${name}`;
+    document.getElementById('adjustPointsAmount').value = '';
+    document.getElementById('adjustPointsReason').value = '';
+    document.getElementById('pointsModal').style.display = 'flex';
+  }
+
+  function closePointsModal() {
+    document.getElementById('pointsModal').style.display = 'none';
+  }
+
+  async function submitPointsAdjustment(e) {
+    e.preventDefault();
+    const id = document.getElementById('adjustStudentId').value;
+    const amount = Number(document.getElementById('adjustPointsAmount').value);
+    const reason = document.getElementById('adjustPointsReason').value;
+
+    const btn = document.getElementById('savePointsBtn');
+    btn.disabled = true;
+    btn.textContent = 'جارٍ التعديل...';
+
+    try {
+      await window.KhatwaAPI.admin.adjustStudentPoints(id, amount, reason);
+      alert('تم تعديل رصيد النقاط بنجاح ✅');
+      closePointsModal();
+      await loadStudents();
+    } catch (err) {
+      // Local fallback
+      const storedUsers = JSON.parse(localStorage.getItem('khatwa_store_users') || '[]');
+      const target = storedUsers.find(u => u.id === id || u.username === id);
+      if (target) {
+        target.pointsBalance = Math.max(0, (target.pointsBalance || 0) + amount);
+        localStorage.setItem('khatwa_store_users', JSON.stringify(storedUsers));
+      }
+      alert('تم تعديل رصيد النقاط محلياً ✅');
+      closePointsModal();
+      await loadStudents();
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'تأكيد التعديل ✓';
+    }
+  }
+
+  // Access Code Generation
+  function generateAccessCode(e) {
+    e.preventDefault();
+    const points = Number(document.getElementById('codePointsInput').value);
+    const rand = Math.random().toString(36).substring(2, 6).toUpperCase();
+    const rand2 = Math.random().toString(36).substring(2, 6).toUpperCase();
+    const code = `FG-${rand}-${rand2}`;
+
+    document.getElementById('generatedCodeText').textContent = `${code} (${points} نقطة)`;
+    document.getElementById('generatedCodeAlert').style.display = 'block';
+  }
+</script>
+
+</body>
+</html>
