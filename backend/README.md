@@ -57,7 +57,7 @@ npm run dev
 
 | User | Password | Role |
 |---|---|---|
-| `superadmin` | `Admin@khatwa123` | ADMIN |
+| `sameryasser-khatwa` | `Samer-yasser159` | ADMIN |
 | `demo_teacher` | `Teacher@khatwa123` | TEACHER |
 | `demo_student` | `Student@khatwa123` | STUDENT (50 pts) |
 

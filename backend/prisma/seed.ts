@@ -1,5 +1,10 @@
 import { prisma } from '../src/config/prisma';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
+
+function hashAccessCode(code: string): string {
+  return crypto.createHash('sha256').update(code.trim().toUpperCase()).digest('hex');
+}
 
 async function main() {
   console.log('🌱 Seeding Khatwa database...');
@@ -10,72 +15,60 @@ async function main() {
     create: {
       id: 'default',
       logoUrl: null,
-      primaryColor: '#6C63FF',
-      secondaryColor: '#FF6584',
-      fontFamily: 'Inter',
+      primaryColor: '#134074',
+      secondaryColor: '#1D5D9B',
+      fontFamily: 'Cairo',
     },
-    update: {},
+    update: {
+      primaryColor: '#134074',
+      secondaryColor: '#1D5D9B',
+      fontFamily: 'Cairo',
+    },
   });
+  console.log('✅ Platform settings initialized');
 
-  // ─── 3 Admin codes ──────────────────────────────────────────────────────────
-  const adminCodes = ['ADM-SEED001', 'ADM-SEED002', 'ADM-SEED003'];
-  for (const code of adminCodes) {
+  // ─── Demo Recharge Point Codes (50 & 100 points) ────────────────────────────
+  const sampleRechargeCodes = [
+    { code: 'POINTS-50-DEMO1', points: 50 },
+    { code: 'POINTS-50-DEMO2', points: 50 },
+    { code: 'POINTS-100-DEMO1', points: 100 },
+  ];
+
+  for (const item of sampleRechargeCodes) {
+    const codeHash = hashAccessCode(item.code);
     await prisma.accessCode.upsert({
-      where: { code },
-      create: { code, type: 'ADMIN', isActive: true },
+      where: { codeHash },
+      create: {
+        codeHash,
+        points: item.points,
+        status: 'ACTIVE',
+      },
       update: {},
     });
   }
-  console.log(`✅ Created 3 admin codes: ${adminCodes.join(', ')}`);
+  console.log('✅ Created sample recharge point codes: POINTS-50-DEMO1, POINTS-50-DEMO2, POINTS-100-DEMO1');
 
-  // ─── 2 Editor codes ─────────────────────────────────────────────────────────
-  const editorCodes = ['EDT-SEED001', 'EDT-SEED002'];
-  for (const code of editorCodes) {
-    await prisma.accessCode.upsert({
-      where: { code },
-      create: { code, type: 'EDITOR', isActive: true },
-      update: {},
-    });
-  }
-  console.log(`✅ Created 2 editor codes: ${editorCodes.join(', ')}`);
+  // ─── Main Admin User ────────────────────────────────────────────────────────
+  const adminPassword = await bcrypt.hash('Samer-yasser159', 12);
 
-  // ─── 2 Teacher codes ────────────────────────────────────────────────────────
-  const teacherCodes = ['TCH-SEED001', 'TCH-SEED002'];
-  for (const code of teacherCodes) {
-    await prisma.accessCode.upsert({
-      where: { code },
-      create: { code, type: 'TEACHER', isActive: true },
-      update: {},
-    });
-  }
-  console.log(`✅ Created 2 teacher codes: ${teacherCodes.join(', ')}`);
-
-  // ─── Demo admin user ─────────────────────────────────────────────────────────
-  const adminPassword = await bcrypt.hash('Admin@khatwa123', 12);
-  const adminCode = await prisma.accessCode.findUnique({ where: { code: 'ADM-SEED001' } });
-
-  const admin = await prisma.user.upsert({
-    where: { username: 'superadmin' },
+  await prisma.user.upsert({
+    where: { username: 'sameryasser-khatwa' },
     create: {
-      username: 'superadmin',
+      username: 'sameryasser-khatwa',
       passwordHash: adminPassword,
       role: 'ADMIN',
+      isActive: true,
     },
-    update: {},
+    update: {
+      passwordHash: adminPassword,
+      role: 'ADMIN',
+      isActive: true,
+    },
   });
+  console.log('✅ Admin user created: sameryasser-khatwa / Samer-yasser159');
 
-  if (adminCode && !adminCode.usedById) {
-    await prisma.accessCode.update({
-      where: { code: 'ADM-SEED001' },
-      data: { usedById: admin.id, isActive: false },
-    });
-  }
-
-  console.log('✅ Demo admin user created: superadmin / Admin@khatwa123');
-
-  // ─── Demo teacher ────────────────────────────────────────────────────────────
+  // ─── Demo Teacher ───────────────────────────────────────────────────────────
   const teacherPassword = await bcrypt.hash('Teacher@khatwa123', 12);
-  const teacherCode = await prisma.accessCode.findUnique({ where: { code: 'TCH-SEED001' } });
 
   const teacher = await prisma.user.upsert({
     where: { username: 'demo_teacher' },
@@ -83,92 +76,92 @@ async function main() {
       username: 'demo_teacher',
       passwordHash: teacherPassword,
       role: 'TEACHER',
+      isActive: true,
       teacherProfile: {
         create: {
-          displayName: 'Demo Teacher',
-          bio: 'A demonstration teacher account',
+          displayName: 'أ/ محمد أحمد',
+          bio: 'مدرس الرياضيات والفيزياء للمرحلة الثانوية',
         },
+      },
+    },
+    update: {
+      passwordHash: teacherPassword,
+      role: 'TEACHER',
+      isActive: true,
+    },
+  });
+  console.log('✅ Demo teacher created: demo_teacher / Teacher@khatwa123');
+
+  // ─── Demo Course & Lesson ───────────────────────────────────────────────────
+  let teacherProfile = await prisma.teacherProfile.findUnique({
+    where: { userId: teacher.id },
+  });
+
+  if (!teacherProfile) {
+    teacherProfile = await prisma.teacherProfile.create({
+      data: {
+        userId: teacher.id,
+        displayName: 'أ/ محمد أحمد',
+        bio: 'مدرس الرياضيات والفيزياء للمرحلة الثانوية',
+      },
+    });
+  }
+
+  const lesson = await prisma.lesson.upsert({
+    where: { id: 'lesson-seed-001' },
+    create: {
+      id: 'lesson-seed-001',
+      teacherProfileId: teacherProfile.id,
+      title: 'مقدمة في الجبر والمصفوفات',
+      description: 'المحاضرة الأولى: مفاهيم أساسية في الجبر والمصفوفات مع تمارين عملية.',
+      pointCost: 10,
+      orderIndex: 1,
+      isPublished: true,
+    },
+    update: {},
+  });
+
+  // Demo opening quiz
+  const quiz = await prisma.quiz.upsert({
+    where: { id: 'quiz-seed-001' },
+    create: {
+      id: 'quiz-seed-001',
+      title: 'امتحان تمهيدي: أساسيات الجبر',
+      type: 'OPENING_QUIZ',
+      questions: {
+        create: [
+          {
+            questionText: 'ما هي قيمة x في المعادلة: 2x + 4 = 10؟',
+            optionA: '2',
+            optionB: '3',
+            optionC: '4',
+            optionD: '5',
+            correctOption: 'B',
+            orderIndex: 0,
+          },
+          {
+            questionText: 'ما هو حاصل ضرب المصفوفة في مصفوفة الوحدة؟',
+            optionA: 'المصفوفة الصفرية',
+            optionB: 'المصفوفة المربعة',
+            optionC: 'نفس المصفوفة',
+            optionD: 'مصفوفة منقولة',
+            correctOption: 'C',
+            orderIndex: 1,
+          },
+        ],
       },
     },
     update: {},
   });
 
-  if (teacherCode && !teacherCode.usedById) {
-    await prisma.accessCode.update({
-      where: { code: 'TCH-SEED001' },
-      data: { usedById: teacher.id, isActive: false },
-    });
-  }
-
-  console.log('✅ Demo teacher created: demo_teacher / Teacher@khatwa123');
-
-  // ─── 5 Assistant codes tied to demo teacher ───────────────────────────────────
-  const teacherProfile = await prisma.teacherProfile.findUnique({
-    where: { userId: teacher.id },
+  await prisma.lesson.update({
+    where: { id: lesson.id },
+    data: { openingQuizId: quiz.id },
   });
 
-  if (teacherProfile) {
-    const assistantCodes = [
-      'AST-SEED001', 'AST-SEED002', 'AST-SEED003', 'AST-SEED004', 'AST-SEED005',
-    ];
-    for (const code of assistantCodes) {
-      await prisma.accessCode.upsert({
-        where: { code },
-        create: { code, type: 'ASSISTANT', ownerTeacherId: teacher.id, isActive: true },
-        update: {},
-      });
-    }
-    console.log(`✅ Created 5 assistant codes for demo_teacher: ${assistantCodes.join(', ')}`);
+  console.log('✅ Demo lesson and opening quiz created');
 
-    // ─── Demo lesson ──────────────────────────────────────────────────────────
-    const lesson = await prisma.lesson.upsert({
-      where: { id: 'lesson-seed-001' },
-      create: {
-        id: 'lesson-seed-001',
-        teacherProfileId: teacherProfile.id,
-        title: 'Introduction to Algebra',
-        description: 'First lesson covering basic algebraic concepts.',
-        pointCost: 10,
-        orderIndex: 1,
-        isPublished: true,
-      },
-      update: {},
-    });
-
-    // Demo opening quiz
-    const quiz = await prisma.quiz.upsert({
-      where: { id: 'quiz-seed-001' },
-      create: {
-        id: 'quiz-seed-001',
-        title: 'Algebra Opening Quiz',
-        type: 'OPENING_QUIZ',
-        questions: {
-          create: [
-            {
-              questionText: 'What is 2 + 2?',
-              optionA: '3', optionB: '4', optionC: '5', optionD: '6',
-              correctOption: 'B', orderIndex: 0,
-            },
-            {
-              questionText: 'What is 5 × 3?',
-              optionA: '12', optionB: '14', optionC: '15', optionD: '18',
-              correctOption: 'C', orderIndex: 1,
-            },
-          ],
-        },
-      },
-      update: {},
-    });
-
-    await prisma.lesson.update({
-      where: { id: lesson.id },
-      data: { openingQuizId: quiz.id },
-    });
-
-    console.log('✅ Demo lesson and opening quiz created');
-  }
-
-  // ─── Demo student ────────────────────────────────────────────────────────────
+  // ─── Demo Student ───────────────────────────────────────────────────────────
   const studentPassword = await bcrypt.hash('Student@khatwa123', 12);
   await prisma.user.upsert({
     where: { username: 'demo_student' },
@@ -177,34 +170,34 @@ async function main() {
       passwordHash: studentPassword,
       role: 'STUDENT',
       pointsBalance: 50,
+      isActive: true,
       studentProfile: {
         create: {
-          studentPhoneNumber: '+201234567890',
+          studentPhoneNumber: '+201012345678',
           parentInfo: {
             create: {
-              parentPhoneNumber: '+201234567891',
-              parentEmail: 'parent@example.com',
-              fatherJob: 'Engineer',
+              parentPhoneNumber: '+201087654321',
+              parentEmail: 'parent@khatwa.app',
+              fatherJob: 'مهندس',
               parentStatus: 'BOTH_ALIVE',
             },
           },
         },
       },
     },
-    update: {},
+    update: {
+      passwordHash: studentPassword,
+      role: 'STUDENT',
+      isActive: true,
+    },
   });
 
   console.log('✅ Demo student created: demo_student / Student@khatwa123 (50 points)');
   console.log('\n🎉 Seeding complete!');
-  console.log('\n📋 Summary:');
-  console.log('   Admin codes:     ADM-SEED001, ADM-SEED002, ADM-SEED003');
-  console.log('   Editor codes:    EDT-SEED001, EDT-SEED002');
-  console.log('   Teacher codes:   TCH-SEED001, TCH-SEED002');
-  console.log('   Assistant codes: AST-SEED001 through AST-SEED005 (linked to demo_teacher)');
-  console.log('\n   Demo users:');
-  console.log('   superadmin   / Admin@khatwa123    (ADMIN)');
-  console.log('   demo_teacher / Teacher@khatwa123  (TEACHER)');
-  console.log('   demo_student / Student@khatwa123  (STUDENT, 50 points)');
+  console.log('\n📋 Login Credentials:');
+  console.log('   Admin:   sameryasser-khatwa / Samer-yasser159    (Role: ADMIN)');
+  console.log('   Teacher: demo_teacher       / Teacher@khatwa123  (Role: TEACHER)');
+  console.log('   Student: demo_student       / Student@khatwa123  (Role: STUDENT, 50 points)');
 }
 
 main()

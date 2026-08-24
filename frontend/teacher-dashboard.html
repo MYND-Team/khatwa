@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>استوديو المدرس | خطوة</title>
+<link rel="icon" type="image/jpeg" href="logo/logo-khatwa.jpeg">
 <link rel="stylesheet" href="css/style.css">
 <style>
   .dropzone-box {
@@ -16,12 +17,12 @@
     transition: all .2s ease;
   }
   .dropzone-box:hover {
-    border-color: var(--gold-border);
-    background: rgba(200, 160, 80, 0.04);
+    border-color: var(--primary);
+    background: var(--primary-faint);
   }
   .dropzone-box.dragover {
-    border-color: var(--gold-light);
-    background: rgba(200, 160, 80, 0.08);
+    border-color: var(--primary-light);
+    background: var(--primary-faint);
   }
   .progress-wrap {
     margin-top: 14px;
@@ -40,7 +41,7 @@
   .progress-bar-fill {
     height: 100%;
     width: 0%;
-    background: linear-gradient(90deg, var(--gold), var(--gold-light));
+    background: linear-gradient(90deg, var(--primary), var(--primary-light));
     transition: width 0.15s ease;
   }
   .question-card {
@@ -74,7 +75,7 @@
     border: 1px solid var(--line-soft);
     font-size: .8rem;
     font-weight: 700;
-    color: var(--gold-light);
+    color: var(--primary);
   }
 </style>
 </head>
@@ -82,7 +83,7 @@
 
 <nav class="nav">
   <div class="container nav-inner">
-    <a href="index.html" class="brand"><span class="brand-mark">خ</span>خطوة</a>
+    <a href="index.html" class="brand"><img src="logo/logo-khatwa.jpeg" alt="خطوة" class="brand-logo"><span class="brand-text">خطوة</span></a>
     <div class="breadcrumb" style="margin:0;"><a href="courses.html">الكورسات</a><span class="sep">›</span> استوديو المدرس</div>
     <div class="nav-cta">
       <a href="profile.html" class="user-line" id="navUserLine">
