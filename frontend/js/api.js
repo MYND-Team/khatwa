@@ -621,12 +621,10 @@
           document.querySelectorAll('.nav-links').forEach(navLinks => {
             navLinks.innerHTML = `
               <li><a href="admin.html" class="${window.location.pathname.includes('admin.html') ? 'active' : ''}">📊 لوحة الإدارة</a></li>
-              <li><a href="teacher-dashboard.html" class="${window.location.pathname.includes('teacher-dashboard') ? 'active' : ''}">👨‍🏫 استوديو الكورسات</a></li>
-              <li><a href="admin-points.html" class="${window.location.pathname.includes('admin-points') ? 'active' : ''}">💳 مراجعة الشحن</a></li>
             `;
           });
-          // Hide student-only wallet indicators for admin
-          document.querySelectorAll('#studentPointsTag, .student-only').forEach(el => el.style.display = 'none');
+          // Hide student-only and teacher-only widgets for admin
+          document.querySelectorAll('#studentPointsTag, .student-only, #statPoints, .teacher-only').forEach(el => el.style.display = 'none');
         } else if (user.role === 'STAFF') {
           document.querySelectorAll('.nav-links').forEach(navLinks => {
             if (!navLinks.querySelector('a[href="admin-points.html"]')) {

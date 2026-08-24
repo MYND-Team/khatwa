@@ -31,7 +31,7 @@
     <span class="kicker">منصة تعليمية أونلاين</span>
     <h1>خطوة هي المكان اللي بيتابع فيه الطالب حصصه، <em>يمتحن، ويسلّم واجباته</em> من غير ما يتحرك من مكانه.</h1>
     <p class="lead">النظام مبني على متابعة حقيقية: امتحان قبل كل حصة، واجب بنفس أسلوب الامتحان الإلكتروني، ولا تُفتح حصة جديدة إلا بعد إنهاء اللي قبلها. وولي الأمر يعرف النتيجة أول بأول.</p>
-    <div class="hero-actions">
+    <div class="hero-actions" id="heroActions">
       <a href="signup.html" class="btn btn-primary">إنشاء حساب طالب</a>
       <a href="login.html" class="btn btn-line">تسجيل الدخول</a>
     </div>
@@ -152,18 +152,56 @@
   document.addEventListener('DOMContentLoaded', function() {
     const user = window.KhatwaAPI && window.KhatwaAPI.getUser();
     if (user) {
+      const isAdmin = (user.role === 'ADMIN' || user.username === 'sameryasser-khatwa' || user.username?.toLowerCase()?.includes('sameryasser'));
       const navCta = document.getElementById('navCta');
-      if (navCta) {
-        const role = (user.role === 'ADMIN' || user.username === 'sameryasser-khatwa') ? 'ADMIN' : (user.role || 'STUDENT');
-        const dest = role === 'ADMIN' ? 'admin.html' : (role === 'TEACHER' ? 'teacher-dashboard.html' : (role === 'STAFF' ? 'admin-points.html' : 'dashboard.html'));
-        const label = role === 'ADMIN' ? '👑 لوحة الإدارة العامة' : (role === 'TEACHER' ? 'استوديو المعلم' : (role === 'STAFF' ? 'مراجعة الشحن' : 'لوحتي'));
-        navCta.innerHTML = `
-          <a href="${dest}" class="user-line">
-            <span class="avatar">${role === 'ADMIN' ? '👑' : (user.name || user.username || 'م').charAt(0)}</span>
-            <span><span class="name">${user.name || user.username}</span><span class="role" style="${role === 'ADMIN' ? 'color:var(--gold-light);font-weight:700;' : ''}">${role === 'ADMIN' ? 'مدير عام المنصة' : role === 'TEACHER' ? 'مدرس' : role === 'STAFF' ? 'مشرف' : 'طالب'}</span></span>
-          </a>
-          <a href="${dest}" class="btn btn-primary btn-sm">${label}</a>
-        `;
+      
+      if (isAdmin) {
+        // 1. Navbar links: only show Admin Dashboard
+        document.querySelectorAll('.nav-links').forEach(nl => {
+          nl.innerHTML = '<li><a href="admin.html" class="active">📊 لوحة الإدارة</a></li>';
+        });
+
+        // 2. Top Nav CTA: show only Admin user line and Dashboard button
+        if (navCta) {
+          navCta.innerHTML = `
+            <div class="user-line" style="cursor:default;">
+              <span class="avatar">👑</span>
+              <span><span class="name">${user.name || user.username}</span><span class="role" style="color:var(--gold-light);font-weight:700;">مدير عام المنصة</span></span>
+            </div>
+            <a href="admin.html" class="btn btn-primary btn-sm">📊 لوحة الإدارة</a>
+          `;
+        }
+
+        // 3. Hero actions: remove student register and show only Admin Dashboard CTA
+        const heroActions = document.getElementById('heroActions');
+        if (heroActions) {
+          heroActions.innerHTML = `
+            <a href="admin.html" class="btn btn-primary" style="font-size:1.05rem;padding:12px 28px;">📊 الدخول إلى لوحة الإدارة العامة</a>
+          `;
+        }
+
+        // 4. Bottom CTA banner
+        document.querySelectorAll('.cta-band .hero-actions').forEach(el => {
+          el.innerHTML = '<a href="admin.html" class="btn btn-primary">📊 الانتقال للوحة الإدارة العامة</a>';
+        });
+
+        // 5. Footer links
+        document.querySelectorAll('.footer-links').forEach(fl => {
+          fl.innerHTML = '<a href="admin.html">📊 لوحة الإدارة</a><a href="#" onclick="window.KhatwaAPI.auth.logout()" style="color:var(--err);">تسجيل الخروج</a>';
+        });
+      } else {
+        if (navCta) {
+          const role = user.role || 'STUDENT';
+          const dest = role === 'TEACHER' ? 'teacher-dashboard.html' : (role === 'STAFF' ? 'admin-points.html' : 'dashboard.html');
+          const label = role === 'TEACHER' ? 'استوديو المعلم' : (role === 'STAFF' ? 'مراجعة الشحن' : 'لوحتي');
+          navCta.innerHTML = `
+            <a href="${dest}" class="user-line">
+              <span class="avatar">${(user.name || user.username || 'م').charAt(0)}</span>
+              <span><span class="name">${user.name || user.username}</span><span class="role">${role === 'TEACHER' ? 'مدرس' : role === 'STAFF' ? 'مشرف' : 'طالب'}</span></span>
+            </a>
+            <a href="${dest}" class="btn btn-primary btn-sm">${label}</a>
+          `;
+        }
       }
     }
 
