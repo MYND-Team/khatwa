@@ -83,11 +83,12 @@ export function errorHandler(
 
   // Unknown errors
   console.error('Unhandled error:', err);
+  const message = (err && err.message) ? err.message : 'An unexpected error occurred.';
   res.status(500).json({
     success: false,
     error: {
       code: 'INTERNAL_ERROR',
-      message: 'An unexpected error occurred.',
+      message: message,
     },
   });
 }

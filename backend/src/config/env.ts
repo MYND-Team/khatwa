@@ -37,10 +37,10 @@ const envSchema = z.object({
   PORT: z.coerce.number().default(3000),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
 
-  DATABASE_URL: z.string().default('postgresql://user:password@localhost:5432/khatwa'),
+  DATABASE_URL: z.string().default('postgresql://postgres.wdkpifcohsivvpgjiubl:zfz7TlcY75SKA17C@aws-1-eu-west-3.pooler.supabase.com:6543/postgres?pgbouncer=true'),
 
-  JWT_ACCESS_SECRET: z.string().default('khatwa_default_jwt_access_secret_key_32_chars_min'),
-  JWT_REFRESH_SECRET: z.string().default('khatwa_default_jwt_refresh_secret_key_32_chars_min'),
+  JWT_ACCESS_SECRET: z.string().default('khatwa_default_jwt_access_secret_key_32_chars_min_2026'),
+  JWT_REFRESH_SECRET: z.string().default('khatwa_default_jwt_refresh_secret_key_32_chars_min_2026'),
   JWT_ACCESS_EXPIRES_IN: z.string().default('15m'),
   JWT_REFRESH_EXPIRES_IN: z.string().default('7d'),
 
