@@ -47,19 +47,6 @@
   .data-table tr:hover {
     background: rgba(255, 255, 255, 0.02);
   }
-  .receipt-thumb {
-    width: 44px;
-    height: 44px;
-    object-fit: cover;
-    border-radius: 4px;
-    border: 1px solid var(--line-soft);
-    cursor: pointer;
-    transition: transform .15s ease;
-  }
-  .receipt-thumb:hover {
-    transform: scale(1.15);
-    border-color: var(--primary);
-  }
   .search-box {
     display: flex;
     gap: 10px;
@@ -84,7 +71,7 @@
   /* Ultra-Modern Executive Metric Cards */
   .modern-stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 16px;
     margin-bottom: 32px;
   }
@@ -195,7 +182,8 @@
     <ul class="nav-links">
       <li><a href="admin.html" class="active">📊 لوحة الإدارة</a></li>
     </ul>
-    <div class="nav-cta">
+    <div class="nav-cta" style="display:flex;align-items:center;gap:12px;">
+      <button class="lang-switcher-btn" onclick="window.KhatwaI18n.toggleLanguage()">🌐 English</button>
       <div class="user-line" id="navUserLine" style="cursor:default;">
         <span class="avatar" id="navAvatar">👑</span>
         <span>
@@ -203,7 +191,7 @@
           <span class="role" id="navRole" style="color:var(--gold-light);font-weight:700;">مدير عام المنصة</span>
         </span>
       </div>
-      <a href="#" class="btn btn-line btn-sm" id="logoutBtn" style="color:var(--err);border-color:rgba(239,68,68,0.3);">تسجيل الخروج</a>
+      <a href="#" class="btn btn-line btn-sm" onclick="window.KhatwaAPI.auth.logout()" style="color:var(--err);border-color:rgba(239,68,68,0.3);">تسجيل الخروج</a>
     </div>
     <button class="nav-toggle">القائمة</button>
   </div>
@@ -216,18 +204,18 @@
     <div>
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
         <h1>لوحة تحكم وإدارة المنصة</h1>
-        <span class="tag tag-ok" style="font-weight:700;">نظام الإشراف المباشر 🛡️</span>
+        <span class="tag tag-ok" style="font-weight:700;">قاعدة البيانات المباشرة 🛡️</span>
       </div>
-      <p class="page-sub" style="margin:0;">متابعة فورية وشاملة لجميع الطلاب، المدرسين، الكورسات، طلبات الشحن وسجلات الأمان.</p>
+      <p class="page-sub" style="margin:0;">متابعة فورية وشاملة لجميع الطلاب، المدرسين، الكورسات، طلبات الشحن، والمحفظة المالية.</p>
     </div>
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+      <button class="btn btn-line btn-sm" onclick="openAddTeacherModal()">👨‍🏫 إضافة مدرس جديد</button>
       <button class="btn btn-primary btn-sm" onclick="refreshAdminData()">تحديث البيانات 🔄</button>
     </div>
   </div>
 
   <!-- Ultra-Modern Key Metrics Grid -->
   <div class="modern-stats-grid">
-    
     <!-- Students -->
     <div class="modern-stat-card" style="--card-accent: #38bdf8; --icon-bg: rgba(56, 189, 248, 0.12); --icon-border: rgba(56, 189, 248, 0.25); --icon-shadow: rgba(56, 189, 248, 0.2);">
       <div class="stat-card-top">
@@ -237,7 +225,7 @@
       <div>
         <div class="stat-label">إجمالي الطلاب المسجلين</div>
         <div class="stat-value" id="statTotalStudents" style="color:#38bdf8;">0</div>
-        <div class="stat-sub"><span>👥</span> حسابات الطلاب المعتمدة</div>
+        <div class="stat-sub"><span>👥</span> حسابات بقاعدة البيانات</div>
       </div>
     </div>
 
@@ -292,24 +280,22 @@
         <div class="stat-sub"><span>💰</span> إجمالي النقاط المعتمدة</div>
       </div>
     </div>
-
   </div>
 
   <!-- Admin Main Navigation Tabs -->
   <div class="tab-row" style="margin-bottom:20px;">
-    <button class="tab active" data-target="tabStudents" onclick="switchAdminTab('tabStudents', this)">🎓 متابعة وإدارة الطلاب (<span id="tabBadgeStudents">0</span>)</button>
-    <button class="tab" data-target="tabTeachers" onclick="switchAdminTab('tabTeachers', this)">👨‍🏫 المدرسين والكورسات (<span id="tabBadgeTeachers">0</span>)</button>
-    <button class="tab" data-target="tabPoints" onclick="switchAdminTab('tabPoints', this)">💳 كروت الشحن والطلبات</button>
+    <button class="tab active" data-target="tabStudents" onclick="switchAdminTab('tabStudents', this)">🎓 إدارة ومتابعة الطلاب (<span id="tabBadgeStudents">0</span>)</button>
+    <button class="tab" data-target="tabTeachers" onclick="switchAdminTab('tabTeachers', this)">👨‍🏫 إدارة المدرسين (<span id="tabBadgeTeachers">0</span>)</button>
+    <button class="tab" data-target="tabPointRequests" onclick="switchAdminTab('tabPointRequests', this)">💳 مراجعة طلبات الشحن</button>
     <button class="tab" data-target="tabSecurity" onclick="switchAdminTab('tabSecurity', this)">🛡️ سجلات الأمان والنظام</button>
   </div>
 
-
-  <!-- Tab 1: Students Directory & Live Management -->
+  <!-- Tab 1: Students Directory -->
   <div id="tabStudents" class="admin-tab-content">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:14px;">
       <div class="search-box">
         <span>🔍</span>
-        <input type="text" id="studentSearchInput" placeholder="بحث باسم الطالب أو رقم الهاتف..." oninput="filterStudents()">
+        <input type="text" id="studentSearchInput" placeholder="بحث باسم المستخدم أو رقم الهاتف..." oninput="filterStudents()">
       </div>
       <span style="font-size:0.85rem;color:var(--ink-dim);" id="studentsCountLabel">عرض 0 طالب</span>
     </div>
@@ -319,104 +305,95 @@
         <thead>
           <tr>
             <th>الطالب</th>
-            <th>رقم هاتف الطالب</th>
+            <th>هاتف الطالب</th>
             <th>هاتف ولي الأمر</th>
             <th>وظيفة الأب</th>
+            <th>رصيد المحفظة (EGP)</th>
             <th>رصيد النقاط</th>
-            <th>حالة الحساب</th>
+            <th>الحالة</th>
             <th>تاريخ التسجيل</th>
             <th>الإجراءات</th>
           </tr>
         </thead>
         <tbody id="studentsTableBody">
-          <tr><td colspan="8" style="text-align:center;color:var(--ink-dim);padding:30px;">جارٍ تحميل قائمة الطلاب...</td></tr>
+          <tr><td colspan="9" style="text-align:center;color:var(--ink-dim);padding:30px;">جارٍ تحميل قائمة الطلاب من قاعدة البيانات...</td></tr>
         </tbody>
       </table>
     </div>
   </div>
 
-  <!-- Tab 2: Teachers & Courses Overview -->
+  <!-- Tab 2: Teachers Management -->
   <div id="tabTeachers" class="admin-tab-content" style="display:none;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-      <h3>قائمة المدرسين والمحتوى الأكاديمي</h3>
-      <a href="teacher-dashboard.html" class="btn btn-primary btn-sm">＋ إضافة / تعديل كورس في الاستوديو</a>
+      <h3>الكادر الأكاديمي والمدرسين المعتمدين</h3>
+      <button class="btn btn-primary btn-sm" onclick="openAddTeacherModal()">＋ إنشاء حساب مدرس جديد</button>
     </div>
     <div class="table-container">
       <table class="data-table">
         <thead>
           <tr>
-            <th>اسم المدرس / المستخدم</th>
-            <th>التخصص / النبذة</th>
-            <th>عدد الحصص المرفوعة</th>
+            <th>المدرس</th>
+            <th>التخصص</th>
+            <th>المراحل الدراسية</th>
+            <th>الكورسات المرفوعة</th>
+            <th>التقييم</th>
             <th>الحالة</th>
-            <th>تاريخ الانضمام</th>
             <th>الإجراءات</th>
           </tr>
         </thead>
         <tbody id="teachersTableBody">
-          <tr><td colspan="6" style="text-align:center;color:var(--ink-dim);padding:30px;">جارٍ تحميل قائمة المدرسين...</td></tr>
+          <tr><td colspan="7" style="text-align:center;color:var(--ink-dim);padding:30px;">جارٍ تحميل قائمة المدرسين...</td></tr>
         </tbody>
       </table>
     </div>
   </div>
 
-  <!-- Tab 3: Points & Access Code Generation -->
-  <div id="tabPoints" class="admin-tab-content" style="display:none;">
-    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:20px;margin-bottom:24px;">
-      
-      <!-- Generator Box -->
-      <div class="block" style="margin:0;">
-        <div class="block-head">
-          <h3>⚡ توليد كود شحن فوري (Access Code)</h3>
-        </div>
-        <p style="font-size:0.88rem;color:var(--ink-dim);margin:0 0 16px;">قم بإنشاء كود كارت شحن جديد لتسليمه للطالب برصيد محدد.</p>
-        <form id="genCodeForm" onsubmit="generateAccessCode(event)">
-          <div class="form-group" style="margin-bottom:14px;">
-            <label class="form-label">عدد النقاط</label>
-            <input type="number" class="form-control" id="codePointsInput" min="5" step="5" value="50" required>
-          </div>
-          <button type="submit" class="btn btn-primary" style="width:100%;" id="genBtn">توليد كود جديد 🎟️</button>
-        </form>
-        <div id="generatedCodeAlert" style="display:none;margin-top:16px;padding:12px;border-radius:var(--radius);background:var(--bg-raised);border:1px solid var(--ok-border);text-align:center;">
-          <span style="font-size:0.85rem;color:var(--ink-dim);">تم التوليد بنجاح! انسخ الكود:</span>
-          <div style="font-size:1.3rem;font-weight:700;letter-spacing:2px;color:var(--ok);margin:6px 0;" id="generatedCodeText">FG-XXXX-XXXX</div>
-        </div>
-      </div>
-
-      <!-- Quick Action Box -->
-      <div class="block" style="margin:0;display:flex;flex-direction:column;justify-content:space-between;">
-        <div>
-          <div class="block-head">
-            <h3>💳 مراجعة طلبات الشحن بالإيصالات</h3>
-          </div>
-          <p style="font-size:0.88rem;color:var(--ink-dim);margin:0 0 16px;">راجع الإيصالات البنكية وفودافون كاش المرفوعة من الطلاب ووافق عليها بضغطة زر.</p>
-        </div>
-        <a href="admin-points.html" class="btn btn-primary" style="text-align:center;">الانتقال لصفحة مراجعة الإيصالات الفورية ↗</a>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- Tab 4: Security & Video Logs -->
-  <div id="tabSecurity" class="admin-tab-content" style="display:none;">
+  <!-- Tab 3: Point Requests Review -->
+  <div id="tabPointRequests" class="admin-tab-content" style="display:none;">
     <div class="block">
       <div class="block-head">
-        <h3>🛡️ سجلات تشغيل وحماية الفيديوهات (Playback Security Logs)</h3>
+        <h3>💳 مراجعة إيصالات وطلبات الشحن</h3>
       </div>
-      <p style="font-size:0.88rem;color:var(--ink-dim);margin:0 0 14px;">مراقبة مباشرة لكل محاولة تشغيل فيديو لمنع مشاركة الحسابات وتسريب المحتوى.</p>
       <div class="table-container">
         <table class="data-table">
           <thead>
             <tr>
               <th>الطالب</th>
-              <th>الحصة / المحاضرة</th>
+              <th>المبلغ (EGP)</th>
+              <th>كود التحويل</th>
+              <th>الإيصال</th>
+              <th>ملاحظات</th>
+              <th>الحالة</th>
+              <th>التاريخ</th>
+              <th>الإجراء</th>
+            </tr>
+          </thead>
+          <tbody id="pointRequestsTableBody">
+            <tr><td colspan="8" style="text-align:center;color:var(--ink-dim);padding:30px;">جارٍ تحميل طلبات الشحن...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab 4: Security & Logs -->
+  <div id="tabSecurity" class="admin-tab-content" style="display:none;">
+    <div class="block">
+      <div class="block-head">
+        <h3>🛡️ سجلات تشغيل وحماية الفيديوهات</h3>
+      </div>
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>الطالب</th>
+              <th>المحاضرة</th>
               <th>عنوان IP</th>
-              <th>حالة التوكن</th>
-              <th>وقت المشاهدة</th>
+              <th>الوقت</th>
             </tr>
           </thead>
           <tbody id="videoLogsTableBody">
-            <tr><td colspan="5" style="text-align:center;color:var(--ink-dim);padding:30px;">جارٍ تحميل سجلات المشاهدة...</td></tr>
+            <tr><td colspan="4" style="text-align:center;color:var(--ink-dim);padding:30px;">جارٍ التحميل...</td></tr>
           </tbody>
         </table>
       </div>
@@ -425,39 +402,103 @@
 
 </div>
 
-<!-- Modal: Adjust Student Points -->
-<div class="modal-overlay" id="pointsModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999;align-items:center;justify-content:center;">
-  <div style="background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius);max-width:440px;width:90%;padding:24px;">
-    <h3 style="margin-top:0;">تعديل رصيد الطالب 💳</h3>
-    <p style="color:var(--ink-dim);font-size:0.88rem;margin:4px 0 16px;" id="pointsModalStudentName">الطالب: —</p>
-    <form id="adjustPointsForm" onsubmit="submitPointsAdjustment(event)">
-      <input type="hidden" id="adjustStudentId">
+<!-- Modal: Add New Teacher (Admin-only) -->
+<div class="modal-overlay" id="addTeacherModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999;align-items:center;justify-content:center;">
+  <div style="background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius);max-width:500px;width:90%;padding:26px;max-height:90vh;overflow-y:auto;">
+    <h3 style="margin-top:0;">👨‍🏫 إنشاء حساب مدرس جديد</h3>
+    <p style="color:var(--ink-dim);font-size:0.88rem;margin:4px 0 16px;">أدخل بيانات المدرس لإنشاء حسابه واعتماده في الكادر الأكاديمي.</p>
+    <form id="addTeacherForm" onsubmit="submitAddTeacher(event)">
       <div class="form-group" style="margin-bottom:12px;">
-        <label class="form-label">قيمة التعديل (موجب للشحن أو سالب للخصم)</label>
-        <input type="number" class="form-control" id="adjustPointsAmount" placeholder="مثال: 50 أو -20" required>
+        <label class="form-label">اسم المستخدم للدخول (Username)</label>
+        <input type="text" class="form-control" id="newTeacherUsername" placeholder="مثال: dr_tamer_elkady" required>
+      </div>
+      <div class="form-group" style="margin-bottom:12px;">
+        <label class="form-label">كلمة المرور المؤقتة</label>
+        <input type="password" class="form-control" id="newTeacherPassword" placeholder="••••••••" required minlength="8">
+      </div>
+      <div class="form-group" style="margin-bottom:12px;">
+        <label class="form-label">الاسم المعروض (اللقب الكامل)</label>
+        <input type="text" class="form-control" id="newTeacherDisplayName" placeholder="مثال: Dr Tamer El-Kady" required>
+      </div>
+      <div class="form-group" style="margin-bottom:12px;">
+        <label class="form-label">المادة التخصصية</label>
+        <input type="text" class="form-control" id="newTeacherSubject" placeholder="مثال: الفيزياء، الكيمياء، الأحياء...">
+      </div>
+      <div class="form-group" style="margin-bottom:12px;">
+        <label class="form-label">رابط صورة المدرس (Avatar URL)</label>
+        <input type="url" class="form-control" id="newTeacherAvatar" placeholder="https://...">
+      </div>
+      <div class="form-group" style="margin-bottom:12px;">
+        <label class="form-label">المراحل الدراسية التي يدرسها</label>
+        <select class="form-control" id="newTeacherStages" multiple style="height:80px;">
+          <option value="PREPARATORY">المرحلة الإعدادية</option>
+          <option value="SECONDARY_1" selected>الصف الأول الثانوي</option>
+          <option value="SECONDARY_2" selected>الصف الثاني الثانوي</option>
+          <option value="SECONDARY_3" selected>الصف الثالث الثانوي</option>
+        </select>
+        <span class="hint">اضغط Ctrl لاختيار أكثر من مرحلة</span>
       </div>
       <div class="form-group" style="margin-bottom:18px;">
-        <label class="form-label">سبب التعديل (اختياري)</label>
-        <input type="text" class="form-control" id="adjustPointsReason" placeholder="مثال: مكافأة تفوق، شحن يدوي...">
+        <label class="form-label">نبذة وسيرة ذاتية (Bio)</label>
+        <textarea class="form-control" id="newTeacherBio" rows="2" placeholder="معلم أول وخبير تدريس المرحلة الثانوية..."></textarea>
       </div>
       <div style="display:flex;gap:10px;justify-content:flex-end;">
-        <button type="button" class="btn btn-line btn-sm" onclick="closePointsModal()">إلغاء</button>
-        <button type="submit" class="btn btn-primary btn-sm" id="savePointsBtn">تأكيد التعديل ✓</button>
+        <button type="button" class="btn btn-line btn-sm" onclick="closeAddTeacherModal()">إلغاء</button>
+        <button type="submit" class="btn btn-primary btn-sm" id="saveTeacherBtn">إنشاء وحفظ المدرس ✓</button>
       </div>
     </form>
   </div>
 </div>
 
+<!-- Modal: Student Profile Dossier & Notes & Wallet -->
+<div class="modal-overlay" id="studentDossierModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999;align-items:center;justify-content:center;">
+  <div style="background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius);max-width:620px;width:95%;padding:26px;max-height:90vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <h3 style="margin:0;" id="dossierStudentName">ملف الطالب: —</h3>
+      <button class="btn btn-line btn-sm" onclick="closeStudentDossier()">✕ إغلاق</button>
+    </div>
+    
+    <div id="dossierDetails">جارٍ التحميل...</div>
+
+    <!-- Quick Operations -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:20px 0;">
+      <!-- Wallet Transfer -->
+      <div style="background:var(--bg-raised);padding:14px;border-radius:12px;border:1px solid var(--line-soft);">
+        <h4 style="margin:0 0 8px;color:#10b981;">💵 تحويل رصيد مالي (EGP)</h4>
+        <input type="number" id="quickWalletAmount" placeholder="المبلغ (مثال: 150)" class="form-control" style="margin-bottom:8px;">
+        <input type="text" id="quickWalletReason" placeholder="السبب (اختياري)" class="form-control" style="margin-bottom:8px;">
+        <button class="btn btn-primary btn-sm" style="width:100%;" onclick="submitQuickWallet()">تحويل الرصيد الآن ✓</button>
+      </div>
+      <!-- Points Adjust -->
+      <div style="background:var(--bg-raised);padding:14px;border-radius:12px;border:1px solid var(--line-soft);">
+        <h4 style="margin:0 0 8px;color:var(--gold-light);">💎 تعديل النقاط</h4>
+        <input type="number" id="quickPointsAmount" placeholder="النقاط (مثال: 150 أو -50)" class="form-control" style="margin-bottom:8px;">
+        <input type="text" id="quickPointsReason" placeholder="السبب (اختياري)" class="form-control" style="margin-bottom:8px;">
+        <button class="btn btn-primary btn-sm" style="width:100%;" onclick="submitQuickPoints()">تعديل النقاط الآن ✓</button>
+      </div>
+    </div>
+
+    <!-- Student Notes Section -->
+    <div style="margin-top:20px;border-top:1px solid var(--line-soft);padding-top:16px;">
+      <h4>📝 ملاحظات المشرفين والمدير عن الطالب</h4>
+      <div id="studentNotesList" style="max-height:160px;overflow-y:auto;margin-bottom:12px;"></div>
+      <div style="display:flex;gap:8px;">
+        <input type="text" id="newNoteInput" placeholder="أضف ملاحظة خاصة عن هذا الطالب..." class="form-control">
+        <button class="btn btn-line btn-sm" onclick="submitStudentNote()">إضافة ＋</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/i18n.js"></script>
 <script src="js/api.js"></script>
 <script>
   let allStudents = [];
-  let allTeachers = [];
+  let currentActiveStudentId = null;
 
-  // Protect Admin Route: must be ADMIN
   document.addEventListener('DOMContentLoaded', async () => {
     const user = window.KhatwaAPI.getUser();
     if (!user || (user.role !== 'ADMIN' && user.username !== 'sameryasser-khatwa')) {
-      // Force admin role if username matches
       if (user && (user.username === 'sameryasser-khatwa' || user.username?.toLowerCase()?.includes('sameryasser'))) {
         user.role = 'ADMIN';
         window.KhatwaAPI.setUser(user);
@@ -467,7 +508,6 @@
         return;
       }
     }
-
     window.KhatwaAPI.syncNav();
     await refreshAdminData();
   });
@@ -484,42 +524,32 @@
       loadAnalytics(),
       loadStudents(),
       loadTeachers(),
+      loadPointRequests(),
       loadVideoLogs(),
     ]);
   }
 
   async function loadAnalytics() {
     try {
-      const res = await window.KhatwaAPI.admin.getAnalytics();
-      if (res && res.data) {
-        document.getElementById('statTotalStudents').textContent = res.data.totalStudents || 0;
-        document.getElementById('statTotalTeachers').textContent = res.data.totalTeachers || 0;
-        document.getElementById('statTotalLessons').textContent = res.data.totalLessons || 0;
-        document.getElementById('statTotalPoints').textContent = res.data.totalPointsCredited || 0;
+      const data = await window.KhatwaAPI.admin.getAnalytics();
+      if (data) {
+        document.getElementById('statTotalStudents').textContent = data.totalStudents || 0;
+        document.getElementById('statTotalTeachers').textContent = data.totalTeachers || 0;
+        document.getElementById('statTotalLessons').textContent = data.totalLessons || 0;
+        document.getElementById('statTotalPoints').textContent = data.totalPointsCredited || 0;
+        document.getElementById('statPendingRequests').textContent = data.pendingPointRequests || 0;
       }
     } catch (e) {
-      // Local fallback calculation
-      const storedUsers = JSON.parse(localStorage.getItem('khatwa_store_users') || '[]');
-      const courses = JSON.parse(localStorage.getItem('khatwa_store_courses') || '[]');
-      document.getElementById('statTotalStudents').textContent = storedUsers.filter(u => u.role === 'STUDENT').length || 1;
-      document.getElementById('statTotalTeachers').textContent = storedUsers.filter(u => u.role === 'TEACHER').length || 1;
-      document.getElementById('statTotalLessons').textContent = courses.length || 0;
+      console.error('Failed to load analytics:', e);
     }
-
-    // Pending requests count
-    try {
-      const reqs = await window.KhatwaAPI.pointRequests.getAdminRequests('PENDING');
-      document.getElementById('statPendingRequests').textContent = reqs ? reqs.length : 0;
-    } catch (e) {}
   }
 
   async function loadStudents() {
     try {
-      const res = await window.KhatwaAPI.admin.getStudents();
-      allStudents = res && res.data ? res.data : [];
+      allStudents = await window.KhatwaAPI.admin.getStudents();
     } catch (e) {
-      const storedUsers = JSON.parse(localStorage.getItem('khatwa_store_users') || '[]');
-      allStudents = storedUsers.filter(u => u.role === 'STUDENT');
+      console.error('Failed to load students:', e);
+      allStudents = [];
     }
     document.getElementById('tabBadgeStudents').textContent = allStudents.length;
     renderStudents(allStudents);
@@ -530,17 +560,18 @@
     document.getElementById('studentsCountLabel').textContent = `عرض ${list.length} طالب`;
 
     if (!list || list.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--ink-dim);padding:30px;">لا يوجد طلاب مسجلون حتى الآن</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--ink-dim);padding:30px;">لا يوجد طلاب مسجلون بقاعدة البيانات حتى الآن</td></tr>';
       return;
     }
 
     tbody.innerHTML = list.map(s => {
-      const phone = s.studentProfile?.studentPhoneNumber || s.studentPhoneNumber || s.phone || '—';
-      const parentPhone = s.studentProfile?.parentInfo?.parentPhoneNumber || s.parentPhoneNumber || s.parentPhone || '—';
-      const fatherJob = s.studentProfile?.parentInfo?.fatherJob || s.fatherJob || '—';
-      const points = typeof s.pointsBalance === 'number' ? s.pointsBalance : 0;
+      const phone = s.studentProfile?.studentPhoneNumber || '—';
+      const parentPhone = s.studentProfile?.parentInfo?.parentPhoneNumber || '—';
+      const fatherJob = s.studentProfile?.parentInfo?.fatherJob || '—';
+      const wallet = (s.walletBalance || 0).toFixed(2);
+      const points = s.pointsBalance || 0;
       const statusBadge = s.isActive !== false ? '<span class="tag tag-ok">نشط ✓</span>' : '<span class="tag tag-err">معطل ✕</span>';
-      const dateStr = s.createdAt ? new Date(s.createdAt).toLocaleDateString('ar-EG', { month: 'short', day: 'numeric' }) : '—';
+      const dateStr = s.createdAt ? new Date(s.createdAt).toLocaleDateString('ar-EG', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
 
       return `
         <tr>
@@ -548,13 +579,13 @@
           <td dir="ltr" style="text-align:right;">${phone}</td>
           <td dir="ltr" style="text-align:right;">${parentPhone}</td>
           <td>${fatherJob}</td>
+          <td><b style="color:#10b981;">${wallet}</b> ج.م</td>
           <td><b style="color:var(--gold-light);">${points}</b> نقطة</td>
           <td>${statusBadge}</td>
           <td>${dateStr}</td>
           <td>
             <div style="display:flex;gap:6px;">
-              <button class="btn btn-line btn-sm" style="padding:4px 8px;font-size:.8rem;" onclick="openPointsModal('${s.id}', '${s.name || s.username}')">💳 شحن/خصم</button>
-              <a href="student-monitor.html?studentId=${s.id}" class="btn btn-text btn-sm" style="padding:4px 8px;font-size:.8rem;">👁️ مراقبة</a>
+              <button class="btn btn-primary btn-sm" style="padding:4px 10px;font-size:.8rem;" onclick="openStudentDossier('${s.id}')">📂 الملف والعمليات</button>
             </div>
           </td>
         </tr>
@@ -566,135 +597,280 @@
     const q = document.getElementById('studentSearchInput').value.trim().toLowerCase();
     if (!q) return renderStudents(allStudents);
     const filtered = allStudents.filter(s => {
-      const name = (s.name || '').toLowerCase();
-      const username = (s.username || '').toLowerCase();
-      const phone = (s.studentProfile?.studentPhoneNumber || s.studentPhoneNumber || s.phone || '').toLowerCase();
-      return name.includes(q) || username.includes(q) || phone.includes(q);
+      const uname = (s.username || '').toLowerCase();
+      const phone = (s.studentProfile?.studentPhoneNumber || '').toLowerCase();
+      const pphone = (s.studentProfile?.parentInfo?.parentPhoneNumber || '').toLowerCase();
+      return uname.includes(q) || phone.includes(q) || pphone.includes(q);
     });
     renderStudents(filtered);
   }
 
   async function loadTeachers() {
     try {
-      const res = await window.KhatwaAPI.admin.getTeachers();
-      allTeachers = res && res.data ? res.data : [];
+      const teachers = await window.KhatwaAPI.admin.getTeachers();
+      document.getElementById('tabBadgeTeachers').textContent = teachers.length;
+      const tbody = document.getElementById('teachersTableBody');
+      if (teachers.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--ink-dim);padding:30px;">لا يوجد مدرسون مضافون بعد. اضغط "إضافة مدرس جديد" لإنشاء أول مدرس.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = teachers.map(t => {
+        const profile = t.teacherProfile || {};
+        const coursesCount = profile.courses?.length || 0;
+        const statusBadge = t.isActive !== false ? '<span class="tag tag-ok">نشط ✓</span>' : '<span class="tag tag-err">معطل ✕</span>';
+        return `
+          <tr>
+            <td>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span style="font-size:1.4rem;">👨‍🏫</span>
+                <div><b>${profile.displayName || t.username}</b><br><span style="font-size:.78rem;color:var(--ink-dim);">@${t.username}</span></div>
+              </div>
+            </td>
+            <td>${profile.subject || 'عام'}</td>
+            <td><span class="tag">${profile.academicStages || 'الكل'}</span></td>
+            <td><b>${coursesCount}</b> كورس</td>
+            <td>⭐ ${(profile.rating || 5.0).toFixed(1)}</td>
+            <td>${statusBadge}</td>
+            <td>
+              <button class="btn btn-line btn-sm" onclick="window.KhatwaAPI.admin.toggleTeacherActive('${t.id}').then(() => loadTeachers())">
+                ${t.isActive !== false ? 'تعطيل' : 'تفعيل'}
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
     } catch (e) {
-      allTeachers = [
-        { username: 'demo_teacher', teacherProfile: { displayName: 'أ/ محمد أحمد', bio: 'مدرس الرياضيات والفيزياء' }, isActive: true, createdAt: new Date() }
-      ];
+      console.error('Failed to load teachers:', e);
     }
-    document.getElementById('tabBadgeTeachers').textContent = allTeachers.length;
-    renderTeachers(allTeachers);
   }
 
-  function renderTeachers(list) {
-    const tbody = document.getElementById('teachersTableBody');
-    if (!list || list.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--ink-dim);padding:30px;">لا يوجد مدرسون مسجلون</td></tr>';
-      return;
+  async function loadPointRequests() {
+    try {
+      const requests = await window.KhatwaAPI.admin.getPointRequests();
+      const tbody = document.getElementById('pointRequestsTableBody');
+      if (requests.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--ink-dim);padding:30px;">لا توجد طلبات شحن معلقة حالياً</td></tr>';
+        return;
+      }
+      tbody.innerHTML = requests.map(r => {
+        const receipt = r.screenshotUrl ? `<a href="${r.screenshotUrl}" target="_blank"><img src="${r.screenshotUrl}" style="width:40px;height:40px;object-fit:cover;border-radius:4px;"></a>` : '—';
+        const isPending = r.status === 'PENDING';
+        return `
+          <tr>
+            <td><b>${r.user?.username || 'طالب'}</b></td>
+            <td><b>${r.amount || 0}</b> ج.م</td>
+            <td><code>${r.code || '—'}</code></td>
+            <td>${receipt}</td>
+            <td>${r.notes || '—'}</td>
+            <td><span class="tag ${r.status === 'APPROVED' ? 'tag-ok' : r.status === 'REJECTED' ? 'tag-err' : ''}">${r.status}</span></td>
+            <td>${new Date(r.createdAt).toLocaleDateString('ar-EG')}</td>
+            <td>
+              ${isPending ? `
+                <button class="btn btn-primary btn-sm" onclick="approveRequest('${r.id}')">موافقة ✓</button>
+                <button class="btn btn-line btn-sm" style="color:var(--err);" onclick="rejectRequest('${r.id}')">رفض ✕</button>
+              ` : 'مكتمل'}
+            </td>
+          </tr>
+        `;
+      }).join('');
+    } catch (e) {
+      console.error('Failed to load point requests:', e);
     }
-    tbody.innerHTML = list.map(t => {
-      const displayName = t.teacherProfile?.displayName || t.name || t.username;
-      const bio = t.teacherProfile?.bio || t.bio || 'مدرس معتمد';
-      const lessonCount = t.teacherProfile?.lessons?.length || 1;
-      const statusBadge = t.isActive !== false ? '<span class="tag tag-ok">نشط ✓</span>' : '<span class="tag tag-err">معطل ✕</span>';
-      const dateStr = t.createdAt ? new Date(t.createdAt).toLocaleDateString('ar-EG', { month: 'short', day: 'numeric' }) : '—';
+  }
 
-      return `
-        <tr>
-          <td><b>${displayName}</b><br><span style="font-size:.78rem;color:var(--ink-dim);">@${t.username}</span></td>
-          <td>${bio}</td>
-          <td><b>${lessonCount}</b> حصة</td>
-          <td>${statusBadge}</td>
-          <td>${dateStr}</td>
-          <td>
-            <a href="teacher-dashboard.html" class="btn btn-line btn-sm" style="padding:4px 8px;font-size:.8rem;">🎬 فتح الاستوديو</a>
-          </td>
-        </tr>
-      `;
-    }).join('');
+  async function approveRequest(id) {
+    if (!confirm('هل أنت متأكد من اعتماد هذا الإيصال وإضافة الرصيد لحساب الطالب؟')) return;
+    await window.KhatwaAPI.admin.approvePointRequest(id);
+    await refreshAdminData();
+  }
+
+  async function rejectRequest(id) {
+    const reason = prompt('أدخل سبب الرفض (ليظهر للطالب):', 'الإيصال غير واضح أو مكرر');
+    if (!reason) return;
+    await window.KhatwaAPI.admin.rejectPointRequest(id, reason);
+    await refreshAdminData();
   }
 
   async function loadVideoLogs() {
-    const tbody = document.getElementById('videoLogsTableBody');
     try {
-      const res = await window.KhatwaAPI.admin.getVideoAccessLogs();
-      const logs = res && res.data ? res.data : [];
+      const logs = await window.KhatwaAPI.admin.getVideoAccessLogs();
+      const tbody = document.getElementById('videoLogsTableBody');
       if (logs.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--ink-dim);padding:24px;">لا توجد سجلات مشاهدة حديثة</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--ink-dim);padding:24px;">لا توجد سجلات مشاهدة حديثة</td></tr>';
         return;
       }
       tbody.innerHTML = logs.map(l => `
         <tr>
           <td><b>${l.student?.username || 'طالب'}</b></td>
           <td>${l.lesson?.title || 'محاضرة'}</td>
-          <td>${l.ipAddress || '127.0.0.1'}</td>
-          <td><span class="tag tag-ok">توكن صالح ✓</span></td>
-          <td>${new Date(l.createdAt).toLocaleTimeString('ar-EG')}</td>
+          <td><code>${l.ip || '127.0.0.1'}</code></td>
+          <td>${new Date(l.createdAt).toLocaleString('ar-EG')}</td>
         </tr>
       `).join('');
-    } catch (e) {
-      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--ink-dim);padding:24px;">سجلات الأمان نشطة وتعمل تلقائياً لمنع تسريب المحتوى.</td></tr>';
-    }
+    } catch (e) {}
   }
 
-  // Modal: Points Adjustment
-  function openPointsModal(studentId, name) {
-    document.getElementById('adjustStudentId').value = studentId;
-    document.getElementById('pointsModalStudentName').textContent = `الطالب: ${name}`;
-    document.getElementById('adjustPointsAmount').value = '';
-    document.getElementById('adjustPointsReason').value = '';
-    document.getElementById('pointsModal').style.display = 'flex';
+  // ─── Modal: Add Teacher ───────────────────────────────────────────────────
+  function openAddTeacherModal() {
+    document.getElementById('addTeacherModal').style.display = 'flex';
+  }
+  function closeAddTeacherModal() {
+    document.getElementById('addTeacherModal').style.display = 'none';
   }
 
-  function closePointsModal() {
-    document.getElementById('pointsModal').style.display = 'none';
-  }
-
-  async function submitPointsAdjustment(e) {
+  async function submitAddTeacher(e) {
     e.preventDefault();
-    const id = document.getElementById('adjustStudentId').value;
-    const amount = Number(document.getElementById('adjustPointsAmount').value);
-    const reason = document.getElementById('adjustPointsReason').value;
+    const username = document.getElementById('newTeacherUsername').value.trim();
+    const password = document.getElementById('newTeacherPassword').value;
+    const displayName = document.getElementById('newTeacherDisplayName').value.trim();
+    const subject = document.getElementById('newTeacherSubject').value.trim();
+    const avatarUrl = document.getElementById('newTeacherAvatar').value.trim();
+    const bio = document.getElementById('newTeacherBio').value.trim();
+    
+    const stageSelect = document.getElementById('newTeacherStages');
+    const selectedStages = Array.from(stageSelect.selectedOptions).map(o => o.value).join(',');
 
-    const btn = document.getElementById('savePointsBtn');
+    const btn = document.getElementById('saveTeacherBtn');
     btn.disabled = true;
-    btn.textContent = 'جارٍ التعديل...';
+    btn.textContent = 'جارٍ الحفظ في قاعدة البيانات...';
 
     try {
-      await window.KhatwaAPI.admin.adjustStudentPoints(id, amount, reason);
-      alert('تم تعديل رصيد النقاط بنجاح ✅');
-      closePointsModal();
-      await loadStudents();
+      await window.KhatwaAPI.admin.createTeacher({
+        username,
+        password,
+        displayName,
+        subject,
+        avatarUrl,
+        bio,
+        academicStages: selectedStages
+      });
+      alert('تم إنشاء حساب المدرس بنجاح في قاعدة البيانات! ✅');
+      closeAddTeacherModal();
+      document.getElementById('addTeacherForm').reset();
+      await loadTeachers();
+      await loadAnalytics();
     } catch (err) {
-      // Local fallback
-      const storedUsers = JSON.parse(localStorage.getItem('khatwa_store_users') || '[]');
-      const target = storedUsers.find(u => u.id === id || u.username === id);
-      if (target) {
-        target.pointsBalance = Math.max(0, (target.pointsBalance || 0) + amount);
-        localStorage.setItem('khatwa_store_users', JSON.stringify(storedUsers));
-      }
-      alert('تم تعديل رصيد النقاط محلياً ✅');
-      closePointsModal();
-      await loadStudents();
+      alert(err.message || 'حدث خطأ أثناء إنشاء حساب المدرس');
     } finally {
       btn.disabled = false;
-      btn.textContent = 'تأكيد التعديل ✓';
+      btn.textContent = 'إنشاء وحفظ المدرس ✓';
     }
   }
 
-  // Access Code Generation
-  function generateAccessCode(e) {
-    e.preventDefault();
-    const points = Number(document.getElementById('codePointsInput').value);
-    const rand = Math.random().toString(36).substring(2, 6).toUpperCase();
-    const rand2 = Math.random().toString(36).substring(2, 6).toUpperCase();
-    const code = `FG-${rand}-${rand2}`;
+  // ─── Modal: Student Dossier & Notes & Wallet ──────────────────────────────
+  async function openStudentDossier(studentId) {
+    currentActiveStudentId = studentId;
+    document.getElementById('studentDossierModal').style.display = 'flex';
+    document.getElementById('dossierDetails').innerHTML = 'جارٍ جلب الملف الشامل من قاعدة البيانات...';
 
-    document.getElementById('generatedCodeText').textContent = `${code} (${points} نقطة)`;
-    document.getElementById('generatedCodeAlert').style.display = 'block';
+    try {
+      const student = await window.KhatwaAPI.admin.getStudentFullProfile(studentId);
+      if (!student) return;
+
+      document.getElementById('dossierStudentName').textContent = `ملف الطالب: ${student.username}`;
+      const phone = student.studentProfile?.studentPhoneNumber || '—';
+      const pphone = student.studentProfile?.parentInfo?.parentPhoneNumber || '—';
+      const fatherJob = student.studentProfile?.parentInfo?.fatherJob || '—';
+
+      document.getElementById('dossierDetails').innerHTML = `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:0.9rem;margin-bottom:12px;">
+          <div><b>رقم الهاتف:</b> <span dir="ltr">${phone}</span></div>
+          <div><b>هاتف ولي الأمر:</b> <span dir="ltr">${pphone}</span></div>
+          <div><b>وظيفة الأب:</b> ${fatherJob}</div>
+          <div><b>رصيد المحفظة:</b> <b style="color:#10b981;">${(student.walletBalance || 0).toFixed(2)} ج.م</b></div>
+          <div><b>رصيد النقاط:</b> <b style="color:var(--gold-light);">${student.pointsBalance || 0} نقطة</b></div>
+          <div><b>الكورسات المشترك بها:</b> ${student.courseEnrollments?.length || 0} كورس</div>
+        </div>
+      `;
+
+      renderNotesList(student.studentNotes || []);
+    } catch (err) {
+      document.getElementById('dossierDetails').innerHTML = 'حدث خطأ أثناء تحميل ملف الطالب.';
+    }
+  }
+
+  function closeStudentDossier() {
+    document.getElementById('studentDossierModal').style.display = 'none';
+    currentActiveStudentId = null;
+  }
+
+  function renderNotesList(notes) {
+    const list = document.getElementById('studentNotesList');
+    if (!notes || notes.length === 0) {
+      list.innerHTML = '<p style="color:var(--ink-dim);font-size:0.85rem;margin:4px 0;">لا توجد ملاحظات مسجلة عن هذا الطالب حتى الآن.</p>';
+      return;
+    }
+    list.innerHTML = notes.map(n => `
+      <div style="background:var(--bg-raised);padding:8px 12px;border-radius:8px;margin-bottom:6px;font-size:0.88rem;">
+        <div style="display:flex;justify-content:space-between;color:var(--ink-dim);font-size:0.75rem;margin-bottom:3px;">
+          <span>بواسطة: ${n.author?.username || 'الإدارة'}</span>
+          <span>${new Date(n.createdAt).toLocaleDateString('ar-EG')}</span>
+        </div>
+        <div>${n.content}</div>
+      </div>
+    `).join('');
+  }
+
+  async function submitQuickWallet() {
+    if (!currentActiveStudentId) return;
+    const amount = Number(document.getElementById('quickWalletAmount').value);
+    const reason = document.getElementById('quickWalletReason').value || 'تحويل رصيد بواسطة المدير';
+
+    if (isNaN(amount) || amount === 0) {
+      alert('أدخل مبلغاً صحيحاً');
+      return;
+    }
+
+    try {
+      await window.KhatwaAPI.admin.adjustWallet(currentActiveStudentId, amount, reason);
+      alert(`تم تحويل ${amount} ج.م بنجاح وحفظ المعاملة في قاعدة البيانات! ✅`);
+      document.getElementById('quickWalletAmount').value = '';
+      document.getElementById('quickWalletReason').value = '';
+      await openStudentDossier(currentActiveStudentId);
+      await loadStudents();
+      await loadAnalytics();
+    } catch (err) {
+      alert(err.message || 'فشلت عملية التحويل');
+    }
+  }
+
+  async function submitQuickPoints() {
+    if (!currentActiveStudentId) return;
+    const amount = Number(document.getElementById('quickPointsAmount').value);
+    const reason = document.getElementById('quickPointsReason').value || 'تعديل نقاط بواسطة المدير';
+
+    if (isNaN(amount) || amount === 0) {
+      alert('أدخل عدداً صحيحاً للنقاط');
+      return;
+    }
+
+    try {
+      await window.KhatwaAPI.admin.adjustPoints(currentActiveStudentId, amount, reason);
+      alert(`تم تعديل النقاط (${amount > 0 ? '+' : ''}${amount}) وحفظ المعاملة بنجاح! ✅`);
+      document.getElementById('quickPointsAmount').value = '';
+      document.getElementById('quickPointsReason').value = '';
+      await openStudentDossier(currentActiveStudentId);
+      await loadStudents();
+      await loadAnalytics();
+    } catch (err) {
+      alert(err.message || 'فشلت عملية تعديل النقاط');
+    }
+  }
+
+  async function submitStudentNote() {
+    if (!currentActiveStudentId) return;
+    const content = document.getElementById('newNoteInput').value.trim();
+    if (!content) return;
+
+    try {
+      await window.KhatwaAPI.admin.addNote(currentActiveStudentId, content);
+      document.getElementById('newNoteInput').value = '';
+      const notes = await window.KhatwaAPI.admin.getNotes(currentActiveStudentId);
+      renderNotesList(notes);
+    } catch (err) {
+      alert(err.message || 'فشل حفظ الملاحظة');
+    }
   }
 </script>
-
 </body>
 </html>

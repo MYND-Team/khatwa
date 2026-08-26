@@ -7,75 +7,30 @@
 <link rel="icon" type="image/jpeg" href="logo/logo-khatwa.jpeg">
 <link rel="stylesheet" href="css/style.css">
 <style>
-  .dropzone-box {
-    border: 2px dashed var(--line);
-    border-radius: var(--radius);
-    padding: 24px 20px;
-    text-align: center;
-    background: var(--bg-raised);
-    cursor: pointer;
-    transition: all .2s ease;
-  }
-  .dropzone-box:hover {
-    border-color: var(--primary);
-    background: var(--primary-faint);
-  }
-  .dropzone-box.dragover {
-    border-color: var(--primary-light);
-    background: var(--primary-faint);
-  }
-  .progress-wrap {
-    margin-top: 14px;
-    background: var(--bg);
+  .chapter-box {
+    background: var(--bg-card);
     border: 1px solid var(--line-soft);
-    border-radius: 6px;
-    padding: 12px 14px;
+    border-radius: 16px;
+    padding: 18px;
+    margin-bottom: 16px;
   }
-  .progress-bar-bg {
-    height: 8px;
-    background: var(--line-soft);
-    border-radius: 4px;
-    overflow: hidden;
-    margin-top: 6px;
-  }
-  .progress-bar-fill {
-    height: 100%;
-    width: 0%;
-    background: linear-gradient(90deg, var(--primary), var(--primary-light));
-    transition: width 0.15s ease;
-  }
-  .question-card {
-    background: var(--bg-raised);
-    border: 1px solid var(--line-soft);
-    border-radius: 6px;
-    padding: 14px 16px;
-    position: relative;
-  }
-  .question-card-head {
+  .chapter-head {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 10px;
+    border-bottom: 1px solid var(--line-soft);
+    padding-bottom: 12px;
+    margin-bottom: 12px;
   }
-  .option-row {
-    display: grid;
-    grid-template-columns: 28px 1fr auto;
-    gap: 8px;
-    align-items: center;
-    margin-bottom: 8px;
-  }
-  .option-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 26px;
-    height: 26px;
-    border-radius: 50%;
-    background: var(--bg);
+  .lesson-item {
+    background: var(--bg-raised);
     border: 1px solid var(--line-soft);
-    font-size: .8rem;
-    font-weight: 700;
-    color: var(--primary);
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
 </style>
 </head>
@@ -84,680 +39,536 @@
 <nav class="nav">
   <div class="container nav-inner">
     <a href="index.html" class="brand"><img src="logo/logo-khatwa.jpeg" alt="خطوة" class="brand-logo"><span class="brand-text">خطوة</span></a>
-    <div class="breadcrumb" style="margin:0;"><a href="courses.html">الكورسات</a><span class="sep">›</span> استوديو المدرس</div>
-    <div class="nav-cta">
-      <a href="profile.html" class="user-line" id="navUserLine">
+    <ul class="nav-links">
+      <li><a href="teacher-dashboard.html" class="active">استوديو المدرس</a></li>
+      <li><a href="courses.html">تصفح كطالب</a></li>
+    </ul>
+    <div class="nav-cta" style="display:flex;align-items:center;gap:12px;">
+      <button class="lang-switcher-btn" onclick="window.KhatwaI18n.toggleLanguage()">🌐 English</button>
+      <div class="user-line" id="navUserLine" style="cursor:default;">
         <span class="avatar" id="navAvatar">م</span>
         <span>
           <span class="name" id="navName">المدرس</span>
           <span class="role" id="navRole">مدرس معتمد</span>
         </span>
-      </a>
+      </div>
+      <a href="#" class="btn btn-line btn-sm" onclick="window.KhatwaAPI.auth.logout()" style="color:var(--err);">تسجيل الخروج</a>
     </div>
+    <button class="nav-toggle">القائمة</button>
   </div>
 </nav>
 
-<div class="container" style="padding-top:36px;padding-bottom:60px;">
+<div class="container" style="padding-top:32px;padding-bottom:60px;">
 
-  <!-- Header & Actions -->
+  <!-- Header -->
   <div class="page-head">
     <div>
-      <h1 id="teacherGreeting">استوديو إدارة المحتوى</h1>
-      <p class="page-sub" style="margin:4px 0 0;">أنشئ كورساتك التعليمية، ارفع فيديوهات المحاضرات مباشرة، وضع امتحانات مخصصة مع التصحيح التلقائي.</p>
+      <h1 id="teacherGreeting">استوديو إدارة المحتوى والمراحل الدراسية</h1>
+      <p class="page-sub" style="margin:4px 0 0;">إدارة الكورسات وفق المراحل الدراسية، رفع مذكرات الـ PDF، فيديوهات المحاضرات، وبناء الواجبات والامتحانات.</p>
     </div>
     <div style="display:flex;gap:10px;align-items:center;">
-      <a href="courses.html" class="btn btn-line btn-sm">👁️ تصفح كطالب</a>
-      <button class="btn btn-primary btn-sm" id="openCreateCourseModalBtn">＋ إنشاء كورس جديد</button>
+      <button class="btn btn-primary btn-sm" onclick="openCreateCourseModal()">＋ إنشاء كورس في المرحلة الحالية</button>
     </div>
   </div>
 
-  <!-- Analytics Stats -->
-  <div class="stats-row" style="grid-template-columns:repeat(4,1fr);margin-bottom:32px;">
-    <div class="stat-card">
-      <div class="label">الكورسات المتاحة</div>
-      <div class="val" id="statCoursesCount">0</div>
-    </div>
-    <div class="stat-card">
-      <div class="label">إجمالي المحاضرات</div>
-      <div class="val" id="statLecturesCount">0</div>
-    </div>
-    <div class="stat-card">
-      <div class="label">الطلاب المشتركين</div>
-      <div class="val" id="statStudentsCount">0</div>
-    </div>
-    <div class="stat-card">
-      <div class="label">تخزين الفيديوهات</div>
-      <div class="val" style="font-size:1.1rem;color:var(--gold-light);">Google Drive ☁️</div>
-    </div>
+  <!-- Academic Stage Folder Tabs -->
+  <div class="stage-folder-tabs" style="margin-bottom:24px;">
+    <button class="stage-folder-tab active" onclick="switchStage('PREPARATORY', this)">📁 المرحلة الإعدادية</button>
+    <button class="stage-folder-tab" onclick="switchStage('SECONDARY_1', this)">📁 الصف الأول الثانوي</button>
+    <button class="stage-folder-tab" onclick="switchStage('SECONDARY_2', this)">📁 الصف الثاني الثانوي</button>
+    <button class="stage-folder-tab" onclick="switchStage('SECONDARY_3', this)">📁 الصف الثالث الثانوي</button>
   </div>
 
-  <!-- Tab Navigation -->
-  <div class="tab-row" style="margin-bottom:24px;">
-    <button class="tab active" data-target="tab-my-courses">كورساتي ومحاضراتي (<span id="coursesBadge">0</span>)</button>
-    <button class="tab" data-target="tab-enrolled-students">الطلاب المشتركين (<span id="studentsBadge">0</span>)</button>
+  <!-- Active Stage Title & Courses Container -->
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+    <h3 id="currentStageTitle" style="margin:0;">📁 كورسات المرحلة الإعدادية</h3>
+    <button class="btn btn-line btn-sm" onclick="openCreateCourseModal()">＋ إضافة كورس جديد</button>
   </div>
 
-  <!-- Panel: My Courses -->
-  <div class="tab-panel" id="tab-my-courses">
-    <div id="coursesListContainer" style="display:flex;flex-direction:column;gap:16px;">
-      <!-- Dynamically filled with courses -->
-    </div>
-  </div>
-
-  <!-- Panel: Enrolled Students -->
-  <div class="tab-panel" id="tab-enrolled-students" style="display:none;">
-    <div style="background:var(--bg-raised);border:1px solid var(--line-soft);border-radius:var(--radius);overflow:hidden;">
-      <table style="width:100%;border-collapse:collapse;text-align:start;font-size:.88rem;">
-        <thead>
-          <tr style="background:var(--bg);border-bottom:1px solid var(--line-soft);color:var(--ink-dim);">
-            <th style="padding:12px 16px;">اسم الطالب</th>
-            <th style="padding:12px 16px;">الكورس</th>
-            <th style="padding:12px 16px;">تاريخ الاشتراك</th>
-            <th style="padding:12px 16px;">المحاضرات المكتملة</th>
-            <th style="padding:12px 16px;">نسبة التقدم</th>
-          </tr>
-        </thead>
-        <tbody id="enrolledStudentsBody">
-          <!-- Dynamically filled -->
-        </tbody>
-      </table>
-    </div>
+  <div id="stageCoursesList" style="display:flex;flex-direction:column;gap:20px;">
+    <div style="text-align:center;padding:40px;color:var(--ink-dim);">جارٍ جلب الكورسات من قاعدة البيانات...</div>
   </div>
 
 </div>
 
-<!-- =========================================================
-     MODAL: Create New Course
-     ========================================================= -->
-<div class="modal-backdrop" id="createCourseModal">
-  <div class="modal-window">
-    <div class="modal-header">
-      <h3>إنشاء كورس جديد</h3>
-      <button type="button" class="modal-close" id="closeCreateCourseBtn">&times;</button>
-    </div>
-    <form id="createCourseForm">
-      <div class="modal-body">
-        <div class="field">
-          <label for="cTitle">عنوان الكورس / المادة</label>
-          <input type="text" id="cTitle" placeholder="مثال: برمجة الويب المتقدمة — الثانوية العامة" required>
-        </div>
-        <div class="field-row">
-          <div class="field">
-            <label for="cSubject">المادة الدراسية</label>
-            <select id="cSubject" required>
-              <option value="الفيزياء">الفيزياء</option>
-              <option value="الكيمياء">الكيمياء</option>
-              <option value="الأحياء">الأحياء</option>
-              <option value="الرياضيات">الرياضيات</option>
-              <option value="اللغة العربية">اللغة العربية</option>
-              <option value="اللغة الإنجليزية">اللغة الإنجليزية</option>
-              <option value="الحاسب الآلي والبرمجة">الحاسب الآلي والبرمجة</option>
-              <option value="التاريخ">التاريخ</option>
-              <option value="الجغرافيا">الجغرافيا</option>
-              <option value="الفلسفة">الفلسفة</option>
-            </select>
-          </div>
-          <div class="field">
-            <label for="cGrade">المرحلة الدراسية</label>
-            <select id="cGrade" required>
-              <option value="الصف الأول الثانوي">الصف الأول الثانوي</option>
-              <option value="الصف الثاني الثانوي">الصف الثاني الثانوي</option>
-              <option value="الصف الثالث الثانوي">الصف الثالث الثانوي</option>
-              <option value="المرحلة الإعدادية">المرحلة الإعدادية</option>
-            </select>
-          </div>
-        </div>
-        <div class="field-row">
-          <div class="field">
-            <label for="cPoints">تكلفة الاشتراك بالكورس (نقاط)</label>
-            <input type="number" id="cPoints" value="30" min="0" required>
-          </div>
-          <div class="field">
-            <label for="cTeacherName">اسم المدرس المعروض</label>
-            <input type="text" id="cTeacherName" placeholder="اسم المدرس أو الأستاذ">
-          </div>
-        </div>
-        <div class="field">
-          <label for="cDesc">وصف الكورس ومحتواه</label>
-          <textarea id="cDesc" rows="3" style="width:100%;padding:10px;border-radius:var(--radius);background:var(--bg-raised);border:1px solid var(--line-soft);color:var(--ink);font-family:inherit;" placeholder="شرح مبسط لما سيتعلمه الطالب في هذا الكورس..."></textarea>
-        </div>
+<!-- Modal: Create Course -->
+<div class="modal-overlay" id="createCourseModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999;align-items:center;justify-content:center;">
+  <div style="background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius);max-width:500px;width:90%;padding:24px;">
+    <h3 style="margin-top:0;">إنشاء كورس جديد</h3>
+    <form id="createCourseForm" onsubmit="submitCreateCourse(event)">
+      <div class="form-group" style="margin-bottom:12px;">
+        <label class="form-label">عنوان الكورس / المنهج</label>
+        <input type="text" class="form-control" id="courseTitleInput" placeholder="مثال: المراجعة النهائية في الفيزياء" required>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-line btn-sm" id="cancelCreateCourseBtn">إلغاء</button>
-        <button type="submit" class="btn btn-primary btn-sm">حفظ ونشر الكورس</button>
+      <div class="form-group" style="margin-bottom:12px;">
+        <label class="form-label">المادة الدراسية</label>
+        <input type="text" class="form-control" id="courseSubjectInput" placeholder="مثال: الفيزياء، الكيمياء، الرياضيات..." required>
+      </div>
+      <div class="form-group" style="margin-bottom:12px;">
+        <label class="form-label">المرحلة الدراسية</label>
+        <select class="form-control" id="courseStageSelect">
+          <option value="PREPARATORY">المرحلة الإعدادية</option>
+          <option value="SECONDARY_1">الصف الأول الثانوي</option>
+          <option value="SECONDARY_2">الصف الثاني الثانوي</option>
+          <option value="SECONDARY_3">الصف الثالث الثانوي</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin-bottom:12px;">
+        <label class="form-label">تكلفة الاشتراك (نقاط)</label>
+        <input type="number" class="form-control" id="coursePointsInput" value="50" min="0">
+      </div>
+      <div class="form-group" style="margin-bottom:18px;">
+        <label class="form-label">وصف الكورس</label>
+        <textarea class="form-control" id="courseDescInput" rows="2" placeholder="شرح مبسط لمحتوى الكورس..."></textarea>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button type="button" class="btn btn-line btn-sm" onclick="closeCreateCourseModal()">إلغاء</button>
+        <button type="submit" class="btn btn-primary btn-sm" id="saveCourseBtn">حفظ الكورس ✓</button>
       </div>
     </form>
   </div>
 </div>
 
-<!-- =========================================================
-     MODAL: Add Lecture + Direct Video Upload + Exam Builder
-     ========================================================= -->
-<div class="modal-backdrop" id="addLectureModal">
-  <div class="modal-window wide" style="max-width:640px;max-height:90vh;overflow-y:auto;">
-    <div class="modal-header">
-      <h3 id="addLectureModalTitle">إضافة محاضرة جديدة</h3>
-      <button type="button" class="modal-close" id="closeAddLectureBtn">&times;</button>
-    </div>
-    <form id="addLectureForm">
-      <input type="hidden" id="lecCourseId">
-      <div class="modal-body">
-        <div class="field">
-          <label for="lTitle">عنوان المحاضرة</label>
-          <input type="text" id="lTitle" placeholder="مثال: المحاضرة 1: مقدمة وشرح المفاهيم" required>
-        </div>
-
-        <!-- Direct Video File Upload Area -->
-        <div class="field">
-          <label>رفع ملف فيديو المحاضرة من جهازك (Google Drive)</label>
-          <div class="dropzone-box" id="videoDropzone" onclick="document.getElementById('lVideoFile').click()">
-            <div id="dropzonePrompt">
-              <div style="font-size:2.2rem;margin-bottom:8px;">🎥</div>
-              <p style="margin:0;font-weight:600;color:var(--ink);font-size:.95rem;">اضغط لاختيار فيديو من جهازك أو اسحب الملف وأفلته هنا</p>
-              <span class="hint" style="margin-top:6px;display:block;">يدعم صيغ MP4, MKV, WebM, MOV — يُحفظ الفيديو تلقائيًا في Google Drive</span>
-            </div>
-            <div id="fileSelectedCard" style="display:none;background:var(--bg);border:1px solid var(--gold-border);border-radius:6px;padding:12px 16px;text-align:right;">
-              <div style="display:flex;justify-content:space-between;align-items:center;">
-                <div>
-                  <span style="font-size:1.3rem;margin-inline-end:8px;">🎬</span>
-                  <b id="selectedFileName" style="color:var(--ink);font-size:.9rem;">video.mp4</b>
-                  <span id="selectedFileSize" style="color:var(--ink-dim);font-size:.8rem;margin-inline-start:8px;">(15 MB)</span>
-                </div>
-                <button type="button" class="btn btn-text btn-sm" style="color:var(--err);" onclick="event.stopPropagation(); clearSelectedVideo();">✕ إلغاء الملف</button>
-              </div>
-            </div>
-            <input type="file" id="lVideoFile" accept="video/mp4,video/webm,video/mkv,video/quicktime,video/*" style="display:none;" onchange="handleVideoFileSelected(this)">
-          </div>
-
-          <!-- Dynamic Progress Bar -->
-          <div class="progress-wrap" id="uploadProgressWrap" style="display:none;">
-            <div style="display:flex;justify-content:space-between;font-size:.82rem;">
-              <span id="uploadStatusText" style="color:var(--gold-light);font-weight:600;">☁️ جاري الرفع إلى Google Drive...</span>
-              <span id="uploadPercentText" style="font-weight:700;color:var(--gold-light);">0%</span>
-            </div>
-            <div class="progress-bar-bg">
-              <div class="progress-bar-fill" id="uploadProgressBar"></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="field-row">
-          <div class="field">
-            <label for="lDuration">مدة المحاضرة التقديرية (بالدقائق)</label>
-            <input type="number" id="lDuration" value="45" min="1">
-          </div>
-          <div class="field">
-            <label for="lPoints">تكلفة فتح الحصة منفردة (نقاط)</label>
-            <input type="number" id="lPoints" value="10" min="0">
-          </div>
-        </div>
-
-        <div class="field">
-          <label for="lDesc">ملاحظات وملخص المحاضرة</label>
-          <textarea id="lDesc" rows="2" style="width:100%;padding:10px;border-radius:var(--radius);background:var(--bg-raised);border:1px solid var(--line-soft);color:var(--ink);font-family:inherit;" placeholder="أهم النقاط التي تتناولها المحاضرة وملاحظات المذاكرة..."></textarea>
-        </div>
-
-        <!-- =========================================================
-             EXAM BUILDER SECTION: Teacher Choice & Custom Questions
-             ========================================================= -->
-        <div style="border:1px solid var(--line-soft);border-radius:6px;padding:16px;margin-top:16px;background:var(--bg);">
-          <div style="display:flex;justify-content:space-between;align-items:center;">
-            <label style="margin:0;cursor:pointer;display:flex;align-items:center;gap:10px;font-weight:600;color:var(--ink);user-select:none;">
-              <input type="checkbox" id="enableQuizCheck" onchange="toggleQuizBuilder(this.checked)" style="width:18px;height:18px;accent-color:var(--gold);">
-              <span>📝 إضافة امتحان / تدريب إلكتروني لهذه المحاضرة</span>
-            </label>
-            <span class="tag tag-ok" id="quizQuestionsCountBadge" style="display:none;font-size:.75rem;">0 أسئلة مضافة</span>
-          </div>
-
-          <div id="quizBuilderContainer" style="display:none;margin-top:16px;border-top:1px solid var(--line-soft);padding-top:16px;">
-            <p style="font-size:.82rem;color:var(--ink-dim);margin-bottom:14px;">
-              أضف أسئلة الامتحان وحدد الخيارات الأربعة والإجابة الصحيحة لكل سؤال ليتم تصحيح إجابات الطلاب تلقائياً:
-            </p>
-
-            <div id="questionsContainer" style="display:flex;flex-direction:column;gap:14px;">
-              <!-- Dynamic Question Cards Inserted Here -->
-            </div>
-
-            <button type="button" class="btn btn-line btn-sm" onclick="addNewQuestionCard()" style="margin-top:14px;width:100%;">
-              ＋ إضافة سؤال جديد
-            </button>
-          </div>
-        </div>
-
+<!-- Modal: Add Chapter -->
+<div class="modal-overlay" id="addChapterModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999;align-items:center;justify-content:center;">
+  <div style="background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius);max-width:440px;width:90%;padding:24px;">
+    <h3 style="margin-top:0;">📁 إضافة فصل / وحدة جديدة (Chapter)</h3>
+    <form id="addChapterForm" onsubmit="submitAddChapter(event)">
+      <input type="hidden" id="chapterCourseId">
+      <div class="form-group" style="margin-bottom:12px;">
+        <label class="form-label">عنوان الفصل / الباب</label>
+        <input type="text" class="form-control" id="chapterTitleInput" placeholder="مثال: الفصل الأول: الحركة الدائرية" required>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-line btn-sm" id="cancelAddLectureBtn">إلغاء</button>
-        <button type="submit" class="btn btn-primary btn-sm" id="submitAddLectureBtn">حفظ المحاضرة ونشرها</button>
+      <div class="form-group" style="margin-bottom:12px;">
+        <label class="form-label">رابط صورة الغلاف للفصل (اختياري)</label>
+        <input type="url" class="form-control" id="chapterImageInput" placeholder="https://...">
+      </div>
+      <div class="form-group" style="margin-bottom:18px;">
+        <label class="form-label">وصف مختصر</label>
+        <input type="text" class="form-control" id="chapterDescInput" placeholder="ملخص ما يتناوله هذا الفصل">
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button type="button" class="btn btn-line btn-sm" onclick="closeAddChapterModal()">إلغاء</button>
+        <button type="submit" class="btn btn-primary btn-sm">حفظ الفصل ✓</button>
       </div>
     </form>
   </div>
 </div>
 
-<!-- Toast notification -->
-<div class="toast" id="appToast"></div>
+<!-- Modal: Add Lesson & Upload PDF / Video & Quizzes -->
+<div class="modal-overlay" id="addLessonModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999;align-items:center;justify-content:center;">
+  <div style="background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius);max-width:620px;width:95%;padding:26px;max-height:90vh;overflow-y:auto;">
+    <h3 style="margin-top:0;">🎬 إضافة درس ومحاضرة</h3>
+    <form id="addLessonForm" onsubmit="submitAddLesson(event)">
+      <input type="hidden" id="lessonChapterId">
+      <div class="form-group" style="margin-bottom:12px;">
+        <label class="form-label">عنوان الدرس / الحصة</label>
+        <input type="text" class="form-control" id="lessonTitleInput" placeholder="مثال: المحاضرة الأولى: شرح القوانين الأساسية" required>
+      </div>
+      <div class="form-group" style="margin-bottom:12px;">
+        <label class="form-label">رابط فيديو المحاضرة (أو ارفع ملف فيديو أدناه)</label>
+        <input type="text" class="form-control" id="lessonVideoUrlInput" placeholder="رابط يوتيوب أو Drive أو استضافة فيديو">
+      </div>
+      <div class="form-group" style="margin-bottom:14px;">
+        <label class="form-label">📄 رفع مذكرة الدرس (PDF Document)</label>
+        <input type="file" id="lessonPdfFile" accept="application/pdf" class="form-control">
+        <span class="hint">سيتمكن الطلاب المشتركون من استعراض المذكرة وتحميلها داخل المنصة.</span>
+      </div>
+      <div class="form-group" style="margin-bottom:18px;">
+        <label class="form-label">وصف وملاحظات المحاضرة</label>
+        <textarea class="form-control" id="lessonDescInput" rows="2" placeholder="أهم النقاط والتوجيهات..."></textarea>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button type="button" class="btn btn-line btn-sm" onclick="closeAddLessonModal()">إلغاء</button>
+        <button type="submit" class="btn btn-primary btn-sm" id="saveLessonBtn">حفظ ونشر الدرس ✓</button>
+      </div>
+    </form>
+  </div>
+</div>
 
+<!-- Modal: Quiz / Assignment Builder with Multiple Choice, Essay & Equation -->
+<div class="modal-overlay" id="quizBuilderModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:999;align-items:center;justify-content:center;">
+  <div style="background:var(--bg-card);border:1px solid var(--line);border-radius:20px;max-width:680px;width:95%;padding:26px;max-height:90vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <h3 style="margin:0;" id="quizBuilderModalTitle">📝 بناء الأسئلة (واجب / امتحان)</h3>
+      <button class="btn btn-line btn-sm" onclick="closeQuizBuilderModal()">✕ إغلاق</button>
+    </div>
+
+    <!-- Add Question Form -->
+    <div style="background:var(--bg-raised);padding:16px;border-radius:14px;border:1px solid var(--line-soft);margin-bottom:18px;">
+      <h4 style="margin:0 0 10px;">＋ إضافة سؤال جديد</h4>
+      <div class="form-group" style="margin-bottom:10px;">
+        <label class="form-label">نوع السؤال</label>
+        <select class="form-control" id="qTypeSelect" onchange="toggleQuestionTypeFields(this.value)">
+          <option value="MULTIPLE_CHOICE">اختيار من متعدد (Multiple Choice)</option>
+          <option value="ESSAY">سؤال مقالي كتابي (Essay Question)</option>
+          <option value="EQUATION">سؤال معادلة ورموز رياضية (Math Equation)</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin-bottom:10px;">
+        <label class="form-label">نص السؤال</label>
+        <textarea class="form-control" id="qTextInput" rows="2" placeholder="اكتب نص السؤال هنا..." required></textarea>
+      </div>
+
+      <!-- Multiple Choice Options -->
+      <div id="qMCOptionsWrap">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+          <input type="text" class="form-control" id="qOptA" placeholder="الخيار (أ)">
+          <input type="text" class="form-control" id="qOptB" placeholder="الخيار (ب)">
+          <input type="text" class="form-control" id="qOptC" placeholder="الخيار (ج)">
+          <input type="text" class="form-control" id="qOptD" placeholder="الخيار (د)">
+        </div>
+        <div class="form-group" style="margin-bottom:10px;">
+          <label class="form-label">الإجابة الصحيحة</label>
+          <select class="form-control" id="qCorrectOpt">
+            <option value="A">الخيار (أ)</option>
+            <option value="B">الخيار (ب)</option>
+            <option value="C">الخيار (ج)</option>
+            <option value="D">الخيار (د)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Math Equation Field -->
+      <div id="qEquationWrap" style="display:none;margin-bottom:10px;">
+        <label class="form-label">كود المعادلة الرياضية (LaTeX / Math Formula)</label>
+        <input type="text" class="form-control" id="qEquationLatex" placeholder="مثال: x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}">
+      </div>
+
+      <!-- Essay Rubric -->
+      <div id="qEssayWrap" style="display:none;margin-bottom:10px;">
+        <label class="form-label">نموذج الإجابة وملاحظات التصحيح (Rubric)</label>
+        <input type="text" class="form-control" id="qSampleAnswer" placeholder="النقاط الأساسية المطلوبة في إجابة الطالب">
+      </div>
+
+      <button type="button" class="btn btn-primary btn-sm" onclick="submitAddQuestionToQuiz()">إضافة هذا السؤال للقائمة ＋</button>
+    </div>
+
+    <!-- Questions Added Preview -->
+    <h4>الأسئلة المضافة حالياً (<span id="addedQuestionsCount">0</span>):</h4>
+    <div id="addedQuestionsList" style="display:flex;flex-direction:column;gap:8px;"></div>
+  </div>
+</div>
+
+<script src="js/i18n.js"></script>
 <script src="js/api.js"></script>
-<script src="js/main.js"></script>
 <script>
-  let currentTeacherId = null;
-  let selectedVideoFile = null;
-  let questionsList = [];
+  let currentStage = 'PREPARATORY';
+  let allTeacherCourses = [];
+  let currentEditingQuizId = null;
+  let currentEditingLessonId = null;
 
-  function showToast(msg) {
-    const toast = document.getElementById('appToast');
-    toast.textContent = msg;
-    toast.classList.add('show');
-    setTimeout(() => toast.classList.remove('show'), 3800);
-  }
+  const stageTitles = {
+    PREPARATORY: 'المرحلة الإعدادية',
+    SECONDARY_1: 'الصف الأول الثانوي',
+    SECONDARY_2: 'الصف الثاني الثانوي',
+    SECONDARY_3: 'الصف الثالث الثانوي'
+  };
 
-  function handleVideoFileSelected(input) {
-    if (input.files && input.files[0]) {
-      selectedVideoFile = input.files[0];
-      const mb = (selectedVideoFile.size / (1024 * 1024)).toFixed(1);
-      document.getElementById('selectedFileName').textContent = selectedVideoFile.name;
-      document.getElementById('selectedFileSize').textContent = `(${mb} MB)`;
-      document.getElementById('dropzonePrompt').style.display = 'none';
-      document.getElementById('fileSelectedCard').style.display = 'block';
-    }
-  }
-
-  function clearSelectedVideo() {
-    selectedVideoFile = null;
-    document.getElementById('lVideoFile').value = '';
-    document.getElementById('dropzonePrompt').style.display = 'block';
-    document.getElementById('fileSelectedCard').style.display = 'none';
-    document.getElementById('uploadProgressWrap').style.display = 'none';
-    document.getElementById('uploadProgressBar').style.width = '0%';
-  }
-
-  // Setup drag & drop on video box
-  const dropzone = document.getElementById('videoDropzone');
-  dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('dragover'); });
-  dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
-  dropzone.addEventListener('drop', (e) => {
-    e.preventDefault();
-    dropzone.classList.remove('dragover');
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      const file = e.dataTransfer.files[0];
-      if (file.type.startsWith('video/') || /\.(mp4|mkv|webm|mov)$/i.test(file.name)) {
-        document.getElementById('lVideoFile').files = e.dataTransfer.files;
-        handleVideoFileSelected(document.getElementById('lVideoFile'));
-      } else {
-        alert('يرجى اختيار ملف فيديو صالح (MP4, MKV, WebM, MOV)');
-      }
-    }
-  });
-
-  // ─── Quiz & Exam Builder Logic ──────────────────────────────────────────────
-
-  function toggleQuizBuilder(isEnabled) {
-    const container = document.getElementById('quizBuilderContainer');
-    const badge = document.getElementById('quizQuestionsCountBadge');
-    container.style.display = isEnabled ? 'block' : 'none';
-    badge.style.display = isEnabled ? 'inline-block' : 'none';
-
-    if (isEnabled && questionsList.length === 0) {
-      addNewQuestionCard();
-    }
-  }
-
-  function addNewQuestionCard() {
-    const qIndex = questionsList.length + 1;
-    const qId = 'q_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 4);
-
-    questionsList.push({
-      id: qId,
-      text: '',
-      optionA: '',
-      optionB: '',
-      optionC: '',
-      optionD: '',
-      correctOption: 'A'
-    });
-
-    renderQuestionsList();
-  }
-
-  function deleteQuestionCard(index) {
-    questionsList.splice(index, 1);
-    renderQuestionsList();
-  }
-
-  function updateQuestionField(index, field, value) {
-    if (questionsList[index]) {
-      questionsList[index][field] = value;
-    }
-  }
-
-  function renderQuestionsList() {
-    const container = document.getElementById('questionsContainer');
-    const badge = document.getElementById('quizQuestionsCountBadge');
-    badge.textContent = `${questionsList.length} أسئلة مضافة`;
-
-    if (questionsList.length === 0) {
-      container.innerHTML = `<p style="color:var(--ink-faint);font-size:.84rem;text-align:center;padding:12px;">لم تتم إضافة أسئلة بعد. اضغط "إضافة سؤال جديد" بالأسفل.</p>`;
+  document.addEventListener('DOMContentLoaded', async () => {
+    const user = window.KhatwaAPI.getUser();
+    if (!user || (user.role !== 'TEACHER' && user.role !== 'ADMIN')) {
+      alert('يجب تسجيل الدخول بحساب مدرس للوصول إلى الاستوديو');
+      window.location.href = 'login.html';
       return;
     }
 
-    container.innerHTML = questionsList.map((q, idx) => `
-      <div class="question-card">
-        <div class="question-card-head">
-          <b style="color:var(--gold-light);font-size:.9rem;">السؤال رقم ${idx + 1}</b>
-          <button type="button" class="btn btn-text btn-sm" style="color:var(--err);padding:2px 6px;" onclick="deleteQuestionCard(${idx})">✕ حذف السؤال</button>
+    document.getElementById('teacherGreeting').textContent = `أهلاً بك، ${user.name || user.username}`;
+    document.getElementById('navName').textContent = user.name || user.username;
+    document.getElementById('navAvatar').textContent = (user.name || user.username || 'م').charAt(0);
+    window.KhatwaAPI.syncNav();
+    await loadCourses();
+  });
+
+  function switchStage(stage, tabBtn) {
+    currentStage = stage;
+    document.querySelectorAll('.stage-folder-tab').forEach(b => b.classList.remove('active'));
+    tabBtn.classList.add('active');
+    document.getElementById('currentStageTitle').textContent = `📁 كورسات ${stageTitles[stage]}`;
+    document.getElementById('courseStageSelect').value = stage;
+    renderStageCourses();
+  }
+
+  async function loadCourses() {
+    try {
+      allTeacherCourses = await window.KhatwaAPI.teacher.getCourses();
+    } catch (e) {
+      allTeacherCourses = [];
+    }
+    renderStageCourses();
+  }
+
+  function renderStageCourses() {
+    const container = document.getElementById('stageCoursesList');
+    const courses = allTeacherCourses.filter(c => c.academicStage === currentStage);
+
+    if (courses.length === 0) {
+      container.innerHTML = `
+        <div style="text-align:center;padding:50px;background:var(--bg-card);border-radius:16px;border:1px solid var(--line-soft);">
+          <div style="font-size:3rem;margin-bottom:8px;">📁</div>
+          <h3>لا توجد كورسات في مجلد ${stageTitles[currentStage]}</h3>
+          <p style="color:var(--ink-dim);margin:6px 0 16px;">ابدأ بإضافة أول كورس في هذه المرحلة لتنظيم الفصول والمحاضرات.</p>
+          <button class="btn btn-primary btn-sm" onclick="openCreateCourseModal()">＋ إنشاء كورس في هذه المرحلة</button>
         </div>
+      `;
+      return;
+    }
 
-        <div class="field" style="margin-bottom:12px;">
-          <input type="text" placeholder="اكتب نص السؤال هنا..." value="${escapeHtml(q.text)}" oninput="updateQuestionField(${idx}, 'text', this.value)" required style="font-weight:600;">
+    container.innerHTML = courses.map(c => {
+      const chapters = c.chapters || [];
+      return `
+        <div class="card" style="padding:22px;border-radius:18px;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;">
+            <div>
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                <h2 style="margin:0;font-size:1.3rem;">${c.title}</h2>
+                <span class="tag tag-ok">${c.subject}</span>
+              </div>
+              <span class="meta">${stageTitles[c.academicStage]} · ${chapters.length} فصول · ${c.pointCost || 0} نقطة</span>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-primary btn-sm" onclick="openAddChapterModal('${c.id}')">＋ إضافة فصل (Chapter)</button>
+              <button class="btn btn-line btn-sm" style="color:var(--err);" onclick="deleteCourse('${c.id}')">حذف</button>
+            </div>
+          </div>
+
+          <!-- Chapters List -->
+          ${chapters.length > 0 ? `
+            <div style="display:flex;flex-direction:column;gap:14px;margin-top:14px;">
+              ${chapters.map((ch, idx) => `
+                <div class="chapter-box">
+                  <div class="chapter-head">
+                    <div>
+                      <b style="color:var(--primary);font-size:1.05rem;">📁 الفصل ${idx + 1}: ${ch.title}</b>
+                      ${ch.description ? `<p style="margin:2px 0 0;font-size:.82rem;color:var(--ink-dim);">${ch.description}</p>` : ''}
+                    </div>
+                    <button class="btn btn-line btn-sm" onclick="openAddLessonModal('${ch.id}')">＋ إضافة درس / محاضرة</button>
+                  </div>
+
+                  <!-- Lessons inside chapter -->
+                  ${ch.lessons && ch.lessons.length > 0 ? `
+                    <div style="display:flex;flex-direction:column;gap:6px;">
+                      ${ch.lessons.map((l, lIdx) => `
+                        <div class="lesson-item">
+                          <div>
+                            <b>${lIdx + 1}. ${l.title}</b>
+                            ${l.pdfUrl ? '<span class="tag" style="margin-inline-start:6px;">📄 PDF</span>' : ''}
+                            ${l.videoUrl ? '<span class="tag tag-ok" style="margin-inline-start:4px;">🎬 فيديو</span>' : ''}
+                          </div>
+                          <div style="display:flex;gap:6px;align-items:center;">
+                            <button class="btn btn-text btn-sm" onclick="openQuizBuilderForLesson('${l.id}', 'assignment')">📝 الواجب</button>
+                            <button class="btn btn-text btn-sm" onclick="openQuizBuilderForLesson('${l.id}', 'exam')">🏆 الامتحان</button>
+                            <a href="lesson.html?lessonId=${l.id}" class="btn btn-line btn-sm" style="padding:2px 8px;font-size:.78rem;">معاينة ↗</a>
+                          </div>
+                        </div>
+                      `).join('')}
+                    </div>
+                  ` : '<p style="font-size:.84rem;color:var(--ink-dim);margin:4px 0;">لا توجد محاضرات في هذا الفصل بعد. اضغط "إضافة درس".</p>'}
+                </div>
+              `).join('')}
+            </div>
+          ` : '<p style="color:var(--ink-dim);font-size:.88rem;margin:12px 0 0;">اضغط "إضافة فصل" لتنظيم محتوى هذا الكورس إلى فصول ووحدات.</p>'}
         </div>
+      `;
+    }).join('');
+  }
 
-        <div style="display:flex;flex-direction:column;gap:6px;">
-          <!-- Option A -->
-          <div class="option-row">
-            <span class="option-badge">أ</span>
-            <input type="text" placeholder="الخيار (أ)" value="${escapeHtml(q.optionA)}" oninput="updateQuestionField(${idx}, 'optionA', this.value)" required>
-            <label style="display:flex;align-items:center;gap:4px;font-size:.8rem;cursor:pointer;user-select:none;">
-              <input type="radio" name="correct_${q.id}" value="A" ${q.correctOption === 'A' ? 'checked' : ''} onchange="updateQuestionField(${idx}, 'correctOption', 'A')">
-              <span style="color:${q.correctOption === 'A' ? 'var(--ok)' : 'var(--ink-dim)'};font-weight:${q.correctOption === 'A' ? '700' : 'normal'};">صحيح</span>
-            </label>
-          </div>
+  // ─── Modal: Create Course ─────────────────────────────────────────────────
+  function openCreateCourseModal() {
+    document.getElementById('courseStageSelect').value = currentStage;
+    document.getElementById('createCourseModal').style.display = 'flex';
+  }
+  function closeCreateCourseModal() {
+    document.getElementById('createCourseModal').style.display = 'none';
+  }
 
-          <!-- Option B -->
-          <div class="option-row">
-            <span class="option-badge">ب</span>
-            <input type="text" placeholder="الخيار (ب)" value="${escapeHtml(q.optionB)}" oninput="updateQuestionField(${idx}, 'optionB', this.value)" required>
-            <label style="display:flex;align-items:center;gap:4px;font-size:.8rem;cursor:pointer;user-select:none;">
-              <input type="radio" name="correct_${q.id}" value="B" ${q.correctOption === 'B' ? 'checked' : ''} onchange="updateQuestionField(${idx}, 'correctOption', 'B')">
-              <span style="color:${q.correctOption === 'B' ? 'var(--ok)' : 'var(--ink-dim)'};font-weight:${q.correctOption === 'B' ? '700' : 'normal'};">صحيح</span>
-            </label>
-          </div>
+  async function submitCreateCourse(e) {
+    e.preventDefault();
+    const title = document.getElementById('courseTitleInput').value.trim();
+    const subject = document.getElementById('courseSubjectInput').value.trim();
+    const academicStage = document.getElementById('courseStageSelect').value;
+    const pointCost = document.getElementById('coursePointsInput').value;
+    const description = document.getElementById('courseDescInput').value.trim();
 
-          <!-- Option C -->
-          <div class="option-row">
-            <span class="option-badge">ج</span>
-            <input type="text" placeholder="الخيار (ج)" value="${escapeHtml(q.optionC)}" oninput="updateQuestionField(${idx}, 'optionC', this.value)" required>
-            <label style="display:flex;align-items:center;gap:4px;font-size:.8rem;cursor:pointer;user-select:none;">
-              <input type="radio" name="correct_${q.id}" value="C" ${q.correctOption === 'C' ? 'checked' : ''} onchange="updateQuestionField(${idx}, 'correctOption', 'C')">
-              <span style="color:${q.correctOption === 'C' ? 'var(--ok)' : 'var(--ink-dim)'};font-weight:${q.correctOption === 'C' ? '700' : 'normal'};">صحيح</span>
-            </label>
-          </div>
+    const btn = document.getElementById('saveCourseBtn');
+    btn.disabled = true;
+    btn.textContent = 'جارٍ الحفظ...';
 
-          <!-- Option D -->
-          <div class="option-row">
-            <span class="option-badge">د</span>
-            <input type="text" placeholder="الخيار (د)" value="${escapeHtml(q.optionD)}" oninput="updateQuestionField(${idx}, 'optionD', this.value)" required>
-            <label style="display:flex;align-items:center;gap:4px;font-size:.8rem;cursor:pointer;user-select:none;">
-              <input type="radio" name="correct_${q.id}" value="D" ${q.correctOption === 'D' ? 'checked' : ''} onchange="updateQuestionField(${idx}, 'correctOption', 'D')">
-              <span style="color:${q.correctOption === 'D' ? 'var(--ok)' : 'var(--ink-dim)'};font-weight:${q.correctOption === 'D' ? '700' : 'normal'};">صحيح</span>
-            </label>
-          </div>
+    try {
+      await window.KhatwaAPI.teacher.createCourse({ title, subject, academicStage, pointCost, description });
+      alert('تم حفظ الكورس بنجاح في قاعدة البيانات! ✅');
+      closeCreateCourseModal();
+      document.getElementById('createCourseForm').reset();
+      await loadCourses();
+    } catch (err) {
+      alert(err.message || 'حدث خطأ أثناء حفظ الكورس');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'حفظ الكورس ✓';
+    }
+  }
+
+  async function deleteCourse(id) {
+    if (!confirm('هل أنت متأكد من حذف هذا الكورس وجميع فصوله ومحاضراته؟')) return;
+    await window.KhatwaAPI.teacher.deleteCourse(id);
+    await loadCourses();
+  }
+
+  // ─── Modal: Add Chapter ───────────────────────────────────────────────────
+  function openAddChapterModal(courseId) {
+    document.getElementById('chapterCourseId').value = courseId;
+    document.getElementById('addChapterModal').style.display = 'flex';
+  }
+  function closeAddChapterModal() {
+    document.getElementById('addChapterModal').style.display = 'none';
+  }
+
+  async function submitAddChapter(e) {
+    e.preventDefault();
+    const courseId = document.getElementById('chapterCourseId').value;
+    const title = document.getElementById('chapterTitleInput').value.trim();
+    const imageUrl = document.getElementById('chapterImageInput').value.trim();
+    const description = document.getElementById('chapterDescInput').value.trim();
+
+    try {
+      await window.KhatwaAPI.teacher.createChapter(courseId, { title, imageUrl, description });
+      closeAddChapterModal();
+      document.getElementById('addChapterForm').reset();
+      await loadCourses();
+    } catch (err) {
+      alert(err.message || 'حدث خطأ أثناء إضافة الفصل');
+    }
+  }
+
+  // ─── Modal: Add Lesson ────────────────────────────────────────────────────
+  function openAddLessonModal(chapterId) {
+    document.getElementById('lessonChapterId').value = chapterId;
+    document.getElementById('addLessonModal').style.display = 'flex';
+  }
+  function closeAddLessonModal() {
+    document.getElementById('addLessonModal').style.display = 'none';
+  }
+
+  async function submitAddLesson(e) {
+    e.preventDefault();
+    const chapterId = document.getElementById('lessonChapterId').value;
+    const title = document.getElementById('lessonTitleInput').value.trim();
+    const videoUrl = document.getElementById('lessonVideoUrlInput').value.trim();
+    const description = document.getElementById('lessonDescInput').value.trim();
+    const pdfFile = document.getElementById('lessonPdfFile').files[0];
+
+    const btn = document.getElementById('saveLessonBtn');
+    btn.disabled = true;
+    btn.textContent = 'جارٍ الحفظ والرفع...';
+
+    try {
+      const lesson = await window.KhatwaAPI.teacher.createLesson(chapterId, { title, videoUrl, description });
+      if (pdfFile && lesson?.id) {
+        await window.KhatwaAPI.teacher.uploadPdf(lesson.id, pdfFile);
+      }
+      alert('تم حفظ الدرس ونشر المحاضرة بنجاح! ✅');
+      closeAddLessonModal();
+      document.getElementById('addLessonForm').reset();
+      await loadCourses();
+    } catch (err) {
+      alert(err.message || 'حدث خطأ أثناء حفظ الدرس');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'حفظ ونشر الدرس ✓';
+    }
+  }
+
+  // ─── Modal: Quiz / Assignment Builder ─────────────────────────────────────
+  async function openQuizBuilderForLesson(lessonId, quizRole) {
+    currentEditingLessonId = lessonId;
+    const quizTitle = quizRole === 'assignment' ? 'واجب المحاضرة' : 'امتحان المحاضرة';
+    document.getElementById('quizBuilderModalTitle').textContent = `📝 ${quizTitle}`;
+    document.getElementById('quizBuilderModal').style.display = 'flex';
+
+    try {
+      // Create or get quiz for this lesson
+      const newQuiz = await window.KhatwaAPI.teacher.createQuiz({ title: quizTitle, type: quizRole === 'assignment' ? 'HOMEWORK' : 'EXAM' });
+      currentEditingQuizId = newQuiz.id;
+      await window.KhatwaAPI.teacher.assignQuizToLesson(lessonId, newQuiz.id, quizRole);
+      renderQuizQuestions();
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  function closeQuizBuilderModal() {
+    document.getElementById('quizBuilderModal').style.display = 'none';
+    currentEditingQuizId = null;
+    currentEditingLessonId = null;
+  }
+
+  function toggleQuestionTypeFields(type) {
+    document.getElementById('qMCOptionsWrap').style.display = type === 'MULTIPLE_CHOICE' ? 'block' : 'none';
+    document.getElementById('qEquationWrap').style.display = type === 'EQUATION' ? 'block' : 'none';
+    document.getElementById('qEssayWrap').style.display = type === 'ESSAY' ? 'block' : 'none';
+  }
+
+  async function submitAddQuestionToQuiz() {
+    if (!currentEditingQuizId) return;
+
+    const questionType = document.getElementById('qTypeSelect').value;
+    const questionText = document.getElementById('qTextInput').value.trim();
+    if (!questionText) {
+      alert('أدخل نص السؤال');
+      return;
+    }
+
+    const payload = { questionType, questionText };
+
+    if (questionType === 'MULTIPLE_CHOICE') {
+      payload.optionA = document.getElementById('qOptA').value.trim() || 'أ';
+      payload.optionB = document.getElementById('qOptB').value.trim() || 'ب';
+      payload.optionC = document.getElementById('qOptC').value.trim() || 'ج';
+      payload.optionD = document.getElementById('qOptD').value.trim() || 'د';
+      payload.correctOption = document.getElementById('qCorrectOpt').value;
+    } else if (questionType === 'EQUATION') {
+      payload.equationLatex = document.getElementById('qEquationLatex').value.trim();
+    } else if (questionType === 'ESSAY') {
+      payload.sampleAnswer = document.getElementById('qSampleAnswer').value.trim();
+    }
+
+    try {
+      await window.KhatwaAPI.teacher.addQuizQuestion(currentEditingQuizId, payload);
+      document.getElementById('qTextInput').value = '';
+      await renderQuizQuestions();
+    } catch (err) {
+      alert(err.message || 'حدث خطأ أثناء إضافة السؤال');
+    }
+  }
+
+  async function renderQuizQuestions() {
+    if (!currentEditingQuizId) return;
+    const quiz = await window.KhatwaAPI.teacher.getQuizWithAnswers(currentEditingQuizId);
+    const questions = quiz.questions || [];
+    document.getElementById('addedQuestionsCount').textContent = questions.length;
+
+    const list = document.getElementById('addedQuestionsList');
+    if (questions.length === 0) {
+      list.innerHTML = '<p style="color:var(--ink-dim);font-size:.85rem;">لم تتم إضافة أسئلة بعد.</p>';
+      return;
+    }
+
+    list.innerHTML = questions.map((q, idx) => `
+      <div style="background:var(--bg-raised);padding:10px 14px;border-radius:10px;border:1px solid var(--line-soft);display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <b>${idx + 1}. ${q.questionText}</b>
+          <span class="tag" style="margin-inline-start:6px;font-size:.75rem;">${q.questionType}</span>
         </div>
+        <button class="btn btn-text btn-sm" style="color:var(--err);" onclick="deleteQuestion('${q.id}')">✕</button>
       </div>
     `).join('');
   }
 
-  function renderTeacherDashboard() {
-    const user = window.KhatwaAPI.getUser();
-    if (user) {
-      currentTeacherId = user.id;
-      document.getElementById('teacherGreeting').textContent = `أهلًا بك، ${user.name || user.displayName || user.username}`;
-      document.getElementById('navName').textContent = user.name || user.displayName || user.username;
-      document.getElementById('navRole').textContent = (user.role === 'ADMIN' || user.username === 'sameryasser-khatwa') ? 'مدير عام المنصة' : (user.specialty ? `مدرس — ${user.specialty}` : 'مدرس معتمد');
-      document.getElementById('navAvatar').textContent = (user.name || user.username || 'م').charAt(0);
-    }
-
-    const stats = window.KhatwaAPI.courses.getTeacherStats(currentTeacherId);
-    document.getElementById('statCoursesCount').textContent = stats.totalCourses;
-    document.getElementById('statLecturesCount').textContent = stats.totalLectures;
-    document.getElementById('statStudentsCount').textContent = stats.totalStudents;
-    document.getElementById('coursesBadge').textContent = stats.totalCourses;
-    document.getElementById('studentsBadge').textContent = stats.totalStudents;
-
-    // Render courses
-    const container = document.getElementById('coursesListContainer');
-    if (stats.courses.length === 0) {
-      container.innerHTML = `
-        <div class="empty-state">
-          <div class="icon">📚</div>
-          <h3>لم تقم بإنشاء أي كورسات بعد</h3>
-          <p>اضغط على زر "إنشاء كورس جديد" بالأعلى لنشر أول كورس لك ورفع المحاضرات والامتحانات.</p>
-          <button class="btn btn-primary btn-sm" onclick="document.getElementById('createCourseModal').classList.add('show')">＋ إنشاء أول كورس الآن</button>
-        </div>
-      `;
-    } else {
-      let html = '';
-      stats.courses.forEach(course => {
-        const lecCount = course.lectures ? course.lectures.length : 0;
-        html += `
-          <div class="card" style="display:grid;grid-template-columns:1fr auto auto auto;gap:20px;align-items:start;">
-            <div>
-              <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-                <span class="tag tag-ok">${escapeHtml(course.subject)}</span>
-                <h3 style="margin:0;font-size:1.15rem;">${escapeHtml(course.title)}</h3>
-              </div>
-              <span class="meta">${escapeHtml(course.grade || 'المرحلة الثانوية')} · ${lecCount} محاضرات · ${course.pointCost} نقطة</span>
-              <p style="color:var(--ink-dim);font-size:.84rem;margin-top:6px;max-width:500px;">${escapeHtml(course.description || '')}</p>
-              
-              <!-- Lectures list inside course -->
-              ${lecCount > 0 ? `
-                <div style="margin-top:14px;background:var(--bg);border-radius:4px;padding:10px 14px;border:1px solid var(--line-soft);">
-                  <b style="font-size:.82rem;color:var(--gold-light);display:block;margin-bottom:8px;">المحاضرات المرفوعة (${lecCount}):</b>
-                  <ul style="font-size:.82rem;color:var(--ink-dim);display:flex;flex-direction:column;gap:6px;">
-                    ${course.lectures.map((l, idx) => `
-                      <li style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px dashed var(--line-soft);">
-                        <span>
-                          <b>${idx + 1}.</b> ${escapeHtml(l.title)} (${l.duration} دقيقة)
-                          ${l.hasVideo || l.driveFileId ? `<span class="tag tag-ok" style="font-size:.7rem;padding:2px 6px;margin-inline-start:4px;">☁️ فيديو</span>` : ''}
-                          ${l.quizQuestions && l.quizQuestions.length > 0 
-                            ? `<span class="tag tag-warn" style="font-size:.7rem;padding:2px 6px;margin-inline-start:4px;">📝 امتحان (${l.quizQuestions.length} أسئلة)</span>` 
-                            : `<span style="font-size:.72rem;color:var(--ink-faint);margin-inline-start:6px;">(بدون امتحان)</span>`}
-                        </span>
-                        <div style="display:flex;gap:6px;align-items:center;">
-                          <a href="lesson.html?courseId=${course.id}&lessonId=${l.id}" class="btn btn-text btn-sm" style="padding:0 6px;">معاينة</a>
-                          <button class="btn btn-text btn-sm" style="color:var(--err);padding:0 6px;" onclick="handleDeleteLecture('${course.id}', '${l.id}')">حذف</button>
-                        </div>
-                      </li>
-                    `).join('')}
-                  </ul>
-                </div>
-              ` : ''}
-            </div>
-
-            <div style="padding-top:4px;">
-              <span class="tag tag-warn">${lecCount} محاضرات</span>
-            </div>
-
-            <div style="padding-top:4px;">
-              <span class="points-tag" style="font-size:.78rem;padding:4px 10px;">${course.pointCost} نقطة</span>
-            </div>
-
-            <div style="display:flex;flex-direction:column;gap:8px;">
-              <button class="btn btn-primary btn-sm" onclick="openAddLectureModal('${course.id}', '${escapeHtml(course.title)}')">＋ إضافة محاضرة & فيديو</button>
-              <a href="subject.html?id=${course.id}" class="btn btn-line btn-sm">👁️ معاينة الكورس</a>
-              <button class="btn btn-text btn-sm" style="color:var(--err);" onclick="handleDeleteCourse('${course.id}')">حذف الكورس</button>
-            </div>
-          </div>
-        `;
-      });
-      container.innerHTML = html;
-    }
-
-    // Render enrolled students
-    const tbody = document.getElementById('enrolledStudentsBody');
-    if (stats.enrollments.length === 0) {
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="5" style="text-align:center;color:var(--ink-faint);padding:30px;">
-            لا يوجد طلاب مسجلين في كورساتك حتى الآن.
-          </td>
-        </tr>
-      `;
-    } else {
-      tbody.innerHTML = stats.enrollments.map(e => {
-        const course = stats.courses.find(c => c.id === e.courseId);
-        const total = course && course.lectures ? course.lectures.length : 1;
-        const comp = (e.completedLectureIds || []).length;
-        const pct = Math.round((comp / total) * 100);
-        return `
-          <tr>
-            <td><b>${escapeHtml(e.studentName || 'طالب')}</b></td>
-            <td>${escapeHtml(e.courseTitle || (course ? course.title : 'كورس'))}</td>
-            <td>${new Date(e.enrolledAt).toLocaleDateString('ar-EG')}</td>
-            <td>${comp} من ${total}</td>
-            <td><span class="tag ${pct === 100 ? 'tag-ok' : 'tag-warn'}">${pct}%</span></td>
-          </tr>
-        `;
-      }).join('');
-    }
+  async function deleteQuestion(qId) {
+    if (!currentEditingQuizId) return;
+    await window.KhatwaAPI.teacher.deleteQuizQuestion(currentEditingQuizId, qId);
+    await renderQuizQuestions();
   }
-
-  function escapeHtml(str) {
-    if (!str) return '';
-    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-  }
-
-  // Course Modal Actions
-  const createCourseModal = document.getElementById('createCourseModal');
-  document.getElementById('openCreateCourseModalBtn').addEventListener('click', () => createCourseModal.classList.add('show'));
-  document.getElementById('closeCreateCourseBtn').addEventListener('click', () => createCourseModal.classList.remove('show'));
-  document.getElementById('cancelCreateCourseBtn').addEventListener('click', () => createCourseModal.classList.remove('show'));
-
-  document.getElementById('createCourseForm').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const title = document.getElementById('cTitle').value.trim();
-    const subject = document.getElementById('cSubject').value;
-    const grade = document.getElementById('cGrade').value;
-    const pointCost = document.getElementById('cPoints').value;
-    const teacherName = document.getElementById('cTeacherName').value.trim();
-    const description = document.getElementById('cDesc').value.trim();
-
-    window.KhatwaAPI.courses.create({
-      title,
-      subject,
-      grade,
-      pointCost,
-      teacherName: teacherName || undefined,
-      description
-    });
-
-    createCourseModal.classList.remove('show');
-    document.getElementById('createCourseForm').reset();
-    showToast('تم إنشاء الكورس بنجاح وبات متاحًا للطلاب على المنصة!');
-    renderTeacherDashboard();
-  });
-
-  // Lecture Modal Actions
-  const addLectureModal = document.getElementById('addLectureModal');
-  window.openAddLectureModal = function(courseId, courseTitle) {
-    document.getElementById('lecCourseId').value = courseId;
-    document.getElementById('addLectureModalTitle').textContent = `إضافة محاضرة إلى: ${courseTitle}`;
-    clearSelectedVideo();
-    questionsList = [];
-    document.getElementById('enableQuizCheck').checked = false;
-    toggleQuizBuilder(false);
-    addLectureModal.classList.add('show');
-  };
-  document.getElementById('closeAddLectureBtn').addEventListener('click', () => addLectureModal.classList.remove('show'));
-  document.getElementById('cancelAddLectureBtn').addEventListener('click', () => addLectureModal.classList.remove('show'));
-
-  document.getElementById('addLectureForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const courseId = document.getElementById('lecCourseId').value;
-    const title = document.getElementById('lTitle').value.trim();
-    const duration = document.getElementById('lDuration').value;
-    const pointCost = document.getElementById('lPoints').value;
-    const description = document.getElementById('lDesc').value.trim();
-
-    const isQuizEnabled = document.getElementById('enableQuizCheck').checked;
-    const finalQuizQuestions = isQuizEnabled 
-      ? questionsList.filter(q => q.text.trim().length > 0 && q.optionA.trim().length > 0 && q.optionB.trim().length > 0)
-      : [];
-
-    const submitBtn = document.getElementById('submitAddLectureBtn');
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'جاري حفظ المحاضرة...';
-
-    const progressWrap = document.getElementById('uploadProgressWrap');
-    const progressBar = document.getElementById('uploadProgressBar');
-    const progressText = document.getElementById('uploadPercentText');
-    const statusText = document.getElementById('uploadStatusText');
-
-    if (selectedVideoFile) {
-      progressWrap.style.display = 'block';
-      progressBar.style.width = '20%';
-      progressText.textContent = '20%';
-      statusText.textContent = '☁️ جاري الرفع إلى Google Drive...';
-    }
-
-    try {
-      const result = await window.KhatwaAPI.courses.uploadLectureWithVideo(
-        courseId,
-        {
-          title,
-          duration,
-          pointCost,
-          description,
-          quizQuestions: finalQuizQuestions
-        },
-        selectedVideoFile,
-        (percent) => {
-          progressBar.style.width = `${percent}%`;
-          progressText.textContent = `${percent}%`;
-          if (percent >= 100) {
-            statusText.textContent = '✓ اكتمل الرفع وحفظ الفيديو في Google Drive!';
-          }
-        }
-      );
-
-      // Short pause so the user sees the 100% completion state
-      await new Promise(r => setTimeout(r, 400));
-
-      addLectureModal.classList.remove('show');
-      document.getElementById('addLectureForm').reset();
-      clearSelectedVideo();
-      questionsList = [];
-
-      showToast(result.isGoogleDrive 
-        ? '✓ تم رفع الفيديو وحفظه في Google Drive ونشر المحاضرة بنجاح!' 
-        : '✓ تم رفع المحاضرة ونشرها بنجاح!');
-      renderTeacherDashboard();
-    } catch (err) {
-      alert('حدث خطأ أثناء رفع المحاضرة: ' + err.message);
-    } finally {
-      submitBtn.disabled = false;
-      submitBtn.textContent = 'حفظ المحاضرة ونشرها';
-    }
-  });
-
-  window.handleDeleteCourse = function(courseId) {
-    if (confirm('هل أنت متأكد من رغبتك في حذف هذا الكورس وجميع محاضراته؟')) {
-      window.KhatwaAPI.courses.delete(courseId);
-      showToast('تم حذف الكورس بنجاح.');
-      renderTeacherDashboard();
-    }
-  };
-
-  window.handleDeleteLecture = function(courseId, lectureId) {
-    if (confirm('هل أنت متأكد من رغبتك في حذف هذه المحاضرة؟')) {
-      window.KhatwaAPI.courses.deleteLecture(courseId, lectureId);
-      showToast('تم حذف المحاضرة.');
-      renderTeacherDashboard();
-    }
-  };
-
-  // Tabs switching
-  document.querySelectorAll('.tab-row .tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-      document.querySelectorAll('.tab-row .tab').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'none');
-      tab.classList.add('active');
-      const target = document.getElementById(tab.getAttribute('data-target'));
-      if (target) target.style.display = 'block';
-    });
-  });
-
-  document.addEventListener('DOMContentLoaded', () => {
-    renderTeacherDashboard();
-  });
 </script>
 </body>
 </html>

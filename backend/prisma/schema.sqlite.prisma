@@ -34,17 +34,24 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  studentProfile      StudentProfile?
-  teacherProfile      TeacherProfile?
-  refreshTokens       RefreshToken[]
-  pointsBalance       Int                 @default(0)
-  pointsTransactions  PointsTransaction[] @relation("StudentTransactions")
-  actedTransactions   PointsTransaction[] @relation("ActorTransactions")
-  videoAccessLogs     VideoAccessLog[]
-  quizAttempts        QuizAttempt[]
-  homeworkSubmissions HomeworkSubmission[]
-  unlockedLessons     UnlockedLesson[]
-  pointRequests       PointRequest[]
+  studentProfile          StudentProfile?
+  teacherProfile          TeacherProfile?
+  refreshTokens           RefreshToken[]
+  walletBalance           Float               @default(0.0)
+  pointsBalance           Int                 @default(0)
+  pointsTransactions      PointsTransaction[] @relation("StudentTransactions")
+  actedPointsTransactions PointsTransaction[] @relation("ActorTransactions")
+  walletTransactions      WalletTransaction[] @relation("StudentWalletTransactions")
+  actedWalletTransactions WalletTransaction[] @relation("ActorWalletTransactions")
+  videoAccessLogs         VideoAccessLog[]
+  quizAttempts            QuizAttempt[]
+  homeworkSubmissions     HomeworkSubmission[]
+  unlockedLessons         UnlockedLesson[]
+  courseEnrollments       CourseEnrollment[]
+  studentNotes            StudentNote[]       @relation("StudentReceivedNotes")
+  authoredNotes           StudentNote[]       @relation("AuthorWrittenNotes")
+  pointRequests           PointRequest[]
+  notifications           Notification[]
 }
 
 model StudentProfile {
@@ -66,13 +73,19 @@ model ParentInfo {
 }
 
 model TeacherProfile {
-  id          String   @id @default(cuid())
-  userId      String   @unique
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  displayName String
-  bio         String?
-  subject     String?
-  lessons     Lesson[]
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  displayName    String
+  bio            String?
+  subject        String?
+  avatarUrl      String?
+  rating         Float    @default(5.0)
+  ratingCount    Int      @default(1)
+  academicStages String?
+
+  courses        Course[]
+  lessons        Lesson[]
 }
 
 model RefreshToken {
@@ -83,6 +96,75 @@ model RefreshToken {
   expiresAt DateTime
   revoked   Boolean  @default(false)
   createdAt DateTime @default(now())
+}
+
+model Course {
+  id               String        @id @default(cuid())
+  teacherProfileId String
+  teacherProfile   TeacherProfile @relation(fields: [teacherProfileId], references: [id], onDelete: Cascade)
+  title            String
+  subject          String
+  academicStage    String        @default("SECONDARY_1")
+  imageUrl         String?
+  description      String?
+  pointCost        Int           @default(0)
+  price            Float         @default(0.0)
+  isPublished      Boolean       @default(true)
+  
+  chapters         Chapter[]
+  lessons          Lesson[]
+  enrollments      CourseEnrollment[]
+
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+}
+
+model Chapter {
+  id          String   @id @default(cuid())
+  courseId    String
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  imageUrl    String?
+  orderIndex  Int      @default(0)
+
+  lessons     Lesson[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model CourseEnrollment {
+  id         String   @id @default(cuid())
+  studentId  String
+  student    User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  courseId   String
+  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  enrolledAt DateTime @default(now())
+}
+
+model StudentNote {
+  id        String   @id @default(cuid())
+  studentId String
+  student   User     @relation("StudentReceivedNotes", fields: [studentId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation("AuthorWrittenNotes", fields: [authorId], references: [id], onDelete: Cascade)
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model WalletTransaction {
+  id           String   @id @default(cuid())
+  studentId    String
+  student      User     @relation("StudentWalletTransactions", fields: [studentId], references: [id], onDelete: Cascade)
+  type         String
+  amount       Float
+  balanceAfter Float
+  reason       String
+  actorId      String
+  actor        User     @relation("ActorWalletTransactions", fields: [actorId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
 }
 
 model PointsTransaction {
@@ -101,27 +183,69 @@ model PointsTransaction {
   createdAt       DateTime    @default(now())
 }
 
+model PointRequest {
+  id              String    @id @default(cuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  requestedPoints Int       @default(0)
+  amount          Float     @default(0.0)
+  code            String?
+  notes           String?
+  screenshotUrl   String?
+  status          String    @default("PENDING")
+  processedById   String?
+  processedAt     DateTime?
+  rejectionReason String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      String   @default("INFO")
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
 model Lesson {
   id               String         @id @default(cuid())
   teacherProfileId String
   teacherProfile   TeacherProfile @relation(fields: [teacherProfileId], references: [id], onDelete: Cascade)
+  courseId         String?
+  course           Course?        @relation(fields: [courseId], references: [id])
+  chapterId        String?
+  chapter          Chapter?       @relation(fields: [chapterId], references: [id])
   title            String
   description      String?
   pointCost        Int            @default(0)
   orderIndex       Int            @default(0)
-  isPublished      Boolean        @default(false)
+  isPublished      Boolean        @default(true)
+
+  videoUrl         String?
   driveFileId      String?
   driveFileName    String?
+  pdfUrl           String?
+  pdfFileName      String?
+
+  assignmentQuizId String?
+  assignmentQuiz   Quiz?          @relation("LessonAssignment", fields: [assignmentQuizId], references: [id])
+  examQuizId       String?
+  examQuiz         Quiz?          @relation("LessonExam", fields: [examQuizId], references: [id])
   openingQuizId    String?
   openingQuiz      Quiz?          @relation("OpeningQuiz", fields: [openingQuizId], references: [id])
   homeworkId       String?
   homework         Quiz?          @relation("Homework", fields: [homeworkId], references: [id])
+
   unlockedBy         UnlockedLesson[]
   pointsTransactions PointsTransaction[]
   videoAccessLogs    VideoAccessLog[]
   playbackTokens     PlaybackToken[]
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
 }
 
 model UnlockedLesson {
@@ -131,8 +255,6 @@ model UnlockedLesson {
   lessonId   String
   lesson     Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
   unlockedAt DateTime @default(now())
-
-  @@unique([studentId, lessonId])
 }
 
 model PlaybackToken {
@@ -159,26 +281,34 @@ model VideoAccessLog {
 model Quiz {
   id        String         @id @default(cuid())
   title     String
-  type      String
+  type      String         @default("EXAM")
   questions QuizQuestion[]
   attempts  QuizAttempt[]
-  openingForLessons  Lesson[] @relation("OpeningQuiz")
-  homeworkForLessons Lesson[] @relation("Homework")
+
+  assignmentForLessons Lesson[] @relation("LessonAssignment")
+  examForLessons       Lesson[] @relation("LessonExam")
+  openingForLessons    Lesson[] @relation("OpeningQuiz")
+  homeworkForLessons   Lesson[] @relation("Homework")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model QuizQuestion {
-  id            String          @id @default(cuid())
+  id            String       @id @default(cuid())
   quizId        String
-  quiz          Quiz            @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  quiz          Quiz         @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  questionType  String       @default("MULTIPLE_CHOICE")
   questionText  String
-  optionA       String
-  optionB       String
-  optionC       String
-  optionD       String
-  correctOption String
-  orderIndex    Int             @default(0)
+  optionA       String?
+  optionB       String?
+  optionC       String?
+  optionD       String?
+  correctOption String?
+  equationLatex String?
+  sampleAnswer  String?
+  rubric        String?
+  orderIndex    Int          @default(0)
   answerLines   AttemptAnswer[]
 }
 
@@ -188,13 +318,11 @@ model QuizAttempt {
   student        User            @relation(fields: [studentId], references: [id], onDelete: Cascade)
   quizId         String
   quiz           Quiz            @relation(fields: [quizId], references: [id], onDelete: Cascade)
-  score          Int
-  totalQuestions Int
-  passed         Boolean
+  score          Int             @default(0)
+  totalQuestions Int             @default(0)
+  passed         Boolean         @default(false)
   submittedAt    DateTime        @default(now())
   answers        AttemptAnswer[]
-
-  @@unique([studentId, quizId])
 }
 
 model AttemptAnswer {
@@ -203,8 +331,9 @@ model AttemptAnswer {
   attempt        QuizAttempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)
   questionId     String
   question       QuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  selectedOption String
-  isCorrect      Boolean
+  selectedOption String?
+  textAnswer     String?
+  isCorrect      Boolean      @default(false)
 }
 
 model HomeworkSubmission {
@@ -213,38 +342,14 @@ model HomeworkSubmission {
   student     User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
   lessonId    String
   submittedAt DateTime @default(now())
-
-  @@unique([studentId, lessonId])
 }
 
 model PlatformSettings {
   id             String   @id @default(cuid())
-  platformName   String   @default("خطوة")
   logoUrl        String?
   primaryColor   String   @default("#6C63FF")
   secondaryColor String   @default("#FF6584")
-  fontFamily     String   @default("Inter")
+  fontFamily     String   @default("Cairo")
   updatedAt      DateTime @updatedAt
   updatedById    String?
 }
-
-// ─── Point Recharge Request (replaces access codes) ───────────────────────────
-// Students upload a payment screenshot; staff/admin review and manually credit points.
-
-model PointRequest {
-  id              String   @id @default(cuid())
-  studentId       String
-  student         User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  requestedPoints Int
-  screenshotPath  String
-  screenshotName  String?
-  notes           String?
-  status          String   @default("PENDING")  // PENDING | APPROVED | REJECTED
-  reviewedById    String?
-  reviewedAt      DateTime?
-  grantedPoints   Int?
-  rejectionReason String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-}
-

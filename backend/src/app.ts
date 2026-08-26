@@ -19,6 +19,8 @@ import pointRequestsRouter from './routes/pointRequests.router';
 
 // Public branding (no auth required)
 import * as BrandingController from './modules/branding/branding.controller';
+import { prisma } from './config/prisma';
+import { asyncHandler } from './utils/asyncHandler';
 
 const app = express();
 
@@ -113,6 +115,76 @@ app.get('/health', (_req, res) => {
 
 // Public branding endpoint (frontend consumes this without auth)
 app.get('/settings/branding', BrandingController.getSettings);
+
+// ─── Public course/teacher discovery (no auth needed) ────────────────────────
+
+app.get('/courses', asyncHandler(async (req, res) => {
+  const { stage, search } = req.query as Record<string, string>;
+  const where: any = { isPublished: true };
+  if (stage) where.academicStage = stage;
+  if (search) {
+    where.OR = [
+      { title: { contains: search, mode: 'insensitive' } },
+      { subject: { contains: search, mode: 'insensitive' } },
+      { teacherProfile: { displayName: { contains: search, mode: 'insensitive' } } },
+    ];
+  }
+  const courses = await prisma.course.findMany({
+    where,
+    select: {
+      id: true, title: true, subject: true, academicStage: true,
+      imageUrl: true, description: true, pointCost: true, price: true,
+      teacherProfile: { select: { id: true, displayName: true, avatarUrl: true, rating: true, subject: true } },
+      _count: { select: { chapters: true, enrollments: true } },
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+  res.status(200).json({ success: true, data: courses });
+}));
+
+app.get('/teachers', asyncHandler(async (_req, res) => {
+  const teachers = await prisma.teacherProfile.findMany({
+    where: { user: { isActive: true } },
+    select: {
+      id: true, displayName: true, bio: true, subject: true,
+      avatarUrl: true, rating: true, ratingCount: true, academicStages: true,
+      courses: {
+        where: { isPublished: true },
+        select: {
+          id: true, title: true, subject: true, academicStage: true,
+          imageUrl: true, pointCost: true, price: true,
+          _count: { select: { chapters: true, enrollments: true } },
+        },
+      },
+      user: { select: { id: true, username: true } },
+    },
+  });
+  res.status(200).json({ success: true, data: teachers });
+}));
+
+app.get('/teachers/:id', asyncHandler(async (req, res) => {
+  const profile = await prisma.teacherProfile.findUnique({
+    where: { id: req.params.id },
+    include: {
+      courses: {
+        where: { isPublished: true },
+        include: {
+          chapters: {
+            orderBy: { orderIndex: 'asc' },
+            select: { id: true, title: true, imageUrl: true, orderIndex: true, _count: { select: { lessons: true } } },
+          },
+          _count: { select: { enrollments: true } },
+        },
+      },
+      user: { select: { id: true, username: true } },
+    },
+  });
+  if (!profile) {
+    res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Teacher not found' } });
+    return;
+  }
+  res.status(200).json({ success: true, data: profile });
+}));
 
 // ─── Auth routes (rate-limited in production) ─────────────────────────────────
 

@@ -40,10 +40,34 @@ enum PointsTransactionType {
   DEBIT
 }
 
+enum WalletTransactionType {
+  CREDIT
+  DEBIT
+}
+
+enum PointRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 enum QuizType {
   OPENING_QUIZ
   HOMEWORK
   EXAM
+}
+
+enum AcademicStage {
+  PREPARATORY
+  SECONDARY_1
+  SECONDARY_2
+  SECONDARY_3
+}
+
+enum QuestionType {
+  MULTIPLE_CHOICE
+  ESSAY
+  EQUATION
 }
 
 // ─────────────────────────────────────────────
@@ -96,10 +120,15 @@ model User {
   // Auth
   refreshTokens RefreshToken[]
 
-  // Points
+  // Real Money & Points Balances
+  walletBalance       Float               @default(0.0)
   pointsBalance       Int                 @default(0)
+  
   pointsTransactions  PointsTransaction[] @relation("StudentTransactions")
-  actedTransactions   PointsTransaction[] @relation("ActorTransactions")
+  actedPointsTransactions PointsTransaction[] @relation("ActorTransactions")
+
+  walletTransactions  WalletTransaction[] @relation("StudentWalletTransactions")
+  actedWalletTransactions WalletTransaction[] @relation("ActorWalletTransactions")
 
   // Access codes created (STAFF / ADMIN) and redeemed (STUDENT)
   createdAccessCodes  AccessCode[]        @relation("CreatedAccessCodes")
@@ -108,7 +137,7 @@ model User {
   // Video access logs
   videoAccessLogs VideoAccessLog[]
 
-  // Quiz attempts
+  // Quiz & Exam attempts
   quizAttempts QuizAttempt[]
 
   // Homework submissions
@@ -116,6 +145,17 @@ model User {
 
   // Unlocked lessons
   unlockedLessons UnlockedLesson[]
+
+  // Course Enrollments
+  courseEnrollments CourseEnrollment[]
+
+  // Student Notes
+  studentNotes  StudentNote[] @relation("StudentReceivedNotes")
+  authoredNotes StudentNote[] @relation("AuthorWrittenNotes")
+
+  // Point requests & notifications
+  pointRequests PointRequest[]
+  notifications Notification[]
 
   @@index([role])
 }
@@ -139,12 +179,19 @@ model ParentInfo {
 }
 
 model TeacherProfile {
-  id          String   @id @default(cuid())
-  userId      String   @unique
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  displayName String
-  bio         String?
-  lessons     Lesson[]
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  displayName    String
+  bio            String?
+  subject        String?
+  avatarUrl      String?
+  rating         Float    @default(5.0)
+  ratingCount    Int      @default(1)
+  academicStages String?  // e.g. "PREPARATORY,SECONDARY_1,SECONDARY_2,SECONDARY_3"
+
+  courses        Course[]
+  lessons        Lesson[]
 }
 
 model RefreshToken {
@@ -161,13 +208,106 @@ model RefreshToken {
 }
 
 // ─────────────────────────────────────────────
-// POINTS / TRANSACTIONS
+// COURSES & CHAPTERS (Academic Year Hierarchy)
 // ─────────────────────────────────────────────
+
+model Course {
+  id               String        @id @default(cuid())
+  teacherProfileId String
+  teacherProfile   TeacherProfile @relation(fields: [teacherProfileId], references: [id], onDelete: Cascade)
+  title            String
+  subject          String
+  academicStage    AcademicStage @default(SECONDARY_1)
+  imageUrl         String?
+  description      String?
+  pointCost        Int           @default(0)
+  price            Float         @default(0.0)
+  isPublished      Boolean       @default(true)
+  
+  chapters         Chapter[]
+  lessons          Lesson[]
+  enrollments      CourseEnrollment[]
+
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@index([teacherProfileId])
+  @@index([academicStage])
+}
+
+model Chapter {
+  id          String   @id @default(cuid())
+  courseId    String
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  imageUrl    String?
+  orderIndex  Int      @default(0)
+
+  lessons     Lesson[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([courseId])
+  @@index([orderIndex])
+}
+
+model CourseEnrollment {
+  id         String   @id @default(cuid())
+  studentId  String
+  student    User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  courseId   String
+  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  enrolledAt DateTime @default(now())
+
+  @@unique([studentId, courseId])
+  @@index([studentId])
+  @@index([courseId])
+}
+
+// ─────────────────────────────────────────────
+// STUDENT NOTES
+// ─────────────────────────────────────────────
+
+model StudentNote {
+  id        String   @id @default(cuid())
+  studentId String
+  student   User     @relation("StudentReceivedNotes", fields: [studentId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation("AuthorWrittenNotes", fields: [authorId], references: [id], onDelete: Cascade)
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([studentId])
+  @@index([authorId])
+}
+
+// ─────────────────────────────────────────────
+// WALLET & POINTS TRANSACTIONS
+// ─────────────────────────────────────────────
+
+model WalletTransaction {
+  id           String                @id @default(cuid())
+  studentId    String
+  student      User                  @relation("StudentWalletTransactions", fields: [studentId], references: [id], onDelete: Cascade)
+  type         WalletTransactionType
+  amount       Float
+  balanceAfter Float
+  reason       String
+  actorId      String
+  actor        User                  @relation("ActorWalletTransactions", fields: [actorId], references: [id], onDelete: Cascade)
+  createdAt    DateTime              @default(now())
+
+  @@index([studentId])
+  @@index([actorId])
+}
 
 model PointsTransaction {
   id               String                @id @default(cuid())
   studentId        String
-  student          User                  @relation("StudentTransactions", fields: [studentId], references: [id])
+  student          User                  @relation("StudentTransactions", fields: [studentId], references: [id], onDelete: Cascade)
   type             PointsTransactionType
   amount           Int
   reason           String
@@ -176,11 +316,44 @@ model PointsTransaction {
   relatedLessonId  String?
   relatedLesson    Lesson?               @relation(fields: [relatedLessonId], references: [id])
   actorId          String
-  actor            User                  @relation("ActorTransactions", fields: [actorId], references: [id])
+  actor            User                  @relation("ActorTransactions", fields: [actorId], references: [id], onDelete: Cascade)
   createdAt        DateTime              @default(now())
 
   @@index([studentId])
   @@index([relatedCodeId])
+}
+
+model PointRequest {
+  id              String             @id @default(cuid())
+  userId          String
+  user            User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  requestedPoints Int                @default(0)
+  amount          Float              @default(0.0)
+  code            String?
+  notes           String?
+  screenshotUrl   String?
+  status          PointRequestStatus @default(PENDING)
+  processedById   String?
+  processedAt     DateTime?
+  rejectionReason String?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  @@index([userId])
+  @@index([status])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      String   @default("INFO")
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 // ─────────────────────────────────────────────
@@ -191,21 +364,36 @@ model Lesson {
   id               String         @id @default(cuid())
   teacherProfileId String
   teacherProfile   TeacherProfile @relation(fields: [teacherProfileId], references: [id], onDelete: Cascade)
+  courseId         String?
+  course           Course?        @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  chapterId        String?
+  chapter          Chapter?       @relation(fields: [chapterId], references: [id], onDelete: SetNull)
+  
   title            String
   description      String?
   pointCost        Int            @default(0)
   orderIndex       Int            @default(0)
-  isPublished      Boolean        @default(false)
+  isPublished      Boolean        @default(true)
 
-  // Google Drive storage
-  driveFileId   String? // Drive fileId — NOT a public link
-  driveFileName String?
+  // Content URLs / Files
+  videoUrl         String?
+  driveFileId      String? // Drive fileId — NOT a public link
+  driveFileName    String?
+  pdfUrl           String?
+  pdfFileName      String?
 
-  openingQuizId String?
-  openingQuiz   Quiz?   @relation("OpeningQuiz", fields: [openingQuizId], references: [id])
+  // Quizzes & Exams relations
+  assignmentQuizId String?
+  assignmentQuiz   Quiz?   @relation("LessonAssignment", fields: [assignmentQuizId], references: [id])
 
-  homeworkId String?
-  homework   Quiz?   @relation("Homework", fields: [homeworkId], references: [id])
+  examQuizId       String?
+  examQuiz         Quiz?   @relation("LessonExam", fields: [examQuizId], references: [id])
+
+  openingQuizId    String?
+  openingQuiz      Quiz?   @relation("OpeningQuiz", fields: [openingQuizId], references: [id])
+
+  homeworkId       String?
+  homework         Quiz?   @relation("Homework", fields: [homeworkId], references: [id])
 
   // Relations
   unlockedBy         UnlockedLesson[]
@@ -216,6 +404,8 @@ model Lesson {
   updatedAt          DateTime            @updatedAt
 
   @@index([teacherProfileId])
+  @@index([courseId])
+  @@index([chapterId])
   @@index([orderIndex])
 }
 
@@ -259,36 +449,48 @@ model VideoAccessLog {
 }
 
 // ─────────────────────────────────────────────
-// QUIZ ENGINE
+// QUIZ & EXAM ENGINE
 // ─────────────────────────────────────────────
 
 model Quiz {
   id        String         @id @default(cuid())
   title     String
-  type      QuizType
+  type      QuizType       @default(EXAM)
   questions QuizQuestion[]
   attempts  QuizAttempt[]
 
-  openingForLessons  Lesson[] @relation("OpeningQuiz")
-  homeworkForLessons Lesson[] @relation("Homework")
+  assignmentForLessons Lesson[] @relation("LessonAssignment")
+  examForLessons       Lesson[] @relation("LessonExam")
+  openingForLessons    Lesson[] @relation("OpeningQuiz")
+  homeworkForLessons   Lesson[] @relation("Homework")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model QuizQuestion {
-  id            String          @id @default(cuid())
+  id            String       @id @default(cuid())
   quizId        String
-  quiz          Quiz            @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  quiz          Quiz         @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  questionType  QuestionType @default(MULTIPLE_CHOICE)
   questionText  String
-  optionA       String
-  optionB       String
-  optionC       String
-  optionD       String
-  correctOption String // 'A' | 'B' | 'C' | 'D'
-  orderIndex    Int             @default(0)
+  
+  // Multiple Choice fields
+  optionA       String?
+  optionB       String?
+  optionC       String?
+  optionD       String?
+  correctOption String? // 'A' | 'B' | 'C' | 'D'
+  
+  // Math / Equation question
+  equationLatex String?
+  
+  // Essay question rubric / sample answer
+  sampleAnswer  String?
+  rubric        String?
 
-  answerLines AttemptAnswer[]
+  orderIndex    Int             @default(0)
+  answerLines   AttemptAnswer[]
 
   @@index([quizId])
 }
@@ -299,9 +501,9 @@ model QuizAttempt {
   student        User            @relation(fields: [studentId], references: [id], onDelete: Cascade)
   quizId         String
   quiz           Quiz            @relation(fields: [quizId], references: [id], onDelete: Cascade)
-  score          Int
-  totalQuestions Int
-  passed         Boolean
+  score          Int             @default(0)
+  totalQuestions Int             @default(0)
+  passed         Boolean         @default(false)
   submittedAt    DateTime        @default(now())
   answers        AttemptAnswer[]
 
@@ -316,8 +518,9 @@ model AttemptAnswer {
   attempt        QuizAttempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)
   questionId     String
   question       QuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  selectedOption String // 'A' | 'B' | 'C' | 'D'
-  isCorrect      Boolean
+  selectedOption String? // 'A' | 'B' | 'C' | 'D'
+  textAnswer     String? // Essay / Equation input
+  isCorrect      Boolean      @default(false)
 
   @@index([attemptId])
 }

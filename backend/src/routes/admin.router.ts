@@ -1,8 +1,13 @@
 /**
  * /admin/* — ADMIN role only (full platform management)
  *
- * Every route is behind requireAdmin middleware.
  * Full unrestricted platform access for administrator.
+ * - Student management (DB-backed, persistent)
+ * - Teacher creation
+ * - Wallet (EGP) atomic transfers
+ * - Points atomic adjustments
+ * - Student notes
+ * - Platform analytics
  */
 
 import { Router } from 'express';
@@ -11,6 +16,7 @@ import * as AccessCodesController from '../modules/accessCodes/accessCodes.contr
 import * as BrandingController from '../modules/branding/branding.controller';
 import { asyncHandler } from '../utils/asyncHandler';
 import { prisma } from '../config/prisma';
+import bcrypt from 'bcryptjs';
 
 const router = Router();
 
@@ -24,66 +30,97 @@ router.get('/access-codes', AccessCodesController.listCodes);
 router.patch('/access-codes/:id/revoke', AccessCodesController.revokeCode);
 router.post('/access-codes/:id/regenerate', AccessCodesController.regenerateCode);
 
-// ─── Student Management (Full access, monitor & edit) ─────────────────────────
+// ─── Student Management (Full DB-backed, IP-independent) ─────────────────────
 
 router.get(
   '/students',
-  asyncHandler(async (_req, res) => {
-    const students = await prisma.user.findMany({
-      where: { role: 'STUDENT' },
-      select: {
-        id: true,
-        username: true,
-        pointsBalance: true,
-        isActive: true,
-        createdAt: true,
-        studentProfile: {
-          include: {
-            parentInfo: true,
+  asyncHandler(async (req, res) => {
+    const { search = '', page = '1', limit = '50' } = req.query as Record<string, string>;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    const where: any = { role: 'STUDENT' };
+    if (search) {
+      where.OR = [
+        { username: { contains: search, mode: 'insensitive' } },
+        { studentProfile: { studentPhoneNumber: { contains: search } } },
+      ];
+    }
+
+    const [students, total] = await Promise.all([
+      prisma.user.findMany({
+        where,
+        select: {
+          id: true,
+          username: true,
+          pointsBalance: true,
+          walletBalance: true,
+          isActive: true,
+          createdAt: true,
+          studentProfile: {
+            include: { parentInfo: true },
           },
         },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
-    res.status(200).json({ success: true, data: students });
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: parseInt(limit),
+      }),
+      prisma.user.count({ where }),
+    ]);
+
+    res.status(200).json({ success: true, data: students, meta: { total, page: parseInt(page), limit: parseInt(limit) } });
   })
 );
 
-// Full student profile with parent info, quizzes, points history, and unlocked lessons
+// Full student profile with notes, wallet, points, enrollments
 router.get(
   '/students/:id/full-profile',
   asyncHandler(async (req, res) => {
     const student = await prisma.user.findUnique({
-      where: { id: req.params.id as string },
+      where: { id: req.params.id },
       select: {
         id: true,
         username: true,
         role: true,
         pointsBalance: true,
+        walletBalance: true,
         isActive: true,
         createdAt: true,
-        studentProfile: {
-          include: {
-            parentInfo: true,
-          },
-        },
-        redeemedAccessCodes: {
-          orderBy: { redeemedAt: 'desc' },
-          take: 50,
-        },
+        studentProfile: { include: { parentInfo: true } },
         pointsTransactions: {
           orderBy: { createdAt: 'desc' },
           take: 50,
+          include: { actor: { select: { username: true } } },
+        },
+        walletTransactions: {
+          orderBy: { createdAt: 'desc' },
+          take: 50,
+          include: { actor: { select: { username: true } } },
+        },
+        studentNotes: {
+          orderBy: { createdAt: 'desc' },
+          include: { author: { select: { username: true } } },
+        },
+        courseEnrollments: {
+          include: {
+            course: {
+              select: {
+                id: true,
+                title: true,
+                subject: true,
+                academicStage: true,
+                teacherProfile: { select: { displayName: true, avatarUrl: true } },
+              },
+            },
+          },
         },
         unlockedLessons: {
           include: {
-            lesson: {
-              select: { id: true, title: true, pointCost: true },
-            },
+            lesson: { select: { id: true, title: true, pointCost: true } },
           },
         },
       },
     });
+
     if (!student) {
       res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Student not found' } });
       return;
@@ -92,48 +129,149 @@ router.get(
   })
 );
 
+// ─── Student Notes ────────────────────────────────────────────────────────────
+
 router.get(
-  '/students/:studentId/performance',
+  '/students/:id/notes',
   asyncHandler(async (req, res) => {
-    const unlocked = await prisma.unlockedLesson.findMany({
-      where: { studentId: req.params.studentId as string },
-      include: { lesson: { select: { id: true, title: true, pointCost: true, teacherProfile: { select: { displayName: true } } } } },
+    const notes = await prisma.studentNote.findMany({
+      where: { studentId: req.params.id },
+      orderBy: { createdAt: 'desc' },
+      include: { author: { select: { username: true } } },
     });
-    res.status(200).json({ success: true, data: unlocked });
+    res.status(200).json({ success: true, data: notes });
   })
 );
 
-// Adjust student points directly (Add or Deduct)
 router.post(
-  '/students/:id/adjust-points',
+  '/students/:id/notes',
   asyncHandler(async (req, res) => {
-    const { amount, reason = 'تعديل رصيد بواسطة المدير العام' } = req.body;
-    const numAmount = Number(amount);
+    const { content } = req.body;
+    if (!content || !content.trim()) {
+      res.status(400).json({ success: false, error: { code: 'INVALID_INPUT', message: 'Note content is required' } });
+      return;
+    }
+
+    const student = await prisma.user.findUnique({ where: { id: req.params.id } });
+    if (!student) {
+      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Student not found' } });
+      return;
+    }
+
+    const note = await prisma.studentNote.create({
+      data: {
+        studentId: req.params.id,
+        authorId: req.user!.sub,
+        content: content.trim(),
+      },
+      include: { author: { select: { username: true } } },
+    });
+
+    res.status(201).json({ success: true, data: note });
+  })
+);
+
+router.delete(
+  '/students/:studentId/notes/:noteId',
+  asyncHandler(async (req, res) => {
+    const note = await prisma.studentNote.findUnique({ where: { id: req.params.noteId } });
+    if (!note || note.studentId !== req.params.studentId) {
+      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Note not found' } });
+      return;
+    }
+    await prisma.studentNote.delete({ where: { id: req.params.noteId } });
+    res.status(200).json({ success: true, message: 'Note deleted' });
+  })
+);
+
+// ─── Wallet (EGP) Management — Atomic ─────────────────────────────────────────
+
+router.post(
+  '/students/:id/adjust-wallet',
+  asyncHandler(async (req, res) => {
+    const { amount, reason = 'تحويل رصيد بواسطة المدير العام' } = req.body;
+    const numAmount = parseFloat(amount);
 
     if (isNaN(numAmount) || numAmount === 0) {
       res.status(400).json({ success: false, error: { code: 'INVALID_AMOUNT', message: 'Amount must be a non-zero number' } });
       return;
     }
 
-    const student = await prisma.user.findUnique({ where: { id: req.params.id as string } });
-    if (!student) {
+    const student = await prisma.user.findUnique({ where: { id: req.params.id } });
+    if (!student || student.role !== 'STUDENT') {
+      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Student not found' } });
+      return;
+    }
+
+    const newBalance = Math.max(0, (student.walletBalance || 0) + numAmount);
+    const transactionType = numAmount > 0 ? 'CREDIT' : 'DEBIT';
+
+    const [updatedUser] = await prisma.$transaction([
+      prisma.user.update({
+        where: { id: student.id },
+        data: { walletBalance: newBalance },
+        select: { id: true, username: true, walletBalance: true, pointsBalance: true },
+      }),
+      prisma.walletTransaction.create({
+        data: {
+          studentId: student.id,
+          type: transactionType,
+          amount: Math.abs(numAmount),
+          balanceAfter: newBalance,
+          reason: reason.trim(),
+          actorId: req.user!.sub,
+        },
+      }),
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        id: updatedUser.id,
+        username: updatedUser.username,
+        walletBalance: updatedUser.walletBalance,
+        change: numAmount,
+        reason,
+      },
+    });
+  })
+);
+
+// ─── Points Management — Atomic ───────────────────────────────────────────────
+
+router.post(
+  '/students/:id/adjust-points',
+  asyncHandler(async (req, res) => {
+    const { amount, reason = 'تعديل نقاط بواسطة المدير العام' } = req.body;
+    const numAmount = parseInt(amount);
+
+    if (isNaN(numAmount) || numAmount === 0) {
+      res.status(400).json({ success: false, error: { code: 'INVALID_AMOUNT', message: 'Amount must be a non-zero integer' } });
+      return;
+    }
+
+    const student = await prisma.user.findUnique({ where: { id: req.params.id } });
+    if (!student || student.role !== 'STUDENT') {
       res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Student not found' } });
       return;
     }
 
     const newBalance = Math.max(0, student.pointsBalance + numAmount);
+    const transactionType = numAmount > 0 ? 'CREDIT' : 'DEBIT';
 
     const [updatedUser] = await prisma.$transaction([
       prisma.user.update({
         where: { id: student.id },
         data: { pointsBalance: newBalance },
+        select: { id: true, username: true, pointsBalance: true, walletBalance: true },
       }),
       prisma.pointsTransaction.create({
         data: {
-          userId: student.id,
+          studentId: student.id,
+          type: transactionType,
           amount: Math.abs(numAmount),
-          type: numAmount > 0 ? 'CREDIT' : 'DEBIT',
-          balanceAfter: newBalance,
+          reason: reason.trim(),
+          actorId: req.user!.sub,
         },
       }),
     ]);
@@ -154,7 +292,7 @@ router.post(
 router.patch(
   '/students/:id/toggle-active',
   asyncHandler(async (req, res) => {
-    const student = await prisma.user.findUnique({ where: { id: req.params.id as string } });
+    const student = await prisma.user.findUnique({ where: { id: req.params.id } });
     if (!student) {
       res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'User not found' } });
       return;
@@ -168,7 +306,59 @@ router.patch(
   })
 );
 
-// ─── Teacher Management & Courses Monitoring ──────────────────────────────────
+// ─── Teacher Management ────────────────────────────────────────────────────────
+
+// Create teacher account (Admin-only)
+router.post(
+  '/teachers',
+  asyncHandler(async (req, res) => {
+    const { username, password, displayName, subject, bio, avatarUrl, academicStages } = req.body;
+
+    if (!username || !password || !displayName) {
+      res.status(400).json({
+        success: false,
+        error: { code: 'MISSING_FIELDS', message: 'username, password, and displayName are required' },
+      });
+      return;
+    }
+
+    const existing = await prisma.user.findUnique({ where: { username } });
+    if (existing) {
+      res.status(409).json({ success: false, error: { code: 'CONFLICT', message: 'Username already taken' } });
+      return;
+    }
+
+    const passwordHash = await bcrypt.hash(password, 12);
+
+    const teacher = await prisma.user.create({
+      data: {
+        username,
+        passwordHash,
+        role: 'TEACHER',
+        teacherProfile: {
+          create: {
+            displayName,
+            subject: subject || null,
+            bio: bio || null,
+            avatarUrl: avatarUrl || null,
+            academicStages: academicStages ? (Array.isArray(academicStages) ? academicStages.join(',') : academicStages) : null,
+          },
+        },
+      },
+      select: {
+        id: true,
+        username: true,
+        role: true,
+        createdAt: true,
+        teacherProfile: {
+          select: { id: true, displayName: true, subject: true, bio: true, avatarUrl: true },
+        },
+      },
+    });
+
+    res.status(201).json({ success: true, data: teacher });
+  })
+);
 
 router.get(
   '/teachers',
@@ -185,14 +375,24 @@ router.get(
             id: true,
             displayName: true,
             bio: true,
-            lessons: {
+            subject: true,
+            avatarUrl: true,
+            rating: true,
+            ratingCount: true,
+            academicStages: true,
+            courses: {
               select: {
                 id: true,
                 title: true,
-                pointCost: true,
+                subject: true,
+                academicStage: true,
                 isPublished: true,
                 createdAt: true,
+                _count: { select: { enrollments: true, chapters: true } },
               },
+            },
+            lessons: {
+              select: { id: true, title: true, pointCost: true, isPublished: true, createdAt: true },
             },
           },
         },
@@ -204,10 +404,41 @@ router.get(
 );
 
 router.patch(
+  '/teachers/:id',
+  asyncHandler(async (req, res) => {
+    const { displayName, subject, bio, avatarUrl, academicStages } = req.body;
+    const teacher = await prisma.user.findUnique({
+      where: { id: req.params.id },
+      include: { teacherProfile: true },
+    });
+
+    if (!teacher || teacher.role !== 'TEACHER') {
+      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Teacher not found' } });
+      return;
+    }
+
+    const updated = await prisma.teacherProfile.update({
+      where: { userId: req.params.id },
+      data: {
+        ...(displayName && { displayName }),
+        ...(subject !== undefined && { subject }),
+        ...(bio !== undefined && { bio }),
+        ...(avatarUrl !== undefined && { avatarUrl }),
+        ...(academicStages !== undefined && {
+          academicStages: Array.isArray(academicStages) ? academicStages.join(',') : academicStages,
+        }),
+      },
+    });
+
+    res.status(200).json({ success: true, data: updated });
+  })
+);
+
+router.patch(
   '/teachers/:id/toggle-active',
   asyncHandler(async (req, res) => {
-    const teacher = await prisma.user.findUnique({ where: { id: req.params.id as string } });
-    if (!teacher) {
+    const teacher = await prisma.user.findUnique({ where: { id: req.params.id } });
+    if (!teacher || teacher.role !== 'TEACHER') {
       res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Teacher not found' } });
       return;
     }
@@ -220,27 +451,21 @@ router.patch(
   })
 );
 
-// All courses & lessons across all teachers
+// ─── Courses & Content Monitoring ────────────────────────────────────────────
+
 router.get(
   '/courses',
   asyncHandler(async (_req, res) => {
-    const lessons = await prisma.lesson.findMany({
+    const courses = await prisma.course.findMany({
       include: {
         teacherProfile: {
-          select: {
-            displayName: true,
-            user: { select: { username: true } },
-          },
+          select: { displayName: true, avatarUrl: true, user: { select: { username: true } } },
         },
-        _count: {
-          select: {
-            unlockedByStudents: true,
-          },
-        },
+        _count: { select: { enrollments: true, chapters: true, lessons: true } },
       },
       orderBy: { createdAt: 'desc' },
     });
-    res.status(200).json({ success: true, data: lessons });
+    res.status(200).json({ success: true, data: courses });
   })
 );
 
@@ -249,19 +474,29 @@ router.get(
 router.get(
   '/analytics',
   asyncHandler(async (_req, res) => {
-    const [totalStudents, totalTeachers, totalStaff, totalPointsCredited, activeCodes, totalLessons, totalUnlocked] =
-      await Promise.all([
-        prisma.user.count({ where: { role: 'STUDENT' } }),
-        prisma.user.count({ where: { role: 'TEACHER' } }),
-        prisma.user.count({ where: { role: 'STAFF' } }),
-        prisma.pointsTransaction.aggregate({
-          where: { type: 'CREDIT' },
-          _sum: { amount: true },
-        }),
-        prisma.accessCode.count({ where: { status: 'ACTIVE' } }),
-        prisma.lesson.count(),
-        prisma.unlockedLesson.count(),
-      ]);
+    const [
+      totalStudents,
+      totalTeachers,
+      totalStaff,
+      totalPointsCredited,
+      totalWalletCredited,
+      pendingPointRequests,
+      activeCodes,
+      totalLessons,
+      totalCourses,
+      totalEnrollments,
+    ] = await Promise.all([
+      prisma.user.count({ where: { role: 'STUDENT' } }),
+      prisma.user.count({ where: { role: 'TEACHER' } }),
+      prisma.user.count({ where: { role: 'STAFF' } }),
+      prisma.pointsTransaction.aggregate({ where: { type: 'CREDIT' }, _sum: { amount: true } }),
+      prisma.walletTransaction.aggregate({ where: { type: 'CREDIT' }, _sum: { amount: true } }),
+      prisma.pointRequest.count({ where: { status: 'PENDING' } }),
+      prisma.accessCode.count({ where: { status: 'ACTIVE' } }),
+      prisma.lesson.count(),
+      prisma.course.count(),
+      prisma.courseEnrollment.count(),
+    ]);
 
     res.status(200).json({
       success: true,
@@ -270,8 +505,11 @@ router.get(
         totalTeachers,
         totalStaff,
         totalLessons,
-        totalUnlockedLessons: totalUnlocked,
+        totalCourses,
+        totalEnrollments,
         totalPointsCredited: totalPointsCredited._sum.amount ?? 0,
+        totalWalletCredited: totalWalletCredited._sum.amount ?? 0,
+        pendingPointRequests,
         activeAccessCodes: activeCodes,
       },
     });
@@ -295,7 +533,7 @@ router.get(
   })
 );
 
-// ─── Point Requests Review (Admin & Staff) ────────────────────────────────────
+// ─── Point Requests Review ────────────────────────────────────────────────────
 
 router.get(
   '/point-requests',
@@ -304,10 +542,107 @@ router.get(
       orderBy: { createdAt: 'desc' },
       take: 100,
       include: {
-        user: { select: { id: true, username: true, pointsBalance: true } },
+        user: { select: { id: true, username: true, pointsBalance: true, walletBalance: true } },
       },
     });
     res.status(200).json({ success: true, data: requests });
+  })
+);
+
+router.patch(
+  '/point-requests/:id/approve',
+  asyncHandler(async (req, res) => {
+    const pr = await prisma.pointRequest.findUnique({
+      where: { id: req.params.id },
+      include: { user: true },
+    });
+
+    if (!pr || pr.status !== 'PENDING') {
+      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Pending request not found' } });
+      return;
+    }
+
+    const newBalance = pr.user.pointsBalance + (pr.requestedPoints || 0);
+
+    await prisma.$transaction([
+      prisma.user.update({ where: { id: pr.userId }, data: { pointsBalance: newBalance } }),
+      prisma.pointsTransaction.create({
+        data: {
+          studentId: pr.userId,
+          type: 'CREDIT',
+          amount: pr.requestedPoints || 0,
+          reason: `اعتماد طلب شحن #${pr.id}`,
+          actorId: req.user!.sub,
+        },
+      }),
+      prisma.pointRequest.update({
+        where: { id: pr.id },
+        data: { status: 'APPROVED', processedById: req.user!.sub, processedAt: new Date() },
+      }),
+      prisma.notification.create({
+        data: {
+          userId: pr.userId,
+          title: 'تمت الموافقة على طلب الشحن',
+          message: `تمت الموافقة على طلب شحن ${pr.requestedPoints} نقطة بنجاح.`,
+          type: 'SUCCESS',
+        },
+      }),
+    ]);
+
+    res.status(200).json({ success: true, message: 'Point request approved and balance updated' });
+  })
+);
+
+router.patch(
+  '/point-requests/:id/reject',
+  asyncHandler(async (req, res) => {
+    const { reason } = req.body;
+    const pr = await prisma.pointRequest.findUnique({ where: { id: req.params.id } });
+    if (!pr || pr.status !== 'PENDING') {
+      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Pending request not found' } });
+      return;
+    }
+
+    await prisma.$transaction([
+      prisma.pointRequest.update({
+        where: { id: pr.id },
+        data: {
+          status: 'REJECTED',
+          processedById: req.user!.sub,
+          processedAt: new Date(),
+          rejectionReason: reason || 'رُفض الطلب من المدير',
+        },
+      }),
+      prisma.notification.create({
+        data: {
+          userId: pr.userId,
+          title: 'تم رفض طلب الشحن',
+          message: reason || 'تم رفض طلب الشحن. يرجى التواصل مع الإدارة.',
+          type: 'ERROR',
+        },
+      }),
+    ]);
+
+    res.status(200).json({ success: true, message: 'Point request rejected' });
+  })
+);
+
+// ─── Notifications ────────────────────────────────────────────────────────────
+
+router.post(
+  '/notifications',
+  asyncHandler(async (req, res) => {
+    const { userId, title, message, type = 'INFO' } = req.body;
+    if (!userId || !title || !message) {
+      res.status(400).json({ success: false, error: { code: 'MISSING_FIELDS', message: 'userId, title, and message are required' } });
+      return;
+    }
+
+    const notification = await prisma.notification.create({
+      data: { userId, title, message, type },
+    });
+
+    res.status(201).json({ success: true, data: notification });
   })
 );
 

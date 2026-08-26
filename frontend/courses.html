@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>الكورسات والمواد | خطوة</title>
+<title>تصفح المعلمين والكورسات | خطوة</title>
 <link rel="icon" type="image/jpeg" href="logo/logo-khatwa.jpeg">
 <link rel="stylesheet" href="css/style.css">
 </head>
@@ -18,7 +18,8 @@
       <li><a href="points.html">النقاط</a></li>
       <li><a href="notifications.html">الإشعارات</a></li>
     </ul>
-    <div class="nav-cta">
+    <div class="nav-cta" style="display:flex;align-items:center;gap:10px;">
+      <button class="lang-switcher-btn" onclick="window.KhatwaI18n.toggleLanguage()">🌐 English</button>
       <a href="profile.html" class="user-line" id="navUserLine">
         <span class="avatar" id="navAvatar">ط</span>
         <span>
@@ -42,13 +43,13 @@
     <div class="side-group">
       <h6>المحفظة</h6>
       <a href="points.html" class="side-link">رصيد النقاط</a>
-      <a href="request-points.html" class="side-link">طلب شحن نقاط</a>
+      <a href="request-points.html" class="side-link">طلب شحن رصيد</a>
     </div>
     <div class="side-group">
       <h6>الحساب</h6>
       <a href="profile.html" class="side-link">بياناتي</a>
       <a href="notifications.html" class="side-link">الإشعارات</a>
-      <a href="#" class="side-link" id="logoutBtn" style="color:var(--err);">تسجيل الخروج</a>
+      <a href="#" class="side-link" onclick="window.KhatwaAPI.auth.logout()" style="color:var(--err);">تسجيل الخروج</a>
     </div>
   </aside>
 
@@ -56,8 +57,8 @@
     <div class="breadcrumb">الكورسات والمواد</div>
     <div class="page-head">
       <div>
-        <h1>الكورسات والمواد التعليمية</h1>
-        <p class="page-sub" style="margin:4px 0 0;">تصفح الكورسات المرفوعة من المدرسين واشترك لمتابعة المحاضرات والامتحانات.</p>
+        <h1>المعلمون والكورسات الدراسية</h1>
+        <p class="page-sub" style="margin:4px 0 0;">اختر أستاذ المادة وتصفح الفصول والمحاضرات الدراسية المعتمدة.</p>
       </div>
       <div id="studentPointsBadgeWrap">
         <span class="points-tag" id="studentPointsTag">رصيدك: 0 نقطة</span>
@@ -66,186 +67,321 @@
 
     <!-- Category Tabs -->
     <div class="tab-row" style="margin-top:16px;">
-      <button class="tab active" id="tabEnrolledBtn" data-target="panel-enrolled">موادي المسجلة (<span id="enrolledCountBadge">0</span>)</button>
-      <button class="tab" id="tabCatalogBtn" data-target="panel-catalog">تصفح جميع الكورسات المتاحة (<span id="catalogCountBadge">0</span>)</button>
+      <button class="tab active" id="tabTeachersBtn" onclick="switchTab('panel-teachers', this)">👨‍🏫 نخبة مدرسي المنصة</button>
+      <button class="tab" id="tabEnrolledBtn" onclick="switchTab('panel-enrolled', this)">📚 كورساتي المشترك بها (<span id="enrolledCountBadge">0</span>)</button>
+      <button class="tab" id="tabCatalogBtn" onclick="switchTab('panel-catalog', this)">🔍 جميع الكورسات المتاحة</button>
     </div>
 
-    <!-- Panel 1: My Enrolled Courses -->
-    <div class="tab-panel" id="panel-enrolled">
-      <div id="enrolledCoursesList">
-        <!-- Dynamically rendered enrolled courses -->
+    <!-- Academic Stage Filter Folders -->
+    <div class="stage-folder-tabs" style="margin-top:20px;">
+      <button class="stage-folder-tab active" onclick="filterByStage('', this)">📁 جميع المراحل</button>
+      <button class="stage-folder-tab" onclick="filterByStage('PREPARATORY', this)">📁 المرحلة الإعدادية</button>
+      <button class="stage-folder-tab" onclick="filterByStage('SECONDARY_1', this)">📁 أولى ثانوي</button>
+      <button class="stage-folder-tab" onclick="filterByStage('SECONDARY_2', this)">📁 ثانية ثانوي</button>
+      <button class="stage-folder-tab" onclick="filterByStage('SECONDARY_3', this)">📁 ثالثة ثانوي</button>
+    </div>
+
+    <!-- Panel 1: Featured Teachers Cards (Visual Reference Style) -->
+    <div class="tab-panel" id="panel-teachers">
+      <div class="teacher-ref-grid" id="teachersGrid">
+        <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--ink-dim);">جارٍ جلب نخبة المدرسين...</div>
       </div>
     </div>
 
-    <!-- Panel 2: Explore / All Courses Catalog -->
+    <!-- Panel 2: My Enrolled Courses (Folder Cards) -->
+    <div class="tab-panel" id="panel-enrolled" style="display:none;">
+      <div class="catalog-grid" id="enrolledCoursesGrid">
+        <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--ink-dim);">جارٍ تحميل كورساتك...</div>
+      </div>
+    </div>
+
+    <!-- Panel 3: All Available Courses Catalog -->
     <div class="tab-panel" id="panel-catalog" style="display:none;">
-      <div class="catalog-grid" id="catalogGrid">
-        <!-- Dynamically rendered course cards -->
+      <div class="catalog-grid" id="allCoursesGrid">
+        <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--ink-dim);">جارٍ تحميل الكورسات المتاحة...</div>
       </div>
     </div>
   </main>
 </div>
 
-<!-- Toast notification -->
-<div class="toast" id="appToast"></div>
+<!-- Modal: Teacher Full Profile & Course List -->
+<div class="modal-overlay" id="teacherProfileModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:999;align-items:center;justify-content:center;">
+  <div style="background:var(--bg-card);border:1px solid var(--line);border-radius:24px;max-width:680px;width:95%;padding:28px;max-height:90vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;">
+      <div style="display:flex;gap:16px;align-items:center;">
+        <div class="teacher-ref-photo-frame" style="width:90px;height:95px;margin:0;border-radius:14px;" id="modalTeacherPhoto">
+          <span class="teacher-ref-photo-placeholder">👨‍🏫</span>
+        </div>
+        <div>
+          <h2 style="margin:0 0 4px;" id="modalTeacherName">أستاذ المادة</h2>
+          <div style="color:#718096;font-size:0.95rem;" id="modalTeacherSubject">التخصص الأكاديمي</div>
+          <div class="teacher-ref-stars-bottom" style="justify-content:flex-start;margin-top:6px;">★★★★★</div>
+        </div>
+      </div>
+      <button class="btn btn-line btn-sm" onclick="closeTeacherModal()">✕ إغلاق</button>
+    </div>
 
+    <p style="color:var(--ink-dim);font-size:0.92rem;line-height:1.6;" id="modalTeacherBio">نبذة عن المدرس والخبرات الأكاديمية.</p>
+
+    <h3 style="margin:24px 0 14px;border-top:1px solid var(--line-soft);padding-top:18px;">📚 الكورسات والمحاضرات المتاحة لهذا المعلم:</h3>
+    <div id="modalTeacherCoursesList" style="display:flex;flex-direction:column;gap:12px;"></div>
+  </div>
+</div>
+
+<script src="js/i18n.js"></script>
 <script src="js/api.js"></script>
 <script src="js/main.js"></script>
 <script>
-  function showToast(msg) {
-    const toast = document.getElementById('appToast');
-    toast.textContent = msg;
-    toast.classList.add('show');
-    setTimeout(() => toast.classList.remove('show'), 3200);
-  }
+  let currentStageFilter = '';
+  let allTeachersList = [];
+  let allCoursesList = [];
+  let enrolledCoursesList = [];
 
-  function renderCoursesPage() {
+  document.addEventListener('DOMContentLoaded', async () => {
     const user = window.KhatwaAPI.getUser();
-    const studentId = user ? user.id : 'student-default';
-
     if (user) {
       document.getElementById('navName').textContent = user.name || user.username;
-      document.getElementById('navRole').textContent = user.role === 'ADMIN' ? 'مدير عام المنصة' : user.role === 'STAFF' ? 'مشرف' : user.role === 'TEACHER' ? 'مدرس' : 'طالب';
       document.getElementById('navAvatar').textContent = (user.name || user.username || 'ط').charAt(0);
-      if (typeof user.pointsBalance === 'number') {
-        document.getElementById('studentPointsTag').textContent = `رصيدك: ${user.pointsBalance} نقطة`;
-      }
+      document.getElementById('studentPointsTag').textContent = `رصيدك: ${user.pointsBalance || 0} نقطة`;
+    }
+    window.KhatwaAPI.syncNav();
+    await loadData();
+  });
+
+  async function loadData() {
+    await Promise.all([
+      loadTeachers(),
+      loadEnrolledCourses(),
+      loadAllCourses()
+    ]);
+  }
+
+  function switchTab(panelId, tabBtn) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'none');
+    document.querySelectorAll('.tab-row .tab').forEach(b => b.classList.remove('active'));
+    document.getElementById(panelId).style.display = 'block';
+    tabBtn.classList.add('active');
+  }
+
+  function filterByStage(stage, tabBtn) {
+    currentStageFilter = stage;
+    document.querySelectorAll('.stage-folder-tab').forEach(b => b.classList.remove('active'));
+    tabBtn.classList.add('active');
+    renderTeachers();
+    renderAllCourses();
+  }
+
+  async function loadTeachers() {
+    try {
+      allTeachersList = await window.KhatwaAPI.public.getTeachers();
+    } catch (e) {
+      allTeachersList = [];
+    }
+    renderTeachers();
+  }
+
+  function renderTeachers() {
+    const grid = document.getElementById('teachersGrid');
+    let list = allTeachersList;
+    if (currentStageFilter) {
+      list = list.filter(t => !t.academicStages || t.academicStages.includes(currentStageFilter));
     }
 
-    const allCourses = window.KhatwaAPI.courses.getAll();
-    const myEnrolledCourses = window.KhatwaAPI.courses.getMyCourses(studentId);
+    if (list.length === 0) {
+      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--ink-dim);">لا يوجد مدرسون متاحون في هذه المرحلة حالياً</div>';
+      return;
+    }
 
-    document.getElementById('enrolledCountBadge').textContent = myEnrolledCourses.length;
-    document.getElementById('catalogCountBadge').textContent = allCourses.length;
+    grid.innerHTML = list.map(t => {
+      const name = t.displayName || t.user?.username || 'معلم المادة';
+      const subject = t.subject || 'Lectures';
+      const avatar = t.avatarUrl ? `<img src="${t.avatarUrl}" alt="${name}">` : `<span class="teacher-ref-photo-placeholder">👨‍🏫</span>`;
 
-    // ─── Render Enrolled Courses ─────────────────────────────────────────────
-    const enrolledContainer = document.getElementById('enrolledCoursesList');
-    if (myEnrolledCourses.length === 0) {
-      enrolledContainer.innerHTML = `
-        <div class="empty-state">
-          <div class="em-mark">📚</div>
-          <h3>لم تشترك في أي كورس بعد</h3>
-          <p>تصفح قائمة الكورسات المتاحة من نخبة المدرسين وابدأ خطتك الدراسية الآن.</p>
-          <button class="btn btn-primary btn-sm" onclick="switchToCatalogTab()">تصفح الكورسات المتاحة</button>
+      return `
+        <div class="teacher-ref-card" onclick="openTeacherModal('${t.id}')">
+          <div class="teacher-ref-stars-top">★★★★</div>
+          <div class="teacher-ref-photo-frame">
+            ${avatar}
+          </div>
+          <div class="teacher-ref-name">${name}</div>
+          <div class="teacher-ref-subtitle">${subject}</div>
+          <div class="teacher-ref-badge">${t.courses?.length || 0} كورس متاح</div>
+          <div class="teacher-ref-stars-bottom">★★★★★</div>
         </div>
       `;
-    } else {
-      enrolledContainer.innerHTML = myEnrolledCourses.map(c => `
-        <div class="subject-row">
-          <div>
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-              <h4>${escapeHtml(c.title)}</h4>
-              <span class="tag tag-ok">${escapeHtml(c.subject)}</span>
+    }).join('');
+  }
+
+  async function loadEnrolledCourses() {
+    try {
+      enrolledCoursesList = await window.KhatwaAPI.student.getEnrolledCourses();
+    } catch (e) {
+      enrolledCoursesList = [];
+    }
+    document.getElementById('enrolledCountBadge').textContent = enrolledCoursesList.length;
+    renderEnrolledCourses();
+  }
+
+  function renderEnrolledCourses() {
+    const grid = document.getElementById('enrolledCoursesGrid');
+    if (enrolledCoursesList.length === 0) {
+      grid.innerHTML = `
+        <div style="grid-column:1/-1;text-align:center;padding:50px;background:var(--bg-card);border-radius:18px;border:1px solid var(--line-soft);">
+          <div style="font-size:3rem;margin-bottom:10px;">📚</div>
+          <h3>لم تشترك في أي كورس بعد</h3>
+          <p style="color:var(--ink-dim);margin:6px 0 16px;">تصفح كروت المعلمين أو الكورسات المتاحة واشترك لمتابعة دروسك.</p>
+          <button class="btn btn-primary btn-sm" onclick="switchTab('panel-teachers', document.getElementById('tabTeachersBtn'))">تصفح المعلمين المعتمدين</button>
+        </div>
+      `;
+      return;
+    }
+
+    grid.innerHTML = enrolledCoursesList.map(e => {
+      const c = e.course || {};
+      const teacher = c.teacherProfile || {};
+      const teacherName = teacher.displayName || 'أستاذ المادة';
+      const teacherImg = teacher.avatarUrl ? `<img src="${teacher.avatarUrl}" style="width:100%;height:100%;object-fit:cover;">` : '👨‍🏫';
+
+      return `
+        <div class="folder-card" onclick="window.location.href='subject.html?courseId=${c.id}'">
+          <div class="folder-card-header">
+            <div class="folder-icon-box" style="overflow:hidden;padding:0;">
+              ${teacherImg}
             </div>
-            <span class="meta">${escapeHtml(c.teacherName)} · ${c.totalLectures} حصص</span>
-          </div>
-          <div class="progress-wrap">
-            <div class="progress-label">
-              <span>التقدم</span>
-              <span>${c.progressPercent}%</span>
+            <div>
+              <h4 style="margin:0 0 2px;">${c.title}</h4>
+              <span style="font-size:0.82rem;color:var(--ink-dim);">${teacherName} · <b style="color:var(--primary);">${c.subject}</b></span>
             </div>
-            <div class="progress"><span style="width:${c.progressPercent}%;"></span></div>
           </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line-soft);padding-top:12px;margin-top:10px;">
+            <span class="tag tag-ok">مشترك بالفعل ✓</span>
+            <span style="font-size:0.85rem;color:var(--primary);font-weight:700;">فتح الكورس والمحاضرات ↗</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async function loadAllCourses() {
+    try {
+      allCoursesList = await window.KhatwaAPI.public.getCourses();
+    } catch (e) {
+      allCoursesList = [];
+    }
+    renderAllCourses();
+  }
+
+  function renderAllCourses() {
+    const grid = document.getElementById('allCoursesGrid');
+    let list = allCoursesList;
+    if (currentStageFilter) {
+      list = list.filter(c => c.academicStage === currentStageFilter);
+    }
+
+    if (list.length === 0) {
+      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--ink-dim);">لا توجد كورسات مطروحة في هذه المرحلة حالياً</div>';
+      return;
+    }
+
+    grid.innerHTML = list.map(c => {
+      const teacher = c.teacherProfile || {};
+      const isEnrolled = enrolledCoursesList.some(e => e.courseId === c.id);
+      const stageMap = { PREPARATORY: 'المرحلة الإعدادية', SECONDARY_1: 'أولى ثانوي', SECONDARY_2: 'ثانية ثانوي', SECONDARY_3: 'ثالثة ثانوي' };
+
+      return `
+        <div class="card" style="padding:20px;border-radius:18px;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+            <span class="tag">${stageMap[c.academicStage] || c.academicStage}</span>
+            <span style="font-weight:700;color:var(--gold-light);">${c.pointCost > 0 ? c.pointCost + ' نقطة' : 'مجاني'}</span>
+          </div>
+          <h3 style="margin:0 0 6px;">${c.title}</h3>
+          <p style="font-size:0.85rem;color:var(--ink-dim);margin:0 0 14px;">${c.description || 'كورس شامل ومكثف مع أستاذ المادة'}</p>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+            <span style="font-size:1.3rem;">👨‍🏫</span>
+            <span style="font-size:0.9rem;font-weight:600;">${teacher.displayName || 'أستاذ المادة'} (${teacher.subject || c.subject})</span>
+          </div>
+          <div style="border-top:1px solid var(--line-soft);padding-top:14px;">
+            ${isEnrolled ? `
+              <button class="btn btn-line btn-sm" style="width:100%;" onclick="window.location.href='subject.html?courseId=${c.id}'">فتح محتوى الكورس ↗</button>
+            ` : `
+              <button class="btn btn-primary btn-sm" style="width:100%;" onclick="enrollInCourse('${c.id}', '${c.title}', ${c.pointCost})">اشتراك في الكورس ＋</button>
+            `}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async function openTeacherModal(teacherId) {
+    const modal = document.getElementById('teacherProfileModal');
+    modal.style.display = 'flex';
+    document.getElementById('modalTeacherCoursesList').innerHTML = 'جارٍ جلب كورسات المعلم...';
+
+    try {
+      const teacher = await window.KhatwaAPI.public.getTeacher(teacherId);
+      if (!teacher) return;
+
+      document.getElementById('modalTeacherName').textContent = teacher.displayName || 'معلم المادة';
+      document.getElementById('modalTeacherSubject').textContent = teacher.subject || 'المحاضرات والمناهج';
+      document.getElementById('modalTeacherBio').textContent = teacher.bio || 'مدرس معتمد على منصة خطوة.';
+      
+      const photoBox = document.getElementById('modalTeacherPhoto');
+      if (teacher.avatarUrl) {
+        photoBox.innerHTML = `<img src="${teacher.avatarUrl}" style="width:100%;height:100%;object-fit:cover;">`;
+      } else {
+        photoBox.innerHTML = `<span class="teacher-ref-photo-placeholder">👨‍🏫</span>`;
+      }
+
+      const courses = teacher.courses || [];
+      if (courses.length === 0) {
+        document.getElementById('modalTeacherCoursesList').innerHTML = '<p style="color:var(--ink-dim);">لا توجد كورسات منشورة لهذا المعلم حالياً.</p>';
+        return;
+      }
+
+      document.getElementById('modalTeacherCoursesList').innerHTML = courses.map(c => `
+        <div style="display:flex;justify-content:space-between;align-items:center;background:var(--bg-raised);padding:14px;border-radius:14px;border:1px solid var(--line-soft);">
           <div>
-            <span class="tag ${c.remainingLectures === 0 ? 'tag-ok' : 'tag-warn'}">
-              ${c.remainingLectures === 0 ? 'تم إنهاء المادة' : `${c.remainingLectures} حصص متبقية`}
-            </span>
+            <h4 style="margin:0 0 3px;">${c.title}</h4>
+            <span style="font-size:0.8rem;color:var(--ink-dim);">${c.subject} · ${c.pointCost > 0 ? c.pointCost + ' نقطة' : 'مجاني'}</span>
           </div>
-          <div>
-            <a href="subject.html?id=${c.id}" class="btn btn-primary btn-sm">متابعة المادة</a>
-          </div>
+          <button class="btn btn-primary btn-sm" onclick="enrollInCourse('${c.id}', '${c.title}', ${c.pointCost})">اشتراك ومتابعة ＋</button>
         </div>
       `).join('');
-    }
-
-    // ─── Render All Available Courses (Catalog) ──────────────────────────────
-    const catalogGrid = document.getElementById('catalogGrid');
-    if (allCourses.length === 0) {
-      catalogGrid.innerHTML = `
-        <div class="empty-state" style="grid-column: 1 / -1;">
-          <div class="em-mark">⏳</div>
-          <h3>لا توجد كورسات متاحة حاليًا</h3>
-          <p>سيقوم المدرسون بنشر موادهم ومحاضراتهم قريبًا على المنصة.</p>
-        </div>
-      `;
-    } else {
-      catalogGrid.innerHTML = allCourses.map(c => {
-        const enrolled = window.KhatwaAPI.courses.isEnrolled(c.id, studentId);
-        const lecCount = c.lectures ? c.lectures.length : 0;
-        return `
-          <div class="course-card">
-            <div>
-              <div class="course-card-top">
-                <span class="course-badge">${escapeHtml(c.subject)}</span>
-                <span class="points-tag" style="font-size:.76rem;padding:3px 8px;">${c.pointCost} نقطة</span>
-              </div>
-              <h3>${escapeHtml(c.title)}</h3>
-              <div class="teacher-info" style="margin-bottom:10px;">
-                <span>المدرس: <b>${escapeHtml(c.teacherName)}</b></span>
-                <span>· ${escapeHtml(c.grade || 'المرحلة الثانوية')}</span>
-              </div>
-              <p>${escapeHtml(c.description || 'كورس تعليمي شامل مصمم لإتقان المادة واجتياز الامتحانات بنجاح.')}</p>
-            </div>
-
-            <div class="course-card-footer">
-              <span style="font-size:.82rem;color:var(--ink-faint);">${lecCount} محاضرات</span>
-              ${enrolled ? `
-                <a href="subject.html?id=${c.id}" class="btn btn-line btn-sm" style="border-color:var(--ok);color:var(--ok);">
-                  ✓ مشترك بالفعل
-                </a>
-              ` : `
-                <button class="btn btn-primary btn-sm" onclick="handleEnroll('${c.id}', '${escapeHtml(c.title)}')">
-                  اشتراك في الكورس
-                </button>
-              `}
-            </div>
-          </div>
-        `;
-      }).join('');
+    } catch (e) {
+      document.getElementById('modalTeacherCoursesList').innerHTML = 'حدث خطأ أثناء تحميل بيانات المعلم.';
     }
   }
 
-  window.switchToCatalogTab = function() {
-    document.getElementById('tabCatalogBtn').click();
-  };
+  function closeTeacherModal() {
+    document.getElementById('teacherProfileModal').style.display = 'none';
+  }
 
-  window.handleEnroll = function(courseId, courseTitle) {
+  async function enrollInCourse(courseId, title, pointCost) {
+    const user = window.KhatwaAPI.getUser();
+    if (!user) {
+      alert('يرجى تسجيل الدخول كطالب أولاً للاشتراك في الكورس');
+      window.location.href = 'login.html';
+      return;
+    }
+
+    if (pointCost > 0 && (user.pointsBalance || 0) < pointCost) {
+      alert(`رصيد نقاطك (${user.pointsBalance || 0}) غير كافٍ للاشتراك (${pointCost} نقطة). يرجى شحن النقاط أولاً.`);
+      window.location.href = 'request-points.html';
+      return;
+    }
+
+    if (!confirm(`هل ترغب في الاشتراك بكورس: "${title}"؟`)) return;
+
     try {
-      window.KhatwaAPI.courses.enroll(courseId);
-      showToast(`تم اشتراكك في كورس: ${courseTitle} بنجاح!`);
-      renderCoursesPage();
-      // Switch to enrolled tab
-      document.getElementById('tabEnrolledBtn').click();
+      await window.KhatwaAPI.student.enrollCourse(courseId);
+      alert('تم الاشتراك في الكورس بنجاح! ✅ يمكنك الآن متابعة المحاضرات والواجبات.');
+      closeTeacherModal();
+      await loadEnrolledCourses();
+      switchTab('panel-enrolled', document.getElementById('tabEnrolledBtn'));
     } catch (err) {
-      alert(err.message || 'تعذر الاشتراك في الكورس.');
+      alert(err.message || 'حدث خطأ أثناء الاشتراك');
     }
-  };
-
-  function escapeHtml(str) {
-    if (!str) return '';
-    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
-
-  // Tabs switching
-  const tabs = document.querySelectorAll('.tab-row .tab');
-  tabs.forEach(t => {
-    t.addEventListener('click', () => {
-      tabs.forEach(item => item.classList.remove('active'));
-      t.classList.add('active');
-      const target = t.getAttribute('data-target');
-      document.querySelectorAll('.tab-panel').forEach(p => {
-        p.style.display = p.id === target ? 'block' : 'none';
-      });
-    });
-  });
-
-  // Logout
-  document.getElementById('logoutBtn')?.addEventListener('click', (e) => {
-    e.preventDefault();
-    window.KhatwaAPI.auth.logout();
-  });
-
-  document.addEventListener('DOMContentLoaded', renderCoursesPage);
 </script>
 </body>
 </html>

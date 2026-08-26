@@ -735,3 +735,301 @@ table.plain tr:hover td{background:var(--primary-faint);}
   .lesson-info{flex-direction:column;}
   .catalog-grid{grid-template-columns:1fr;}
 }
+
+/* ==========================================================================
+   TEACHER REFERENCE CARDS (Matching Visual Reference Design)
+   ========================================================================== */
+.teacher-ref-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 28px;
+  margin: 32px 0;
+}
+
+.teacher-ref-card {
+  background: #FFFFFF;
+  border: 1px solid #EFEAE3;
+  border-radius: 24px;
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.teacher-ref-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 36px rgba(11, 37, 69, 0.09);
+  border-color: var(--gold-light, #D4AF37);
+}
+
+.teacher-ref-stars-top,
+.teacher-ref-stars-bottom {
+  color: #D4AF37;
+  font-size: 0.95rem;
+  letter-spacing: 4px;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2px;
+}
+
+.teacher-ref-stars-bottom {
+  margin-top: 14px;
+  margin-bottom: 0;
+}
+
+.teacher-ref-photo-frame {
+  width: 140px;
+  height: 150px;
+  border-radius: 16px;
+  overflow: hidden;
+  margin: 0 auto 16px;
+  background: #F8F6F2;
+  border: 1px solid #EAE3D9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 2px 6px rgba(0,0,0,0.03);
+}
+
+.teacher-ref-photo-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  transition: transform 0.3s ease;
+}
+
+.teacher-ref-card:hover .teacher-ref-photo-frame img {
+  transform: scale(1.04);
+}
+
+.teacher-ref-photo-placeholder {
+  font-size: 3rem;
+  color: var(--primary, #0B2545);
+}
+
+.teacher-ref-name {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #1A202C;
+  margin: 0 0 6px;
+  line-height: 1.3;
+}
+
+.teacher-ref-subtitle {
+  font-size: 0.92rem;
+  color: #718096;
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+
+.teacher-ref-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 12px;
+  background: #F7FAFC;
+  border: 1px solid #E2E8F0;
+  font-size: 0.78rem;
+  color: #4A5568;
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   ACADEMIC YEAR FOLDERS & HIERARCHY
+   ========================================================================== */
+.stage-folder-tabs {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 12px;
+  margin-bottom: 24px;
+}
+
+.stage-folder-tab {
+  padding: 12px 24px;
+  border-radius: 14px;
+  background: #FFFFFF;
+  border: 1px solid var(--line-soft);
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--ink);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.stage-folder-tab:hover {
+  border-color: var(--primary);
+  background: #F8FAFC;
+}
+
+.stage-folder-tab.active {
+  background: var(--primary, #0B2545);
+  color: #FFFFFF;
+  border-color: var(--primary);
+  box-shadow: 0 4px 14px rgba(11, 37, 69, 0.2);
+}
+
+/* Course Folder Cards */
+.folder-card {
+  background: #FFFFFF;
+  border: 1px solid var(--line-soft);
+  border-radius: 18px;
+  padding: 20px;
+  position: relative;
+  transition: all 0.25s ease;
+  cursor: pointer;
+}
+
+.folder-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--primary-light);
+  box-shadow: var(--shadow-md);
+}
+
+.folder-card-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.folder-icon-box {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(11, 37, 69, 0.08), rgba(212, 175, 55, 0.12));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+/* ==========================================================================
+   STRICT PROGRESSION STEPPER (Assignment → Exam → Lesson)
+   ========================================================================== */
+.progression-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #FFFFFF;
+  border: 1px solid var(--line-soft);
+  border-radius: 16px;
+  padding: 16px 24px;
+  margin-bottom: 24px;
+  position: relative;
+}
+
+.progression-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--ink-dim);
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+
+.progression-step.active {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.progression-step.completed {
+  color: #10B981;
+}
+
+.progression-step-circle {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #F1F5F9;
+  border: 2px solid #CBD5E1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.progression-step.active .progression-step-circle {
+  background: var(--primary);
+  color: #FFFFFF;
+  border-color: var(--primary);
+}
+
+.progression-step.completed .progression-step-circle {
+  background: #10B981;
+  color: #FFFFFF;
+  border-color: #10B981;
+}
+
+.progression-divider {
+  flex: 1;
+  height: 2px;
+  background: #E2E8F0;
+  margin: 0 16px;
+}
+
+/* ==========================================================================
+   MATH EQUATION & ESSAY QUESTION STYLES
+   ========================================================================== */
+.math-equation-box {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin: 12px 0;
+  font-size: 1.15rem;
+  direction: ltr;
+  text-align: center;
+  font-family: 'Cambria Math', 'KaTeX_Main', serif;
+}
+
+.essay-answer-box {
+  width: 100%;
+  min-height: 120px;
+  border: 1px solid var(--line-soft);
+  border-radius: 12px;
+  padding: 14px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  resize: vertical;
+}
+
+.essay-answer-box:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(11, 37, 69, 0.1);
+}
+
+/* Language Switcher */
+.lang-switcher-btn {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #FFFFFF;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.lang-switcher-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+

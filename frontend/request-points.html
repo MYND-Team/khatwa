@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>طلب شحن نقاط | خطوة</title>
+<title>شحن المحفظة والنقاط | خطوة</title>
 <link rel="icon" type="image/jpeg" href="logo/logo-khatwa.jpeg">
 <link rel="stylesheet" href="css/style.css">
 <style>
   .upload-dropzone {
     border: 2px dashed var(--line);
-    border-radius: var(--radius);
-    padding: 24px 16px;
+    border-radius: 16px;
+    padding: 28px 20px;
     text-align: center;
     background: var(--bg-raised);
     cursor: pointer;
@@ -18,23 +18,23 @@
   }
   .upload-dropzone:hover {
     border-color: var(--primary);
-    background: var(--primary-faint);
+    background: #F8FAFC;
   }
   .preview-wrap {
-    margin-top: 12px;
+    margin-top: 14px;
     display: none;
     background: #FFFFFF;
     border: 1px solid var(--primary-border);
-    border-radius: 6px;
-    padding: 10px 14px;
+    border-radius: 12px;
+    padding: 12px 16px;
     align-items: center;
     justify-content: space-between;
   }
   .preview-thumb {
-    width: 44px;
-    height: 44px;
+    width: 52px;
+    height: 52px;
     object-fit: cover;
-    border-radius: 4px;
+    border-radius: 8px;
     border: 1px solid var(--line-soft);
   }
 </style>
@@ -44,8 +44,13 @@
 <nav class="nav">
   <div class="container nav-inner">
     <a href="index.html" class="brand"><img src="logo/logo-khatwa.jpeg" alt="خطوة" class="brand-logo"><span class="brand-text">خطوة</span></a>
-    <div class="breadcrumb" style="margin:0;"><a href="points.html">النقاط</a><span class="sep">›</span> طلب شحن</div>
-    <div class="nav-cta">
+    <ul class="nav-links">
+      <li><a href="dashboard.html">الرئيسية</a></li>
+      <li><a href="courses.html">الكورسات</a></li>
+      <li><a href="points.html">النقاط والمحفظة</a></li>
+    </ul>
+    <div class="nav-cta" style="display:flex;align-items:center;gap:10px;">
+      <button class="lang-switcher-btn" onclick="window.KhatwaI18n.toggleLanguage()">🌐 English</button>
       <a href="profile.html" class="user-line" id="navUserLine">
         <span class="avatar" id="navAvatar">ط</span>
         <span>
@@ -57,73 +62,60 @@
   </div>
 </nav>
 
-<div class="container" style="padding-top:36px;padding-bottom:60px;max-width:760px;">
+<div class="container" style="padding-top:36px;padding-bottom:60px;max-width:680px;">
 
   <div class="page-head" style="margin-bottom:24px;">
     <div>
-      <h1>طلب شحن نقاط المحفظة</h1>
-      <p class="page-sub" style="margin:4px 0 0;">حوّل المبلغ المطلوب وارفع صورة إثبات التحويل، وسيقوم فريق المتابعة بمراجعتها وشحن النقاط فورًا.</p>
+      <h1>شحن المحفظة والرصيد</h1>
+      <p class="page-sub" style="margin:4px 0 0;">ارفع إيصال التحويل وأدخل المبلغ والكود لتأكيد الشحن فورياً.</p>
     </div>
     <a href="points.html" class="btn btn-line btn-sm">العودة للمحفظة</a>
   </div>
 
-  <!-- Instruction Box -->
-  <div style="background:var(--bg-raised);border:1px solid var(--gold-border);border-radius:var(--radius);padding:18px 20px;margin-bottom:24px;">
-    <h4 style="margin:0 0 8px;color:var(--gold-light);display:flex;align-items:center;gap:8px;">
-      <span>📱</span> خطوات التحويل والشحن:
-    </h4>
-    <ol style="margin:0;padding-inline-start:20px;font-size:.88rem;color:var(--ink-dim);line-height:1.7;">
-      <li>حوّل المبلغ المطلوب عبر <b>فودافون كاش</b> أو <b>إنستاباي (InstaPay)</b> إلى الرقم: <b style="color:var(--gold-light);font-size:1rem;direction:ltr;display:inline-block;">01000000000</b></li>
-      <li>خذ لقطة شاشة (Screenshot) واضحة لرسالة أو إشعار التحويل الناجح.</li>
-      <li>أدخل عدد النقاط المطلوبة وارفع صورة الإيصال بالأسفل، ثم اضغط <b>إرسال الطلب</b>.</li>
-    </ol>
-  </div>
+  <!-- Simplified Recharge Form Card (Upload Receipt -> Enter Amount -> Enter Code -> Submit) -->
+  <div class="card" style="padding:28px;border-radius:20px;margin-bottom:32px;">
+    <form id="simplifiedRechargeForm" onsubmit="submitRecharge(event)">
 
-  <!-- Request Form Card -->
-  <div class="card" id="requestFormCard" style="margin-bottom:32px;">
-    <form id="rpForm">
-      <div class="field-row">
-        <div class="field">
-          <label for="points">عدد النقاط المطلوبة</label>
-          <input type="number" id="points" placeholder="مثال: 50" min="1" required oninput="updateCalculation(this.value)">
-        </div>
-        <div class="field">
-          <label>المبلغ المطلوب تحويله</label>
-          <div style="padding:10px 14px;background:var(--bg);border:1px solid var(--line-soft);border-radius:var(--radius);font-weight:700;color:var(--gold-light);font-size:1.1rem;">
-            <span id="amountOut">0</span> جنيه مصري
-          </div>
-        </div>
-      </div>
-
-      <div class="field">
-        <label>صورة إثبات التحويل (Screenshot / إيصال الدفع)</label>
+      <!-- Step 1: Upload Receipt -->
+      <div class="field" style="margin-bottom:20px;">
+        <label style="font-weight:700;font-size:0.95rem;margin-bottom:8px;display:block;">1. صورة إيصال التحويل (Upload Receipt)</label>
         <div class="upload-dropzone" id="receiptDropzone" onclick="document.getElementById('receiptFile').click()">
           <div id="dropzonePrompt">
-            <div style="font-size:2rem;margin-bottom:6px;">🧾</div>
-            <p style="margin:0;font-weight:600;font-size:.9rem;color:var(--ink);">اضغط لاختيار صورة الإيصال أو اسحب الصورة هنا</p>
-            <span style="font-size:.78rem;color:var(--ink-faint);display:block;margin-top:4px;">يدعم صور JPG, PNG, WebP (بحد أقصى 10MB)</span>
+            <div style="font-size:2.2rem;margin-bottom:6px;">🧾</div>
+            <p style="margin:0;font-weight:600;font-size:0.95rem;color:var(--ink);">اضغط لاختيار صورة الإيصال أو اسحب الصورة هنا</p>
+            <span style="font-size:0.8rem;color:var(--ink-dim);display:block;margin-top:4px;">يدعم JPG, PNG, WebP (لقطة شاشة التحويل)</span>
           </div>
           <input type="file" id="receiptFile" accept="image/*" style="display:none;" onchange="handleReceiptFile(this)" required>
         </div>
 
         <div class="preview-wrap" id="receiptPreviewWrap">
-          <div style="display:flex;align-items:center;gap:10px;">
+          <div style="display:flex;align-items:center;gap:12px;">
             <img id="receiptPreviewImg" class="preview-thumb" src="" alt="معاينة">
             <div>
-              <b id="receiptFileName" style="font-size:.85rem;color:var(--ink);display:block;">receipt.jpg</b>
-              <span id="receiptFileSize" style="font-size:.75rem;color:var(--ink-dim);">—</span>
+              <b id="receiptFileName" style="font-size:0.88rem;color:var(--ink);display:block;">receipt.jpg</b>
+              <span id="receiptFileSize" style="font-size:0.78rem;color:var(--ink-dim);">—</span>
             </div>
           </div>
           <button type="button" class="btn btn-text btn-sm" style="color:var(--err);" onclick="clearSelectedReceipt()">✕ تغيير الصورة</button>
         </div>
       </div>
 
-      <div class="field">
-        <label for="notes">ملاحظات إضافية (اختياري)</label>
-        <input type="text" id="notes" placeholder="مثال: تم التحويل من محفظة رقم 01012345678 باسم...">
+      <!-- Step 2: Amount -->
+      <div class="field" style="margin-bottom:18px;">
+        <label for="rechargeAmount" style="font-weight:700;font-size:0.95rem;">2. المبلغ المدفوع (Amount)</label>
+        <div style="position:relative;">
+          <input type="number" id="rechargeAmount" class="form-control" placeholder="مثال: 50 أو 100 أو 150" min="1" step="any" required style="font-size:1.1rem;font-weight:700;padding-inline-end:60px;">
+          <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-weight:700;color:var(--ink-dim);pointer-events:none;">ج.م EGP</span>
+        </div>
       </div>
 
-      <button type="submit" class="btn btn-primary btn-block" id="submitRpBtn" style="padding:12px;">
+      <!-- Step 3: Code -->
+      <div class="field" style="margin-bottom:24px;">
+        <label for="rechargeCode" style="font-weight:700;font-size:0.95rem;">3. كود المعاملة / التحويل (Code)</label>
+        <input type="text" id="rechargeCode" class="form-control" placeholder="أدخل كود التحويل المرجعي من رسالة الدفع" required style="font-family:monospace;font-size:1.05rem;">
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block" id="submitRechargeBtn" style="padding:14px;font-size:1.05rem;font-weight:700;">
         🚀 إرسال طلب الشحن للمراجعة
       </button>
     </form>
@@ -132,178 +124,113 @@
   <!-- My Point Requests History -->
   <div class="block">
     <div class="block-head" style="display:flex;justify-content:space-between;align-items:center;">
-      <h3 style="margin:0;">طلبات الشحن السابقة</h3>
+      <h3 style="margin:0;">سجل طلبات الشحن السابقة</h3>
       <button class="btn btn-text btn-sm" onclick="loadMyRequests()">تحديث 🔄</button>
     </div>
     <div id="myRequestsContainer">
-      <!-- Dynamically filled -->
+      <p style="color:var(--ink-dim);font-size:0.88rem;text-align:center;padding:20px;">جارٍ تحميل طلباتك السابقة...</p>
     </div>
   </div>
 
 </div>
 
-<!-- Toast notification -->
-<div class="toast" id="appToast"></div>
-
+<script src="js/i18n.js"></script>
 <script src="js/api.js"></script>
-<script src="js/main.js"></script>
 <script>
-  let selectedReceiptFile = null;
+  let selectedFile = null;
 
-  function showToast(msg) {
-    const toast = document.getElementById('appToast');
-    toast.textContent = msg;
-    toast.classList.add('show');
-    setTimeout(() => toast.classList.remove('show'), 3800);
-  }
-
-  function updateCalculation(val) {
-    const pts = Number(val) || 0;
-    document.getElementById('amountOut').textContent = pts * 10;
-  }
+  document.addEventListener('DOMContentLoaded', async () => {
+    const user = window.KhatwaAPI.getUser();
+    if (user) {
+      document.getElementById('navName').textContent = user.name || user.username;
+      document.getElementById('navAvatar').textContent = (user.name || user.username || 'ط').charAt(0);
+    }
+    window.KhatwaAPI.syncNav();
+    await loadMyRequests();
+  });
 
   function handleReceiptFile(input) {
     if (input.files && input.files[0]) {
-      const file = input.files[0];
-      if (!file.type.startsWith('image/')) {
-        alert('يرجى اختيار ملف صورة صالح (JPG, PNG, WebP)');
-        return;
-      }
-      selectedReceiptFile = file;
-      document.getElementById('receiptFileName').textContent = file.name;
-      document.getElementById('receiptFileSize').textContent = `(${(file.size / (1024 * 1024)).toFixed(2)} MB)`;
+      selectedFile = input.files[0];
+      const mb = (selectedFile.size / (1024 * 1024)).toFixed(2);
+      document.getElementById('receiptFileName').textContent = selectedFile.name;
+      document.getElementById('receiptFileSize').textContent = `${mb} MB`;
 
       const reader = new FileReader();
       reader.onload = function(e) {
         document.getElementById('receiptPreviewImg').src = e.target.result;
-        document.getElementById('dropzonePrompt').style.display = 'none';
+        document.getElementById('receiptDropzone').style.display = 'none';
         document.getElementById('receiptPreviewWrap').style.display = 'flex';
       };
-      reader.readAsDataURL(file);
+      reader.readAsDataURL(selectedFile);
     }
   }
 
   function clearSelectedReceipt() {
-    selectedReceiptFile = null;
+    selectedFile = null;
     document.getElementById('receiptFile').value = '';
-    document.getElementById('dropzonePrompt').style.display = 'block';
+    document.getElementById('receiptDropzone').style.display = 'block';
     document.getElementById('receiptPreviewWrap').style.display = 'none';
   }
 
-  // Setup drag & drop
-  const dropzone = document.getElementById('receiptDropzone');
-  dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.style.borderColor = 'var(--gold-light)'; });
-  dropzone.addEventListener('dragleave', () => { dropzone.style.borderColor = 'var(--line)'; });
-  dropzone.addEventListener('drop', (e) => {
+  async function submitRecharge(e) {
     e.preventDefault();
-    dropzone.style.borderColor = 'var(--line)';
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      document.getElementById('receiptFile').files = e.dataTransfer.files;
-      handleReceiptFile(document.getElementById('receiptFile'));
-    }
-  });
+    const amount = document.getElementById('rechargeAmount').value;
+    const code = document.getElementById('rechargeCode').value.trim();
 
-  async function loadMyRequests() {
-    const container = document.getElementById('myRequestsContainer');
+    if (!amount || !code) {
+      alert('يرجى إدخال المبلغ والكود');
+      return;
+    }
+
+    const btn = document.getElementById('submitRechargeBtn');
+    btn.disabled = true;
+    btn.textContent = 'جارٍ إرسال الطلب...';
+
     try {
-      const requests = await window.KhatwaAPI.pointRequests.getMyRequests();
-      if (!requests || requests.length === 0) {
-        container.innerHTML = `
-          <div class="empty-state" style="padding:24px;text-align:center;color:var(--ink-dim);">
-            <div style="font-size:1.8rem;margin-bottom:8px;">💳</div>
-            <p style="margin:0;font-weight:600;">لا توجد طلبات شحن سابقة</p>
-            <span style="font-size:.82rem;color:var(--ink-faint);">أدخل عدد النقاط وارفع الإيصال بالأعلى لإنشاء أول طلب شحن.</span>
-          </div>
-        `;
-        return;
+      const formData = new FormData();
+      formData.append('amount', amount);
+      formData.append('code', code);
+      if (selectedFile) {
+        formData.append('screenshot', selectedFile);
       }
 
-      container.innerHTML = `
-        <table class="plain">
-          <thead>
-            <tr>
-              <th>تاريخ الطلب</th>
-              <th>النقاط المطلوبة</th>
-              <th>المبلغ</th>
-              <th>الحالة</th>
-              <th>النقاط المشحونة</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${requests.map(r => {
-              const d = r.createdAt ? new Date(r.createdAt).toLocaleDateString('ar-EG', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
-              let statusBadge = '<span class="tag tag-warn">⏳ قيد المراجعة</span>';
-              if (r.status === 'APPROVED') {
-                statusBadge = '<span class="tag tag-ok">✓ تم الشحن والموافقة</span>';
-              } else if (r.status === 'REJECTED') {
-                statusBadge = `<span class="tag tag-err" title="${escapeHtml(r.rejectionReason || '')}">✕ تم الرفض</span>`;
-              }
-              return `
-                <tr>
-                  <td>${d}</td>
-                  <td><b>${r.requestedPoints} نقطة</b></td>
-                  <td>${r.requestedPoints * 10} ج.م</td>
-                  <td>${statusBadge}</td>
-                  <td><b>${r.grantedPoints !== null && r.grantedPoints !== undefined ? `+${r.grantedPoints} نقطة` : '—'}</b></td>
-                </tr>
-              `;
-            }).join('')}
-          </tbody>
-        </table>
-      `;
-    } catch (e) {
-      container.innerHTML = `<p style="color:var(--err);font-size:.85rem;text-align:center;">تعذر تحميل الطلبات: ${e.message}</p>`;
-    }
-  }
-
-  document.getElementById('rpForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    const pts = Number(document.getElementById('points').value) || 0;
-    const notes = document.getElementById('notes').value.trim();
-
-    if (!selectedReceiptFile) {
-      alert('يرجى اختيار صورة إثبات التحويل أولاً');
-      return;
-    }
-
-    if (pts < 1) {
-      alert('يرجى إدخال عدد نقاط صحيح');
-      return;
-    }
-
-    const btn = document.getElementById('submitRpBtn');
-    btn.disabled = true;
-    btn.textContent = 'جاري إرسال الطلب ورفع الإيصال...';
-
-    try {
-      await window.KhatwaAPI.pointRequests.submit({
-        requestedPoints: pts,
-        notes,
-        screenshot: selectedReceiptFile
-      });
-
-      showToast('✓ تم إرسال طلب الشحن بنجاح! سيتم الشحن بعد مراجعة الإيصال فورًا.');
-      document.getElementById('rpForm').reset();
+      await window.KhatwaAPI.student.requestPoints(formData);
+      alert('تم إرسال طلب الشحن بنجاح! سيتم مراجعته واعتماد الرصيد فوراً. ✅');
+      document.getElementById('simplifiedRechargeForm').reset();
       clearSelectedReceipt();
-      updateCalculation(0);
       await loadMyRequests();
     } catch (err) {
-      alert('حدث خطأ أثناء إرسال الطلب: ' + err.message);
+      alert(err.message || 'حدث خطأ أثناء إرسال الطلب');
     } finally {
       btn.disabled = false;
       btn.textContent = '🚀 إرسال طلب الشحن للمراجعة';
     }
-  });
-
-  function escapeHtml(str) {
-    if (!str) return '';
-    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
-    window.KhatwaAPI.syncNav();
-    loadMyRequests();
-  });
+  async function loadMyRequests() {
+    const container = document.getElementById('myRequestsContainer');
+    try {
+      const requests = await window.KhatwaAPI.student.getPointRequests();
+      if (!requests || requests.length === 0) {
+        container.innerHTML = '<p style="color:var(--ink-dim);font-size:0.88rem;text-align:center;padding:20px;">لا توجد طلبات شحن سابقة.</p>';
+        return;
+      }
+      container.innerHTML = requests.map(r => `
+        <div style="display:flex;justify-content:space-between;align-items:center;background:var(--bg-raised);padding:14px;border-radius:12px;margin-bottom:8px;border:1px solid var(--line-soft);">
+          <div>
+            <b>المبلغ: ${r.amount} ج.م</b>
+            <div style="font-size:0.8rem;color:var(--ink-dim);margin-top:2px;">الكود: <code>${r.code}</code> · ${new Date(r.createdAt).toLocaleDateString('ar-EG')}</div>
+          </div>
+          <span class="tag ${r.status === 'APPROVED' ? 'tag-ok' : r.status === 'REJECTED' ? 'tag-err' : 'tag-warn'}">
+            ${r.status === 'APPROVED' ? 'معتمد ✓' : r.status === 'REJECTED' ? 'مرفوض ✕' : 'قيد المراجعة ⏳'}
+          </span>
+        </div>
+      `).join('');
+    } catch (e) {
+      container.innerHTML = '<p style="color:var(--ink-dim);font-size:0.88rem;">فشل جلب الطلبات السابقة.</p>';
+    }
+  }
 </script>
 </body>
 </html>
