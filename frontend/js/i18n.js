@@ -152,7 +152,27 @@
     }
   };
 
-  const currentLang = localStorage.getItem('khatwa_lang') || 'ar';
+  // Common auto-translation dictionary for plain text in common elements
+  const textMap = {
+    "الرئيسية": { en: "Home", ar: "الرئيسية" },
+    "تصفح الكورسات": { en: "Browse Courses", ar: "تصفح الكورسات" },
+    "كورساتي": { en: "My Courses", ar: "كورساتي" },
+    "الأسئلة الشائعة": { en: "FAQ", ar: "الأسئلة الشائعة" },
+    "تسجيل الدخول": { en: "Login", ar: "تسجيل الدخول" },
+    "إنشاء حساب": { en: "Sign Up", ar: "إنشاء حساب" },
+    "إنشاء حساب جديد": { en: "Create Account", ar: "إنشاء حساب جديد" },
+    "تسجيل الخروج": { en: "Logout", ar: "تسجيل الخروج" },
+    "لوحة التحكم": { en: "Dashboard", ar: "لوحة التحكم" },
+    "لوحة الإدارة": { en: "Admin Panel", ar: "لوحة الإدارة" },
+    "استوديو المعلم": { en: "Teacher Studio", ar: "استوديو المعلم" },
+    "شحن رصيد": { en: "Recharge Points", ar: "شحن رصيد" },
+    "إلغاء": { en: "Cancel", ar: "إلغاء" },
+    "دخول": { en: "Login", ar: "دخول" },
+    "تذكرني": { en: "Remember me", ar: "تذكرني" },
+    "نسيت كلمة المرور؟": { en: "Forgot password?", ar: "نسيت كلمة المرور؟" },
+    "اسم المستخدم": { en: "Username", ar: "اسم المستخدم" },
+    "كلمة المرور": { en: "Password", ar: "كلمة المرور" }
+  };
 
   function t(key, fallback = '') {
     const lang = localStorage.getItem('khatwa_lang') || 'ar';
@@ -166,11 +186,13 @@
   }
 
   function toggleLanguage() {
-    const nextLang = (localStorage.getItem('khatwa_lang') || 'ar') === 'ar' ? 'en' : 'ar';
+    const current = localStorage.getItem('khatwa_lang') || 'ar';
+    const nextLang = current === 'ar' ? 'en' : 'ar';
     setLanguage(nextLang);
   }
 
   function applyLanguage(lang) {
+    if (!lang) lang = localStorage.getItem('khatwa_lang') || 'ar';
     document.documentElement.lang = lang;
     document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
 
@@ -186,16 +208,28 @@
       }
     });
 
+    // Auto translate navbar links and common elements
+    document.querySelectorAll('.nav-links a, .nav-cta a, .brand-text').forEach(el => {
+      const raw = (el.dataset.origText || el.textContent || '').trim();
+      if (!el.dataset.origText) el.dataset.origText = raw;
+      if (textMap[el.dataset.origText]) {
+        el.textContent = textMap[el.dataset.origText][lang] || el.dataset.origText;
+      }
+    });
+
     // Update language switcher button text
     document.querySelectorAll('.lang-switcher-btn').forEach(btn => {
       btn.innerHTML = lang === 'ar' ? '🌐 English' : '🌐 العربية';
     });
   }
 
-  // Auto-init on DOMContentLoaded
-  document.addEventListener('DOMContentLoaded', () => {
-    applyLanguage(localStorage.getItem('khatwa_lang') || 'ar');
-  });
+  // Auto-init immediately and on DOMContentLoaded
+  applyLanguage(localStorage.getItem('khatwa_lang') || 'ar');
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      applyLanguage(localStorage.getItem('khatwa_lang') || 'ar');
+    });
+  }
 
   window.KhatwaI18n = {
     t,

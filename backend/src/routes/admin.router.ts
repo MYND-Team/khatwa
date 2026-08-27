@@ -646,9 +646,176 @@ router.post(
   })
 );
 
+// ─── Teachers Management (Full DB-backed) ───────────────────────────────────
+
+router.get(
+  '/teachers',
+  asyncHandler(async (_req, res) => {
+    const teachers = await prisma.user.findMany({
+      where: { role: 'TEACHER' },
+      select: {
+        id: true,
+        username: true,
+        isActive: true,
+        createdAt: true,
+        teacherProfile: {
+          select: {
+            id: true,
+            displayName: true,
+            bio: true,
+            subject: true,
+            avatarUrl: true,
+            rating: true,
+            ratingCount: true,
+            academicStages: true,
+            courses: {
+              select: {
+                id: true,
+                title: true,
+                isPublished: true,
+                _count: { select: { chapters: true, enrollments: true, lessons: true } },
+              },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    res.status(200).json({ success: true, data: teachers });
+  })
+);
+
+router.post(
+  '/teachers',
+  asyncHandler(async (req, res) => {
+    const { username, password, displayName, subject, avatarUrl, bio, academicStages } = req.body;
+    if (!username || !password || !displayName) {
+      res.status(400).json({ success: false, error: { code: 'MISSING_FIELDS', message: 'Username, password, and display name are required' } });
+      return;
+    }
+
+    const normalizedUsername = username.trim().replace(/\s+/g, '').toLowerCase();
+
+    const existing = await prisma.user.findUnique({ where: { username: normalizedUsername } });
+    if (existing) {
+      res.status(409).json({ success: false, error: { code: 'CONFLICT', message: 'اسم المستخدم مسجل بالفعل، يرجى اختيار اسم مستخدم آخر' } });
+      return;
+    }
+
+    const passwordHash = await bcrypt.hash(password, 12);
+
+    const newTeacher = await prisma.user.create({
+      data: {
+        username: normalizedUsername,
+        passwordHash,
+        role: 'TEACHER',
+        isActive: true,
+        teacherProfile: {
+          create: {
+            displayName: displayName.trim(),
+            subject: subject ? subject.trim() : null,
+            avatarUrl: avatarUrl ? avatarUrl.trim() : null,
+            bio: bio ? bio.trim() : null,
+            academicStages: academicStages || 'SECONDARY_1,SECONDARY_2,SECONDARY_3',
+            rating: 5.0,
+            ratingCount: 1,
+          },
+        },
+      },
+      select: {
+        id: true,
+        username: true,
+        role: true,
+        isActive: true,
+        createdAt: true,
+        teacherProfile: true,
+      },
+    });
+
+    res.status(201).json({ success: true, data: newTeacher, message: 'تم إنشاء حساب المدرس بنجاح' });
+  })
+);
+
+router.patch(
+  '/teachers/:id',
+  asyncHandler(async (req, res) => {
+    const { displayName, subject, avatarUrl, bio, academicStages, password, isActive } = req.body;
+    const user = await prisma.user.findUnique({ where: { id: req.params.id as string } });
+    if (!user || user.role !== 'TEACHER') {
+      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Teacher not found' } });
+      return;
+    }
+
+    let passwordHash: string | undefined = undefined;
+    if (password && password.trim().length >= 6) {
+      passwordHash = await bcrypt.hash(password.trim(), 12);
+    }
+
+    const updated = await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        ...(passwordHash && { passwordHash }),
+        ...(isActive !== undefined && { isActive }),
+        teacherProfile: {
+          update: {
+            ...(displayName !== undefined && { displayName: displayName.trim() }),
+            ...(subject !== undefined && { subject: subject ? subject.trim() : null }),
+            ...(avatarUrl !== undefined && { avatarUrl: avatarUrl ? avatarUrl.trim() : null }),
+            ...(bio !== undefined && { bio: bio ? bio.trim() : null }),
+            ...(academicStages !== undefined && { academicStages }),
+          },
+        },
+      },
+      select: {
+        id: true,
+        username: true,
+        role: true,
+        isActive: true,
+        teacherProfile: true,
+      },
+    });
+
+    res.status(200).json({ success: true, data: updated });
+  })
+);
+
+router.patch(
+  '/teachers/:id/toggle-active',
+  asyncHandler(async (req, res) => {
+    const user = await prisma.user.findUnique({ where: { id: req.params.id as string } });
+    if (!user || user.role !== 'TEACHER') {
+      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Teacher not found' } });
+      return;
+    }
+
+    const updated = await prisma.user.update({
+      where: { id: user.id },
+      data: { isActive: !user.isActive },
+      select: { id: true, username: true, isActive: true },
+    });
+
+    res.status(200).json({ success: true, data: updated });
+  })
+);
+
+router.delete(
+  '/teachers/:id',
+  asyncHandler(async (req, res) => {
+    const user = await prisma.user.findUnique({ where: { id: req.params.id as string } });
+    if (!user || user.role !== 'TEACHER') {
+      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Teacher not found' } });
+      return;
+    }
+
+    await prisma.user.delete({ where: { id: user.id } });
+    res.status(200).json({ success: true, message: 'تم حذف المدرس بنجاح' });
+  })
+);
+
 // ─── Branding Settings ───────────────────────────────────────────────────────
 
 router.get('/settings/branding', BrandingController.getSettings);
 router.patch('/settings/branding', BrandingController.updateSettings);
 
 export default router;
+

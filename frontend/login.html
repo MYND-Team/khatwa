@@ -17,7 +17,10 @@
       <li><a href="courses.html">تصفح الكورسات</a></li>
       <li><a href="help.html">الأسئلة الشائعة</a></li>
     </ul>
-    <div class="nav-cta"><a href="signup.html" class="btn btn-line">إنشاء حساب</a></div>
+    <div class="nav-cta">
+      <button class="lang-switcher-btn" onclick="window.KhatwaI18n.toggleLanguage()">🌐 English</button>
+      <a href="signup.html" class="btn btn-line">إنشاء حساب</a>
+    </div>
     <button class="nav-toggle">القائمة</button>
   </div>
 </nav>
@@ -58,6 +61,7 @@
 </div>
 
 <script src="js/api.js"></script>
+<script src="js/i18n.js"></script>
 <script src="js/main.js"></script>
 <script>
   document.getElementById('loginForm').addEventListener('submit', async function(e) {

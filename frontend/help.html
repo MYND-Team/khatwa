@@ -16,7 +16,10 @@
       <li><a href="index.html">الرئيسية</a></li>
       <li><a href="help.html" class="active">الأسئلة الشائعة</a></li>
     </ul>
-    <div class="nav-cta"><a href="login.html" class="btn btn-line">تسجيل الدخول</a></div>
+    <div class="nav-cta">
+      <button class="lang-switcher-btn" onclick="window.KhatwaI18n.toggleLanguage()">🌐 English</button>
+      <a href="login.html" class="btn btn-line">تسجيل الدخول</a>
+    </div>
     <button class="nav-toggle">القائمة</button>
   </div>
 </nav>
@@ -77,6 +80,7 @@
   </div>
 </footer>
 
+<script src="js/i18n.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>
