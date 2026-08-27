@@ -11,11 +11,20 @@ import { requireStaff } from '../middleware/requireStaff';
 import { asyncHandler } from '../utils/asyncHandler';
 import { prisma } from '../config/prisma';
 
+import os from 'os';
+
 const router = Router();
 
 // ─── Screenshot upload storage ────────────────────────────────────────────────
-const uploadDir = path.join(process.cwd(), 'uploads', 'payment-screenshots');
-fs.mkdirSync(uploadDir, { recursive: true });
+const uploadDir = (process.env.VERCEL || process.env.NODE_ENV === 'production')
+  ? path.join(os.tmpdir(), 'khatwa-uploads', 'payment-screenshots')
+  : path.join(process.cwd(), 'uploads', 'payment-screenshots');
+
+try {
+  fs.mkdirSync(uploadDir, { recursive: true });
+} catch {
+  // Ignored if directory creation fails on read-only environments
+}
 
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, uploadDir),
