@@ -75,8 +75,9 @@
     alertBox.classList.remove('show');
 
     try {
-      const res = await window.KhatwaAPI.auth.login(u, p);
-      const user = res.data?.user || window.KhatwaAPI.getUser();
+      const data = await window.KhatwaAPI.auth.login(u, p);
+      // api.js login() returns res.data directly: { user, accessToken, refreshToken }
+      const user = data?.user || window.KhatwaAPI.getUser();
       const role = user?.role || 'STUDENT';
 
       if (role === 'ADMIN') {
