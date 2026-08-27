@@ -179,16 +179,30 @@ app.get('/teachers/:id', asyncHandler(async (req, res) => {
 // ─── Auth routes (rate-limited in production) ─────────────────────────────────
 
 app.use('/auth', authLimiter, authRouter);
+app.use('/api/auth', authLimiter, authRouter);
 
 // ─── Role-isolated route groups ───────────────────────────────────────────────
 // Each group has its own auth middleware — structurally separated, not just role-checked.
 // A STUDENT token will be structurally rejected by /teacher/* and /admin/* routes.
 
 app.use('/student', studentRouter);
+app.use('/api/student', studentRouter);
+
 app.use('/teacher', teacherRouter);
+app.use('/api/teacher', teacherRouter);
+
 app.use('/staff', staffRouter);
+app.use('/api/staff', staffRouter);
+
 app.use('/admin', adminRouter);
+app.use('/api/admin', adminRouter);
+
 app.use('/point-requests', pointRequestsRouter);
+app.use('/api/point-requests', pointRequestsRouter);
+
+app.get('/api/health', (_req, res) => {
+  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
 
 // ─── 404 handler ─────────────────────────────────────────────────────────────
 
