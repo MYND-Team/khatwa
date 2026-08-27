@@ -72,10 +72,10 @@ router.post(
 
     const pr = await prisma.pointRequest.create({
       data: {
-        studentId: req.user!.sub,
+        userId: req.user!.sub,
         requestedPoints,
-        screenshotPath: req.file.filename,
-        screenshotName: req.file.originalname,
+        amount: requestedPoints,
+        screenshotUrl: req.file.filename,
         notes: (req.body.notes as string) || null,
         status: 'PENDING',
       },
@@ -102,17 +102,17 @@ router.get(
   requireStudent,
   asyncHandler(async (req: Request, res: Response) => {
     const requests = await prisma.pointRequest.findMany({
-      where: { studentId: req.user!.sub },
+      where: { userId: req.user!.sub },
       orderBy: { createdAt: 'desc' },
       select: {
         id: true,
         requestedPoints: true,
-        grantedPoints: true,
+        amount: true,
         status: true,
         notes: true,
         rejectionReason: true,
         createdAt: true,
-        reviewedAt: true,
+        processedAt: true,
       },
     });
 
@@ -130,10 +130,10 @@ router.get(
     const status = (req.query.status as string) || 'PENDING';
 
     const requests = await prisma.pointRequest.findMany({
-      where: status === 'ALL' ? {} : { status },
+      where: status === 'ALL' ? {} : { status: status as any },
       orderBy: { createdAt: 'desc' },
       include: {
-        student: {
+        user: {
           select: {
             id: true,
             username: true,
@@ -160,14 +160,14 @@ router.get(
   '/:id/screenshot',
   requireStaff,
   asyncHandler(async (req: Request, res: Response) => {
-    const pr = await prisma.pointRequest.findUnique({ where: { id: req.params.id } });
+    const pr = await prisma.pointRequest.findUnique({ where: { id: req.params.id as string } });
 
     if (!pr) {
       res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'الطلب غير موجود' } });
       return;
     }
 
-    const filePath = path.join(uploadDir, pr.screenshotPath);
+    const filePath = path.join(uploadDir, pr.screenshotUrl || '');
     if (!fs.existsSync(filePath)) {
       res.status(404).json({ success: false, error: { code: 'FILE_NOT_FOUND', message: 'ملف الصورة غير موجود' } });
       return;
@@ -194,7 +194,7 @@ router.patch(
       return;
     }
 
-    const pr = await prisma.pointRequest.findUnique({ where: { id: req.params.id } });
+    const pr = await prisma.pointRequest.findUnique({ where: { id: req.params.id as string } });
     if (!pr) {
       res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'الطلب غير موجود' } });
       return;
@@ -214,20 +214,20 @@ router.patch(
         where: { id: pr.id },
         data: {
           status: 'APPROVED',
-          grantedPoints,
-          reviewedById: req.user!.sub,
-          reviewedAt: new Date(),
+          requestedPoints: grantedPoints,
+          processedById: req.user!.sub,
+          processedAt: new Date(),
         },
       });
 
       await tx.user.update({
-        where: { id: pr.studentId },
+        where: { id: pr.userId },
         data: { pointsBalance: { increment: grantedPoints } },
       });
 
       await tx.pointsTransaction.create({
         data: {
-          studentId: pr.studentId,
+          studentId: pr.userId,
           type: 'CREDIT',
           amount: grantedPoints,
           reason: `شحن نقاط مراجع (طلب #${pr.id.slice(-6)})`,
@@ -237,7 +237,7 @@ router.patch(
     });
 
     const updatedStudent = await prisma.user.findUnique({
-      where: { id: pr.studentId },
+      where: { id: pr.userId },
       select: { id: true, username: true, pointsBalance: true },
     });
 
@@ -260,7 +260,7 @@ router.patch(
   '/:id/reject',
   requireStaff,
   asyncHandler(async (req: Request, res: Response) => {
-    const pr = await prisma.pointRequest.findUnique({ where: { id: req.params.id } });
+    const pr = await prisma.pointRequest.findUnique({ where: { id: req.params.id as string } });
     if (!pr) {
       res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'الطلب غير موجود' } });
       return;
@@ -279,8 +279,8 @@ router.patch(
       data: {
         status: 'REJECTED',
         rejectionReason: (req.body.reason as string) || 'لم يتم قبول الطلب',
-        reviewedById: req.user!.sub,
-        reviewedAt: new Date(),
+        processedById: req.user!.sub,
+        processedAt: new Date(),
       },
     });
 

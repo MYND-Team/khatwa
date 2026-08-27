@@ -553,7 +553,7 @@ router.patch(
   '/point-requests/:id/approve',
   asyncHandler(async (req, res) => {
     const pr = await prisma.pointRequest.findUnique({
-      where: { id: req.params.id },
+      where: { id: req.params.id as string },
       include: { user: true },
     });
 
@@ -562,7 +562,7 @@ router.patch(
       return;
     }
 
-    const newBalance = pr.user.pointsBalance + (pr.requestedPoints || 0);
+    const newBalance = ((pr as any).user?.pointsBalance || 0) + (pr.requestedPoints || 0);
 
     await prisma.$transaction([
       prisma.user.update({ where: { id: pr.userId }, data: { pointsBalance: newBalance } }),
@@ -597,7 +597,7 @@ router.patch(
   '/point-requests/:id/reject',
   asyncHandler(async (req, res) => {
     const { reason } = req.body;
-    const pr = await prisma.pointRequest.findUnique({ where: { id: req.params.id } });
+    const pr = await prisma.pointRequest.findUnique({ where: { id: req.params.id as string } });
     if (!pr || pr.status !== 'PENDING') {
       res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Pending request not found' } });
       return;
