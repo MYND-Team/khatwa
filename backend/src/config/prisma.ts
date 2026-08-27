@@ -6,7 +6,12 @@ import path from 'path';
 // • Local Development: PostgreSQL or SQLite
 // ────────────────────────────────────────────────────────────────────────────
 
-const connectionString = process.env.DATABASE_URL || env.DATABASE_URL;
+const defaultDbUrl = 'postgresql://postgres.wdkpifcohsivvpgjiubl:zfz7TlcY75SKA17C@aws-1-eu-west-3.pooler.supabase.com:6543/postgres?pgbouncer=true';
+const connectionString = process.env.DATABASE_URL || env.DATABASE_URL || defaultDbUrl;
+
+if (!process.env.DATABASE_URL) {
+  process.env.DATABASE_URL = connectionString;
+}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let prismaInstance: any;
@@ -31,13 +36,23 @@ function createPrismaClient() {
     });
 
     const adapter = new PrismaPg(pool);
-    return new PrismaClient({
+    return new (PrismaClient as any)({
       adapter,
+      datasources: {
+        db: {
+          url: connectionString,
+        },
+      },
       log: ['error', 'warn'],
     });
   } catch (pgErr) {
     try {
-      return new PrismaClient({
+      return new (PrismaClient as any)({
+        datasources: {
+          db: {
+            url: connectionString,
+          },
+        },
         log: ['error', 'warn'],
       });
     } catch (fallbackErr) {
