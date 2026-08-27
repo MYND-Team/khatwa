@@ -2,10 +2,9 @@
 import "dotenv/config";
 import { defineConfig } from "prisma/config";
 
-// Use SQLite for local dev when DATABASE_URL is not a real PostgreSQL URL
-const dbUrl = process.env.DATABASE_URL ?? "";
-const isSqlite =
-  !dbUrl || dbUrl === "postgresql://user:password@localhost:5432/khatwa";
+const defaultDbUrl = "postgresql://postgres.wdkpifcohsivvpgjiubl:zfz7TlcY75SKA17C@aws-1-eu-west-3.pooler.supabase.com:6543/postgres?pgbouncer=true";
+const dbUrl = process.env.DATABASE_URL || defaultDbUrl;
+const isSqlite = process.env.USE_SQLITE === "true";
 
 export default defineConfig({
   schema: isSqlite

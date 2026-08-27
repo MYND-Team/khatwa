@@ -5,13 +5,13 @@
   "scripts": {
     "dev": "npm --prefix backend run dev",
     "build": "npm --prefix backend run build",
-    "vercel-build": "npm --prefix backend run prisma:generate && npm --prefix backend run build && prisma generate --schema=backend/prisma/schema.prisma",
+    "vercel-build": "prisma generate --schema=backend/prisma/schema.prisma && npm --prefix backend run build",
     "start": "npm --prefix backend start",
     "test": "npm --prefix backend test",
     "seed": "npm --prefix backend run seed",
-    "prisma:generate": "npm --prefix backend run prisma:generate",
-    "prisma:push": "npm --prefix backend run prisma:push",
-    "prisma:migrate": "npm --prefix backend run prisma:migrate"
+    "prisma:generate": "prisma generate --schema=backend/prisma/schema.prisma",
+    "prisma:push": "prisma db push --schema=backend/prisma/schema.prisma",
+    "prisma:migrate": "prisma migrate dev --schema=backend/prisma/schema.prisma"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.9.1",
