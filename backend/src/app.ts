@@ -85,26 +85,23 @@ app.get('/api/health', (_req, res) => {
   res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// ─── Rate limiting ────────────────────────────────────────────────────────────
-
-const globalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 500,
-  standardHeaders: true,
-  legacyHeaders: false,
-  skip: (req) => req.path === '/health' || req.path === '/api/health' || req.path.startsWith('/settings/branding'),
-  message: { success: false, error: { code: 'RATE_LIMITED', message: 'Too many requests, please slow down.' } },
-});
+// ─── Rate limiting (targeted specifically to auth endpoints) ──────────────────
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 50,
+  max: 100,
+  validate: { xForwardedForHeader: false, default: false },
+  keyGenerator: (req) => {
+    const forwarded = req.headers['x-forwarded-for'];
+    if (typeof forwarded === 'string') {
+      return forwarded.split(',')[0].trim();
+    }
+    return req.ip || '127.0.0.1';
+  },
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, error: { code: 'RATE_LIMITED', message: 'Too many auth attempts.' } },
 });
-
-app.use(globalLimiter);
 
 // Public branding endpoint (frontend consumes this without auth)
 app.get('/settings/branding', BrandingController.getSettings);
