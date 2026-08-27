@@ -403,48 +403,87 @@
 </div>
 
 <!-- Modal: Add New Teacher (Admin-only) -->
-<div class="modal-overlay" id="addTeacherModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999;align-items:center;justify-content:center;">
-  <div style="background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius);max-width:500px;width:90%;padding:26px;max-height:90vh;overflow-y:auto;">
-    <h3 style="margin-top:0;">👨‍🏫 إنشاء حساب مدرس جديد</h3>
-    <p style="color:var(--ink-dim);font-size:0.88rem;margin:4px 0 16px;">أدخل بيانات المدرس لإنشاء حسابه واعتماده في الكادر الأكاديمي.</p>
+<div class="modal-overlay" id="addTeacherModal" onclick="if(event.target===this) closeAddTeacherModal()">
+  <div class="modal-card" style="max-width:580px;width:95%;padding:28px;border-radius:20px;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;border-bottom:1px solid var(--line-soft);padding-bottom:14px;">
+      <div>
+        <h3 style="margin:0 0 4px;display:flex;align-items:center;gap:8px;color:var(--primary-deep);font-size:1.3rem;">
+          <span>👨‍🏫</span> إنشاء حساب مدرس جديد
+        </h3>
+        <p style="color:var(--ink-dim);font-size:0.88rem;margin:0;">أدخل بيانات المدرس لإنشاء حسابه واعتماده في الكادر الأكاديمي للمنصة.</p>
+      </div>
+      <button type="button" class="modal-close-btn" onclick="closeAddTeacherModal()" title="إغلاق">✕</button>
+    </div>
+
+    <div id="addTeacherAlert" style="display:none;padding:12px 16px;border-radius:10px;margin-bottom:16px;font-size:0.9rem;font-weight:600;"></div>
+
     <form id="addTeacherForm" onsubmit="submitAddTeacher(event)">
-      <div class="form-group" style="margin-bottom:12px;">
-        <label class="form-label">اسم المستخدم للدخول (Username)</label>
-        <input type="text" class="form-control" id="newTeacherUsername" placeholder="مثال: dr_tamer_elkady" required>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(230px, 1fr));gap:14px;margin-bottom:14px;">
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label" style="font-weight:600;color:var(--ink);margin-bottom:6px;display:block;">اسم المستخدم للدخول (Username) <span style="color:var(--err);">*</span></label>
+          <input type="text" class="form-control" id="newTeacherUsername" placeholder="مثال: dr_tamer_elkady" required style="border-radius:10px;padding:10px 14px;">
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label" style="font-weight:600;color:var(--ink);margin-bottom:6px;display:block;">كلمة المرور المؤقتة <span style="color:var(--err);">*</span></label>
+          <div style="position:relative;">
+            <input type="password" class="form-control" id="newTeacherPassword" placeholder="••••••••" required minlength="8" style="border-radius:10px;padding:10px 38px 10px 14px;width:100%;">
+            <button type="button" onclick="toggleTeacherPasswordVisibility()" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--ink-faint);font-size:1rem;padding:0;" title="إظهار/إخفاء">👁️</button>
+          </div>
+        </div>
       </div>
-      <div class="form-group" style="margin-bottom:12px;">
-        <label class="form-label">كلمة المرور المؤقتة</label>
-        <input type="password" class="form-control" id="newTeacherPassword" placeholder="••••••••" required minlength="8">
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(230px, 1fr));gap:14px;margin-bottom:14px;">
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label" style="font-weight:600;color:var(--ink);margin-bottom:6px;display:block;">الاسم المعروض (اللقب الكامل) <span style="color:var(--err);">*</span></label>
+          <input type="text" class="form-control" id="newTeacherDisplayName" placeholder="مثال: د. تامر القاضي" required style="border-radius:10px;padding:10px 14px;">
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label" style="font-weight:600;color:var(--ink);margin-bottom:6px;display:block;">المادة التخصصية</label>
+          <input type="text" class="form-control" id="newTeacherSubject" placeholder="مثال: الفيزياء، الكيمياء..." style="border-radius:10px;padding:10px 14px;">
+        </div>
       </div>
-      <div class="form-group" style="margin-bottom:12px;">
-        <label class="form-label">الاسم المعروض (اللقب الكامل)</label>
-        <input type="text" class="form-control" id="newTeacherDisplayName" placeholder="مثال: Dr Tamer El-Kady" required>
+
+      <div class="form-group" style="margin-bottom:14px;">
+        <label class="form-label" style="font-weight:600;color:var(--ink);margin-bottom:6px;display:block;">رابط صورة المدرس (Avatar URL)</label>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <input type="url" class="form-control" id="newTeacherAvatar" placeholder="https://..." oninput="previewTeacherAvatar(this.value)" style="border-radius:10px;padding:10px 14px;flex:1;">
+          <div id="teacherAvatarPreview" style="width:42px;height:42px;border-radius:50%;background:var(--primary-faint);border:1.5px solid var(--line-soft);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;font-size:1.2rem;">👨‍🏫</div>
+        </div>
       </div>
-      <div class="form-group" style="margin-bottom:12px;">
-        <label class="form-label">المادة التخصصية</label>
-        <input type="text" class="form-control" id="newTeacherSubject" placeholder="مثال: الفيزياء، الكيمياء، الأحياء...">
+
+      <div class="form-group" style="margin-bottom:14px;">
+        <label class="form-label" style="font-weight:600;color:var(--ink);margin-bottom:6px;display:block;">المراحل الدراسية المعتمدة</label>
+        <div class="stage-chips-grid">
+          <label class="stage-chip" onclick="toggleStageChip(this)">
+            <input type="checkbox" name="teacherStage" value="PREPARATORY">
+            <span>المرحلة الإعدادية</span>
+          </label>
+          <label class="stage-chip selected" onclick="toggleStageChip(this)">
+            <input type="checkbox" name="teacherStage" value="SECONDARY_1" checked>
+            <span>أولى ثانوي</span>
+          </label>
+          <label class="stage-chip selected" onclick="toggleStageChip(this)">
+            <input type="checkbox" name="teacherStage" value="SECONDARY_2" checked>
+            <span>تانية ثانوي</span>
+          </label>
+          <label class="stage-chip selected" onclick="toggleStageChip(this)">
+            <input type="checkbox" name="teacherStage" value="SECONDARY_3" checked>
+            <span>تالتة ثانوي</span>
+          </label>
+        </div>
       </div>
-      <div class="form-group" style="margin-bottom:12px;">
-        <label class="form-label">رابط صورة المدرس (Avatar URL)</label>
-        <input type="url" class="form-control" id="newTeacherAvatar" placeholder="https://...">
+
+      <div class="form-group" style="margin-bottom:20px;">
+        <label class="form-label" style="font-weight:600;color:var(--ink);margin-bottom:6px;display:block;">نبذة وسيرة ذاتية (Bio)</label>
+        <textarea class="form-control" id="newTeacherBio" rows="2" placeholder="معلم خبير ومعد المناهج بالمرحلة الثانوية..." style="border-radius:10px;padding:10px 14px;resize:vertical;"></textarea>
       </div>
-      <div class="form-group" style="margin-bottom:12px;">
-        <label class="form-label">المراحل الدراسية التي يدرسها</label>
-        <select class="form-control" id="newTeacherStages" multiple style="height:80px;">
-          <option value="PREPARATORY">المرحلة الإعدادية</option>
-          <option value="SECONDARY_1" selected>الصف الأول الثانوي</option>
-          <option value="SECONDARY_2" selected>الصف الثاني الثانوي</option>
-          <option value="SECONDARY_3" selected>الصف الثالث الثانوي</option>
-        </select>
-        <span class="hint">اضغط Ctrl لاختيار أكثر من مرحلة</span>
-      </div>
-      <div class="form-group" style="margin-bottom:18px;">
-        <label class="form-label">نبذة وسيرة ذاتية (Bio)</label>
-        <textarea class="form-control" id="newTeacherBio" rows="2" placeholder="معلم أول وخبير تدريس المرحلة الثانوية..."></textarea>
-      </div>
-      <div style="display:flex;gap:10px;justify-content:flex-end;">
-        <button type="button" class="btn btn-line btn-sm" onclick="closeAddTeacherModal()">إلغاء</button>
-        <button type="submit" class="btn btn-primary btn-sm" id="saveTeacherBtn">إنشاء وحفظ المدرس ✓</button>
+
+      <div style="display:flex;gap:12px;justify-content:flex-end;border-top:1px solid var(--line-soft);padding-top:16px;">
+        <button type="button" class="btn btn-line btn-sm" onclick="closeAddTeacherModal()" style="border-radius:10px;padding:10px 20px;font-weight:600;">إلغاء</button>
+        <button type="submit" class="btn btn-primary btn-sm" id="saveTeacherBtn" style="border-radius:10px;padding:10px 24px;font-weight:700;display:inline-flex;align-items:center;gap:6px;">
+          <span>إنشاء وحفظ المدرس</span>
+          <span>✓</span>
+        </button>
       </div>
     </form>
   </div>
@@ -712,27 +751,78 @@
 
   // ─── Modal: Add Teacher ───────────────────────────────────────────────────
   function openAddTeacherModal() {
-    document.getElementById('addTeacherModal').style.display = 'flex';
+    const modal = document.getElementById('addTeacherModal');
+    const alertBox = document.getElementById('addTeacherAlert');
+    if (alertBox) alertBox.style.display = 'none';
+    modal.style.display = 'flex';
+    setTimeout(() => {
+      document.getElementById('newTeacherUsername')?.focus();
+    }, 50);
   }
+
   function closeAddTeacherModal() {
     document.getElementById('addTeacherModal').style.display = 'none';
   }
 
+  function toggleTeacherPasswordVisibility() {
+    const passInput = document.getElementById('newTeacherPassword');
+    if (passInput) {
+      passInput.type = passInput.type === 'password' ? 'text' : 'password';
+    }
+  }
+
+  function previewTeacherAvatar(url) {
+    const preview = document.getElementById('teacherAvatarPreview');
+    if (!preview) return;
+    if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
+      preview.innerHTML = `<img src="${url}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='👨‍🏫'">`;
+    } else {
+      preview.innerHTML = '👨‍🏫';
+    }
+  }
+
+  function toggleStageChip(label) {
+    setTimeout(() => {
+      const checkbox = label.querySelector('input[type="checkbox"]');
+      if (checkbox) {
+        if (checkbox.checked) {
+          label.classList.add('selected');
+        } else {
+          label.classList.remove('selected');
+        }
+      }
+    }, 10);
+  }
+
   async function submitAddTeacher(e) {
     e.preventDefault();
+    const alertBox = document.getElementById('addTeacherAlert');
+    if (alertBox) alertBox.style.display = 'none';
+
     const username = document.getElementById('newTeacherUsername').value.trim();
     const password = document.getElementById('newTeacherPassword').value;
     const displayName = document.getElementById('newTeacherDisplayName').value.trim();
     const subject = document.getElementById('newTeacherSubject').value.trim();
     const avatarUrl = document.getElementById('newTeacherAvatar').value.trim();
     const bio = document.getElementById('newTeacherBio').value.trim();
-    
-    const stageSelect = document.getElementById('newTeacherStages');
-    const selectedStages = Array.from(stageSelect.selectedOptions).map(o => o.value).join(',');
+
+    const checkboxes = document.querySelectorAll('#addTeacherForm input[name="teacherStage"]:checked');
+    const selectedStages = Array.from(checkboxes).map(cb => cb.value).join(',');
+
+    if (!selectedStages) {
+      if (alertBox) {
+        alertBox.style.display = 'block';
+        alertBox.style.background = '#FEE2E2';
+        alertBox.style.color = '#DC2626';
+        alertBox.style.border = '1px solid #FCA5A5';
+        alertBox.textContent = '⚠️ يرجى اختيار مرحلة دراسية واحدة على الأقل للمدرس.';
+      }
+      return;
+    }
 
     const btn = document.getElementById('saveTeacherBtn');
     btn.disabled = true;
-    btn.textContent = 'جارٍ الحفظ في قاعدة البيانات...';
+    btn.innerHTML = '<span>جارٍ الحفظ في قاعدة البيانات...</span>';
 
     try {
       await window.KhatwaAPI.admin.createTeacher({
@@ -744,18 +834,55 @@
         bio,
         academicStages: selectedStages
       });
-      alert('تم إنشاء حساب المدرس بنجاح في قاعدة البيانات! ✅');
-      closeAddTeacherModal();
-      document.getElementById('addTeacherForm').reset();
+
+      if (alertBox) {
+        alertBox.style.display = 'block';
+        alertBox.style.background = '#ECFDF5';
+        alertBox.style.color = '#047857';
+        alertBox.style.border = '1px solid #6EE7B7';
+        alertBox.textContent = '✓ تم إنشاء حساب المدرس بنجاح واعتماده في الكادر الأكاديمي!';
+      }
+
+      setTimeout(() => {
+        closeAddTeacherModal();
+        document.getElementById('addTeacherForm').reset();
+        document.querySelectorAll('#addTeacherForm .stage-chip').forEach(chip => {
+          const cb = chip.querySelector('input');
+          if (cb && cb.value !== 'PREPARATORY') {
+            cb.checked = true;
+            chip.classList.add('selected');
+          } else if (cb) {
+            cb.checked = false;
+            chip.classList.remove('selected');
+          }
+        });
+        previewTeacherAvatar('');
+      }, 1000);
+
       await loadTeachers();
       await loadAnalytics();
     } catch (err) {
-      alert(err.message || 'حدث خطأ أثناء إنشاء حساب المدرس');
+      if (alertBox) {
+        alertBox.style.display = 'block';
+        alertBox.style.background = '#FEE2E2';
+        alertBox.style.color = '#DC2626';
+        alertBox.style.border = '1px solid #FCA5A5';
+        alertBox.textContent = '❌ ' + (err.message || 'حدث خطأ أثناء إنشاء حساب المدرس');
+      } else {
+        alert(err.message || 'حدث خطأ أثناء إنشاء حساب المدرس');
+      }
     } finally {
       btn.disabled = false;
-      btn.textContent = 'إنشاء وحفظ المدرس ✓';
+      btn.innerHTML = '<span>إنشاء وحفظ المدرس</span> <span>✓</span>';
     }
   }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeAddTeacherModal();
+      if (typeof closeStudentDossier === 'function') closeStudentDossier();
+    }
+  });
 
   // ─── Modal: Student Dossier & Notes & Wallet ──────────────────────────────
   async function openStudentDossier(studentId) {

@@ -26,6 +26,7 @@
   /* Surface & Background (Crisp Clean White & Soft Slate-White) */
   --bg: #F8FAFD;
   --bg-raised: #FFFFFF;
+  --bg-card: #FFFFFF;
   --panel: #FFFFFF;
   --panel-alt: #F1F6FB;
   --line: rgba(19, 64, 116, 0.16);
@@ -1032,4 +1033,89 @@ table.plain tr:hover td{background:var(--primary-faint);}
 .lang-switcher-btn:hover {
   background: rgba(255, 255, 255, 0.25);
 }
+
+/* ─── Universal Modal System ─────────────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(11, 37, 69, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 99999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: fadeIn 0.2s ease-out forwards;
+}
+
+.modal-overlay[style*="display: flex"],
+.modal-overlay.active {
+  display: flex !important;
+}
+
+.modal-card,
+.modal-overlay > div {
+  background: #FFFFFF !important;
+  color: var(--ink) !important;
+  border: 1px solid var(--line-soft) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 20px 50px rgba(11, 37, 69, 0.28) !important;
+  animation: modalPop 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modalPop {
+  from { transform: translateY(20px) scale(0.96); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+/* Modal Form Controls & Stage Selector Chips */
+.stage-chips-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.stage-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1.5px solid var(--line-soft);
+  border-radius: 10px;
+  background: var(--panel-alt);
+  cursor: pointer;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--ink-dim);
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.stage-chip:hover {
+  border-color: var(--primary-light);
+  background: var(--primary-faint);
+  color: var(--primary);
+}
+
+.stage-chip input[type="checkbox"] {
+  accent-color: var(--primary);
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.stage-chip.selected {
+  border-color: var(--primary);
+  background: var(--primary-faint);
+  color: var(--primary-deep);
+  box-shadow: 0 2px 6px rgba(19, 64, 116, 0.08);
+}
+
 
