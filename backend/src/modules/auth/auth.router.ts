@@ -22,7 +22,7 @@ router.post('/logout', AuthController.logout);
 router.post('/dev/staff-login', async (_req, res) => {
   const { prisma } = await import('../../config/prisma');
   const { signAccessToken, signRefreshToken } = await import('../../utils/jwt');
-  const { v4: uuidv4 } = await import('uuid');
+  const crypto = await import('crypto');
 
   let user = await prisma.user.findFirst({
     where: { role: { in: ['STAFF', 'ADMIN'] } }
@@ -39,7 +39,7 @@ router.post('/dev/staff-login', async (_req, res) => {
     });
   }
 
-  const jti = uuidv4();
+  const jti = crypto.randomUUID();
   const accessToken = signAccessToken({ sub: user.id, username: user.username, role: user.role as any });
   const refreshToken = signRefreshToken({ sub: user.id, jti });
 

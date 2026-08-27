@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs';
-import { v4 as uuidv4 } from 'uuid';
+import crypto from 'crypto';
 import { prisma } from '../../config/prisma';
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../../utils/jwt';
 import { AppError, BadRequestError, ConflictError, UnauthorizedError } from '../../utils/errors';
@@ -17,7 +17,7 @@ const SALT_ROUNDS = 12;
 // ─── Token helpers ───────────────────────────────────────────────────────────
 
 async function issueTokens(userId: string, username: string, role: Role) {
-  const jti = uuidv4();
+  const jti = crypto.randomUUID();
   const accessToken = signAccessToken({ sub: userId, username, role });
   const refreshToken = signRefreshToken({ sub: userId, jti });
 
