@@ -23,6 +23,7 @@ import { prisma } from './config/prisma';
 import { asyncHandler } from './utils/asyncHandler';
 
 const app = express();
+app.set('trust proxy', 1);
 
 // ─── Frontend directory resolution ───────────────────────────────────────────
 const candidateFrontendPaths = [
@@ -49,24 +50,13 @@ app.use(
 );
 
 // ─── CORS ────────────────────────────────────────────────────────────────────
-// In production, set ALLOWED_ORIGINS to a comma-separated list of trusted origins.
-// Without it in production, CORS defaults to the same-origin policy (no cross-origin).
 const allowedOrigins: string[] | undefined = env.ALLOWED_ORIGINS
   ? env.ALLOWED_ORIGINS.split(',').map((o) => o.trim()).filter(Boolean)
   : undefined;
 
-if (env.NODE_ENV === 'production' && !allowedOrigins) {
-  console.warn('⚠️  [CORS] ALLOWED_ORIGINS is not set in production — cross-origin requests will be blocked.');
-}
-
 app.use(
   cors({
-    origin:
-      env.NODE_ENV !== 'production'
-        ? true // allow all in development
-        : allowedOrigins && allowedOrigins.length > 0
-          ? allowedOrigins
-          : false, // block all cross-origin in production if not configured
+    origin: allowedOrigins && allowedOrigins.length > 0 ? allowedOrigins : true,
     credentials: true,
   })
 );

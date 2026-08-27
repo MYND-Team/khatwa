@@ -6,8 +6,8 @@
   "cleanUrls": false,
   "trailingSlash": false,
   "functions": {
-    "api/index.js": {
-      "includeFiles": "backend/dist/**,backend/node_modules/.prisma/**"
+    "api/index.ts": {
+      "includeFiles": "node_modules/.prisma/client/**"
     }
   },
   "rewrites": [
