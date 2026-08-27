@@ -404,17 +404,22 @@
 
 <!-- Modal: Add New Teacher (Admin-only) -->
 <div class="modal-overlay" id="addTeacherModal" onclick="if(event.target===this) closeAddTeacherModal()">
-  <div class="modal-card" style="max-width:580px;width:95%;padding:28px;border-radius:20px;">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;border-bottom:1px solid var(--line-soft);padding-bottom:14px;">
-      <div>
-        <h3 style="margin:0 0 4px;display:flex;align-items:center;gap:8px;color:var(--primary-deep);font-size:1.3rem;">
-          <span>👨‍🏫</span> إنشاء حساب مدرس جديد
-        </h3>
-        <p style="color:var(--ink-dim);font-size:0.88rem;margin:0;">أدخل بيانات المدرس لإنشاء حسابه واعتماده في الكادر الأكاديمي للمنصة.</p>
+  <div class="modal-card" style="max-width:580px;width:95%;padding:0;border-radius:20px;overflow:hidden;">
+
+    <!-- Modal Header — branded with site colours -->
+    <div style="background:linear-gradient(135deg, #0B2545 0%, #134074 60%, #1D5D9B 100%);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;">
+      <div style="display:flex;align-items:center;gap:14px;">
+        <img src="logo/logo-khatwa.jpeg" alt="خطوة" style="height:44px;width:44px;border-radius:10px;object-fit:cover;border:2px solid rgba(255,255,255,0.3);flex-shrink:0;">
+        <div>
+          <h3 style="margin:0 0 2px;color:#FFFFFF;font-size:1.15rem;font-weight:700;font-family:'Cairo',sans-serif;">إنشاء حساب مدرس جديد</h3>
+          <p style="margin:0;color:rgba(255,255,255,0.72);font-size:0.82rem;font-family:'Cairo',sans-serif;">اعتماد المدرس في الكادر الأكاديمي للمنصة</p>
+        </div>
       </div>
-      <button type="button" class="modal-close-btn" onclick="closeAddTeacherModal()" title="إغلاق">✕</button>
+      <button type="button" onclick="closeAddTeacherModal()" title="إغلاق" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.28)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'">✕</button>
     </div>
 
+    <!-- Modal Body -->
+    <div style="padding:24px 24px 0;">
     <div id="addTeacherAlert" style="display:none;padding:12px 16px;border-radius:10px;margin-bottom:16px;font-size:0.9rem;font-weight:600;"></div>
 
     <form id="addTeacherForm" onsubmit="submitAddTeacher(event)">
@@ -478,7 +483,7 @@
         <textarea class="form-control" id="newTeacherBio" rows="2" placeholder="معلم خبير ومعد المناهج بالمرحلة الثانوية..." style="border-radius:10px;padding:10px 14px;resize:vertical;"></textarea>
       </div>
 
-      <div style="display:flex;gap:12px;justify-content:flex-end;border-top:1px solid var(--line-soft);padding-top:16px;">
+      <div style="display:flex;gap:12px;justify-content:flex-end;border-top:1px solid var(--line-soft);padding:16px 0 24px;">
         <button type="button" class="btn btn-line btn-sm" onclick="closeAddTeacherModal()" style="border-radius:10px;padding:10px 20px;font-weight:600;">إلغاء</button>
         <button type="submit" class="btn btn-primary btn-sm" id="saveTeacherBtn" style="border-radius:10px;padding:10px 24px;font-weight:700;display:inline-flex;align-items:center;gap:6px;">
           <span>إنشاء وحفظ المدرس</span>
