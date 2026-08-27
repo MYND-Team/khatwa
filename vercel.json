@@ -1,12 +1,13 @@
 {
   "version": 2,
+  "installCommand": "npm install && npm --prefix backend install",
   "buildCommand": "npm run vercel-build",
   "outputDirectory": "frontend",
   "cleanUrls": false,
   "trailingSlash": false,
   "functions": {
-    "api/index.ts": {
-      "includeFiles": "backend/node_modules/.prisma/**"
+    "api/index.js": {
+      "includeFiles": "backend/dist/**,backend/node_modules/.prisma/**"
     }
   },
   "rewrites": [
