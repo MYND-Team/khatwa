@@ -730,42 +730,47 @@
 </div>
 
 <!-- Modal: Student Profile Dossier & Notes & Wallet -->
-<div class="modal-overlay" id="studentDossierModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:10000;align-items:center;justify-content:center;backdrop-filter:blur(4px);" onclick="if(event.target===this) closeStudentDossier()">
-  <div style="background:var(--bg-card);border:1px solid var(--line);border-radius:20px;max-width:640px;width:95%;padding:28px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 40px rgba(0,0,0,0.5);">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;border-bottom:1px solid var(--line-soft);padding-bottom:12px;">
-      <h3 style="margin:0;font-size:1.2rem;display:flex;align-items:center;gap:8px;" id="dossierStudentName">📂 ملف الطالب: —</h3>
-      <button type="button" class="btn btn-line btn-sm" onclick="closeStudentDossier()" style="padding:4px 12px;">✕ إغلاق</button>
+<div id="studentDossierModal" style="display:none; position:fixed; inset:0; width:100vw; height:100vh; background:rgba(15,23,42,0.75); z-index:999999; align-items:center; justify-content:center; backdrop-filter:blur(4px);" onclick="if(event.target===this) closeStudentDossier()">
+  <div style="background:#ffffff; color:#0f172a; border-radius:24px; max-width:620px; width:92%; padding:28px; max-height:90vh; overflow-y:auto; box-shadow:0 25px 50px -12px rgba(0,0,0,0.35); border:1px solid #e2e8f0;">
+    
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; border-bottom:1px solid #f1f5f9; padding-bottom:14px;">
+      <h3 style="margin:0; font-size:1.25rem; font-weight:700; color:#0f172a; font-family:'Cairo',sans-serif;" id="dossierStudentName">ملف الطالب: —</h3>
+      <button type="button" onclick="closeStudentDossier()" style="background:#f1f5f9; border:1px solid #cbd5e1; color:#334155; padding:6px 16px; border-radius:10px; cursor:pointer; font-weight:700; font-size:0.9rem;">✕ إغلاق</button>
     </div>
     
-    <div id="dossierDetails">جارٍ التحميل...</div>
+    <div id="dossierDetails">
+      <!-- Info Grid rendered dynamically -->
+    </div>
 
     <!-- Quick Operations -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:20px 0;">
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:22px 0;">
       <!-- Wallet Transfer -->
-      <div style="background:var(--bg-raised);padding:14px;border-radius:12px;border:1px solid var(--line-soft);">
-        <h4 style="margin:0 0 8px;color:#10b981;">💵 تحويل رصيد مالي (EGP)</h4>
-        <input type="number" id="quickWalletAmount" placeholder="المبلغ (مثال: 150)" class="form-control" style="margin-bottom:8px;">
-        <input type="text" id="quickWalletReason" placeholder="السبب (اختياري)" class="form-control" style="margin-bottom:8px;">
-        <button class="btn btn-primary btn-sm" style="width:100%;" onclick="submitQuickWallet()">تحويل الرصيد الآن ✓</button>
+      <div style="background:#f8fafc; padding:16px; border-radius:16px; border:1px solid #e2e8f0;">
+        <h4 style="margin:0 0 10px; color:#10b981; font-size:0.95rem; font-weight:700; display:flex; align-items:center; gap:6px;">💵 تحويل رصيد مالي (EGP)</h4>
+        <input type="number" id="quickWalletAmount" placeholder="المبلغ (مثال: 150)" class="form-control" style="margin-bottom:8px; border-radius:10px; background:#fff; color:#0f172a; border:1px solid #cbd5e1;">
+        <input type="text" id="quickWalletReason" placeholder="السبب (اختياري)" class="form-control" style="margin-bottom:10px; border-radius:10px; background:#fff; color:#0f172a; border:1px solid #cbd5e1;">
+        <button type="button" class="btn btn-primary btn-sm" style="width:100%; border-radius:10px; font-weight:700; background:#0B2545; color:#fff;" onclick="submitQuickWallet()">تحويل الرصيد الآن ✓</button>
       </div>
+
       <!-- Points Adjust -->
-      <div style="background:var(--bg-raised);padding:14px;border-radius:12px;border:1px solid var(--line-soft);">
-        <h4 style="margin:0 0 8px;color:var(--gold-light);">💎 تعديل النقاط</h4>
-        <input type="number" id="quickPointsAmount" placeholder="النقاط (مثال: 150 أو -50)" class="form-control" style="margin-bottom:8px;">
-        <input type="text" id="quickPointsReason" placeholder="السبب (اختياري)" class="form-control" style="margin-bottom:8px;">
-        <button class="btn btn-primary btn-sm" style="width:100%;" onclick="submitQuickPoints()">تعديل النقاط الآن ✓</button>
+      <div style="background:#f8fafc; padding:16px; border-radius:16px; border:1px solid #e2e8f0;">
+        <h4 style="margin:0 0 10px; color:#d97706; font-size:0.95rem; font-weight:700; display:flex; align-items:center; gap:6px;">💎 تعديل النقاط</h4>
+        <input type="number" id="quickPointsAmount" placeholder="النقاط (مثال: 150 أو -50)" class="form-control" style="margin-bottom:8px; border-radius:10px; background:#fff; color:#0f172a; border:1px solid #cbd5e1;">
+        <input type="text" id="quickPointsReason" placeholder="السبب (اختياري)" class="form-control" style="margin-bottom:10px; border-radius:10px; background:#fff; color:#0f172a; border:1px solid #cbd5e1;">
+        <button type="button" class="btn btn-primary btn-sm" style="width:100%; border-radius:10px; font-weight:700; background:#0B2545; color:#fff;" onclick="submitQuickPoints()">تعديل النقاط الآن ✓</button>
       </div>
     </div>
 
     <!-- Student Notes Section -->
-    <div style="margin-top:20px;border-top:1px solid var(--line-soft);padding-top:16px;">
-      <h4>📝 ملاحظات المشرفين والمدير عن الطالب</h4>
-      <div id="studentNotesList" style="max-height:160px;overflow-y:auto;margin-bottom:12px;"></div>
-      <div style="display:flex;gap:8px;">
-        <input type="text" id="newNoteInput" placeholder="أضف ملاحظة خاصة عن هذا الطالب..." class="form-control">
-        <button class="btn btn-line btn-sm" onclick="submitStudentNote()">إضافة ＋</button>
+    <div style="margin-top:22px; border-top:1px solid #f1f5f9; padding-top:18px;">
+      <h4 style="margin:0 0 12px; font-size:1rem; font-weight:700; color:#0f172a;">📝 ملاحظات المشرفين والمدير عن الطالب</h4>
+      <div id="studentNotesList" style="max-height:160px; overflow-y:auto; margin-bottom:12px;"></div>
+      <div style="display:flex; gap:8px;">
+        <input type="text" id="newNoteInput" placeholder="أضف ملاحظة خاصة عن هذا الطالب..." class="form-control" style="flex:1; border-radius:10px; background:#fff; color:#0f172a; border:1px solid #cbd5e1;">
+        <button type="button" class="btn btn-line btn-sm" onclick="submitStudentNote()" style="border-radius:10px; font-weight:700; padding:0 16px;">إضافة ＋</button>
       </div>
     </div>
+
   </div>
 </div>
 
@@ -1432,91 +1437,54 @@
     const modal = document.getElementById('studentDossierModal');
     if (!modal) return;
 
-    // Hide any other active modals immediately
-    const teacherModal = document.getElementById('addTeacherModal');
-    if (teacherModal) {
-      teacherModal.style.setProperty('display', 'none', 'important');
-      teacherModal.classList.remove('active', 'open', 'show');
-    }
-    const vouchersModal = document.getElementById('printVouchersModal');
-    if (vouchersModal) {
-      vouchersModal.style.setProperty('display', 'none', 'important');
-      vouchersModal.classList.remove('active', 'open', 'show');
-    }
-
     // Force show dossier modal instantly (0ms delay)
-    modal.classList.add('active', 'open', 'show');
-    modal.style.setProperty('display', 'flex', 'important');
-    modal.style.setProperty('z-index', '100000', 'important');
-    modal.style.setProperty('visibility', 'visible', 'important');
-    modal.style.setProperty('opacity', '1', 'important');
+    modal.style.cssText = 'display: flex !important; position: fixed !important; inset: 0 !important; width: 100vw !important; height: 100vh !important; background: rgba(15,23,42,0.8) !important; z-index: 999999 !important; align-items: center !important; justify-content: center !important; backdrop-filter: blur(4px) !important;';
 
-    // Reset inputs
-    const wAmount = document.getElementById('quickWalletAmount');
-    if (wAmount) wAmount.value = '';
-    const wReason = document.getElementById('quickWalletReason');
-    if (wReason) wReason.value = '';
-    const pAmount = document.getElementById('quickPointsAmount');
-    if (pAmount) pAmount.value = '';
-    const pReason = document.getElementById('quickPointsReason');
-    if (pReason) pReason.value = '';
-    const nInput = document.getElementById('newNoteInput');
-    if (nInput) nInput.value = '';
+    // Reset input fields
+    const wAmt = document.getElementById('quickWalletAmount'); if (wAmt) wAmt.value = '';
+    const wRsn = document.getElementById('quickWalletReason'); if (wRsn) wRsn.value = '';
+    const pAmt = document.getElementById('quickPointsAmount'); if (pAmt) pAmt.value = '';
+    const pRsn = document.getElementById('quickPointsReason'); if (pRsn) pRsn.value = '';
+    const nInp = document.getElementById('newNoteInput'); if (nInp) nInp.value = '';
 
-    // 1. Instant Synchronous Render from cache
+    // 1. Instant Synchronous Render from cache (0ms delay!)
     const cached = Array.isArray(allStudents) ? allStudents.find(s => s.id === studentId) : null;
-    const studentName = cached ? (cached.name || cached.username) : 'الطالب';
-    document.getElementById('dossierStudentName').textContent = `ملف الطالب: ${studentName}`;
-
-    const phone = cached?.studentProfile?.studentPhoneNumber || '—';
-    const pphone = cached?.studentProfile?.parentInfo?.parentPhoneNumber || '—';
-    const fatherJob = cached?.studentProfile?.parentInfo?.fatherJob || '—';
-    const wallet = cached?.walletBalance !== undefined ? Number(cached.walletBalance).toFixed(2) : '0.00';
-    const points = cached?.pointsBalance !== undefined ? cached.pointsBalance : 0;
-    const enrollmentsCount = cached?.courseEnrollments?.length || 0;
-
-    document.getElementById('dossierDetails').innerHTML = `
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:0.9rem;margin-bottom:12px;">
-        <div><b>رقم الهاتف:</b> <span dir="ltr">${phone}</span></div>
-        <div><b>هاتف ولي الأمر:</b> <span dir="ltr">${pphone}</span></div>
-        <div><b>وظيفة الأب:</b> ${fatherJob}</div>
-        <div><b>رصيد المحفظة:</b> <b style="color:#10b981;">${wallet} ج.م</b></div>
-        <div><b>رصيد النقاط:</b> <b style="color:var(--gold-light);">${points} نقطة</b></div>
-        <div id="dossierEnrollmentCount"><b>الكورسات المشترك بها:</b> ${enrollmentsCount} كورس</div>
-      </div>
-    `;
-
-    document.getElementById('studentNotesList').innerHTML = '<p style="color:var(--ink-dim);font-size:0.85rem;margin:4px 0;">جارٍ فحص الملاحظات والعمليات... ⏳</p>';
+    renderDossierInfo(cached || { id: studentId, username: 'الطالب' });
+    document.getElementById('studentNotesList').innerHTML = '<p style="color:#64748b; font-size:0.85rem; margin:4px 0;">جارٍ فحص الملاحظات والعمليات... ⏳</p>';
 
     // 2. Fetch full background profile
     try {
       const student = await window.KhatwaAPI.admin.getStudentFullProfile(studentId);
       if (!student || currentActiveStudentId !== studentId) return;
-
-      const fPhone = student.studentProfile?.studentPhoneNumber || phone;
-      const fPphone = student.studentProfile?.parentInfo?.parentPhoneNumber || pphone;
-      const fFatherJob = student.studentProfile?.parentInfo?.fatherJob || fatherJob;
-      const fWallet = Number(student.walletBalance || 0).toFixed(2);
-      const fPoints = student.pointsBalance || 0;
-      const fCourses = student.courseEnrollments?.length || 0;
-
-      document.getElementById('dossierStudentName').textContent = `ملف الطالب: ${student.name || student.username}`;
-      document.getElementById('dossierDetails').innerHTML = `
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:0.9rem;margin-bottom:12px;">
-          <div><b>رقم الهاتف:</b> <span dir="ltr">${fPhone}</span></div>
-          <div><b>هاتف ولي الأمر:</b> <span dir="ltr">${fPphone}</span></div>
-          <div><b>وظيفة الأب:</b> ${fFatherJob}</div>
-          <div><b>رصيد المحفظة:</b> <b style="color:#10b981;">${fWallet} ج.م</b></div>
-          <div><b>رصيد النقاط:</b> <b style="color:var(--gold-light);">${fPoints} نقطة</b></div>
-          <div><b>الكورسات المشترك بها:</b> ${fCourses} كورس</div>
-        </div>
-      `;
-
+      renderDossierInfo(student);
       renderNotesList(student.studentNotes || []);
     } catch (err) {
       console.warn('Error loading full profile background details:', err);
       renderNotesList([]);
     }
+  }
+
+  function renderDossierInfo(s) {
+    const name = s.name || s.username || 'طالب';
+    document.getElementById('dossierStudentName').textContent = `ملف الطالب: ${name}`;
+
+    const phone = s.studentProfile?.studentPhoneNumber || s.phone || '—';
+    const pphone = s.studentProfile?.parentInfo?.parentPhoneNumber || s.parentPhone || '—';
+    const fatherJob = s.studentProfile?.parentInfo?.fatherJob || s.fatherJob || '—';
+    const wallet = s.walletBalance !== undefined ? Number(s.walletBalance).toFixed(2) : '0.00';
+    const points = s.pointsBalance !== undefined ? s.pointsBalance : 0;
+    const enrollmentsCount = s.courseEnrollments?.length || s.enrolledCount || 0;
+
+    document.getElementById('dossierDetails').innerHTML = `
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; font-size:0.92rem; color:#1e293b; background:#f8fafc; padding:16px; border-radius:14px; border:1px solid #e2e8f0; margin-bottom:12px;">
+        <div><b>رقم الهاتف:</b> <span dir="ltr" style="font-weight:600;">${phone}</span></div>
+        <div><b>هاتف ولي الأمر:</b> <span dir="ltr" style="font-weight:600;">${pphone}</span></div>
+        <div><b>وظيفة الأب:</b> <span style="font-weight:600;">${fatherJob}</span></div>
+        <div><b>رصيد المحفظة:</b> <b style="color:#10b981;">${wallet} ج.م</b></div>
+        <div><b>رصيد النقاط:</b> <b style="color:#d97706;">${points} نقطة</b></div>
+        <div><b>الكورسات المشترك بها:</b> <span style="font-weight:600;">${enrollmentsCount} كورس</span></div>
+      </div>
+    `;
   }
 
   function closeStudentDossier() {
