@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>لوحة التحكم والإدارة العامة | خطوة</title>
 <link rel="icon" type="image/jpeg" href="logo/logo-khatwa.jpeg">
 <link rel="stylesheet" href="css/style.css">
@@ -66,6 +69,142 @@
     width: 100%;
     font-family: inherit;
     font-size: 0.9rem;
+  }
+
+  /* Voucher Card & Access Codes Styles */
+  .voucher-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+  }
+  .voucher-card {
+    background: linear-gradient(135deg, rgba(11, 37, 69, 0.95) 0%, rgba(19, 64, 116, 0.9) 100%);
+    border: 2px dashed rgba(245, 158, 11, 0.45);
+    border-radius: 14px;
+    padding: 16px 18px;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 160px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+    position: relative;
+    overflow: hidden;
+  }
+  .voucher-card::before {
+    content: '';
+    position: absolute;
+    top: -30px;
+    right: -30px;
+    width: 90px;
+    height: 90px;
+    background: radial-gradient(circle, rgba(245, 158, 11, 0.25) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .voucher-code-box {
+    font-family: monospace;
+    font-size: 1.18rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+    background: rgba(0, 0, 0, 0.45);
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(245, 158, 11, 0.6);
+    color: #fde68a;
+    text-align: center;
+    user-select: all;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  /* Admin Navigation Tabs Styling */
+  .admin-nav-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.08);
+    padding-bottom: 12px;
+    margin-bottom: 24px;
+  }
+  .admin-nav-tab {
+    background: rgba(255, 255, 255, 0.035);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    padding: 10px 18px;
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--ink-dim);
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    user-select: none;
+  }
+  .admin-nav-tab:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--ink);
+    border-color: rgba(255, 255, 255, 0.25);
+    transform: translateY(-1px);
+  }
+  .admin-nav-tab.active {
+    background: linear-gradient(135deg, #0B2545 0%, #134074 100%);
+    color: #ffffff;
+    border-color: #f59e0b;
+    box-shadow: 0 4px 15px rgba(11, 37, 69, 0.45);
+  }
+  .admin-nav-tab .tab-count-badge {
+    background: rgba(255, 255, 255, 0.15);
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    color: inherit;
+  }
+  .admin-nav-tab.active .tab-count-badge {
+    background: rgba(245, 158, 11, 0.3);
+    color: #fde68a;
+    border: 1px solid rgba(245, 158, 11, 0.5);
+  }
+
+  @media print {
+    body * {
+      visibility: hidden !important;
+    }
+    #printVouchersModal, #printVouchersModal * {
+      visibility: visible !important;
+    }
+    #printVouchersModal {
+      position: absolute !important;
+      left: 0 !important;
+      top: 0 !important;
+      width: 100% !important;
+      background: #fff !important;
+      color: #000 !important;
+      display: block !important;
+    }
+    .print-hide {
+      display: none !important;
+    }
+    .print-grid {
+      display: grid !important;
+      grid-template-columns: repeat(2, 1fr) !important;
+      gap: 16px !important;
+      padding: 16px !important;
+    }
+    .print-voucher-item {
+      border: 2px dashed #333 !important;
+      border-radius: 10px !important;
+      padding: 14px !important;
+      background: #fff !important;
+      color: #111 !important;
+      page-break-inside: avoid !important;
+    }
+    .print-voucher-item .voucher-code-box {
+      background: #f1f5f9 !important;
+      color: #0f172a !important;
+      border: 1.5px solid #64748b !important;
+    }
   }
 
   /* Ultra-Modern Executive Metric Cards */
@@ -283,11 +422,25 @@
   </div>
 
   <!-- Admin Main Navigation Tabs -->
-  <div class="tab-row" style="margin-bottom:20px;">
-    <button class="tab active" data-target="tabStudents" onclick="switchAdminTab('tabStudents', this)">🎓 إدارة ومتابعة الطلاب (<span id="tabBadgeStudents">0</span>)</button>
-    <button class="tab" data-target="tabTeachers" onclick="switchAdminTab('tabTeachers', this)">👨‍🏫 إدارة المدرسين (<span id="tabBadgeTeachers">0</span>)</button>
-    <button class="tab" data-target="tabPointRequests" onclick="switchAdminTab('tabPointRequests', this)">💳 مراجعة طلبات الشحن</button>
-    <button class="tab" data-target="tabSecurity" onclick="switchAdminTab('tabSecurity', this)">🛡️ سجلات الأمان والنظام</button>
+  <div class="admin-nav-tabs">
+    <button class="admin-nav-tab active" data-target="tabStudents" onclick="switchAdminTab('tabStudents', this)">
+      <span>🎓 إدارة ومتابعة الطلاب</span>
+      <span class="tab-count-badge" id="tabBadgeStudents">0</span>
+    </button>
+    <button class="admin-nav-tab" data-target="tabTeachers" onclick="switchAdminTab('tabTeachers', this)">
+      <span>👨‍🏫 إدارة المدرسين</span>
+      <span class="tab-count-badge" id="tabBadgeTeachers">0</span>
+    </button>
+    <button class="admin-nav-tab" data-target="tabAccessCodes" onclick="switchAdminTab('tabAccessCodes', this)">
+      <span>🎟️ كروت وأكواد الشحن</span>
+      <span class="tab-count-badge" id="tabBadgeAccessCodes">0</span>
+    </button>
+    <button class="admin-nav-tab" data-target="tabPointRequests" onclick="switchAdminTab('tabPointRequests', this)">
+      <span>💳 مراجعة طلبات الشحن</span>
+    </button>
+    <button class="admin-nav-tab" data-target="tabSecurity" onclick="switchAdminTab('tabSecurity', this)">
+      <span>🛡️ سجلات الأمان والنظام</span>
+    </button>
   </div>
 
   <!-- Tab 1: Students Directory -->
@@ -348,6 +501,88 @@
     </div>
   </div>
 
+  <!-- Tab 3: Access Codes Management -->
+  <div id="tabAccessCodes" class="admin-tab-content" style="display:none;">
+    <!-- Batch Generator Box -->
+    <div style="background:linear-gradient(135deg, rgba(11, 37, 69, 0.4) 0%, rgba(19, 64, 116, 0.25) 100%);border:1px solid var(--line);border-radius:var(--radius);padding:22px;margin-bottom:24px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+        <div>
+          <h3 style="margin:0 0 4px;display:flex;align-items:center;gap:8px;">
+            <span>🎟️ توليد كروت وأكواد شحن النقاط</span>
+            <span class="tag tag-ok" style="font-size:0.75rem;">توليد فوري ومؤمّن</span>
+          </h3>
+          <p style="margin:0;color:var(--ink-dim);font-size:0.88rem;">يمكنك توليد مجموعة كروت شحن مطبوعة أو إلكترونية بنقاط محددة وتوزيعها على الطلاب للشحن الفوري.</p>
+        </div>
+      </div>
+
+      <form id="generateAccessCodesForm" onsubmit="handleGenerateAccessCodes(event)" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)) auto;gap:14px;align-items:flex-end;">
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label" style="font-weight:600;font-size:0.85rem;margin-bottom:6px;display:block;">عدد النقاط لكل كارت <span style="color:var(--err);">*</span></label>
+          <div style="position:relative;">
+            <input type="number" id="accessCodePoints" min="1" max="10000" value="50" required class="form-control" style="border-radius:10px;padding:10px 14px;font-weight:700;color:var(--gold-light);">
+            <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:0.8rem;color:var(--ink-dim);">💎 نقطة</span>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label" style="font-weight:600;font-size:0.85rem;margin-bottom:6px;display:block;">عدد الكروت المراد توليدها <span style="color:var(--err);">*</span></label>
+          <input type="number" id="accessCodeCount" min="1" max="50" value="5" required class="form-control" style="border-radius:10px;padding:10px 14px;font-weight:700;">
+        </div>
+
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label" style="font-weight:600;font-size:0.85rem;margin-bottom:6px;display:block;">مدة الصلاحية بالساعات (اختياري)</label>
+          <input type="number" id="accessCodeExpiryHours" min="1" placeholder="مثال: 720 (شهر)" class="form-control" style="border-radius:10px;padding:10px 14px;">
+        </div>
+
+        <div>
+          <button type="submit" id="btnGenerateCodes" class="btn btn-primary" style="height:45px;padding:0 24px;border-radius:10px;font-weight:700;display:flex;align-items:center;gap:8px;white-space:nowrap;">
+            <span>⚡ توليد الكروت الآن</span>
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Active Codes List & Filter -->
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:14px;">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <div class="search-box" style="max-width:280px;">
+          <span>🔍</span>
+          <input type="text" id="accessCodeSearchInput" placeholder="بحث بكود الشحن أو المعرف..." oninput="filterAccessCodes()">
+        </div>
+        <div style="display:flex;gap:4px;">
+          <button class="btn btn-line btn-sm" id="btnFilterCodeAll" style="font-size:0.8rem;padding:6px 12px;background:var(--bg-raised);" onclick="filterAccessCodesByStatus('ALL', this)">الكل</button>
+          <button class="btn btn-line btn-sm" id="btnFilterCodeActive" style="font-size:0.8rem;padding:6px 12px;" onclick="filterAccessCodesByStatus('ACTIVE', this)">نشط متاح ✓</button>
+          <button class="btn btn-line btn-sm" id="btnFilterCodeRedeemed" style="font-size:0.8rem;padding:6px 12px;" onclick="filterAccessCodesByStatus('REDEEMED', this)">تم استخدامه</button>
+          <button class="btn btn-line btn-sm" id="btnFilterCodeRevoked" style="font-size:0.8rem;padding:6px 12px;" onclick="filterAccessCodesByStatus('REVOKED', this)">ملغي</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span style="font-size:0.85rem;color:var(--ink-dim);" id="accessCodesCountLabel">عرض 0 كود</span>
+        <button class="btn btn-line btn-sm" onclick="loadAccessCodes()" title="تحديث">🔄</button>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>معرف الكود</th>
+            <th>قيمة النقاط</th>
+            <th>الحالة</th>
+            <th>المنشئ</th>
+            <th>المستخدم (الطالب)</th>
+            <th>تاريخ الإنشاء</th>
+            <th>تاريخ الشحن / الصلاحية</th>
+            <th>الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody id="accessCodesTableBody">
+          <tr><td colspan="8" style="text-align:center;color:var(--ink-dim);padding:30px;">جارٍ تحميل أكواد الشحن...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
   <!-- Tab 3: Point Requests Review -->
   <div id="tabPointRequests" class="admin-tab-content" style="display:none;">
     <div class="block">
@@ -403,7 +638,7 @@
 </div>
 
 <!-- Modal: Add New Teacher (Admin-only) -->
-<div class="modal-overlay" id="addTeacherModal" onclick="if(event.target===this) closeAddTeacherModal()">
+<div class="modal-overlay" id="addTeacherModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;align-items:center;justify-content:center;" onclick="if(event.target===this) closeAddTeacherModal()">
   <div class="modal-card" style="max-width:580px;width:95%;padding:0;border-radius:20px;overflow:hidden;">
 
     <!-- Modal Header — branded with site colours -->
@@ -495,11 +730,11 @@
 </div>
 
 <!-- Modal: Student Profile Dossier & Notes & Wallet -->
-<div class="modal-overlay" id="studentDossierModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999;align-items:center;justify-content:center;">
-  <div style="background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius);max-width:620px;width:95%;padding:26px;max-height:90vh;overflow-y:auto;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-      <h3 style="margin:0;" id="dossierStudentName">ملف الطالب: —</h3>
-      <button class="btn btn-line btn-sm" onclick="closeStudentDossier()">✕ إغلاق</button>
+<div class="modal-overlay" id="studentDossierModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:10000;align-items:center;justify-content:center;backdrop-filter:blur(4px);" onclick="if(event.target===this) closeStudentDossier()">
+  <div style="background:var(--bg-card);border:1px solid var(--line);border-radius:20px;max-width:640px;width:95%;padding:28px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 40px rgba(0,0,0,0.5);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;border-bottom:1px solid var(--line-soft);padding-bottom:12px;">
+      <h3 style="margin:0;font-size:1.2rem;display:flex;align-items:center;gap:8px;" id="dossierStudentName">📂 ملف الطالب: —</h3>
+      <button type="button" class="btn btn-line btn-sm" onclick="closeStudentDossier()" style="padding:4px 12px;">✕ إغلاق</button>
     </div>
     
     <div id="dossierDetails">جارٍ التحميل...</div>
@@ -534,33 +769,88 @@
   </div>
 </div>
 
+<!-- Modal: Generated Voucher Cards & Print Preview -->
+<div class="modal-overlay" id="printVouchersModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:1000;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
+  <div class="modal-card" style="max-width:850px;width:95%;padding:0;border-radius:20px;overflow:hidden;background:var(--bg-card);border:1px solid var(--line);max-height:92vh;display:flex;flex-direction:column;">
+    
+    <!-- Modal Header (hidden on print) -->
+    <div class="print-hide" style="background:linear-gradient(135deg, #0B2545 0%, #134074 100%);padding:18px 24px;display:flex;align-items:center;justify-content:space-between;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span style="font-size:1.6rem;">🎟️</span>
+        <div>
+          <h3 style="margin:0 0 2px;color:#fff;font-size:1.15rem;font-weight:700;">كروت الشحن المولدة بنجاح</h3>
+          <p style="margin:0;color:rgba(255,255,255,0.75);font-size:0.82rem;" id="printModalSubTitle">تم إنشاء الكروت وجاهزة للنسخ أو الطباعة والتوزيع</p>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button type="button" class="btn btn-line btn-sm" onclick="copyAllGeneratedCodes()" style="color:#fde68a;border-color:rgba(253,230,138,0.4);font-weight:600;">📋 نسخ كل الأكواد</button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="printVoucherCards()" style="font-weight:700;">🖨️ طباعة كروت الشحن</button>
+        <button type="button" onclick="closePrintCodesModal()" style="background:rgba(255,255,255,0.15);border:none;color:#fff;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;">✕</button>
+      </div>
+    </div>
+
+    <!-- Printable Cards Area -->
+    <div style="padding:24px;overflow-y:auto;flex:1;" id="printableVouchersArea">
+      <div class="voucher-grid print-grid" id="generatedVouchersGrid">
+        <!-- Dynamic Voucher Cards injected here -->
+      </div>
+    </div>
+
+    <!-- Modal Footer (hidden on print) -->
+    <div class="print-hide" style="padding:14px 24px;background:var(--bg-raised);border-top:1px solid var(--line-soft);display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-size:0.85rem;color:var(--ink-dim);">💡 يمكن للطالب إدخال هذا الكود في خانة "شحن كود مسبق الدفع" بحسابه لشحن النقاط فوراً.</span>
+      <button type="button" class="btn btn-line btn-sm" onclick="closePrintCodesModal()">إغلاق</button>
+    </div>
+  </div>
+</div>
+
 <script src="js/i18n.js"></script>
 <script src="js/api.js"></script>
 <script>
   let allStudents = [];
+  let allAccessCodes = [];
+  let newlyGeneratedCodes = [];
+  let currentAccessCodeFilter = 'ALL';
   let currentActiveStudentId = null;
 
   document.addEventListener('DOMContentLoaded', async () => {
-    const user = window.KhatwaAPI.getUser();
-    if (!user || (user.role !== 'ADMIN' && user.username !== 'sameryasser-khatwa')) {
-      if (user && (user.username === 'sameryasser-khatwa' || user.username?.toLowerCase()?.includes('sameryasser'))) {
-        user.role = 'ADMIN';
-        window.KhatwaAPI.setUser(user);
-      } else {
-        alert('هذه الصفحة مخصصة لمدير المنصة العام فقط.');
-        window.location.href = 'login.html';
-        return;
+    let user = window.KhatwaAPI.getUser();
+    let token = window.KhatwaAPI.getToken();
+
+    if (!user || !token) {
+      const refreshed = await window.KhatwaAPI.auth.silentRefresh();
+      if (refreshed) {
+        user = await window.KhatwaAPI.fetchLiveUser();
       }
     }
+
+    const isAdmin = user && (user.role === 'ADMIN' || user.username === 'sameryasser-khatwa' || user.username?.toLowerCase()?.includes('sameryasser'));
+    if (!isAdmin) {
+      alert('هذه الصفحة مخصصة لمدير المنصة العام فقط. سيتم نقلك لصفحة الدخول.');
+      window.location.href = 'login.html';
+      return;
+    }
+
     window.KhatwaAPI.syncNav();
     await refreshAdminData();
   });
 
   function switchAdminTab(tabId, tabBtn) {
     document.querySelectorAll('.admin-tab-content').forEach(el => el.style.display = 'none');
-    document.querySelectorAll('.tab-row .tab').forEach(b => b.classList.remove('active'));
-    document.getElementById(tabId).style.display = 'block';
-    tabBtn.classList.add('active');
+    document.querySelectorAll('.admin-nav-tabs .admin-nav-tab').forEach(b => b.classList.remove('active'));
+    
+    const target = document.getElementById(tabId);
+    if (target) {
+      target.style.display = 'block';
+    }
+    
+    if (tabBtn) {
+      tabBtn.classList.add('active');
+    }
+
+    if (tabId === 'tabAccessCodes') {
+      loadAccessCodes();
+    }
   }
 
   async function refreshAdminData() {
@@ -568,6 +858,7 @@
       loadAnalytics(),
       loadStudents(),
       loadTeachers(),
+      loadAccessCodes(),
       loadPointRequests(),
       loadVideoLogs(),
     ]);
@@ -589,14 +880,19 @@
   }
 
   async function loadStudents() {
+    const tbody = document.getElementById('studentsTableBody');
     try {
       allStudents = await window.KhatwaAPI.admin.getStudents();
+      document.getElementById('tabBadgeStudents').textContent = allStudents.length;
+      renderStudents(allStudents);
     } catch (e) {
       console.error('Failed to load students:', e);
       allStudents = [];
+      document.getElementById('tabBadgeStudents').textContent = '0';
+      if (tbody) {
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--err);padding:24px;">⚠️ تعذر تحميل قائمة الطلاب: ${e.message || 'خطأ في الاتصال بالخادم'}. تأكد من الاتصال وجلسة الدخول.</td></tr>`;
+      }
     }
-    document.getElementById('tabBadgeStudents').textContent = allStudents.length;
-    renderStudents(allStudents);
   }
 
   function renderStudents(list) {
@@ -629,7 +925,7 @@
           <td>${dateStr}</td>
           <td>
             <div style="display:flex;gap:6px;">
-              <button class="btn btn-primary btn-sm" style="padding:4px 10px;font-size:.8rem;" onclick="openStudentDossier('${s.id}')">📂 الملف والعمليات</button>
+              <button type="button" class="btn btn-primary btn-sm" data-action="open-dossier" data-student-id="${s.id}" style="padding:4px 10px;font-size:.8rem;cursor:pointer;" onclick="openStudentDossier('${s.id}')">📂 الملف والعمليات</button>
             </div>
           </td>
         </tr>
@@ -678,15 +974,249 @@
             <td>⭐ ${(profile.rating || 5.0).toFixed(1)}</td>
             <td>${statusBadge}</td>
             <td>
-              <button class="btn btn-line btn-sm" onclick="window.KhatwaAPI.admin.toggleTeacherActive('${t.id}').then(() => loadTeachers())">
-                ${t.isActive !== false ? 'تعطيل' : 'تفعيل'}
-              </button>
+              <div style="display:flex;gap:6px;align-items:center;">
+                <button class="btn btn-line btn-sm" onclick="toggleTeacherActive('${t.id}')">
+                  ${t.isActive !== false ? 'تعطيل' : 'تفعيل'}
+                </button>
+                <button class="btn btn-line btn-sm" style="color:var(--err,#ef4444);border-color:rgba(239,68,68,0.35);font-size:0.8rem;padding:4px 8px;" onclick="confirmDeleteTeacher('${t.id}', '${(profile.displayName || t.username).replace(/'/g, "\\'")}')">
+                  🗑️ حذف
+                </button>
+              </div>
             </td>
           </tr>
         `;
       }).join('');
+
+      if (window.KhatwaI18n) window.KhatwaI18n.applyLanguage();
     } catch (e) {
       console.error('Failed to load teachers:', e);
+    }
+  }
+
+  async function toggleTeacherActive(id) {
+    try {
+      await window.KhatwaAPI.admin.toggleTeacherActive(id);
+      await loadTeachers();
+    } catch (e) {
+      alert(e.message || 'حدث خطأ أثناء تغيير حالة المدرس');
+    }
+  }
+
+  async function confirmDeleteTeacher(id, displayName) {
+    const ok = confirm(`هل أنت متأكد من رغبتك في حذف حساب المدرس (${displayName}) نهائياً؟\n\n⚠️ تحذير: سيتم مسح اسم المستخدم وكلمة المرور وحسابه بالكامل من قاعدة البيانات فوراً.`);
+    if (!ok) return;
+
+    try {
+      const res = await window.KhatwaAPI.admin.deleteTeacher(id);
+      alert(res.message || 'تم حذف حساب المدرس وبياناته من قاعدة البيانات بنجاح.');
+      await loadTeachers();
+      await loadAnalytics();
+    } catch (err) {
+      alert(err.message || 'حدث خطأ أثناء حذف المدرس');
+    }
+  }
+
+  // ─── Access Codes (Voucher Cards) Handlers ────────────────────────────────
+  async function loadAccessCodes() {
+    try {
+      allAccessCodes = await window.KhatwaAPI.admin.getAccessCodes(currentAccessCodeFilter);
+      document.getElementById('tabBadgeAccessCodes').textContent = allAccessCodes.length;
+      renderAccessCodes(allAccessCodes);
+    } catch (e) {
+      console.error('Failed to load access codes:', e);
+      allAccessCodes = [];
+      renderAccessCodes([]);
+    }
+  }
+
+  function renderAccessCodes(list) {
+    const tbody = document.getElementById('accessCodesTableBody');
+    document.getElementById('accessCodesCountLabel').textContent = `عرض ${list.length} كود`;
+
+    if (!list || list.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--ink-dim);padding:30px;">لا توجد كروت أو أكواد شحن مطابقة حالياً</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = list.map(c => {
+      const isRedeemed = c.status === 'REDEEMED' || c.redeemedBy;
+      const isRevoked = c.status === 'REVOKED';
+      const isExpired = c.status === 'EXPIRED';
+      const isActive = c.status === 'ACTIVE' && !isRedeemed && !isRevoked;
+
+      let statusBadge = '<span class="tag tag-ok">نشط متاح ✓</span>';
+      if (isRedeemed) statusBadge = '<span class="tag" style="background:rgba(59, 130, 246, 0.2);color:#60a5fa;border:1px solid rgba(59, 130, 246, 0.4);">تم الشحن</span>';
+      else if (isRevoked) statusBadge = '<span class="tag tag-err">ملغي ✕</span>';
+      else if (isExpired) statusBadge = '<span class="tag tag-dim">منتهي الصلاحية</span>';
+
+      const createdDate = c.createdAt ? (window.KhatwaI18n ? window.KhatwaI18n.formatDate(c.createdAt) : new Date(c.createdAt).toLocaleDateString()) : '—';
+      const redeemedDate = c.redeemedAt ? (window.KhatwaI18n ? window.KhatwaI18n.formatDate(c.redeemedAt) : new Date(c.redeemedAt).toLocaleDateString()) : (c.expiresAt ? `ينتهي: ${new Date(c.expiresAt).toLocaleDateString()}` : 'دائم');
+      const studentName = c.redeemedBy?.username ? `<b>@${c.redeemedBy.username}</b>` : '<span style="color:var(--ink-dim);">لم يُستخدم بعد</span>';
+      const creatorName = c.createdBy?.username ? `@${c.createdBy.username}` : 'الإدارة';
+
+      return `
+        <tr>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span style="font-family:monospace;font-weight:700;font-size:0.88rem;color:var(--ink-dim);">${c.id.slice(-8)}</span>
+              <button class="btn btn-text btn-sm" onclick="copyCodeToClipboard('${c.id}')" title="نسخ المعرف" style="padding:2px 4px;font-size:0.75rem;">📋</button>
+            </div>
+          </td>
+          <td><b style="color:var(--gold-light);font-size:1.05rem;">+${c.points}</b> 💎 نقطة</td>
+          <td>${statusBadge}</td>
+          <td style="font-size:0.85rem;color:var(--ink-dim);">${creatorName}</td>
+          <td>${studentName}</td>
+          <td>${createdDate}</td>
+          <td style="font-size:0.85rem;color:var(--ink-dim);">${redeemedDate}</td>
+          <td>
+            <div style="display:flex;gap:6px;align-items:center;">
+              ${isActive ? `
+                <button class="btn btn-line btn-sm" style="color:var(--err);border-color:rgba(239,68,68,0.3);padding:3px 8px;font-size:0.78rem;" onclick="handleRevokeCode('${c.id}')" title="إلغاء وإبطال هذا الكود">
+                  ✕ إبطال
+                </button>
+              ` : `
+                <span style="color:var(--ink-faint);font-size:0.8rem;">—</span>
+              `}
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    if (window.KhatwaI18n) window.KhatwaI18n.applyLanguage();
+  }
+
+  function filterAccessCodes() {
+    const q = document.getElementById('accessCodeSearchInput').value.trim().toLowerCase();
+    if (!q) return renderAccessCodes(allAccessCodes);
+    const filtered = allAccessCodes.filter(c => {
+      const cid = (c.id || '').toLowerCase();
+      const student = (c.redeemedBy?.username || '').toLowerCase();
+      const creator = (c.createdBy?.username || '').toLowerCase();
+      const pts = String(c.points || '');
+      return cid.includes(q) || student.includes(q) || creator.includes(q) || pts.includes(q);
+    });
+    renderAccessCodes(filtered);
+  }
+
+  async function filterAccessCodesByStatus(status, btn) {
+    currentAccessCodeFilter = status;
+    document.querySelectorAll('#tabAccessCodes .btn-line').forEach(b => b.style.background = 'transparent');
+    if (btn) btn.style.background = 'var(--bg-raised)';
+    await loadAccessCodes();
+  }
+
+  async function handleGenerateAccessCodes(event) {
+    event.preventDefault();
+    const points = parseInt(document.getElementById('accessCodePoints').value, 10);
+    const count = parseInt(document.getElementById('accessCodeCount').value, 10);
+    const expiryHours = parseInt(document.getElementById('accessCodeExpiryHours').value, 10) || undefined;
+
+    if (!points || points < 1) {
+      alert('يرجى تحديد عدد نقاط صحيح للكارت');
+      return;
+    }
+    if (!count || count < 1 || count > 50) {
+      alert('يرجى تحديد عدد كروت بين 1 و 50');
+      return;
+    }
+
+    const btn = document.getElementById('btnGenerateCodes');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span>جارٍ التوليد... ⏳</span>';
+
+    try {
+      const res = await window.KhatwaAPI.admin.createAccessCode({
+        points,
+        count,
+        expiresInHours: expiryHours,
+      });
+
+      const codes = res.codes || [res];
+      newlyGeneratedCodes = codes;
+
+      await loadAccessCodes();
+      await loadAnalytics();
+
+      openPrintCodesModal(codes, points);
+    } catch (err) {
+      alert(err.message || 'حدث خطأ أثناء توليد الكروت');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+    }
+  }
+
+  function openPrintCodesModal(codes, points) {
+    const modal = document.getElementById('printVouchersModal');
+    const grid = document.getElementById('generatedVouchersGrid');
+    document.getElementById('printModalSubTitle').textContent = `تم توليد عدد (${codes.length}) كارت شحن بقيمة ${points} نقطة لكل كارت.`;
+
+    grid.innerHTML = codes.map((item, idx) => `
+      <div class="voucher-card print-voucher-item">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <img src="logo/logo-khatwa.jpeg" alt="خطوة" style="width:30px;height:30px;border-radius:6px;object-fit:cover;">
+            <b style="font-size:1rem;color:#fff;">منصة خطوة التعليمية</b>
+          </div>
+          <span class="admin-badge" style="background:#f59e0b;color:#000;font-size:0.72rem;font-weight:800;">كارت شحن مسبق الدفع</span>
+        </div>
+
+        <div style="margin:10px 0;text-align:center;">
+          <div style="font-size:0.8rem;color:rgba(255,255,255,0.75);margin-bottom:2px;">قيمة الرصيد التعليمي</div>
+          <div style="font-size:1.5rem;font-weight:900;color:#fcd34d;">+${item.points} نقطة 💎</div>
+        </div>
+
+        <div class="voucher-code-box">
+          <span style="direction:ltr;letter-spacing:2.5px;">${item.code || item.id}</span>
+          <button type="button" class="btn btn-text btn-sm print-hide" onclick="copyCodeToClipboard('${item.code || item.id}')" title="نسخ الكود" style="color:#fde68a;padding:2px 6px;font-size:0.8rem;">📋</button>
+        </div>
+
+        <div style="margin-top:8px;font-size:0.72rem;color:rgba(255,255,255,0.65);text-align:center;display:flex;justify-content:space-between;">
+          <span>شحن مباشر عبر حساب الطالب</span>
+          <span>كارت #${idx + 1}</span>
+        </div>
+      </div>
+    `).join('');
+
+    modal.style.display = 'flex';
+  }
+
+  function closePrintCodesModal() {
+    document.getElementById('printVouchersModal').style.display = 'none';
+  }
+
+  function copyCodeToClipboard(code) {
+    navigator.clipboard.writeText(code).then(() => {
+      alert(`تم نسخ الكود بنجاح: ${code}`);
+    }).catch(() => {
+      prompt('انسخ الكود:', code);
+    });
+  }
+
+  function copyAllGeneratedCodes() {
+    if (!newlyGeneratedCodes || newlyGeneratedCodes.length === 0) return;
+    const textList = newlyGeneratedCodes.map((c, i) => `${i + 1}. كود: ${c.code || c.id} (+${c.points} نقطة)`).join('\n');
+    navigator.clipboard.writeText(textList).then(() => {
+      alert('✓ تم نسخ قائمة جميع الأكواد المولدة إلى الحافظة بنجاح!');
+    }).catch(() => {
+      prompt('قائمة الأكواد:', textList);
+    });
+  }
+
+  function printVoucherCards() {
+    window.print();
+  }
+
+  async function handleRevokeCode(id) {
+    if (!confirm('هل أنت متأكد من رغبتك في إبطال وإلغاء هذا الكود نهائياً؟\nلن يتمكن أي طالب من استخدامه بعد الإلغاء.')) return;
+    try {
+      await window.KhatwaAPI.admin.revokeAccessCode(id);
+      alert('✓ تم إبطال الكود بنجاح');
+      await loadAccessCodes();
+    } catch (err) {
+      alert(err.message || 'فشل إبطال الكود');
     }
   }
 
@@ -897,40 +1427,116 @@
 
   // ─── Modal: Student Dossier & Notes & Wallet ──────────────────────────────
   async function openStudentDossier(studentId) {
+    if (!studentId) return;
     currentActiveStudentId = studentId;
-    document.getElementById('studentDossierModal').style.display = 'flex';
-    document.getElementById('dossierDetails').innerHTML = 'جارٍ جلب الملف الشامل من قاعدة البيانات...';
+    const modal = document.getElementById('studentDossierModal');
+    if (!modal) return;
 
+    // Hide any other active modals immediately
+    const teacherModal = document.getElementById('addTeacherModal');
+    if (teacherModal) {
+      teacherModal.style.setProperty('display', 'none', 'important');
+      teacherModal.classList.remove('active', 'open', 'show');
+    }
+    const vouchersModal = document.getElementById('printVouchersModal');
+    if (vouchersModal) {
+      vouchersModal.style.setProperty('display', 'none', 'important');
+      vouchersModal.classList.remove('active', 'open', 'show');
+    }
+
+    // Force show dossier modal instantly (0ms delay)
+    modal.classList.add('active', 'open', 'show');
+    modal.style.setProperty('display', 'flex', 'important');
+    modal.style.setProperty('z-index', '100000', 'important');
+    modal.style.setProperty('visibility', 'visible', 'important');
+    modal.style.setProperty('opacity', '1', 'important');
+
+    // Reset inputs
+    const wAmount = document.getElementById('quickWalletAmount');
+    if (wAmount) wAmount.value = '';
+    const wReason = document.getElementById('quickWalletReason');
+    if (wReason) wReason.value = '';
+    const pAmount = document.getElementById('quickPointsAmount');
+    if (pAmount) pAmount.value = '';
+    const pReason = document.getElementById('quickPointsReason');
+    if (pReason) pReason.value = '';
+    const nInput = document.getElementById('newNoteInput');
+    if (nInput) nInput.value = '';
+
+    // 1. Instant Synchronous Render from cache
+    const cached = Array.isArray(allStudents) ? allStudents.find(s => s.id === studentId) : null;
+    const studentName = cached ? (cached.name || cached.username) : 'الطالب';
+    document.getElementById('dossierStudentName').textContent = `ملف الطالب: ${studentName}`;
+
+    const phone = cached?.studentProfile?.studentPhoneNumber || '—';
+    const pphone = cached?.studentProfile?.parentInfo?.parentPhoneNumber || '—';
+    const fatherJob = cached?.studentProfile?.parentInfo?.fatherJob || '—';
+    const wallet = cached?.walletBalance !== undefined ? Number(cached.walletBalance).toFixed(2) : '0.00';
+    const points = cached?.pointsBalance !== undefined ? cached.pointsBalance : 0;
+    const enrollmentsCount = cached?.courseEnrollments?.length || 0;
+
+    document.getElementById('dossierDetails').innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:0.9rem;margin-bottom:12px;">
+        <div><b>رقم الهاتف:</b> <span dir="ltr">${phone}</span></div>
+        <div><b>هاتف ولي الأمر:</b> <span dir="ltr">${pphone}</span></div>
+        <div><b>وظيفة الأب:</b> ${fatherJob}</div>
+        <div><b>رصيد المحفظة:</b> <b style="color:#10b981;">${wallet} ج.م</b></div>
+        <div><b>رصيد النقاط:</b> <b style="color:var(--gold-light);">${points} نقطة</b></div>
+        <div id="dossierEnrollmentCount"><b>الكورسات المشترك بها:</b> ${enrollmentsCount} كورس</div>
+      </div>
+    `;
+
+    document.getElementById('studentNotesList').innerHTML = '<p style="color:var(--ink-dim);font-size:0.85rem;margin:4px 0;">جارٍ فحص الملاحظات والعمليات... ⏳</p>';
+
+    // 2. Fetch full background profile
     try {
       const student = await window.KhatwaAPI.admin.getStudentFullProfile(studentId);
-      if (!student) return;
+      if (!student || currentActiveStudentId !== studentId) return;
 
-      document.getElementById('dossierStudentName').textContent = `ملف الطالب: ${student.username}`;
-      const phone = student.studentProfile?.studentPhoneNumber || '—';
-      const pphone = student.studentProfile?.parentInfo?.parentPhoneNumber || '—';
-      const fatherJob = student.studentProfile?.parentInfo?.fatherJob || '—';
+      const fPhone = student.studentProfile?.studentPhoneNumber || phone;
+      const fPphone = student.studentProfile?.parentInfo?.parentPhoneNumber || pphone;
+      const fFatherJob = student.studentProfile?.parentInfo?.fatherJob || fatherJob;
+      const fWallet = Number(student.walletBalance || 0).toFixed(2);
+      const fPoints = student.pointsBalance || 0;
+      const fCourses = student.courseEnrollments?.length || 0;
 
+      document.getElementById('dossierStudentName').textContent = `ملف الطالب: ${student.name || student.username}`;
       document.getElementById('dossierDetails').innerHTML = `
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:0.9rem;margin-bottom:12px;">
-          <div><b>رقم الهاتف:</b> <span dir="ltr">${phone}</span></div>
-          <div><b>هاتف ولي الأمر:</b> <span dir="ltr">${pphone}</span></div>
-          <div><b>وظيفة الأب:</b> ${fatherJob}</div>
-          <div><b>رصيد المحفظة:</b> <b style="color:#10b981;">${(student.walletBalance || 0).toFixed(2)} ج.م</b></div>
-          <div><b>رصيد النقاط:</b> <b style="color:var(--gold-light);">${student.pointsBalance || 0} نقطة</b></div>
-          <div><b>الكورسات المشترك بها:</b> ${student.courseEnrollments?.length || 0} كورس</div>
+          <div><b>رقم الهاتف:</b> <span dir="ltr">${fPhone}</span></div>
+          <div><b>هاتف ولي الأمر:</b> <span dir="ltr">${fPphone}</span></div>
+          <div><b>وظيفة الأب:</b> ${fFatherJob}</div>
+          <div><b>رصيد المحفظة:</b> <b style="color:#10b981;">${fWallet} ج.م</b></div>
+          <div><b>رصيد النقاط:</b> <b style="color:var(--gold-light);">${fPoints} نقطة</b></div>
+          <div><b>الكورسات المشترك بها:</b> ${fCourses} كورس</div>
         </div>
       `;
 
       renderNotesList(student.studentNotes || []);
     } catch (err) {
-      document.getElementById('dossierDetails').innerHTML = 'حدث خطأ أثناء تحميل ملف الطالب.';
+      console.warn('Error loading full profile background details:', err);
+      renderNotesList([]);
     }
   }
 
   function closeStudentDossier() {
-    document.getElementById('studentDossierModal').style.display = 'none';
+    const modal = document.getElementById('studentDossierModal');
+    if (modal) {
+      modal.classList.remove('active', 'open', 'show');
+      modal.style.setProperty('display', 'none', 'important');
+    }
     currentActiveStudentId = null;
   }
+
+  // Global event delegation for opening dossier
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-action="open-dossier"]');
+    if (btn) {
+      e.preventDefault();
+      const sid = btn.getAttribute('data-student-id');
+      if (sid) openStudentDossier(sid);
+    }
+  });
 
   function renderNotesList(notes) {
     const list = document.getElementById('studentNotesList');

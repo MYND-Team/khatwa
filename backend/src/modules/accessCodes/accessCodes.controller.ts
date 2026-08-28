@@ -8,6 +8,7 @@ const createAccessCodeSchema = z.object({
   body: z.object({
     points: z.coerce.number().int().min(1, 'Points must be at least 1'),
     expiresInHours: z.coerce.number().min(1).optional(),
+    count: z.coerce.number().int().min(1).max(100).optional(),
   }),
 });
 
@@ -31,12 +32,35 @@ const listAccessCodesSchema = z.object({
 
 export const createCode = asyncHandler(async (req: Request, res: Response) => {
   const { body } = validate(createAccessCodeSchema, req);
-  const data = await AccessCodesService.createAccessCode({
-    points: body.points,
-    expiresInHours: body.expiresInHours,
-    createdById: req.user!.sub,
-  });
-  res.status(201).json({ success: true, data });
+  if (body.count && body.count > 1) {
+    const codes = await AccessCodesService.batchCreateAccessCodes({
+      points: body.points,
+      expiresInHours: body.expiresInHours,
+      createdById: req.user!.sub,
+      count: body.count,
+    });
+    res.status(201).json({
+      success: true,
+      data: {
+        count: codes.length,
+        codes,
+        ...codes[0],
+      },
+    });
+  } else {
+    const data = await AccessCodesService.createAccessCode({
+      points: body.points,
+      expiresInHours: body.expiresInHours,
+      createdById: req.user!.sub,
+    });
+    res.status(201).json({
+      success: true,
+      data: {
+        ...data,
+        codes: [data],
+      },
+    });
+  }
 });
 
 export const listCodes = asyncHandler(async (req: Request, res: Response) => {

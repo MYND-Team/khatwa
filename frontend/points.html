@@ -67,9 +67,32 @@
         <span style="font-size:.85rem;color:var(--ink-dim);display:block;margin-bottom:4px;">الرصيد المتاح حاليًا</span>
         <div class="amount"><span id="pointsBalanceVal">0</span> <span>نقطة</span></div>
       </div>
-      <div style="display:flex;gap:10px;align-items:center;">
-        <a href="request-points.html" class="btn btn-primary">💳 طلب شحن نقاط وإرفاق إيصال التحويل</a>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <a href="request-points.html" class="btn btn-line">🧾 شحن بإيصال تحويل</a>
       </div>
+    </div>
+
+    <!-- Instant Access Code Card (Redeem Voucher) -->
+    <div class="card" style="padding:22px 26px;border-radius:18px;margin-bottom:28px;background:linear-gradient(135deg, rgba(11, 37, 69, 0.4) 0%, rgba(19, 64, 116, 0.2) 100%);border:1px solid var(--line);">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:14px;">
+        <div>
+          <h3 style="margin:0 0 4px;display:flex;align-items:center;gap:8px;">
+            <span>🎟️ شحن كود مسبق الدفع (كروت الشحن)</span>
+            <span class="tag tag-ok" style="font-size:0.75rem;">شحن فوري</span>
+          </h3>
+          <p style="margin:0;color:var(--ink-dim);font-size:0.88rem;">إذا كان لديك كارت شحن من المدرس أو المركز التعليمي، أدخل الكود المكون من الحروف والأرقام للشحن الفوري.</p>
+        </div>
+      </div>
+
+      <form id="redeemCodeForm" onsubmit="handleRedeemCode(event)" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+        <div style="flex:1;min-width:240px;position:relative;">
+          <input type="text" id="accessCodeInput" placeholder="مثال: FG-7B2A-9K1M" required style="width:100%;text-transform:uppercase;font-family:monospace;font-size:1.15rem;font-weight:700;letter-spacing:1.5px;padding:12px 16px;border-radius:10px;" class="form-control">
+        </div>
+        <button type="submit" id="btnRedeemCode" class="btn btn-primary" style="height:48px;padding:0 28px;font-weight:700;border-radius:10px;white-space:nowrap;">
+          ⚡ شحن الرصيد الآن
+        </button>
+      </form>
+      <div id="redeemAlert" style="display:none;margin-top:12px;padding:10px 16px;border-radius:8px;font-size:0.9rem;font-weight:600;"></div>
     </div>
 
     <!-- My Recharge Requests Section -->
@@ -96,26 +119,64 @@
 <!-- Toast notification -->
 <div class="toast" id="appToast"></div>
 
+<script src="js/i18n.js"></script>
 <script src="js/api.js"></script>
 <script src="js/main.js"></script>
 <script>
   function showToast(msg) {
     const toast = document.getElementById('appToast');
+    if (!toast) return;
     toast.textContent = msg;
     toast.classList.add('show');
     setTimeout(() => toast.classList.remove('show'), 3200);
   }
 
+  async function handleRedeemCode(e) {
+    e.preventDefault();
+    const input = document.getElementById('accessCodeInput');
+    const alertBox = document.getElementById('redeemAlert');
+    const btn = document.getElementById('btnRedeemCode');
+    const code = input.value.trim().toUpperCase();
+
+    if (!code) return;
+
+    btn.disabled = true;
+    btn.textContent = 'جارٍ التحقق والشحن...';
+    alertBox.style.display = 'none';
+
+    try {
+      const res = await window.KhatwaAPI.student.redeemAccessCode(code);
+      alertBox.style.display = 'block';
+      alertBox.style.background = '#ECFDF5';
+      alertBox.style.color = '#047857';
+      alertBox.style.border = '1px solid #6EE7B7';
+      alertBox.textContent = `✓ تم شحن ${res.pointsAdded || res.data?.pointsAdded || ''} نقطة بنجاح إلى رصيدك! 🎉`;
+      input.value = '';
+      await loadPointsPage();
+    } catch (err) {
+      alertBox.style.display = 'block';
+      alertBox.style.background = '#FEE2E2';
+      alertBox.style.color = '#DC2626';
+      alertBox.style.border = '1px solid #FCA5A5';
+      alertBox.textContent = '❌ ' + (err.message || 'كود الشحن غير صالح أو تم استخدامه من قبل.');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '⚡ شحن الرصيد الآن';
+    }
+  }
+
   async function loadPointsPage() {
-    let user = window.KhatwaAPI.getUser();
+    let user = null;
+    try {
+      user = await window.KhatwaAPI.student.getProfile();
+    } catch (e) {
+      user = await window.KhatwaAPI.getUser();
+    }
+
     if (!user) {
       window.location.href = 'login.html';
       return;
     }
-
-    try {
-      user = await window.KhatwaAPI.student.getProfile();
-    } catch (e) {}
 
     const balance = typeof user.pointsBalance === 'number' ? user.pointsBalance : 0;
     document.getElementById('pointsBalanceVal').textContent = balance;
@@ -123,7 +184,7 @@
     // Load user's recharge requests
     const reqContainer = document.getElementById('requestsTableContainer');
     try {
-      const requests = await window.KhatwaAPI.pointRequests.getMyRequests();
+      const requests = await window.KhatwaAPI.student.getPointRequests();
       if (!requests || requests.length === 0) {
         reqContainer.innerHTML = `
           <div class="empty-state" style="padding:20px 16px;text-align:center;color:var(--ink-dim);">
@@ -134,21 +195,21 @@
       } else {
         reqContainer.innerHTML = `
           <table class="plain">
-            <thead><tr><th>التاريخ</th><th>النقاط المطلوبة</th><th>المبلغ</th><th>الحالة</th><th>النقاط المشحونة</th></tr></thead>
+            <thead><tr><th>التاريخ</th><th>المبلغ</th><th>كود التحويل</th><th>الحالة</th><th>النقاط</th></tr></thead>
             <tbody>
               ${requests.map(r => {
-                const d = r.createdAt ? new Date(r.createdAt).toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
+                const d = r.createdAt ? (window.KhatwaI18n ? window.KhatwaI18n.formatDate(r.createdAt) : new Date(r.createdAt).toLocaleDateString()) : '—';
                 let statusBadge = '<span class="tag tag-warn">⏳ قيد المراجعة</span>';
-                if (r.status === 'APPROVED') statusBadge = '<span class="tag tag-ok">✓ تم الشحن بنجاح</span>';
+                if (r.status === 'APPROVED') statusBadge = '<span class="tag tag-ok">✓ معتمد</span>';
                 else if (r.status === 'REJECTED') statusBadge = `<span class="tag tag-err">✕ مرفوض (${escapeHtml(r.rejectionReason || '')})</span>`;
 
                 return `
                   <tr>
                     <td>${d}</td>
-                    <td><b>${r.requestedPoints} نقطة</b></td>
-                    <td>${r.requestedPoints * 10} ج.م</td>
+                    <td><b>${r.amount || 0} ج.م</b></td>
+                    <td><code>${escapeHtml(r.code || '—')}</code></td>
                     <td>${statusBadge}</td>
-                    <td><b>${r.grantedPoints !== null && r.grantedPoints !== undefined ? `+${r.grantedPoints} نقطة` : '—'}</b></td>
+                    <td><b>${r.status === 'APPROVED' ? `+${r.requestedPoints || r.amount} نقطة` : '—'}</b></td>
                   </tr>
                 `;
               }).join('')}
@@ -158,40 +219,43 @@
       }
     } catch (e) {}
 
-    // Load recent activities related to points
-    const activities = window.KhatwaAPI.student.getActivities();
-    const pointActivities = activities.filter(a => a.text && (a.text.includes('نقطة') || a.text.includes('شحن') || a.text.includes('اشتركت')));
-    
+    // Load transactions history
     const container = document.getElementById('transactionsTableContainer');
-    if (pointActivities.length === 0) {
-      container.innerHTML = `
-        <div class="empty-state" style="padding:24px 16px;text-align:center;color:var(--ink-dim);">
-          <div style="font-size:1.6rem;margin-bottom:8px;">💳</div>
-          <p style="margin:0;font-weight:600;">لا توجد معاملات نقاط سابقة حتى الآن</p>
-          <span style="font-size:.82rem;color:var(--ink-faint);">ستظهر هنا عمليات الشحن واستخدام النقاط في الكورسات.</span>
-        </div>
-      `;
-    } else {
-      container.innerHTML = `
-        <table class="plain">
-          <thead><tr><th>التاريخ</th><th>البيان</th><th>الحالة</th></tr></thead>
-          <tbody>
-            ${pointActivities.map(a => {
-              const d = a.timestamp ? new Date(a.timestamp).toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric' }) : '—';
-              return `
-                <tr>
-                  <td>${d}</td>
-                  <td><b>${escapeHtml(a.text)}</b></td>
-                  <td><span class="tag tag-ok">مكتمل</span></td>
-                </tr>
-              `;
-            }).join('')}
-          </tbody>
-        </table>
-      `;
-    }
+    try {
+      const txs = await window.KhatwaAPI.student.getPointsTransactions();
+      if (!txs || txs.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state" style="padding:24px 16px;text-align:center;color:var(--ink-dim);">
+            <div style="font-size:1.6rem;margin-bottom:8px;">💎</div>
+            <p style="margin:0;font-weight:600;">لا توجد حركات نقاط سابقة حتى الآن</p>
+            <span style="font-size:.82rem;color:var(--ink-faint);">ستظهر هنا عمليات الشحن واستخدام النقاط في الكورسات.</span>
+          </div>
+        `;
+      } else {
+        container.innerHTML = `
+          <table class="plain">
+            <thead><tr><th>التاريخ</th><th>نوع الحركة</th><th>النقاط</th><th>البيان والسبب</th></tr></thead>
+            <tbody>
+              ${txs.map(t => {
+                const d = t.createdAt ? (window.KhatwaI18n ? window.KhatwaI18n.formatDate(t.createdAt) : new Date(t.createdAt).toLocaleDateString()) : '—';
+                const isCredit = t.type === 'CREDIT';
+                return `
+                  <tr>
+                    <td>${d}</td>
+                    <td><span class="tag ${isCredit ? 'tag-ok' : 'tag-warn'}">${isCredit ? 'شحن رصيد ＋' : 'استخدام points －'}</span></td>
+                    <td><b style="color:${isCredit ? '#10b981' : 'var(--err)'};">${isCredit ? '+' : '-'}${t.amount} نقطة</b></td>
+                    <td>${escapeHtml(t.reason || '—')}</td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        `;
+      }
+    } catch (e) {}
 
     window.KhatwaAPI.syncNav();
+    if (window.KhatwaI18n) window.KhatwaI18n.applyLanguage();
   }
 
   function escapeHtml(str) {
@@ -201,6 +265,5 @@
 
   document.addEventListener('DOMContentLoaded', loadPointsPage);
 </script>
-<script src="js/i18n.js"></script>
 </body>
 </html>

@@ -72,6 +72,16 @@ export async function createAccessCode(input: CreateAccessCodeInput) {
   };
 }
 
+export async function batchCreateAccessCodes(input: CreateAccessCodeInput & { count: number }) {
+  const count = Math.min(Math.max(1, input.count || 1), 100);
+  const results = [];
+  for (let i = 0; i < count; i++) {
+    const codeData = await createAccessCode(input);
+    results.push(codeData);
+  }
+  return results;
+}
+
 // ─── Redeem points access code (STUDENT) ─────────────────────────────────────
 
 export async function redeemAccessCode(rawCode: string, studentId: string) {

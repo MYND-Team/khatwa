@@ -106,25 +106,45 @@
 <script src="js/api.js"></script>
 <script src="js/main.js"></script>
 <script>
-  function renderDashboard() {
+  async function renderDashboard() {
     const user = window.KhatwaAPI.getUser();
-    const studentId = user ? user.id : 'student-default';
-    const studentName = user ? (user.name || user.username) : 'طالب خطوة';
+    if (!user) {
+      window.location.href = 'login.html';
+      return;
+    }
+
+    const studentId = user.id || 'student-default';
+    const studentName = user.name || user.username || 'طالب خطوة';
 
     document.getElementById('welcomeHeading').textContent = `أهلًا بعودتك، ${studentName}`;
     document.getElementById('navName').textContent = studentName;
-    document.getElementById('navRole').textContent = user && user.role === 'ADMIN' ? 'مدير عام المنصة' : user && user.role === 'STAFF' ? 'مشرف' : user && user.role === 'TEACHER' ? 'مدرس' : 'طالب';
+    document.getElementById('navRole').textContent = user.role === 'ADMIN' ? 'مدير عام المنصة' : user.role === 'STAFF' ? 'مشرف' : user.role === 'TEACHER' ? 'مدرس' : 'طالب';
     document.getElementById('navAvatar').textContent = studentName.charAt(0);
 
-    const stats = window.KhatwaAPI.courses.getStudentStats(studentId);
-    document.getElementById('statPoints').textContent = stats.pointsBalance;
-    document.getElementById('statEnrolled').textContent = stats.enrolledCount;
-    document.getElementById('statCompleted').textContent = stats.completedLectures;
-    document.getElementById('statAvgScore').textContent = stats.averageScore;
+    let stats = {
+      pointsBalance: user.pointsBalance || 0,
+      enrolledCount: 0,
+      completedLectures: 0,
+      averageScore: '100%',
+      enrolledCourses: [],
+      quizAttempts: []
+    };
+
+    try {
+      const liveStats = await window.KhatwaAPI.student.getStats();
+      if (liveStats) stats = { ...stats, ...liveStats };
+    } catch (e) {
+      console.warn('Could not load live student stats:', e);
+    }
+
+    document.getElementById('statPoints').textContent = stats.pointsBalance ?? 0;
+    document.getElementById('statEnrolled').textContent = stats.enrolledCount ?? 0;
+    document.getElementById('statCompleted').textContent = stats.completedLectures ?? 0;
+    document.getElementById('statAvgScore').textContent = stats.averageScore ?? '—';
 
     // Render Next Lesson
     const nextContainer = document.getElementById('nextLessonContainer');
-    const enrolled = stats.enrolledCourses;
+    const enrolled = stats.enrolledCourses || [];
     let nextLecture = null;
     let nextCourse = null;
 
@@ -147,11 +167,11 @@
               <span class="ri-idx">0${nextLecture.orderIndex || 1}</span>
               <div class="ri-text">
                 <b>${escapeHtml(nextLecture.title)} — ${escapeHtml(nextCourse.teacherName)}</b>
-                <span>${escapeHtml(nextCourse.subject)} · مدة ${nextLecture.duration} دقيقة</span>
+                <span>${escapeHtml(nextCourse.subject)} · مدة ${nextLecture.duration || 30} دقيقة</span>
               </div>
             </div>
             <div class="ri-side">
-              <span class="tag tag-warn">${nextLecture.pointCost} نقطة</span>
+              <span class="tag tag-warn">${nextLecture.pointCost || 0} نقطة</span>
               <a href="lesson.html?courseId=${nextCourse.id}&lessonId=${nextLecture.id}" class="btn btn-primary btn-sm">ابدأ الآن</a>
             </div>
           </div>
@@ -213,12 +233,12 @@
           <div class="ri-main">
             <div class="ri-text">
               <b>${escapeHtml(c.title)} — ${escapeHtml(c.teacherName)}</b>
-              <span>${c.completedCount} من ${c.totalLectures} حصة مكتملة</span>
+              <span>${c.completedCount || 0} من ${c.totalLectures || 0} حصة مكتملة</span>
             </div>
           </div>
           <div class="ri-side" style="width:200px;display:flex;align-items:center;gap:12px;">
             <div class="progress-wrap" style="flex:1;">
-              <div class="progress"><span style="width:${c.progressPercent}%;"></span></div>
+              <div class="progress"><span style="width:${c.progressPercent || 0}%;"></span></div>
             </div>
             <a href="subject.html?id=${c.id}" class="btn btn-line btn-sm" style="padding:4px 10px;font-size:.78rem;">فتح</a>
           </div>
@@ -272,7 +292,10 @@
     window.KhatwaAPI.auth.logout();
   });
 
-  document.addEventListener('DOMContentLoaded', renderDashboard);
+  document.addEventListener('DOMContentLoaded', () => {
+    window.KhatwaAPI.syncNav();
+    renderDashboard();
+  });
 </script>
 <script src="js/i18n.js"></script>
 </body>

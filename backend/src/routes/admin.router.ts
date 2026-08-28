@@ -88,16 +88,17 @@ router.get(
         studentProfile: { include: { parentInfo: true } },
         pointsTransactions: {
           orderBy: { createdAt: 'desc' },
-          take: 50,
+          take: 20,
           include: { actor: { select: { username: true } } },
         },
         walletTransactions: {
           orderBy: { createdAt: 'desc' },
-          take: 50,
+          take: 20,
           include: { actor: { select: { username: true } } },
         },
         studentNotes: {
           orderBy: { createdAt: 'desc' },
+          take: 30,
           include: { author: { select: { username: true } } },
         },
         courseEnrollments: {
@@ -306,151 +307,6 @@ router.patch(
   })
 );
 
-// ─── Teacher Management ────────────────────────────────────────────────────────
-
-// Create teacher account (Admin-only)
-router.post(
-  '/teachers',
-  asyncHandler(async (req, res) => {
-    const { username, password, displayName, subject, bio, avatarUrl, academicStages } = req.body;
-
-    if (!username || !password || !displayName) {
-      res.status(400).json({
-        success: false,
-        error: { code: 'MISSING_FIELDS', message: 'username, password, and displayName are required' },
-      });
-      return;
-    }
-
-    const existing = await prisma.user.findUnique({ where: { username } });
-    if (existing) {
-      res.status(409).json({ success: false, error: { code: 'CONFLICT', message: 'Username already taken' } });
-      return;
-    }
-
-    const passwordHash = await bcrypt.hash(password, 12);
-
-    const teacher = await prisma.user.create({
-      data: {
-        username,
-        passwordHash,
-        role: 'TEACHER',
-        teacherProfile: {
-          create: {
-            displayName,
-            subject: subject || null,
-            bio: bio || null,
-            avatarUrl: avatarUrl || null,
-            academicStages: academicStages ? (Array.isArray(academicStages) ? academicStages.join(',') : academicStages) : null,
-          },
-        },
-      },
-      select: {
-        id: true,
-        username: true,
-        role: true,
-        createdAt: true,
-        teacherProfile: {
-          select: { id: true, displayName: true, subject: true, bio: true, avatarUrl: true },
-        },
-      },
-    });
-
-    res.status(201).json({ success: true, data: teacher });
-  })
-);
-
-router.get(
-  '/teachers',
-  asyncHandler(async (_req, res) => {
-    const teachers = await prisma.user.findMany({
-      where: { role: 'TEACHER' },
-      select: {
-        id: true,
-        username: true,
-        isActive: true,
-        createdAt: true,
-        teacherProfile: {
-          select: {
-            id: true,
-            displayName: true,
-            bio: true,
-            subject: true,
-            avatarUrl: true,
-            rating: true,
-            ratingCount: true,
-            academicStages: true,
-            courses: {
-              select: {
-                id: true,
-                title: true,
-                subject: true,
-                academicStage: true,
-                isPublished: true,
-                createdAt: true,
-                _count: { select: { enrollments: true, chapters: true } },
-              },
-            },
-            lessons: {
-              select: { id: true, title: true, pointCost: true, isPublished: true, createdAt: true },
-            },
-          },
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
-    res.status(200).json({ success: true, data: teachers });
-  })
-);
-
-router.patch(
-  '/teachers/:id',
-  asyncHandler(async (req, res) => {
-    const { displayName, subject, bio, avatarUrl, academicStages } = req.body;
-    const teacher = await prisma.user.findUnique({
-      where: { id: req.params.id },
-      include: { teacherProfile: true },
-    });
-
-    if (!teacher || teacher.role !== 'TEACHER') {
-      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Teacher not found' } });
-      return;
-    }
-
-    const updated = await prisma.teacherProfile.update({
-      where: { userId: req.params.id },
-      data: {
-        ...(displayName && { displayName }),
-        ...(subject !== undefined && { subject }),
-        ...(bio !== undefined && { bio }),
-        ...(avatarUrl !== undefined && { avatarUrl }),
-        ...(academicStages !== undefined && {
-          academicStages: Array.isArray(academicStages) ? academicStages.join(',') : academicStages,
-        }),
-      },
-    });
-
-    res.status(200).json({ success: true, data: updated });
-  })
-);
-
-router.patch(
-  '/teachers/:id/toggle-active',
-  asyncHandler(async (req, res) => {
-    const teacher = await prisma.user.findUnique({ where: { id: req.params.id } });
-    if (!teacher || teacher.role !== 'TEACHER') {
-      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Teacher not found' } });
-      return;
-    }
-    const updated = await prisma.user.update({
-      where: { id: teacher.id },
-      data: { isActive: !teacher.isActive },
-      select: { id: true, username: true, isActive: true },
-    });
-    res.status(200).json({ success: true, data: updated });
-  })
-);
-
 // ─── Courses & Content Monitoring ────────────────────────────────────────────
 
 router.get(
@@ -562,34 +418,57 @@ router.patch(
       return;
     }
 
-    const newBalance = ((pr as any).user?.pointsBalance || 0) + (pr.requestedPoints || 0);
+    // Determine points to credit: explicit body points > requestedPoints > amount
+    const pointsToCredit = req.body?.points
+      ? parseInt(req.body.points, 10)
+      : (pr.requestedPoints > 0 ? pr.requestedPoints : Math.max(1, Math.round(pr.amount || 0)));
 
     await prisma.$transaction([
-      prisma.user.update({ where: { id: pr.userId }, data: { pointsBalance: newBalance } }),
+      prisma.user.update({
+        where: { id: pr.userId },
+        data: { pointsBalance: { increment: pointsToCredit } },
+      }),
       prisma.pointsTransaction.create({
         data: {
           studentId: pr.userId,
           type: 'CREDIT',
-          amount: pr.requestedPoints || 0,
-          reason: `اعتماد طلب شحن #${pr.id}`,
+          amount: pointsToCredit,
+          reason: `اعتماد طلب شحن نقاط (كود: ${pr.code || pr.id.slice(-6)})`,
           actorId: req.user!.sub,
         },
       }),
       prisma.pointRequest.update({
         where: { id: pr.id },
-        data: { status: 'APPROVED', processedById: req.user!.sub, processedAt: new Date() },
+        data: {
+          status: 'APPROVED',
+          requestedPoints: pointsToCredit,
+          processedById: req.user!.sub,
+          processedAt: new Date(),
+        },
       }),
       prisma.notification.create({
         data: {
           userId: pr.userId,
-          title: 'تمت الموافقة على طلب الشحن',
-          message: `تمت الموافقة على طلب شحن ${pr.requestedPoints} نقطة بنجاح.`,
+          title: 'تمت الموافقة على طلب الشحن 🎉',
+          message: `تم اعتماد إيصال التحويل وشحن ${pointsToCredit} نقطة إلى رصيدك بنجاح!`,
           type: 'SUCCESS',
         },
       }),
     ]);
 
-    res.status(200).json({ success: true, message: 'Point request approved and balance updated' });
+    const updatedUser = await prisma.user.findUnique({
+      where: { id: pr.userId },
+      select: { id: true, username: true, pointsBalance: true, walletBalance: true },
+    });
+
+    res.status(200).json({
+      success: true,
+      message: `تم شحن ${pointsToCredit} نقطة للطالب بنجاح`,
+      data: {
+        pointsCredited: pointsToCredit,
+        user: updatedUser,
+      },
+    });
   })
 );
 
@@ -801,14 +680,57 @@ router.patch(
 router.delete(
   '/teachers/:id',
   asyncHandler(async (req, res) => {
-    const user = await prisma.user.findUnique({ where: { id: req.params.id as string } });
+    const user = await prisma.user.findUnique({
+      where: { id: req.params.id as string },
+      include: {
+        teacherProfile: {
+          include: {
+            lessons: true,
+            courses: true,
+          },
+        },
+      },
+    });
+
     if (!user || user.role !== 'TEACHER') {
-      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Teacher not found' } });
+      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'المدرس غير موجود' } });
       return;
     }
 
-    await prisma.user.delete({ where: { id: user.id } });
-    res.status(200).json({ success: true, message: 'تم حذف المدرس بنجاح' });
+    const lessonIds = user.teacherProfile?.lessons?.map((l: { id: string }) => l.id) || [];
+
+    // Safely delete and clean up all relations in a database transaction
+    await prisma.$transaction(async (tx: any) => {
+      // 1. Unlink PointsTransactions that reference lessons belonging to this teacher
+      if (lessonIds.length > 0) {
+        await tx.pointsTransaction.updateMany({
+          where: { relatedLessonId: { in: lessonIds } },
+          data: { relatedLessonId: null },
+        });
+      }
+
+      // 2. Unlink any AccessCodes created or redeemed by this teacher user
+      await tx.accessCode.updateMany({
+        where: { createdById: user.id },
+        data: { createdById: null },
+      });
+      await tx.accessCode.updateMany({
+        where: { redeemedById: user.id },
+        data: { redeemedById: null },
+      });
+
+      // 3. Delete notifications and refresh tokens
+      await tx.notification.deleteMany({ where: { userId: user.id } });
+      await tx.refreshToken.deleteMany({ where: { userId: user.id } });
+
+      // 4. Delete the User record completely from DB (cascades TeacherProfile, Courses, Lessons)
+      await tx.user.delete({ where: { id: user.id } });
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'تم حذف حساب المدرس واسم المستخدم وكلمة المرور وكافة بياناته من قاعدة البيانات بنجاح',
+    });
   })
 );
 

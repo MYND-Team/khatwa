@@ -18,6 +18,7 @@
     { "source": "/admin/:path*", "destination": "/api" },
     { "source": "/point-requests/:path*", "destination": "/api" },
     { "source": "/settings/:path*", "destination": "/api" },
+    { "source": "/courses/:path*", "destination": "/api" },
     { "source": "/courses", "destination": "/api" },
     { "source": "/teachers/:path*", "destination": "/api" },
     { "source": "/teachers", "destination": "/api" },

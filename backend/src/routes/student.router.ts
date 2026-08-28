@@ -605,11 +605,14 @@ router.post(
       screenshotUrl = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
     }
 
+    const numAmount = parseFloat(amount);
+    const parsedPoints = Math.max(1, Math.round(isNaN(numAmount) ? 0 : numAmount));
+
     const request = await prisma.pointRequest.create({
       data: {
         userId: req.user!.sub,
-        amount: parseFloat(amount),
-        requestedPoints: 0, // Will be set by admin on approval
+        amount: isNaN(numAmount) ? 0 : numAmount,
+        requestedPoints: parsedPoints,
         code,
         notes: notes || null,
         screenshotUrl: screenshotUrl || null,

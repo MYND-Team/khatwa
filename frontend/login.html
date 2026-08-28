@@ -64,11 +64,25 @@
 <script src="js/i18n.js"></script>
 <script src="js/main.js"></script>
 <script>
+  // Auto-redirect if user has a valid session (HttpOnly Cookie)
+  document.addEventListener('DOMContentLoaded', async () => {
+    const refreshed = await window.KhatwaAPI.auth.silentRefresh();
+    if (refreshed) {
+      const user = await window.KhatwaAPI.getUser();
+      if (user) {
+        const role = user.role || 'STUDENT';
+        if (role === 'ADMIN') window.location.href = 'admin.html';
+        else if (role === 'TEACHER') window.location.href = 'teacher-dashboard.html';
+        else if (role === 'STAFF') window.location.href = 'admin-points.html';
+        else window.location.href = 'dashboard.html';
+      }
+    }
+  });
+
   document.getElementById('loginForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const btn = document.getElementById('loginSubmitBtn');
     const alertBox = document.getElementById('loginAlert');
-    // Normalize username: strip spaces & force lowercase to handle mobile autocorrect
     const u = document.getElementById('username').value.trim().replace(/\s+/g, '').toLowerCase();
     const p = document.getElementById('password').value;
 
@@ -81,19 +95,13 @@
 
     try {
       const data = await window.KhatwaAPI.auth.login(u, p);
-      // api.js login() returns res.data directly: { user, accessToken, refreshToken }
-      const user = data?.user || window.KhatwaAPI.getUser();
+      const user = data?.user;
       const role = user?.role || 'STUDENT';
 
-      if (role === 'ADMIN') {
-        window.location.href = 'admin.html';
-      } else if (role === 'TEACHER') {
-        window.location.href = 'teacher-dashboard.html';
-      } else if (role === 'STAFF') {
-        window.location.href = 'admin-points.html';
-      } else {
-        window.location.href = 'dashboard.html';
-      }
+      if (role === 'ADMIN') window.location.href = 'admin.html';
+      else if (role === 'TEACHER') window.location.href = 'teacher-dashboard.html';
+      else if (role === 'STAFF') window.location.href = 'admin-points.html';
+      else window.location.href = 'dashboard.html';
     } catch (err) {
       alertBox.textContent = err.message || 'اسم المستخدم أو كلمة المرور غير صحيحة.';
       alertBox.classList.add('show');

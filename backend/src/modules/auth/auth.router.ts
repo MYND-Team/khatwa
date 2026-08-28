@@ -12,11 +12,14 @@ router.post('/register', AuthController.registerWithCode);
 // POST /auth/login
 router.post('/login', AuthController.login);
 
-// POST /auth/refresh
+// POST /auth/refresh  — reads refresh token from HttpOnly cookie (or body for backward compat)
 router.post('/refresh', AuthController.refresh);
 
-// POST /auth/logout
+// POST /auth/logout   — clears HttpOnly cookie and revokes DB token
 router.post('/logout', AuthController.logout);
+
+// GET /auth/me        — returns live user data from DB using access token
+router.get('/me', ...AuthController.me);
 
 // POST /auth/dev/staff-login (Quick login/switch for staff testing)
 router.post('/dev/staff-login', async (_req, res) => {
