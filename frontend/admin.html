@@ -615,7 +615,7 @@
       const wallet = (s.walletBalance || 0).toFixed(2);
       const points = s.pointsBalance || 0;
       const statusBadge = s.isActive !== false ? '<span class="tag tag-ok">نشط ✓</span>' : '<span class="tag tag-err">معطل ✕</span>';
-      const dateStr = s.createdAt ? new Date(s.createdAt).toLocaleDateString('ar-EG', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
+      const dateStr = s.createdAt ? (window.KhatwaI18n ? window.KhatwaI18n.formatDate(s.createdAt) : new Date(s.createdAt).toLocaleDateString()) : '—';
 
       return `
         <tr>
@@ -635,6 +635,8 @@
         </tr>
       `;
     }).join('');
+
+    if (window.KhatwaI18n) window.KhatwaI18n.applyLanguage();
   }
 
   function filterStudents() {
@@ -707,7 +709,7 @@
             <td>${receipt}</td>
             <td>${r.notes || '—'}</td>
             <td><span class="tag ${r.status === 'APPROVED' ? 'tag-ok' : r.status === 'REJECTED' ? 'tag-err' : ''}">${r.status}</span></td>
-            <td>${new Date(r.createdAt).toLocaleDateString('ar-EG')}</td>
+            <td>${window.KhatwaI18n ? window.KhatwaI18n.formatDate(r.createdAt) : new Date(r.createdAt).toLocaleDateString()}</td>
             <td>
               ${isPending ? `
                 <button class="btn btn-primary btn-sm" onclick="approveRequest('${r.id}')">موافقة ✓</button>
@@ -717,6 +719,8 @@
           </tr>
         `;
       }).join('');
+
+      if (window.KhatwaI18n) window.KhatwaI18n.applyLanguage();
     } catch (e) {
       console.error('Failed to load point requests:', e);
     }
@@ -748,9 +752,11 @@
           <td><b>${l.student?.username || 'طالب'}</b></td>
           <td>${l.lesson?.title || 'محاضرة'}</td>
           <td><code>${l.ip || '127.0.0.1'}</code></td>
-          <td>${new Date(l.createdAt).toLocaleString('ar-EG')}</td>
+          <td>${window.KhatwaI18n ? window.KhatwaI18n.formatDate(l.createdAt) : new Date(l.createdAt).toLocaleDateString()}</td>
         </tr>
       `).join('');
+
+      if (window.KhatwaI18n) window.KhatwaI18n.applyLanguage();
     } catch (e) {}
   }
 

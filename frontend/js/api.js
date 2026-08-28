@@ -179,13 +179,13 @@
         if (nameEl) nameEl.textContent = user.name || user.username;
         if (roleEl) {
           if (isAdmin) {
-            roleEl.textContent = 'مدير عام المنصة';
+            roleEl.textContent = window.KhatwaI18n ? window.KhatwaI18n.t('مدير عام المنصة') : 'مدير عام المنصة';
             roleEl.style.color = 'var(--gold-light, #D4AF37)';
             roleEl.style.fontWeight = '700';
           } else if (isTeacher) {
-            roleEl.textContent = 'مدرس';
+            roleEl.textContent = window.KhatwaI18n ? window.KhatwaI18n.t('مدرس') : 'مدرس';
           } else {
-            roleEl.textContent = 'طالب';
+            roleEl.textContent = window.KhatwaI18n ? window.KhatwaI18n.t('طالب') : 'طالب';
           }
         }
         if (avatarEl) avatarEl.textContent = isAdmin ? '👑' : firstLetter;
@@ -198,7 +198,8 @@
 
       if (isAdmin) {
         document.querySelectorAll('.nav-links').forEach(navLinks => {
-          navLinks.innerHTML = '<li><a href="admin.html" class="active">📊 لوحة الإدارة</a></li>';
+          const label = window.KhatwaI18n ? window.KhatwaI18n.t('📊 لوحة الإدارة') : '📊 لوحة الإدارة';
+          navLinks.innerHTML = `<li><a href="admin.html" class="active">${label}</a></li>`;
         });
         document.querySelectorAll('#studentPointsTag, .student-only, .teacher-only').forEach(el => el.style.display = 'none');
       }
