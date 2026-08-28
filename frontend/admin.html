@@ -1438,6 +1438,7 @@
     if (!modal) return;
 
     // Force show dossier modal instantly (0ms delay)
+    modal.classList.add('open', 'show', 'active');
     modal.style.cssText = 'display: flex !important; position: fixed !important; inset: 0 !important; width: 100vw !important; height: 100vh !important; background: rgba(15,23,42,0.8) !important; z-index: 999999 !important; align-items: center !important; justify-content: center !important; backdrop-filter: blur(4px) !important;';
 
     // Reset input fields
