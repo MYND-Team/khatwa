@@ -1,14 +1,16 @@
 /**
  * Khatwa Platform — Full-Site i18n Translation Engine (Arabic RTL ⇄ English LTR)
- * Translates EVERY text element across the entire platform dynamically.
+ * High-performance, deep DOM text translation across ALL pages and components.
  */
 
 (function (window) {
-  // Comprehensive Bilingual Dictionary (Arabic ⇄ English)
+  // Master Bilingual Dictionary (Arabic ⇄ English)
   const DICTIONARY = {
-    // ─── Branding & Navigation ───
+    // ─── Branding & Platform ───
     "خطوة": "Khatwa",
     "منصة خطوة": "Khatwa Platform",
+    "منصة تعليمية أونلاين": "Online Educational Platform",
+    "منصة تعليمية": "Educational Platform",
     "الرئيسية": "Home",
     "تصفح الكورسات": "Browse Courses",
     "الكورسات": "Courses",
@@ -21,9 +23,15 @@
     "لوحة تحكم وإدارة المنصة": "Platform Management Dashboard",
     "لوحة التحكم والإدارة العامة": "Platform Administration Dashboard",
     "استوديو المعلم": "Teacher Studio",
+    "استوديو المدرس": "Teacher Studio",
     "لوحة المعلم": "Teacher Dashboard",
+    "استوديو إدارة المعلم": "Teacher Management Studio",
     "النقاط": "Points",
+    "النقاط والمحفظة": "Points & Wallet",
     "رصيد النقاط": "Points Balance",
+    "رصيد المحفظة": "Wallet Balance",
+    "المحفظة": "Wallet",
+    "المحفظة والتحويلات": "Wallet & Transfers",
     "الإشعارات": "Notifications",
     "النتائج": "Results",
     "نتائجي": "My Results",
@@ -58,9 +66,9 @@
     "موافق": "OK",
     "نعم": "Yes",
     "لا": "No",
+    "الكل": "All",
 
     // ─── Landing Page (index.html) ───
-    "منصة تعليمية أونلاين": "Online Educational Platform",
     "خطوة هي المكان اللي بيتابع فيه الطالب حصصه، يمتحن، ويسلّم واجباته من غير ما يتحرك من مكانه.": "Khatwa is where students follow lectures, take exams, and submit assignments seamlessly from home.",
     "النظام مبني على متابعة حقيقية: امتحان قبل كل حصة، واجب بنفس أسلوب الامتحان الإلكتروني، ولا تُفتح حصة جديدة إلا بعد إنهاء اللي قبلها. وولي الأمر يعرف النتيجة أول بأول.": "Built on genuine progress tracking: pre-lecture exam, interactive assignments, linear course progression, with instant parent report notifications.",
     "أونلاين بالكامل": "100% Online",
@@ -136,15 +144,19 @@
 
     // ─── Roles ───
     "طالب": "Student",
+    "طالب معتمد": "Accredited Student",
     "مدرس": "Teacher",
+    "مدرس معتمد": "Accredited Teacher",
     "معلم": "Teacher",
     "المدرس": "Teacher",
     "المعلم": "Teacher",
     "مدير عام المنصة": "Platform Director",
     "مدير": "Admin",
     "مشرف": "Supervisor",
+    "مشرف متابعة (Staff)": "Follow-up Supervisor (Staff)",
     "فريق المتابعة": "Support Staff",
     "المسؤول": "Administrator",
+    "الإدارة": "Management",
 
     // ─── Auth (Login / Signup) ───
     "ادخل بيانات حسابك لمتابعة حصصك أو إدارة كورساتك": "Enter your account details to resume lectures or manage courses",
@@ -158,7 +170,6 @@
     "ليس لديك حساب؟": "Don't have an account?",
     "أنشئ حسابًا جديدًا": "Create a new account",
     "لديك حساب بالفعل؟": "Already have an account?",
-    "تسجيل الدخول": "Login",
     "إظهار": "Show",
     "إخفاء": "Hide",
     "جارٍ التحقق...": "Verifying...",
@@ -265,6 +276,7 @@
     "آخر الأنشطة والامتحانات": "Recent Activities & Exams",
     "شحن رصيد النقاط": "Recharge Points",
     "شحن المحفظة": "Recharge Wallet",
+    "شحن رصيد": "Recharge Balance",
     "سجل المعاملات": "Transaction History",
     "تعديل البيانات": "Edit Profile",
     "تحديث البيانات": "Update Profile",
@@ -275,7 +287,6 @@
     "حفظ التعديلات": "Save Changes",
 
     // ─── Teacher Studio (teacher-dashboard.html) ───
-    "استوديو إدارة المعلم": "Teacher Management Studio",
     "إدارة الكورسات، الفصول، المحاضرات، وبنك الأسئلة": "Manage courses, chapters, lectures, and question banks",
     "إضافة كورس جديد": "Add New Course",
     "إنشاء كورس": "Create Course",
@@ -296,7 +307,6 @@
     "نص السؤال": "Question Text",
     "الخيارات": "Options",
     "الإجابة الصحيحة": "Correct Answer",
-    "الدرجة": "Points",
     "نشر": "Publish",
     "إلغاء النشر": "Unpublish",
     "منشور": "Published",
@@ -304,19 +314,23 @@
     "إجمالي الطلاب": "Total Students",
     "إجمالي المشاهدات": "Total Views",
     "متوسط التقييم": "Average Rating",
+    "تصفح كطالب": "Browse as Student",
 
     // ─── Admin Panel (admin.html, admin-points.html) ───
     "إجمالي الطلاب": "Total Students",
     "إجمالي المدرسين": "Total Teachers",
     "إجمالي الكورسات": "Total Courses",
     "طلبات شحن معلقة": "Pending Recharge Requests",
+    "طلبات شحن معلقة حالياً": "Pending Recharge Requests",
     "قاعدة البيانات المباشرة 🛡️": "Live Database 🛡️",
     "متابعة فورية وشاملة لجميع الطلاب، المدرسين، الكورسات، طلبات الشحن، والمحفظة المالية.": "Real-time monitoring of all students, teachers, courses, recharge requests, and platform finances.",
     "إدارة المدرسين": "Teachers Directory",
     "إدارة الطلاب": "Students Directory",
     "مراجعة طلبات الشحن": "Review Recharge Requests",
+    "مراجعة وشحن طلبات النقاط (Staff / Admin)": "Review & Process Recharge Requests (Staff / Admin)",
     "سجلات الأمان والنظام": "Security & System Logs",
     "إضافة مدرس جديد": "Add New Teacher",
+    "👨‍🏫 إضافة مدرس جديد": "👨‍🏫 Add New Teacher",
     "إنشاء حساب مدرس جديد": "Create New Teacher Account",
     "👨‍🏫 إنشاء حساب مدرس جديد": "👨‍🏫 Create New Teacher Account",
     "اعتماد المدرس في الكادر الأكاديمي للمنصة": "Accredit teacher into platform academic staff",
@@ -331,8 +345,6 @@
     "إيصالات بانتظار الاعتماد": "Receipts Awaiting Approval",
     "بحث باسم الطالب أو رقم الهاتف...": "Search student name or phone...",
     "بحث باسم المدرس أو المادة...": "Search teacher name or subject...",
-    "رصيد المحفظة": "Wallet Balance",
-    "الرصيد": "Balance",
     "تحويل رصيد مالي (EGP)": "Transfer Funds (EGP)",
     "تعديل رصيد النقاط": "Adjust Points Balance",
     "ملف الطالب": "Student Dossier",
@@ -349,6 +361,12 @@
     "سجلات تشغيل وحماية الفيديوهات": "Video Playback & Security Logs",
     "عنوان IP": "IP Address",
     "الوقت": "Timestamp",
+    "الطالب": "Student",
+    "المبلغ": "Amount",
+    "الكود": "Code",
+    "الإيصال": "Receipt",
+    "ملاحظات": "Notes",
+    "الإجراء": "Action",
 
     // ─── Notifications & Status ───
     "نشط ✓": "Active ✓",
@@ -372,6 +390,15 @@
     REVERSE_DICT[en] = ar;
   }
 
+  // Pre-sort dictionary phrases by length descending to match longest phrases first
+  const AR_PHRASES = Object.keys(DICTIONARY).sort((a, b) => b.length - a.length);
+  const EN_PHRASES = Object.keys(REVERSE_DICT).sort((a, b) => b.length - a.length);
+
+  // WeakMaps for storing original values without polluting DOM
+  const textNodeMap = new WeakMap();
+  const inputPlaceholderMap = new WeakMap();
+  const inputTitleMap = new WeakMap();
+
   function getLanguage() {
     return localStorage.getItem('khatwa_lang') || 'ar';
   }
@@ -387,116 +414,123 @@
     setLanguage(nextLang);
   }
 
-  function translateText(text, targetLang) {
-    if (!text || typeof text !== 'string') return text;
-    const trimmed = text.trim();
-    if (!trimmed) return text;
+  /**
+   * Translate a single text string
+   */
+  function translateString(str, lang) {
+    if (!str || typeof str !== 'string') return str;
+    const trimmed = str.trim();
+    if (!trimmed) return str;
 
-    if (targetLang === 'en') {
-      if (DICTIONARY[trimmed]) return DICTIONARY[trimmed];
-      // Try normalized match (remove trailing punctuation or emoji)
-      const clean = trimmed.replace(/^[\s\d\.\-—\(\)\/•✓✕👨‍🏫👑🛡️⭐📊]+/u, '').trim();
-      if (DICTIONARY[clean]) {
-        return text.replace(clean, DICTIONARY[clean]);
+    if (lang === 'en') {
+      // 1. Exact match
+      if (DICTIONARY[trimmed]) {
+        return str.replace(trimmed, DICTIONARY[trimmed]);
       }
+      // 2. Phrase matching (longest first)
+      let result = str;
+      for (const arPhrase of AR_PHRASES) {
+        if (result.includes(arPhrase)) {
+          result = result.split(arPhrase).join(DICTIONARY[arPhrase]);
+        }
+      }
+      return result;
     } else {
-      if (REVERSE_DICT[trimmed]) return REVERSE_DICT[trimmed];
+      // Revert to Arabic
+      if (REVERSE_DICT[trimmed]) {
+        return str.replace(trimmed, REVERSE_DICT[trimmed]);
+      }
+      let result = str;
+      for (const enPhrase of EN_PHRASES) {
+        if (result.includes(enPhrase)) {
+          result = result.split(enPhrase).join(REVERSE_DICT[enPhrase]);
+        }
+      }
+      return result;
     }
-    return text;
   }
 
   /**
-   * Translates a single DOM node recursively.
+   * Translates all text nodes and attributes within a DOM subtree
    */
-  function translateNode(node, lang) {
-    if (!node) return;
+  function translateTree(rootNode, lang) {
+    if (!rootNode) return;
 
-    // Skip script, style, code, svg elements
-    const tag = node.tagName ? node.tagName.toLowerCase() : '';
-    if (['script', 'style', 'code', 'pre', 'svg', 'noscript'].includes(tag)) return;
-
-    // Handle text input & textarea placeholders
-    if (node.tagName === 'INPUT' || node.tagName === 'TEXTAREA') {
-      if (node.placeholder) {
-        if (!node.dataset.i18nPlaceholderOrig) {
-          node.dataset.i18nPlaceholderOrig = node.placeholder;
+    // 1. Process inputs & textareas (placeholders)
+    const inputs = rootNode.querySelectorAll ? rootNode.querySelectorAll('input, textarea') : [];
+    inputs.forEach(inp => {
+      if (inp.placeholder) {
+        if (!inputPlaceholderMap.has(inp)) {
+          inputPlaceholderMap.set(inp, inp.placeholder);
         }
-        if (lang === 'en') {
-          node.placeholder = DICTIONARY[node.dataset.i18nPlaceholderOrig] || node.dataset.i18nPlaceholderOrig;
-        } else {
-          node.placeholder = node.dataset.i18nPlaceholderOrig;
-        }
+        const orig = inputPlaceholderMap.get(inp);
+        inp.placeholder = lang === 'en' ? translateString(orig, 'en') : orig;
       }
-      return;
-    }
+      if (inp.title) {
+        if (!inputTitleMap.has(inp)) {
+          inputTitleMap.set(inp, inp.title);
+        }
+        const orig = inputTitleMap.get(inp);
+        inp.title = lang === 'en' ? translateString(orig, 'en') : orig;
+      }
+    });
 
-    // Handle title attribute
-    if (node.title) {
-      if (!node.dataset.i18nTitleOrig) node.dataset.i18nTitleOrig = node.title;
+    // 2. Walk all text nodes using TreeWalker
+    const walker = document.createTreeWalker(
+      rootNode,
+      NodeFilter.SHOW_TEXT,
+      {
+        acceptNode: function(node) {
+          const parent = node.parentElement;
+          if (!parent) return NodeFilter.FILTER_REJECT;
+          const tag = parent.tagName.toLowerCase();
+          if (['script', 'style', 'code', 'pre', 'svg', 'noscript'].includes(tag)) {
+            return NodeFilter.FILTER_REJECT;
+          }
+          if (!node.nodeValue || !node.nodeValue.trim()) {
+            return NodeFilter.FILTER_SKIP;
+          }
+          return NodeFilter.FILTER_ACCEPT;
+        }
+      },
+      false
+    );
+
+    let currentNode;
+    while ((currentNode = walker.nextNode())) {
+      if (!textNodeMap.has(currentNode)) {
+        textNodeMap.set(currentNode, currentNode.nodeValue);
+      }
+      const origValue = textNodeMap.get(currentNode);
       if (lang === 'en') {
-        node.title = DICTIONARY[node.dataset.i18nTitleOrig] || node.dataset.i18nTitleOrig;
+        currentNode.nodeValue = translateString(origValue, 'en');
       } else {
-        node.title = node.dataset.i18nTitleOrig;
-      }
-    }
-
-    // Check if element has child elements vs just plain text
-    const hasChildElements = Array.from(node.childNodes).some(n => n.nodeType === Node.ELEMENT_NODE);
-
-    if (!hasChildElements && node.textContent) {
-      const rawText = node.textContent.trim();
-      if (rawText.length > 0) {
-        if (!node.dataset.i18nOrig) {
-          node.dataset.i18nOrig = rawText;
-        }
-        const orig = node.dataset.i18nOrig;
-        if (lang === 'en') {
-          const translated = DICTIONARY[orig] || translateText(orig, 'en');
-          if (translated && translated !== orig) {
-            node.textContent = translated;
-          }
-        } else {
-          node.textContent = orig;
-        }
-      }
-    } else {
-      // Recurse into direct child text nodes
-      for (const child of node.childNodes) {
-        if (child.nodeType === Node.TEXT_NODE) {
-          const raw = child.nodeValue.trim();
-          if (raw.length > 1) {
-            if (lang === 'en') {
-              if (DICTIONARY[raw]) child.nodeValue = child.nodeValue.replace(raw, DICTIONARY[raw]);
-            }
-          }
-        } else if (child.nodeType === Node.ELEMENT_NODE) {
-          translateNode(child, lang);
-        }
+        currentNode.nodeValue = origValue;
       }
     }
   }
 
   function applyLanguage(lang) {
     if (!lang) lang = getLanguage();
-    
-    // Update HTML root attributes
+
+    // 1. Set HTML direction & lang attribute
     document.documentElement.lang = lang;
     document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
 
-    // Walk entire body
+    // 2. Translate entire document body
     if (document.body) {
-      translateNode(document.body, lang);
+      translateTree(document.body, lang);
     }
 
-    // Update all switcher buttons
+    // 3. Update all language switcher buttons
     document.querySelectorAll('.lang-switcher-btn').forEach(btn => {
       btn.innerHTML = lang === 'ar' ? '🌐 English' : '🌐 العربية';
     });
   }
 
-  // MutationObserver to automatically translate newly added dynamic DOM content
+  // 4. MutationObserver for dynamic API content
   let observer = null;
-  function startObserver() {
+  function initObserver() {
     if (observer || typeof MutationObserver === 'undefined') return;
     observer = new MutationObserver(mutations => {
       const currentLang = getLanguage();
@@ -504,34 +538,38 @@
         mutations.forEach(mutation => {
           mutation.addedNodes.forEach(node => {
             if (node.nodeType === Node.ELEMENT_NODE) {
-              translateNode(node, 'en');
+              translateTree(node, 'en');
+            } else if (node.nodeType === Node.TEXT_NODE) {
+              if (!textNodeMap.has(node)) textNodeMap.set(node, node.nodeValue);
+              node.nodeValue = translateString(textNodeMap.get(node), 'en');
             }
           });
         });
       }
     });
-    observer.observe(document.body, { childList: true, subtree: true });
+    if (document.body) {
+      observer.observe(document.body, { childList: true, subtree: true });
+    }
   }
 
-  // Initial boot
+  // Run on DOM ready
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
       applyLanguage(getLanguage());
-      startObserver();
+      initObserver();
     });
   } else {
     applyLanguage(getLanguage());
-    startObserver();
+    initObserver();
   }
 
-  // Public API
   window.KhatwaI18n = {
     t: (key, fallback = '') => (getLanguage() === 'en' ? DICTIONARY[key] || fallback || key : key),
     getLanguage,
     setLanguage,
     toggleLanguage,
     applyLanguage,
-    translateElement: (el) => translateNode(el, getLanguage()),
+    translateElement: (el) => translateTree(el, getLanguage()),
     DICTIONARY
   };
 })(window);
