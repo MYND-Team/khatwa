@@ -38,7 +38,7 @@ async function issueTokens(userId: string, username: string, role: Role) {
 // ─── Register Student ─────────────────────────────────────────────────────────
 
 export async function registerStudent(input: RegisterStudentInput) {
-  const { username, password, studentPhoneNumber, parentInfo } = input;
+  const { username, password, studentPhoneNumber, academicStage, parentInfo } = input as any;
 
   const existing = await prisma.user.findUnique({ where: { username } });
   if (existing) throw ConflictError('Username already taken');
@@ -53,6 +53,7 @@ export async function registerStudent(input: RegisterStudentInput) {
       studentProfile: {
         create: {
           studentPhoneNumber,
+          academicStage: academicStage || 'SECONDARY_1',
           parentInfo: {
             create: {
               parentPhoneNumber: parentInfo.parentPhoneNumber,

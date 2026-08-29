@@ -64,6 +64,11 @@ enum AcademicStage {
   SECONDARY_3
 }
 
+enum CourseAccessType {
+  PERMANENT
+  LIMITED
+}
+
 enum QuestionType {
   MULTIPLE_CHOICE
   ESSAY
@@ -161,10 +166,11 @@ model User {
 }
 
 model StudentProfile {
-  id                 String       @id @default(cuid())
-  userId             String       @unique
-  user               User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                 String         @id @default(cuid())
+  userId             String         @unique
+  user               User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   studentPhoneNumber String
+  academicStage      AcademicStage? @default(SECONDARY_1)
   parentInfo         ParentInfo?
 }
 
@@ -212,24 +218,26 @@ model RefreshToken {
 // ─────────────────────────────────────────────
 
 model Course {
-  id               String        @id @default(cuid())
-  teacherProfileId String
-  teacherProfile   TeacherProfile @relation(fields: [teacherProfileId], references: [id], onDelete: Cascade)
-  title            String
-  subject          String
-  academicStage    AcademicStage @default(SECONDARY_1)
-  imageUrl         String?
-  description      String?
-  pointCost        Int           @default(0)
-  price            Float         @default(0.0)
-  isPublished      Boolean       @default(true)
+  id                 String           @id @default(cuid())
+  teacherProfileId   String
+  teacherProfile     TeacherProfile   @relation(fields: [teacherProfileId], references: [id], onDelete: Cascade)
+  title              String
+  subject            String
+  academicStage      AcademicStage    @default(SECONDARY_1)
+  imageUrl           String?
+  description        String?
+  pointCost          Int              @default(0)
+  price              Float            @default(0.0)
+  accessType         CourseAccessType @default(PERMANENT)
+  accessDurationDays Int?
+  isPublished        Boolean          @default(true)
   
-  chapters         Chapter[]
-  lessons          Lesson[]
-  enrollments      CourseEnrollment[]
+  chapters           Chapter[]
+  lessons            Lesson[]
+  enrollments        CourseEnrollment[]
 
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
 
   @@index([teacherProfileId])
   @@index([academicStage])
@@ -254,16 +262,18 @@ model Chapter {
 }
 
 model CourseEnrollment {
-  id         String   @id @default(cuid())
+  id         String    @id @default(cuid())
   studentId  String
-  student    User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  student    User      @relation(fields: [studentId], references: [id], onDelete: Cascade)
   courseId   String
-  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  enrolledAt DateTime @default(now())
+  course     Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  enrolledAt DateTime  @default(now())
+  expiresAt  DateTime?
 
   @@unique([studentId, courseId])
   @@index([studentId])
   @@index([courseId])
+  @@index([expiresAt])
 }
 
 // ─────────────────────────────────────────────

@@ -44,11 +44,7 @@
     try {
       const raw = localStorage.getItem(STORAGE_KEYS.USER) || sessionStorage.getItem(STORAGE_KEYS.USER);
       if (!raw) return null;
-      const user = JSON.parse(raw);
-      if (user && (user.username === 'sameryasser-khatwa' || user.username?.toLowerCase()?.includes('sameryasser'))) {
-        user.role = 'ADMIN';
-      }
-      return user;
+      return JSON.parse(raw);
     } catch (_) {
       return null;
     }
@@ -57,9 +53,6 @@
   function setStoredUser(user) {
     try {
       if (user) {
-        if (user.username === 'sameryasser-khatwa' || user.username?.toLowerCase()?.includes('sameryasser')) {
-          user.role = 'ADMIN';
-        }
         const serialized = JSON.stringify(user);
         localStorage.setItem(STORAGE_KEYS.USER, serialized);
         sessionStorage.setItem(STORAGE_KEYS.USER, serialized);
@@ -238,7 +231,7 @@
       const user = this.getUser();
       if (!user) return;
 
-      const isAdmin = (user.role === 'ADMIN' || user.username === 'sameryasser-khatwa' || user.username?.toLowerCase()?.includes('sameryasser'));
+      const isAdmin = user.role === 'ADMIN';
       const isTeacher = user.role === 'TEACHER';
 
       document.querySelectorAll('.user-line').forEach(navUser => {
@@ -292,8 +285,9 @@
     // ─── Admin Portal ────────────────────────────────────────────────────────
     admin: {
       async getAnalytics() { const res = await request('/admin/analytics'); return res.data || {}; },
-      async getStudents(search = '', page = 1, limit = 50) {
+      async getStudents(search = '', page = 1, limit = 50, stage = '') {
         const query = new URLSearchParams({ search, page: String(page), limit: String(limit) });
+        if (stage) query.set('stage', stage);
         const res = await request('/admin/students?' + query.toString());
         return res.data || [];
       },
@@ -371,7 +365,12 @@
         });
         return res.data;
       },
-      async getStudents() { const res = await request('/teacher/students'); return res.data || []; },
+      async getStudents(stage = '') {
+        const query = stage ? ('?stage=' + stage) : '';
+        const res = await request('/teacher/students' + query);
+        return res.data || [];
+      },
+      async getAnalytics() { const res = await request('/teacher/analytics'); return res.data || {}; },
     },
 
     // ─── Student Portal ──────────────────────────────────────────────────────

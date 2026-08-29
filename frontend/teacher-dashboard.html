@@ -71,6 +71,26 @@
     </div>
   </div>
 
+  <!-- Analytics Stat Cards -->
+  <div id="analyticsCards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:24px;">
+    <div class="card" style="padding:16px;text-align:center;border-radius:16px;">
+      <div style="font-size:1.6rem;font-weight:700;color:var(--primary);" id="statStudents">—</div>
+      <div style="font-size:0.82rem;color:var(--ink-dim);margin-top:2px;">طلاب فريدون</div>
+    </div>
+    <div class="card" style="padding:16px;text-align:center;border-radius:16px;">
+      <div style="font-size:1.6rem;font-weight:700;color:var(--primary);" id="statEnrollments">—</div>
+      <div style="font-size:0.82rem;color:var(--ink-dim);margin-top:2px;">إجمالي التسجيلات</div>
+    </div>
+    <div class="card" style="padding:16px;text-align:center;border-radius:16px;">
+      <div style="font-size:1.6rem;font-weight:700;color:#22c55e;" id="statRevenue">—</div>
+      <div style="font-size:0.82rem;color:var(--ink-dim);margin-top:2px;">الإيراد (ج.م)</div>
+    </div>
+    <div class="card" style="padding:16px;text-align:center;border-radius:16px;">
+      <div style="font-size:1.6rem;font-weight:700;color:#f59e0b;" id="statPoints">—</div>
+      <div style="font-size:0.82rem;color:var(--ink-dim);margin-top:2px;">نقاط مكتسبة</div>
+    </div>
+  </div>
+
   <!-- Academic Stage Folder Tabs -->
   <div class="stage-folder-tabs" style="margin-bottom:24px;">
     <button class="stage-folder-tab active" onclick="switchStage('PREPARATORY', this)">📁 المرحلة الإعدادية</button>
@@ -93,7 +113,7 @@
 
 <!-- Modal: Create Course -->
 <div class="modal-overlay" id="createCourseModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999;align-items:center;justify-content:center;">
-  <div style="background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius);max-width:500px;width:90%;padding:24px;">
+  <div style="background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius);max-width:540px;width:90%;padding:24px;max-height:90vh;overflow-y:auto;">
     <h3 style="margin-top:0;">إنشاء كورس جديد</h3>
     <form id="createCourseForm" onsubmit="submitCreateCourse(event)">
       <div class="form-group" style="margin-bottom:12px;">
@@ -116,6 +136,18 @@
       <div class="form-group" style="margin-bottom:12px;">
         <label class="form-label">تكلفة الاشتراك (نقاط)</label>
         <input type="number" class="form-control" id="coursePointsInput" value="50" min="0">
+      </div>
+      <div class="form-group" style="margin-bottom:12px;">
+        <label class="form-label">🕐 مدة الوصول للكورس</label>
+        <select class="form-control" id="courseAccessTypeSelect" onchange="toggleAccessDuration()">
+          <option value="PERMANENT">وصول دائم (بدون انتهاء)</option>
+          <option value="LIMITED">وصول محدود المدة (بالأيام)</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin-bottom:12px;display:none;" id="accessDurationGroup">
+        <label class="form-label">عدد أيام الوصول</label>
+        <input type="number" class="form-control" id="courseAccessDaysInput" value="30" min="1" placeholder="مثال: 30 أو 90 أو 365">
+        <span style="font-size:0.8rem;color:var(--ink-dim);">سيتم احتساب تاريخ الانتهاء من لحظة اشتراك الطالب.</span>
       </div>
       <div class="form-group" style="margin-bottom:18px;">
         <label class="form-label">وصف الكورس</label>
@@ -278,7 +310,20 @@
     document.getElementById('navAvatar').textContent = (user.name || user.username || 'م').charAt(0);
     window.KhatwaAPI.syncNav();
     await loadCourses();
+    await loadAnalytics();
   });
+
+  async function loadAnalytics() {
+    try {
+      const data = await window.KhatwaAPI.teacher.getAnalytics();
+      document.getElementById('statStudents').textContent = data.totalStudents || 0;
+      document.getElementById('statEnrollments').textContent = data.totalEnrollments || 0;
+      document.getElementById('statRevenue').textContent = (data.totalRevenue || 0).toLocaleString('ar-EG') + ' ج.م';
+      document.getElementById('statPoints').textContent = (data.totalPoints || 0).toLocaleString('ar-EG') + ' نقطة';
+    } catch (e) {
+      console.warn('Analytics load failed', e);
+    }
+  }
 
   function switchStage(stage, tabBtn) {
     currentStage = stage;
@@ -376,10 +421,16 @@
   // ─── Modal: Create Course ─────────────────────────────────────────────────
   function openCreateCourseModal() {
     document.getElementById('courseStageSelect').value = currentStage;
+    document.getElementById('courseAccessTypeSelect').value = 'PERMANENT';
+    document.getElementById('accessDurationGroup').style.display = 'none';
     document.getElementById('createCourseModal').style.display = 'flex';
   }
   function closeCreateCourseModal() {
     document.getElementById('createCourseModal').style.display = 'none';
+  }
+  function toggleAccessDuration() {
+    const isLimited = document.getElementById('courseAccessTypeSelect').value === 'LIMITED';
+    document.getElementById('accessDurationGroup').style.display = isLimited ? 'block' : 'none';
   }
 
   async function submitCreateCourse(e) {
@@ -389,17 +440,20 @@
     const academicStage = document.getElementById('courseStageSelect').value;
     const pointCost = document.getElementById('coursePointsInput').value;
     const description = document.getElementById('courseDescInput').value.trim();
+    const accessType = document.getElementById('courseAccessTypeSelect').value;
+    const accessDurationDays = accessType === 'LIMITED' ? parseInt(document.getElementById('courseAccessDaysInput').value) || 30 : null;
 
     const btn = document.getElementById('saveCourseBtn');
     btn.disabled = true;
     btn.textContent = 'جارٍ الحفظ...';
 
     try {
-      await window.KhatwaAPI.teacher.createCourse({ title, subject, academicStage, pointCost, description });
+      await window.KhatwaAPI.teacher.createCourse({ title, subject, academicStage, pointCost, description, accessType, accessDurationDays });
       alert('تم حفظ الكورس بنجاح في قاعدة البيانات! ✅');
       closeCreateCourseModal();
       document.getElementById('createCourseForm').reset();
       await loadCourses();
+      await loadAnalytics();
     } catch (err) {
       alert(err.message || 'حدث خطأ أثناء حفظ الكورس');
     } finally {

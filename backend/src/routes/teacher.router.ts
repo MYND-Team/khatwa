@@ -77,6 +77,59 @@ router.patch(
   })
 );
 
+// ─── Teacher Revenue & Analytics ─────────────────────────────────────────────
+
+router.get(
+  '/analytics',
+  asyncHandler(async (req, res) => {
+    const teacherProfile = await prisma.teacherProfile.findUnique({ where: { userId: req.user!.sub } });
+    if (!teacherProfile) {
+      res.status(200).json({ success: true, data: { totalStudents: 0, totalEnrollments: 0, totalRevenue: 0, totalPoints: 0, freeEnrollments: 0, paidEnrollments: 0, courses: [] } });
+      return;
+    }
+
+    const courses = await prisma.course.findMany({
+      where: { teacherProfileId: teacherProfile.id },
+      include: { _count: { select: { enrollments: true } } },
+    });
+
+    const enrollments = await prisma.courseEnrollment.findMany({
+      where: { course: { teacherProfileId: teacherProfile.id } },
+      include: { course: { select: { price: true, pointCost: true, title: true, id: true } } },
+    });
+
+    const uniqueStudents = new Set(enrollments.map((e: any) => e.studentId));
+    const paidEnrollments = enrollments.filter((e: any) => e.course.price > 0 || e.course.pointCost > 0);
+    const freeEnrollments = enrollments.filter((e: any) => e.course.price === 0 && e.course.pointCost === 0);
+    const totalRevenue = enrollments.reduce((sum: number, e: any) => sum + (e.course.price || 0), 0);
+    const totalPoints = enrollments.reduce((sum: number, e: any) => sum + (e.course.pointCost || 0), 0);
+
+    const courseBreakdown = courses.map((c: any) => ({
+      id: c.id,
+      title: c.title,
+      price: c.price,
+      pointCost: c.pointCost,
+      accessType: c.accessType,
+      enrollmentCount: c._count.enrollments,
+      revenueEGP: Math.round(c.price * c._count.enrollments * 100) / 100,
+      revenuePoints: c.pointCost * c._count.enrollments,
+    }));
+
+    res.status(200).json({
+      success: true,
+      data: {
+        totalStudents: uniqueStudents.size,
+        totalEnrollments: enrollments.length,
+        paidEnrollments: paidEnrollments.length,
+        freeEnrollments: freeEnrollments.length,
+        totalRevenue: Math.round(totalRevenue * 100) / 100,
+        totalPoints,
+        courses: courseBreakdown,
+      },
+    });
+  })
+);
+
 // ─── Courses (Academic Year Folder Structure) ─────────────────────────────────
 
 router.get(
@@ -112,7 +165,7 @@ router.get(
 router.post(
   '/courses',
   asyncHandler(async (req, res) => {
-    const { title, subject, academicStage, imageUrl, description, pointCost, price } = req.body;
+    const { title, subject, academicStage, imageUrl, description, pointCost, price, accessType, accessDurationDays } = req.body;
 
     if (!title || !subject || !academicStage) {
       res.status(400).json({
@@ -131,6 +184,9 @@ router.post(
       return;
     }
 
+    const resolvedAccessType = accessType === 'LIMITED' ? 'LIMITED' : 'PERMANENT';
+    const resolvedDays = resolvedAccessType === 'LIMITED' && accessDurationDays ? parseInt(accessDurationDays) : null;
+
     const teacherProfile = await prisma.teacherProfile.findUnique({ where: { userId: req.user!.sub } });
     if (!teacherProfile) {
       res.status(403).json({ success: false, error: { code: 'FORBIDDEN', message: 'Teacher profile not found' } });
@@ -147,6 +203,8 @@ router.post(
         description: description || null,
         pointCost: parseInt(pointCost) || 0,
         price: parseFloat(price) || 0.0,
+        accessType: resolvedAccessType,
+        accessDurationDays: resolvedDays,
       },
       include: {
         chapters: true,
@@ -212,7 +270,9 @@ router.patch(
       return;
     }
 
-    const { title, subject, academicStage, imageUrl, description, pointCost, price, isPublished } = req.body;
+    const { title, subject, academicStage, imageUrl, description, pointCost, price, isPublished, accessType, accessDurationDays } = req.body;
+    const resolvedAccessType = accessType === 'LIMITED' ? 'LIMITED' : (accessType === 'PERMANENT' ? 'PERMANENT' : undefined);
+    const resolvedDays = resolvedAccessType === 'LIMITED' && accessDurationDays ? parseInt(accessDurationDays) : (accessType === 'PERMANENT' ? null : undefined);
     const updated = await prisma.course.update({
       where: { id: course.id },
       data: {
@@ -224,6 +284,8 @@ router.patch(
         ...(pointCost !== undefined && { pointCost: parseInt(pointCost) }),
         ...(price !== undefined && { price: parseFloat(price) }),
         ...(isPublished !== undefined && { isPublished: Boolean(isPublished) }),
+        ...(resolvedAccessType !== undefined && { accessType: resolvedAccessType }),
+        ...(resolvedDays !== undefined && { accessDurationDays: resolvedDays }),
       },
     });
 
@@ -620,12 +682,26 @@ router.get(
       return;
     }
 
-    // Get enrolled students from courses
+    const { stage = '' } = req.query as Record<string, string>;
+    const validStages = ['PREPARATORY', 'SECONDARY_1', 'SECONDARY_2', 'SECONDARY_3'];
+    const stageFilter = stage && validStages.includes(stage) ? stage : null;
+
     const enrollments = await prisma.courseEnrollment.findMany({
-      where: { course: { teacherProfileId: teacherProfile.id } },
+      where: {
+        course: { teacherProfileId: teacherProfile.id },
+        ...(stageFilter ? { student: { studentProfile: { academicStage: stageFilter as any } } } : {}),
+      },
       include: {
         student: {
-          select: { id: true, username: true, pointsBalance: true, walletBalance: true, isActive: true, createdAt: true },
+          select: {
+            id: true,
+            username: true,
+            pointsBalance: true,
+            walletBalance: true,
+            isActive: true,
+            createdAt: true,
+            studentProfile: { select: { studentPhoneNumber: true, academicStage: true } },
+          },
         },
         course: { select: { id: true, title: true, academicStage: true } },
       },

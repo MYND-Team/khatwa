@@ -49,12 +49,12 @@ router.get(
         studentProfile: {
           select: {
             studentPhoneNumber: true,
+            academicStage: true,
             parentInfo: {
               select: {
                 parentPhoneNumber: true,
                 parentEmail: true,
                 fatherJob: true,
-                // parentStatus intentionally excluded — sensitive
               },
             },
           },
@@ -68,7 +68,8 @@ router.get(
 router.put(
   '/profile',
   asyncHandler(async (req, res) => {
-    const { studentPhoneNumber, parentPhoneNumber, parentEmail, fatherJob } = req.body;
+    const { studentPhoneNumber, academicStage, parentPhoneNumber, parentEmail, fatherJob } = req.body;
+    const validStages = ['PREPARATORY', 'SECONDARY_1', 'SECONDARY_2', 'SECONDARY_3'];
 
     let studentProfile = await prisma.studentProfile.findUnique({
       where: { userId: req.user!.sub },
@@ -80,6 +81,7 @@ router.put(
         data: {
           userId: req.user!.sub,
           studentPhoneNumber: studentPhoneNumber || '',
+          academicStage: (academicStage && validStages.includes(academicStage)) ? academicStage : 'SECONDARY_1',
           parentInfo: {
             create: {
               parentPhoneNumber: parentPhoneNumber || '',
@@ -92,10 +94,13 @@ router.put(
         include: { parentInfo: true },
       });
     } else {
-      if (studentPhoneNumber !== undefined) {
+      const profileUpdates: any = {};
+      if (studentPhoneNumber !== undefined) profileUpdates.studentPhoneNumber = studentPhoneNumber;
+      if (academicStage && validStages.includes(academicStage)) profileUpdates.academicStage = academicStage;
+      if (Object.keys(profileUpdates).length > 0) {
         await prisma.studentProfile.update({
           where: { id: studentProfile.id },
-          data: { studentPhoneNumber },
+          data: profileUpdates,
         });
       }
 
@@ -267,32 +272,76 @@ router.post(
 
     // Deduct points if required
     if (course.pointCost > 0) {
-      const student = await prisma.user.findUnique({ where: { id: studentId } });
-      if (!student || student.pointsBalance < course.pointCost) {
-        res.status(402).json({ success: false, error: { code: 'INSUFFICIENT_POINTS', message: 'Not enough points to enroll' } });
-        return;
-      }
+      try {
+        await prisma.$transaction(async (tx: any) => {
+          const inTxExisting = await tx.courseEnrollment.findUnique({
+            where: { studentId_courseId: { studentId, courseId } },
+          });
+          if (inTxExisting) {
+            throw Object.assign(new Error('Already enrolled in this course'), { statusCode: 409, code: 'ALREADY_ENROLLED' });
+          }
 
-      await prisma.$transaction([
-        prisma.user.update({
-          where: { id: studentId },
-          data: { pointsBalance: { decrement: course.pointCost } },
-        }),
-        prisma.pointsTransaction.create({
-          data: {
-            studentId,
-            type: 'DEBIT',
-            amount: course.pointCost,
-            reason: `تسجيل في كورس: ${course.title}`,
-            actorId: studentId,
-          },
-        }),
-        prisma.courseEnrollment.create({
-          data: { studentId, courseId },
-        }),
-      ]);
+          const updated = await tx.user.updateMany({
+            where: { id: studentId, pointsBalance: { gte: course.pointCost } },
+            data: { pointsBalance: { decrement: course.pointCost } },
+          });
+
+          if (updated.count === 0) {
+            throw Object.assign(new Error('Not enough points to enroll'), { statusCode: 402, code: 'INSUFFICIENT_POINTS' });
+          }
+
+          await tx.pointsTransaction.create({
+            data: {
+              studentId,
+              type: 'DEBIT',
+              amount: course.pointCost,
+              reason: `تسجيل في كورس: ${course.title}`,
+              actorId: studentId,
+            },
+          });
+
+          // Calculate expiresAt for time-limited courses
+          let expiresAt: Date | null = null;
+          if ((course as any).accessType === 'LIMITED' && (course as any).accessDurationDays) {
+            expiresAt = new Date();
+            expiresAt.setDate(expiresAt.getDate() + (course as any).accessDurationDays);
+          }
+
+          await tx.courseEnrollment.create({
+            data: { studentId, courseId, ...(expiresAt ? { expiresAt } : {}) },
+          });
+        });
+      } catch (err: any) {
+        if (err.code === 'ALREADY_ENROLLED' || err.statusCode === 409) {
+          res.status(409).json({ success: false, error: { code: 'ALREADY_ENROLLED', message: err.message || 'Already enrolled in this course' } });
+          return;
+        }
+        if (err.code === 'INSUFFICIENT_POINTS' || err.statusCode === 402) {
+          res.status(402).json({ success: false, error: { code: 'INSUFFICIENT_POINTS', message: err.message || 'Not enough points to enroll' } });
+          return;
+        }
+        if (err?.code === 'P2002') {
+          res.status(409).json({ success: false, error: { code: 'ALREADY_ENROLLED', message: 'Already enrolled in this course' } });
+          return;
+        }
+        throw err;
+      }
     } else {
-      await prisma.courseEnrollment.create({ data: { studentId, courseId } });
+      try {
+        // Calculate expiresAt for time-limited courses
+        let expiresAt: Date | null = null;
+        if ((course as any).accessType === 'LIMITED' && (course as any).accessDurationDays) {
+          expiresAt = new Date();
+          expiresAt.setDate(expiresAt.getDate() + (course as any).accessDurationDays);
+        }
+        await prisma.courseEnrollment.create({ data: { studentId, courseId, ...(expiresAt ? { expiresAt } : {}) } });
+      } catch (err: any) {
+        if (err?.code === 'P2002') {
+          res.status(409).json({ success: false, error: { code: 'ALREADY_ENROLLED', message: 'Already enrolled in this course' } });
+          return;
+        }
+        throw err;
+      }
     }
 
     res.status(201).json({ success: true, message: `Enrolled in ${course.title}` });
@@ -307,12 +356,17 @@ router.get(
     const studentId = req.user!.sub;
     const courseId = req.params.courseId;
 
-    // Check enrollment
+    // Check enrollment and expiration
     const enrollment = await prisma.courseEnrollment.findUnique({
       where: { studentId_courseId: { studentId, courseId } },
     });
     if (!enrollment) {
       res.status(403).json({ success: false, error: { code: 'NOT_ENROLLED', message: 'You are not enrolled in this course' } });
+      return;
+    }
+    // Enforce time-limited access
+    if ((enrollment as any).expiresAt && new Date() > new Date((enrollment as any).expiresAt)) {
+      res.status(403).json({ success: false, error: { code: 'ACCESS_EXPIRED', message: 'Your access to this course has expired' } });
       return;
     }
 
@@ -437,6 +491,25 @@ router.get(
       return;
     }
 
+    // Check if lesson requires point unlock
+    if (lesson.pointCost > 0) {
+      const unlocked = await prisma.unlockedLesson.findUnique({
+        where: { studentId_lessonId: { studentId, lessonId } },
+      });
+      if (!unlocked) {
+        res.status(200).json({
+          success: true,
+          data: {
+            canAccess: false,
+            reason: 'LESSON_LOCKED',
+            step: 'unlock',
+            pointCost: lesson.pointCost,
+          },
+        });
+        return;
+      }
+    }
+
     // All gates passed
     res.status(200).json({
       success: true,
@@ -501,15 +574,15 @@ router.get(
       }
     }
 
-    // 3. Check exam passed
-    if (lesson.examQuizId) {
-      const attempt = await prisma.quizAttempt.findUnique({
-        where: { studentId_quizId: { studentId, quizId: lesson.examQuizId } },
+    // 4. Check if lesson requires point unlock
+    if (lesson.pointCost > 0) {
+      const unlocked = await prisma.unlockedLesson.findUnique({
+        where: { studentId_lessonId: { studentId, lessonId } },
       });
-      if (!attempt || !attempt.passed) {
+      if (!unlocked) {
         res.status(403).json({
           success: false,
-          error: { code: 'EXAM_REQUIRED', message: 'You must pass the exam before accessing this lesson' },
+          error: { code: 'LESSON_LOCKED', message: `This lesson costs ${lesson.pointCost} points and must be unlocked first` },
         });
         return;
       }

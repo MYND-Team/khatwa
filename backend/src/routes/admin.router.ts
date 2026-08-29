@@ -35,10 +35,16 @@ router.post('/access-codes/:id/regenerate', AccessCodesController.regenerateCode
 router.get(
   '/students',
   asyncHandler(async (req, res) => {
-    const { search = '', page = '1', limit = '50' } = req.query as Record<string, string>;
+    const { search = '', page = '1', limit = '50', stage = '' } = req.query as Record<string, string>;
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
+    const validStages = ['PREPARATORY', 'SECONDARY_1', 'SECONDARY_2', 'SECONDARY_3'];
+    const stageFilter = stage && validStages.includes(stage) ? stage : null;
+
     const where: any = { role: 'STUDENT' };
+    if (stageFilter) {
+      where.studentProfile = { academicStage: stageFilter };
+    }
     if (search) {
       where.OR = [
         { username: { contains: search, mode: 'insensitive' } },

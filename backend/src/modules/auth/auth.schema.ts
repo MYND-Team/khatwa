@@ -10,6 +10,7 @@ export const registerStudentSchema = z.object({
     password: z.string().min(8, 'Password must be at least 8 characters'),
     confirmPassword: z.string(),
     studentPhoneNumber: z.string().min(10),
+    academicStage: z.enum(['PREPARATORY', 'SECONDARY_1', 'SECONDARY_2', 'SECONDARY_3']).optional(),
     parentInfo: z.object({
       parentPhoneNumber: z.string().min(10),
       parentEmail: z.string().email().optional(),

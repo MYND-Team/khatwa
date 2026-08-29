@@ -97,9 +97,8 @@
     return urlParams.get(param);
   }
 
-  function renderCourseDetails() {
+  async function renderCourseDetails() {
     const user = window.KhatwaAPI.getUser();
-    const studentId = user ? user.id : 'student-default';
     let courseId = getQueryParam('id');
 
     if (user) {
@@ -108,15 +107,17 @@
       document.getElementById('navAvatar').textContent = (user.name || user.username || 'ط').charAt(0);
     }
 
-    const allCourses = window.KhatwaAPI.courses.getAll();
     let course = null;
-
     if (courseId) {
-      course = window.KhatwaAPI.courses.getById(courseId);
+      course = await window.KhatwaAPI.courses.getById(courseId);
     }
-    if (!course && allCourses.length > 0) {
-      course = allCourses[0];
-      courseId = course.id;
+
+    if (!course) {
+      const allCourses = await window.KhatwaAPI.courses.getAll();
+      if (allCourses && allCourses.length > 0) {
+        course = allCourses[0];
+        courseId = course.id;
+      }
     }
 
     if (!course) {
@@ -131,38 +132,56 @@
       return;
     }
 
+    const teacherName = course.teacherProfile?.displayName || course.teacherName || 'مدرس المادة';
+    const stageLabel = course.academicStage || course.grade || 'المرحلة الدراسية';
+    const pointCost = course.pointCost || 0;
+
     document.title = `${course.title} | خطوة`;
     document.getElementById('courseBreadcrumbTitle').textContent = course.title;
     document.getElementById('courseHeaderTitle').textContent = course.title;
-    document.getElementById('courseHeaderSubtitle').textContent = `${course.teacherName} · ${course.subject} (${course.grade || 'المرحلة الثانوية'})`;
-    document.getElementById('coursePointsTag').textContent = `${course.pointCost} نقطة`;
+    document.getElementById('courseHeaderSubtitle').textContent = `${teacherName} · ${course.subject} (${stageLabel})`;
+    document.getElementById('coursePointsTag').textContent = `${pointCost} نقطة`;
 
-    const isEnrolled = window.KhatwaAPI.courses.isEnrolled(course.id, studentId);
+    const isEnrolled = await window.KhatwaAPI.courses.isEnrolled(course.id);
     const enrollBtn = document.getElementById('enrollActionBtn');
     if (!isEnrolled) {
       enrollBtn.style.display = 'inline-flex';
-      enrollBtn.onclick = function() {
-        window.KhatwaAPI.courses.enroll(course.id);
-        renderCourseDetails();
+      enrollBtn.textContent = pointCost > 0 ? `اشتراك الان (${pointCost} نقطة)` : 'اشتراك مجاني الآن';
+      enrollBtn.onclick = async function() {
+        enrollBtn.disabled = true;
+        enrollBtn.textContent = 'جارٍ الاشتراك...';
+        try {
+          await window.KhatwaAPI.courses.enroll(course.id);
+          alert('تم الاشتراك في الكورس بنجاح! 🎉');
+          await renderCourseDetails();
+        } catch (err) {
+          alert(err.message || 'فشل الاشتراك في الكورس');
+          enrollBtn.disabled = false;
+          enrollBtn.textContent = pointCost > 0 ? `اشتراك الآن (${pointCost} نقطة)` : 'اشتراك مجاني الآن';
+        }
       };
     } else {
       enrollBtn.style.display = 'none';
     }
 
-    // Progress calculation
-    const lectures = course.lectures || [];
-    const myEnrolledCourses = window.KhatwaAPI.courses.getMyCourses(studentId);
-    const thisEnrollment = myEnrolledCourses.find(c => c.id === course.id);
-    const completedIds = thisEnrollment ? (thisEnrollment.completedLectureIds || []) : [];
-    const completedCount = completedIds.length;
-    const totalCount = lectures.length;
-    const progressPct = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+    // Flatten chapters & lessons
+    let allLessons = [];
+    if (course.chapters && Array.isArray(course.chapters)) {
+      course.chapters.forEach(ch => {
+        if (ch.lessons && Array.isArray(ch.lessons)) {
+          allLessons.push(...ch.lessons);
+        }
+      });
+    } else if (course.lessons && Array.isArray(course.lessons)) {
+      allLessons = course.lessons;
+    }
 
-    document.getElementById('courseProgressRatio').textContent = `${completedCount} من ${totalCount} حصة مكتملة (${progressPct}%)`;
-    document.getElementById('courseProgressBar').style.width = `${progressPct}%`;
+    const totalCount = allLessons.length;
+    document.getElementById('courseProgressRatio').textContent = `${isEnrolled ? totalCount : 0} من ${totalCount} حصة متاحة`;
+    document.getElementById('courseProgressBar').style.width = isEnrolled ? '100%' : '0%';
 
     const container = document.getElementById('lessonsContainer');
-    if (lectures.length === 0) {
+    if (totalCount === 0) {
       container.innerHTML = `
         <div class="empty-state">
           <div class="em-mark">⏳</div>
@@ -171,24 +190,20 @@
         </div>
       `;
     } else {
-      container.innerHTML = lectures.map((lec, idx) => {
-        const isDone = completedIds.includes(lec.id);
-        const isAvailable = isEnrolled || idx === 0;
-
+      container.innerHTML = allLessons.map((lec, idx) => {
+        const isAvailable = isEnrolled;
         return `
-          <div class="lesson-row ${isDone ? 'done' : (!isAvailable ? 'locked' : '')}">
-            <span class="lnum">${isDone ? '✓' : (idx + 1)}</span>
+          <div class="lesson-row ${!isAvailable ? 'locked' : ''}">
+            <span class="lnum">${idx + 1}</span>
             <div class="ltext">
               <b>${escapeHtml(lec.title)}</b>
-              <span>${escapeHtml(lec.description || `مدة المحاضرة: ${lec.duration} دقيقة`)}</span>
+              <span>${escapeHtml(lec.description || 'محاضرة وشرح تفصيلي للمنهج')}</span>
             </div>
-            ${isDone ? `
-              <a href="lesson.html?courseId=${course.id}&lessonId=${lec.id}" class="btn btn-text btn-sm">مراجعة المحاضرة</a>
-            ` : (isAvailable ? `
+            ${isAvailable ? `
               <a href="lesson.html?courseId=${course.id}&lessonId=${lec.id}" class="btn btn-primary btn-sm">ابدأ المحاضرة</a>
             ` : `
-              <span class="tag tag-locked">مقفلة</span>
-            `)}
+              <span class="tag tag-locked">اشترك لفتح الدرس 🔒</span>
+            `}
           </div>
         `;
       }).join('');
