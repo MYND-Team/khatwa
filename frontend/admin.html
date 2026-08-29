@@ -739,6 +739,7 @@
     </form>
   </div>
 </div>
+</div>
 
 <!-- Modal: Student Profile Dossier & Notes & Wallet -->
 <div id="studentDossierModal" style="display:none; position:fixed; inset:0; width:100vw; height:100vh; background:rgba(15,23,42,0.75); z-index:999999; align-items:center; justify-content:center; backdrop-filter:blur(4px);" onclick="if(event.target===this) closeStudentDossier()">
@@ -946,7 +947,7 @@
           <td>${dateStr}</td>
           <td>
             <div style="display:flex;gap:6px;">
-              <button type="button" class="btn btn-primary btn-sm" style="padding:4px 10px;font-size:.8rem;cursor:pointer;" onclick="openStudentDossier('${s.id}')">📂 الملف والعمليات</button>
+              <button type="button" class="btn btn-primary btn-sm" data-action="open-dossier" data-student-id="${s.id}" style="padding:4px 10px;font-size:.8rem;cursor:pointer;" onclick="openStudentDossier('${s.id}')">📂 الملف والعمليات</button>
             </div>
           </td>
         </tr>
