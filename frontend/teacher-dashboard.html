@@ -198,6 +198,11 @@
         <input type="text" class="form-control" id="lessonTitleInput" placeholder="مثال: المحاضرة الأولى: شرح القوانين الأساسية" required>
       </div>
       <div class="form-group" style="margin-bottom:12px;">
+        <label class="form-label">💎 تكلفة فتح هذه المحاضرة (نقاط) — 0 = مجاني</label>
+        <input type="number" class="form-control" id="lessonPointCostInput" value="0" min="0" placeholder="0">
+        <span style="font-size:0.8rem;color:var(--ink-dim);">الطلاب المشتركون في الكورس سيحتاجون هذا الرصيد من النقاط لفتح هذه المحاضرة بشكل منفرد.</span>
+      </div>
+      <div class="form-group" style="margin-bottom:12px;">
         <label class="form-label">رابط فيديو المحاضرة (أو ارفع ملف فيديو أدناه)</label>
         <input type="text" class="form-control" id="lessonVideoUrlInput" placeholder="رابط يوتيوب أو Drive أو استضافة فيديو">
       </div>
@@ -397,6 +402,7 @@
                         <div class="lesson-item">
                           <div>
                             <b>${lIdx + 1}. ${l.title}</b>
+                            ${l.pointCost > 0 ? `<span class="tag tag-warn" style="margin-inline-start:6px;">💎 ${l.pointCost} نقطة</span>` : '<span class="tag tag-ok" style="margin-inline-start:6px;">مجاني</span>'}
                             ${l.pdfUrl ? '<span class="tag" style="margin-inline-start:6px;">📄 PDF</span>' : ''}
                             ${l.videoUrl ? '<span class="tag tag-ok" style="margin-inline-start:4px;">🎬 فيديو</span>' : ''}
                           </div>
@@ -510,13 +516,14 @@
     const videoUrl = document.getElementById('lessonVideoUrlInput').value.trim();
     const description = document.getElementById('lessonDescInput').value.trim();
     const pdfFile = document.getElementById('lessonPdfFile').files[0];
+    const pointCost = parseInt(document.getElementById('lessonPointCostInput').value) || 0;
 
     const btn = document.getElementById('saveLessonBtn');
     btn.disabled = true;
     btn.textContent = 'جارٍ الحفظ والرفع...';
 
     try {
-      const lesson = await window.KhatwaAPI.teacher.createLesson(chapterId, { title, videoUrl, description });
+      const lesson = await window.KhatwaAPI.teacher.createLesson(chapterId, { title, videoUrl, description, pointCost });
       if (pdfFile && lesson?.id) {
         await window.KhatwaAPI.teacher.uploadPdf(lesson.id, pdfFile);
       }

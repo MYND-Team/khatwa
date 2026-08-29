@@ -192,6 +192,7 @@
     } else {
       container.innerHTML = allLessons.map((lec, idx) => {
         const isAvailable = isEnrolled;
+        const lessonCost = lec.pointCost || 0;
         return `
           <div class="lesson-row ${!isAvailable ? 'locked' : ''}">
             <span class="lnum">${idx + 1}</span>
@@ -200,7 +201,10 @@
               <span>${escapeHtml(lec.description || 'محاضرة وشرح تفصيلي للمنهج')}</span>
             </div>
             ${isAvailable ? `
-              <a href="lesson.html?courseId=${course.id}&lessonId=${lec.id}" class="btn btn-primary btn-sm">ابدأ المحاضرة</a>
+              <div style="display:flex;align-items:center;gap:8px;">
+                ${lessonCost > 0 ? `<span class="tag tag-warn">💎 ${lessonCost} نقطة</span>` : '<span class="tag tag-ok">مجاني</span>'}
+                <a href="lesson.html?courseId=${course.id}&lessonId=${lec.id}" class="btn btn-primary btn-sm">ابدأ المحاضرة</a>
+              </div>
             ` : `
               <span class="tag tag-locked">اشترك لفتح الدرس 🔒</span>
             `}

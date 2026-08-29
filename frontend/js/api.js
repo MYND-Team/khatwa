@@ -385,6 +385,7 @@
         return res.data || { canAccess: false, reason: 'UNKNOWN', step: 'assignment' };
       },
       async getLessonContent(lessonId) { const res = await request('/student/lessons/' + lessonId + '/content'); return res.data; },
+      async unlockLesson(lessonId) { const res = await request('/student/lessons/' + lessonId + '/unlock', { method: 'POST' }); return res.data; },
       async getQuiz(quizId) { const res = await request('/student/quizzes/' + quizId); return res.data; },
       async submitQuizAttempt(quizId, answers) {
         const res = await request('/student/quizzes/' + quizId + '/attempt', {
