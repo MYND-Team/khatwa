@@ -1977,14 +1977,28 @@
     const points = s.pointsBalance !== undefined ? s.pointsBalance : 0;
     const enrollmentsCount = s.courseEnrollments?.length || s.enrolledCount || 0;
 
+    const isActive = s.isActive !== false;
+    const statusText = isActive ? '<span style="color:#16a34a;font-weight:700;">نشط ✓</span>' : '<span style="color:#dc2626;font-weight:700;">معطل ✕</span>';
+
     document.getElementById('dossierDetails').innerHTML = `
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; font-size:0.92rem; color:#1e293b; background:#f8fafc; padding:16px; border-radius:14px; border:1px solid #e2e8f0; margin-bottom:12px;">
+        <div><b>حالة الحساب:</b> ${statusText}</div>
         <div><b>رقم الهاتف:</b> <span dir="ltr" style="font-weight:600;">${phone}</span></div>
         <div><b>هاتف ولي الأمر:</b> <span dir="ltr" style="font-weight:600;">${pphone}</span></div>
         <div><b>وظيفة الأب:</b> <span style="font-weight:600;">${fatherJob}</span></div>
         <div><b>رصيد المحفظة:</b> <b style="color:#10b981;">${wallet} ج.م</b></div>
         <div><b>رصيد النقاط:</b> <b style="color:#d97706;">${points} نقطة</b></div>
-        <div><b>الكورسات المشترك بها:</b> <span style="font-weight:600;">${enrollmentsCount} كورس</span></div>
+        <div style="grid-column: span 2;"><b>الكورسات المشترك بها:</b> <span style="font-weight:600;">${enrollmentsCount} كورس</span></div>
+      </div>
+
+      <div style="display:flex; gap:10px; align-items:center; margin-bottom:16px; padding:10px 14px; background:#fff1f2; border:1px solid #fecdd3; border-radius:12px;">
+        <span style="font-size:0.88rem; font-weight:700; color:#9f1239;">⚙️ إدارة الحساب:</span>
+        <button type="button" class="btn btn-line btn-sm" style="background:#fff; font-size:0.82rem; padding:4px 12px;" onclick="toggleStudentActive('${s.id}'); closeStudentDossier();">
+          ${isActive ? 'تعطيل الحساب' : 'تفعيل الحساب'}
+        </button>
+        <button type="button" class="btn btn-line btn-sm" style="background:#fff; color:#dc2626; border-color:#fca5a5; font-size:0.82rem; padding:4px 12px;" onclick="confirmDeleteStudent('${s.id}', '${name.replace(/'/g, "\\'")}'); closeStudentDossier();">
+          🗑️ حذف الحساب نهائياً
+        </button>
       </div>
     `;
   }
