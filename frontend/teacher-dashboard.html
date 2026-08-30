@@ -582,11 +582,14 @@
         </div>
       `;
 
-      if (data.videoUrl) {
+      if (data.driveFileId || data.videoUrl) {
+        const streamUrl = data.driveFileId ? `${window.KhatwaAPI.BASE_URL}/student/lessons/${data.id}/stream` : data.videoUrl;
         previewContent += `
           <div style="margin-bottom:16px;">
-            <h4>🎬 رابط الفيديو:</h4>
-            <a href="${data.videoUrl}" target="_blank" class="btn btn-line btn-sm">فتح الفيديو في نافذة جديدة ↗</a>
+            <h4>🎬 فيديو المحاضرة (معاينة التشغيل المباشر):</h4>
+            <div style="position:relative;background:#000;border-radius:12px;overflow:hidden;">
+              <video src="${streamUrl}" controls controlsList="nodownload" style="width:100%;max-height:400px;display:block;"></video>
+            </div>
           </div>
         `;
       }
