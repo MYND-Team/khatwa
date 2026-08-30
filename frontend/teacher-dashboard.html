@@ -238,9 +238,10 @@
       </div>
       <span style="font-size:0.8rem;color:var(--ink-dim);display:block;margin-bottom:12px;">ضع 0 لتكون المحاضرة مجانية لجميع طلاب هذه المرحلة.</span>
 
-      <div class="form-group" style="margin-bottom:12px;">
-        <label class="form-label">رابط فيديو المحاضرة</label>
-        <input type="text" class="form-control" id="lessonVideoUrlInput" placeholder="رابط يوتيوب أو Drive أو استضافة فيديو">
+      <div class="form-group" style="margin-bottom:14px;">
+        <label class="form-label">🎬 رفع ملف فيديو المحاضرة (Upload Video File)</label>
+        <input type="file" id="lessonVideoFile" accept="video/mp4,video/mkv,video/webm,video/*" class="form-control">
+        <span style="font-size:0.8rem;color:var(--ink-dim);">سيتم رفع ملف الفيديو مباشرة وتخزينه في Google Drive وتأمينه ضد التحميل والسرقة.</span>
       </div>
       <div class="form-group" style="margin-bottom:14px;">
         <label class="form-label">📄 رفع مذكرة الدرس (PDF Document)</label>
@@ -703,25 +704,33 @@
     const title = document.getElementById('lessonTitleInput').value.trim();
     const price = parseFloat(document.getElementById('lessonPriceInput').value) || 0;
     const pointCost = parseInt(document.getElementById('lessonPointCostInput').value) || 0;
-    const videoUrl = document.getElementById('lessonVideoUrlInput').value.trim();
     const description = document.getElementById('lessonDescInput').value.trim();
-    const pdfFile = document.getElementById('lessonPdfFile').files[0];
+    const videoFile = document.getElementById('lessonVideoFile')?.files[0];
+    const pdfFile = document.getElementById('lessonPdfFile')?.files[0];
 
     const btn = document.getElementById('saveLessonBtn');
     btn.disabled = true;
-    btn.textContent = 'جارٍ الحفظ والرفع...';
+    btn.textContent = 'جارٍ إنشاء الدرس...';
 
     try {
-      const lesson = await window.KhatwaAPI.teacher.createLesson(chapterId, { title, price, pointCost, videoUrl, description });
+      const lesson = await window.KhatwaAPI.teacher.createLesson(chapterId, { title, price, pointCost, description });
+
+      if (videoFile && lesson?.id) {
+        btn.textContent = 'جارٍ رفع الفيديو وتأمينه في Google Drive... ⏳';
+        await window.KhatwaAPI.teacher.uploadVideo(lesson.id, videoFile);
+      }
+
       if (pdfFile && lesson?.id) {
+        btn.textContent = 'جارٍ رفع مذكرة الـ PDF... 📄';
         await window.KhatwaAPI.teacher.uploadPdf(lesson.id, pdfFile);
       }
-      alert('تم حفظ الدرس ونشر المحاضرة بنجاح! ✅');
+
+      alert('تم حفظ الدرس ورفع المحاضرة والمذكرة بنجاح! ✅');
       closeAddLessonModal();
       document.getElementById('addLessonForm').reset();
       await refreshWorkspace();
     } catch (err) {
-      alert(err.message || 'حدث خطأ أثناء حفظ الدرس');
+      alert(err.message || 'حدث خطأ أثناء حفظ ورفع الدرس');
     } finally {
       btn.disabled = false;
       btn.textContent = 'حفظ ونشر الدرس ✓';

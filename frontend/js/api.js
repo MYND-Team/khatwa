@@ -406,11 +406,10 @@
         const res = await request('/teacher/lessons/' + lessonId + '/pdf', { method: 'POST', body: formData });
         return res.data;
       },
-      async uploadVideo(file, lessonId) {
+      async uploadVideo(lessonId, file) {
         const formData = new FormData();
         formData.append('video', file);
-        if (lessonId) formData.append('lessonId', lessonId);
-        const res = await request('/teacher/upload-video', { method: 'POST', body: formData });
+        const res = await request('/teacher/lessons/' + lessonId + '/video', { method: 'POST', body: formData });
         return res.data;
       },
       async createQuiz(data) { const res = await request('/teacher/quizzes', { method: 'POST', body: data }); return res.data; },

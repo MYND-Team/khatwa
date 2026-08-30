@@ -662,8 +662,14 @@
         </div>
 
         <div class="form-group" style="margin-bottom:14px;">
-          <label class="form-label">رابط لوجو المنصة (Logo URL)</label>
-          <input type="url" id="setLogoUrl" class="form-control" placeholder="logo/logo-khatwa.jpeg">
+          <label class="form-label">لوجو المنصة (رفع ملف صورة Logo)</label>
+          <div style="display:flex;gap:10px;align-items:center;">
+            <input type="file" id="setLogoFile" accept="image/*" class="form-control" onchange="previewPlatformLogo(this)">
+            <input type="hidden" id="setLogoUrl">
+            <div id="platformLogoPreview" style="width:40px;height:40px;border-radius:8px;background:var(--bg-raised);border:1px solid var(--line-soft);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;">
+              <img id="logoPreviewImg" src="logo/logo-khatwa.jpeg" style="width:100%;height:100%;object-fit:cover;">
+            </div>
+          </div>
         </div>
 
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">
@@ -888,9 +894,10 @@
       </div>
 
       <div class="form-group" style="margin-bottom:14px;">
-        <label class="form-label" style="font-weight:600;color:var(--ink);margin-bottom:6px;display:block;">رابط صورة المدرس (Avatar URL)</label>
+        <label class="form-label" style="font-weight:600;color:var(--ink);margin-bottom:6px;display:block;">صورة المدرس الشخصية (رفع ملف صورة)</label>
         <div style="display:flex;gap:10px;align-items:center;">
-          <input type="url" class="form-control" id="newTeacherAvatar" placeholder="https://..." oninput="previewTeacherAvatar(this.value)" style="border-radius:10px;padding:10px 14px;flex:1;">
+          <input type="file" id="newTeacherAvatarFile" accept="image/*" class="form-control" onchange="previewTeacherAvatarFile(this)" style="border-radius:10px;padding:8px 14px;flex:1;">
+          <input type="hidden" id="newTeacherAvatar">
           <div id="teacherAvatarPreview" style="width:42px;height:42px;border-radius:50%;background:var(--primary-faint);border:1.5px solid var(--line-soft);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;font-size:1.2rem;">👨‍🏫</div>
         </div>
       </div>
@@ -1791,10 +1798,33 @@
   function previewTeacherAvatar(url) {
     const preview = document.getElementById('teacherAvatarPreview');
     if (!preview) return;
-    if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
+    if (url && (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:'))) {
       preview.innerHTML = `<img src="${url}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='👨‍🏫'">`;
     } else {
       preview.innerHTML = '👨‍🏫';
+    }
+  }
+
+  function previewTeacherAvatarFile(input) {
+    if (input.files && input.files[0]) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        document.getElementById('newTeacherAvatar').value = e.target.result;
+        previewTeacherAvatar(e.target.result);
+      };
+      reader.readAsDataURL(input.files[0]);
+    }
+  }
+
+  function previewPlatformLogo(input) {
+    if (input.files && input.files[0]) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        document.getElementById('setLogoUrl').value = e.target.result;
+        const img = document.getElementById('logoPreviewImg');
+        if (img) img.src = e.target.result;
+      };
+      reader.readAsDataURL(input.files[0]);
     }
   }
 
