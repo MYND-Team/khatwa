@@ -945,9 +945,13 @@
 <div id="studentDossierModal" style="display:none; position:fixed; inset:0; width:100vw; height:100vh; background:rgba(15,23,42,0.75); z-index:999999; align-items:center; justify-content:center; backdrop-filter:blur(4px);" onclick="if(event.target===this) closeStudentDossier()">
   <div style="background:#ffffff; color:#0f172a; border-radius:24px; max-width:620px; width:92%; padding:28px; max-height:90vh; overflow-y:auto; box-shadow:0 25px 50px -12px rgba(0,0,0,0.35); border:1px solid #e2e8f0;">
     
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; border-bottom:1px solid #f1f5f9; padding-bottom:14px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; border-bottom:1px solid #f1f5f9; padding-bottom:14px; flex-wrap:wrap; gap:10px;">
       <h3 style="margin:0; font-size:1.25rem; font-weight:700; color:#0f172a; font-family:'Cairo',sans-serif;" id="dossierStudentName">ملف الطالب: —</h3>
-      <button type="button" onclick="closeStudentDossier()" style="background:#f1f5f9; border:1px solid #cbd5e1; color:#334155; padding:6px 16px; border-radius:10px; cursor:pointer; font-weight:700; font-size:0.9rem;">✕ إغلاق</button>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <button type="button" id="dossierToggleActiveBtn" class="btn btn-line btn-sm" style="font-weight:700; padding:6px 14px; border-radius:10px; background:#fff; font-size:0.85rem;">تعطيل</button>
+        <button type="button" id="dossierDeleteBtn" class="btn btn-line btn-sm" style="color:#ef4444; border-color:#fca5a5; font-weight:700; padding:6px 14px; border-radius:10px; background:#fff; font-size:0.85rem;">🗑️ حذف</button>
+        <button type="button" onclick="closeStudentDossier()" style="background:#f1f5f9; border:1px solid #cbd5e1; color:#334155; padding:6px 16px; border-radius:10px; cursor:pointer; font-weight:700; font-size:0.9rem;">✕ إغلاق</button>
+      </div>
     </div>
     
     <div id="dossierDetails">
@@ -1980,6 +1984,24 @@
     const isActive = s.isActive !== false;
     const statusText = isActive ? '<span style="color:#16a34a;font-weight:700;">نشط ✓</span>' : '<span style="color:#dc2626;font-weight:700;">معطل ✕</span>';
 
+    // Update Header Quick Buttons
+    const toggleBtn = document.getElementById('dossierToggleActiveBtn');
+    if (toggleBtn) {
+      toggleBtn.textContent = isActive ? 'تعطيل الحساب' : 'تفعيل الحساب';
+      toggleBtn.style.color = isActive ? '#d97706' : '#16a34a';
+      toggleBtn.onclick = async () => {
+        await toggleStudentActive(s.id);
+        closeStudentDossier();
+      };
+    }
+    const delBtn = document.getElementById('dossierDeleteBtn');
+    if (delBtn) {
+      delBtn.onclick = async () => {
+        await confirmDeleteStudent(s.id, name);
+        closeStudentDossier();
+      };
+    }
+
     document.getElementById('dossierDetails').innerHTML = `
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; font-size:0.92rem; color:#1e293b; background:#f8fafc; padding:16px; border-radius:14px; border:1px solid #e2e8f0; margin-bottom:12px;">
         <div><b>حالة الحساب:</b> ${statusText}</div>
@@ -1991,14 +2013,19 @@
         <div style="grid-column: span 2;"><b>الكورسات المشترك بها:</b> <span style="font-weight:600;">${enrollmentsCount} كورس</span></div>
       </div>
 
-      <div style="display:flex; gap:10px; align-items:center; margin-bottom:16px; padding:10px 14px; background:#fff1f2; border:1px solid #fecdd3; border-radius:12px;">
-        <span style="font-size:0.88rem; font-weight:700; color:#9f1239;">⚙️ إدارة الحساب:</span>
-        <button type="button" class="btn btn-line btn-sm" style="background:#fff; font-size:0.82rem; padding:4px 12px;" onclick="toggleStudentActive('${s.id}'); closeStudentDossier();">
-          ${isActive ? 'تعطيل الحساب' : 'تفعيل الحساب'}
-        </button>
-        <button type="button" class="btn btn-line btn-sm" style="background:#fff; color:#dc2626; border-color:#fca5a5; font-size:0.82rem; padding:4px 12px;" onclick="confirmDeleteStudent('${s.id}', '${name.replace(/'/g, "\\'")}'); closeStudentDossier();">
-          🗑️ حذف الحساب نهائياً
-        </button>
+      <div style="display:flex; gap:10px; align-items:center; margin-bottom:16px; padding:12px 14px; background:#fff1f2; border:1px solid #fecdd3; border-radius:14px; justify-content:space-between;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-size:1.1rem;">⚙️</span>
+          <span style="font-size:0.88rem; font-weight:700; color:#9f1239;">إجراءات حساب الطالب:</span>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button type="button" class="btn btn-line btn-sm" style="background:#fff; font-weight:700; font-size:0.82rem; padding:6px 14px; border-radius:8px;" onclick="toggleStudentActive('${s.id}'); closeStudentDossier();">
+            ${isActive ? 'تعطيل الحساب' : 'تفعيل الحساب'}
+          </button>
+          <button type="button" class="btn btn-line btn-sm" style="background:#fff; color:#dc2626; border-color:#fca5a5; font-weight:700; font-size:0.82rem; padding:6px 14px; border-radius:8px;" onclick="confirmDeleteStudent('${s.id}', '${name.replace(/'/g, "\\'")}'); closeStudentDossier();">
+            🗑️ حذف الحساب نهائياً
+          </button>
+        </div>
       </div>
     `;
   }
