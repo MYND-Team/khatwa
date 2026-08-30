@@ -180,6 +180,10 @@
           <option value="SECONDARY_3">الصف الثالث الثانوي</option>
         </select>
       </div>
+      <div class="form-group" style="margin-bottom:14px;">
+        <label class="form-label">🖼️ رفع صورة غلاف الكورس (اختياري)</label>
+        <input type="file" id="courseCoverFile" accept="image/*" class="form-control">
+      </div>
       <div class="form-group" style="margin-bottom:18px;">
         <label class="form-label">وصف الكورس</label>
         <textarea class="form-control" id="courseDescInput" rows="2" placeholder="شرح مبسط لمحتوى الكورس..."></textarea>
@@ -201,6 +205,10 @@
       <div class="form-group" style="margin-bottom:12px;">
         <label class="form-label">عنوان الفصل / الباب</label>
         <input type="text" class="form-control" id="chapterTitleInput" placeholder="مثال: الوحدة الأولى: الحركة الدائرية" required>
+      </div>
+      <div class="form-group" style="margin-bottom:14px;">
+        <label class="form-label">🖼️ رفع صورة الغلاف للفصل (اختياري)</label>
+        <input type="file" id="chapterCoverFile" accept="image/*" class="form-control">
       </div>
       <div class="form-group" style="margin-bottom:18px;">
         <label class="form-label">وصف مختصر</label>
@@ -239,9 +247,9 @@
       <span style="font-size:0.8rem;color:var(--ink-dim);display:block;margin-bottom:12px;">ضع 0 لتكون المحاضرة مجانية لجميع طلاب هذه المرحلة.</span>
 
       <div class="form-group" style="margin-bottom:14px;">
-        <label class="form-label">🎬 رفع ملف فيديو المحاضرة (Upload Video File)</label>
+        <label class="form-label">🎬 تحميل ورفع فيديو المحاضرة (اختر ملف الفيديو من جهازك)</label>
         <input type="file" id="lessonVideoFile" accept="video/mp4,video/mkv,video/webm,video/*" class="form-control">
-        <span style="font-size:0.8rem;color:var(--ink-dim);">سيتم رفع ملف الفيديو مباشرة وتخزينه في Google Drive وتأمينه ضد التحميل والسرقة.</span>
+        <span style="font-size:0.8rem;color:var(--ink-dim);">اختر ملف الفيديو من الـ Disk وسيتم رفعه وتخزينه في Google Drive وتأمينه تلقائياً بدون أي روابط خارجية.</span>
       </div>
       <div class="form-group" style="margin-bottom:14px;">
         <label class="form-label">📄 رفع مذكرة الدرس (PDF Document)</label>
@@ -637,10 +645,20 @@
     const title = document.getElementById('courseTitleInput').value.trim();
     const subject = document.getElementById('courseSubjectInput').value.trim();
     const description = document.getElementById('courseDescInput').value.trim();
+    const coverFile = document.getElementById('courseCoverFile')?.files[0];
 
     const btn = document.getElementById('saveCourseBtn');
     btn.disabled = true;
     btn.textContent = 'جارٍ الحفظ...';
+
+    let imageUrl = null;
+    if (coverFile) {
+      imageUrl = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.readAsDataURL(coverFile);
+      });
+    }
 
     try {
       await window.KhatwaAPI.teacher.createCourse({
@@ -648,6 +666,7 @@
         subject,
         academicStage: currentStage,
         description,
+        imageUrl,
       });
       alert('تم إنشاء الكورس بنجاح في هذه المرحلة! ✅');
       closeCreateCourseModal();
@@ -681,9 +700,19 @@
     const courseId = document.getElementById('chapterCourseId').value;
     const title = document.getElementById('chapterTitleInput').value.trim();
     const description = document.getElementById('chapterDescInput').value.trim();
+    const coverFile = document.getElementById('chapterCoverFile')?.files[0];
+
+    let imageUrl = null;
+    if (coverFile) {
+      imageUrl = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.readAsDataURL(coverFile);
+      });
+    }
 
     try {
-      await window.KhatwaAPI.teacher.createChapter(courseId, { title, description });
+      await window.KhatwaAPI.teacher.createChapter(courseId, { title, description, imageUrl });
       closeAddChapterModal();
       document.getElementById('addChapterForm').reset();
       await refreshWorkspace();
