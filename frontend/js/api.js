@@ -342,6 +342,7 @@
       async adjustWallet(studentId, amount, reason) { const res = await request('/admin/students/' + studentId + '/adjust-wallet', { method: 'POST', body: { amount, reason } }); return res.data; },
       async adjustPoints(studentId, amount, reason) { const res = await request('/admin/students/' + studentId + '/adjust-points', { method: 'POST', body: { amount, reason } }); return res.data; },
       async toggleStudentActive(id) { const res = await request('/admin/students/' + id + '/toggle-active', { method: 'PATCH' }); return res.data; },
+      async deleteStudent(id) { return request('/admin/students/' + id, { method: 'DELETE' }); },
       async getTeachers() { const res = await request('/admin/teachers'); return res.data || []; },
       async createTeacher(data) { const res = await request('/admin/teachers', { method: 'POST', body: data }); return res.data; },
       async updateTeacher(id, data) { const res = await request('/admin/teachers/' + id, { method: 'PATCH', body: data }); return res.data; },

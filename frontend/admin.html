@@ -1372,8 +1372,14 @@
           <td>${statusBadge}</td>
           <td>${dateStr}</td>
           <td>
-            <div style="display:flex;gap:6px;">
-              <button type="button" class="btn btn-primary btn-sm" data-action="open-dossier" data-student-id="${s.id}" style="padding:4px 10px;font-size:.8rem;cursor:pointer;" onclick="openStudentDossier('${s.id}')">📂 الملف والعمليات</button>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <button type="button" class="btn btn-primary btn-sm" data-action="open-dossier" data-student-id="${s.id}" style="padding:4px 8px;font-size:.78rem;cursor:pointer;" onclick="openStudentDossier('${s.id}')">📂 الملف</button>
+              <button type="button" class="btn btn-line btn-sm" style="padding:4px 8px;font-size:.78rem;" onclick="toggleStudentActive('${s.id}')">
+                ${s.isActive !== false ? 'تعطيل' : 'تفعيل'}
+              </button>
+              <button type="button" class="btn btn-line btn-sm" style="color:var(--err,#ef4444);border-color:rgba(239,68,68,0.35);font-size:.78rem;padding:4px 8px;" onclick="confirmDeleteStudent('${s.id}', '${(s.name || s.username).replace(/'/g, "\\'")}')">
+                🗑️ حذف
+              </button>
             </div>
           </td>
         </tr>
@@ -1381,6 +1387,33 @@
     }).join('');
 
     if (window.KhatwaI18n) window.KhatwaI18n.applyLanguage();
+  }
+
+  async function toggleStudentActive(id) {
+    try {
+      await window.KhatwaAPI.admin.toggleStudentActive(id);
+      const stage = document.getElementById('studentStageFilter')?.value || '';
+      const q = document.getElementById('studentSearchInput')?.value.trim() || '';
+      await loadStudents(stage, q);
+    } catch (e) {
+      alert(e.message || 'حدث خطأ أثناء تغيير حالة الطالب');
+    }
+  }
+
+  async function confirmDeleteStudent(id, displayName) {
+    const ok = confirm(`هل أنت متأكد من رغبتك في حذف حساب الطالب (${displayName}) نهائياً؟\n\n⚠️ تحذير: سيتم مسح حسابه واشتراكاته وسجلاته بالكامل من قاعدة البيانات فوراً.`);
+    if (!ok) return;
+
+    try {
+      await window.KhatwaAPI.admin.deleteStudent(id);
+      alert('✓ تم حذف حساب الطالب وكافة سجلاته من قاعدة البيانات بنجاح.');
+      const stage = document.getElementById('studentStageFilter')?.value || '';
+      const q = document.getElementById('studentSearchInput')?.value.trim() || '';
+      await loadStudents(stage, q);
+      await loadAnalytics();
+    } catch (e) {
+      alert(e.message || 'حدث خطأ أثناء حذف حساب الطالب');
+    }
   }
 
   function filterStudents() {

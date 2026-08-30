@@ -517,6 +517,65 @@ router.patch(
   })
 );
 
+router.delete(
+  '/students/:id',
+  asyncHandler(async (req, res) => {
+    const user = await prisma.user.findUnique({
+      where: { id: req.params.id as string },
+      include: { studentProfile: { include: { parentInfo: true } } },
+    });
+
+    if (!user || user.role !== 'STUDENT') {
+      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'حساب الطالب غير موجود' } });
+      return;
+    }
+
+    await prisma.$transaction(async (tx: any) => {
+      // 1. Delete student notes
+      await tx.studentNote.deleteMany({ where: { studentId: user.id } });
+
+      // 2. Delete quiz attempts and answers
+      const attempts = await tx.quizAttempt.findMany({ where: { studentId: user.id }, select: { id: true } });
+      const attemptIds = attempts.map((a: any) => a.id);
+      if (attemptIds.length > 0) {
+        await tx.studentAnswer.deleteMany({ where: { attemptId: { in: attemptIds } } });
+      }
+      await tx.quizAttempt.deleteMany({ where: { studentId: user.id } });
+
+      // 3. Delete subscriptions & unlocks & enrollments
+      await tx.lessonSubscription.deleteMany({ where: { studentId: user.id } });
+      await tx.unlockedLesson.deleteMany({ where: { studentId: user.id } });
+      await tx.courseEnrollment.deleteMany({ where: { studentId: user.id } });
+
+      // 4. Delete payments & transactions
+      await tx.paymentTransaction.deleteMany({ where: { studentId: user.id } });
+      await tx.walletTransaction.deleteMany({ where: { studentId: user.id } });
+      await tx.pointsTransaction.deleteMany({ where: { studentId: user.id } });
+      await tx.pointRequest.deleteMany({ where: { userId: user.id } });
+
+      // 5. Video access logs & notifications & access codes redeemed
+      await tx.videoAccessLog.deleteMany({ where: { studentId: user.id } });
+      await tx.notification.deleteMany({ where: { userId: user.id } });
+      await tx.refreshToken.deleteMany({ where: { userId: user.id } });
+      await tx.accessCode.updateMany({ where: { redeemedById: user.id }, data: { redeemedById: null } });
+
+      // 6. Delete parent info & student profile
+      if (user.studentProfile?.parentInfo) {
+        await tx.parentInfo.deleteMany({ where: { studentProfileId: user.studentProfile.id } });
+      }
+      await tx.studentProfile.deleteMany({ where: { userId: user.id } });
+
+      // 7. Delete user
+      await tx.user.delete({ where: { id: user.id } });
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'تم حذف حساب الطالب وكافة بياناته وسجلاته من قاعدة البيانات بنجاح',
+    });
+  })
+);
+
 // ─── Courses & Content Monitoring ────────────────────────────────────────────
 
 router.get(
