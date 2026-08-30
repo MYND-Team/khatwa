@@ -431,6 +431,19 @@
       <span>👨‍🏫 إدارة المدرسين</span>
       <span class="tab-count-badge" id="tabBadgeTeachers">0</span>
     </button>
+    <button class="admin-nav-tab" data-target="tabSubscriptions" onclick="switchAdminTab('tabSubscriptions', this)">
+      <span>🔑 مراقبة اشتراكات الطلاب</span>
+      <span class="tab-count-badge" id="tabBadgeSubscriptions">0</span>
+    </button>
+    <button class="admin-nav-tab" data-target="tabPayments" onclick="switchAdminTab('tabPayments', this)">
+      <span>💳 السجل المالي والمدفوعات</span>
+    </button>
+    <button class="admin-nav-tab" data-target="tabStages" onclick="switchAdminTab('tabStages', this)">
+      <span>🏫 المراحل الأكاديمية</span>
+    </button>
+    <button class="admin-nav-tab" data-target="tabAppearance" onclick="switchAdminTab('tabAppearance', this)">
+      <span>🎨 مظهر وهوية المنصة</span>
+    </button>
     <button class="admin-nav-tab" data-target="tabAccessCodes" onclick="switchAdminTab('tabAccessCodes', this)">
       <span>🎟️ كروت وأكواد الشحن</span>
       <span class="tab-count-badge" id="tabBadgeAccessCodes">0</span>
@@ -512,7 +525,187 @@
     </div>
   </div>
 
-  <!-- Tab 3: Access Codes Management -->
+  <!-- Tab: Subscriptions Monitor (Requirement 1, 3, 7, 8) -->
+  <div id="tabSubscriptions" class="admin-tab-content" style="display:none;">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:14px;">
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <select id="subStageFilter" class="form-control" style="height:38px;font-size:0.88rem;min-width:160px;border-radius:10px;" onchange="loadAdminSubscriptions()">
+          <option value="">جميع المراحل</option>
+          <option value="PREPARATORY">المرحلة الإعدادية</option>
+          <option value="SECONDARY_1">الصف الأول الثانوي</option>
+          <option value="SECONDARY_2">الصف الثاني الثانوي</option>
+          <option value="SECONDARY_3">الصف الثالث الثانوي</option>
+        </select>
+        <select id="subStatusFilter" class="form-control" style="height:38px;font-size:0.88rem;min-width:140px;border-radius:10px;" onchange="loadAdminSubscriptions()">
+          <option value="">كل الحالات</option>
+          <option value="ACTIVE">نشط (Active)</option>
+          <option value="EXPIRED">منتهي (Expired)</option>
+          <option value="REVOKED">ملغي (Revoked)</option>
+        </select>
+        <button class="btn btn-line btn-sm" onclick="loadAdminSubscriptions()">تحديث الاشتراكات 🔄</button>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="openGrantSubModal()">＋ منح اشتراك يدوي لطالب</button>
+    </div>
+
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>الطالب</th>
+            <th>المحاضرة</th>
+            <th>الكورس</th>
+            <th>المدرس</th>
+            <th>المرحلة</th>
+            <th>المبلغ المدفوع</th>
+            <th>وسيلة الدفع</th>
+            <th>الحالة</th>
+            <th>تاريخ الاشتراك</th>
+            <th>الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody id="adminSubscriptionsTableBody">
+          <tr><td colspan="10" style="text-align:center;color:var(--ink-dim);padding:30px;">جارٍ تحميل الاشتراكات...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Tab: Traceable Payments Ledger (Requirement 6) -->
+  <div id="tabPayments" class="admin-tab-content" style="display:none;">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:14px;">
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <select id="paymentStageFilter" class="form-control" style="height:38px;font-size:0.88rem;min-width:160px;border-radius:10px;" onchange="loadAdminPayments()">
+          <option value="">جميع المراحل</option>
+          <option value="PREPARATORY">المرحلة الإعدادية</option>
+          <option value="SECONDARY_1">الصف الأول الثانوي</option>
+          <option value="SECONDARY_2">الصف الثاني الثانوي</option>
+          <option value="SECONDARY_3">الصف الثالث الثانوي</option>
+        </select>
+        <button class="btn btn-line btn-sm" onclick="loadAdminPayments()">تحديث السجل 🔄</button>
+      </div>
+      <div id="paymentSummaryBadge" style="font-size:0.9rem;font-weight:700;color:#22c55e;">إجمالي الإيرادات: 0 ج.م</div>
+    </div>
+
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>رقم المعاملة</th>
+            <th>الطالب</th>
+            <th>المدرس</th>
+            <th>المرحلة</th>
+            <th>الكورس / المحاضرة</th>
+            <th>المبلغ الإجمالي</th>
+            <th>حصة المدرس</th>
+            <th>عمولة المنصة</th>
+            <th>طريقة الدفع</th>
+            <th>التاريخ</th>
+          </tr>
+        </thead>
+        <tbody id="adminPaymentsTableBody">
+          <tr><td colspan="10" style="text-align:center;color:var(--ink-dim);padding:30px;">جارٍ تحميل سجل المدفوعات...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Tab: Academic Stages Platform Control (Requirement 1, 2, 4) -->
+  <div id="tabStages" class="admin-tab-content" style="display:none;">
+    <div style="margin-bottom:16px;">
+      <h3 style="margin:0 0 6px;">🏫 متابعة بيئات المراحل الدراسية على المنصة</h3>
+      <p style="color:var(--ink-dim);margin:0;font-size:0.88rem;">نظرة شاملة على نشاط وتوزيع الطلاب والكورسات والاشتراكات في كل مرحلة دراسية بشكل مستقل.</p>
+    </div>
+    <div id="adminStagesGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;">
+      <div style="text-align:center;padding:30px;color:var(--ink-dim);">جارٍ جلب إحصائيات المراحل...</div>
+    </div>
+  </div>
+
+  <!-- Tab: Platform Theming & Appearance (Requirement 1) -->
+  <div id="tabAppearance" class="admin-tab-content" style="display:none;">
+    <div style="background:var(--bg-card);border:1px solid var(--line-soft);border-radius:18px;padding:26px;max-width:700px;">
+      <h3 style="margin-top:0;">🎨 تخصيص مظهر وهوية المنصة والألوان</h3>
+      <p style="color:var(--ink-dim);font-size:0.88rem;margin-bottom:20px;">يمكنك تغيير ألوان المنصة الأساسية والفرعية واسم المنصة وتطبيقها مباشرة وفورياً على جميع صفحات الطلاب والمدرسين.</p>
+
+      <form id="appearanceSettingsForm" onsubmit="saveAppearanceSettings(event)">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:16px;">
+          <div class="form-group">
+            <label class="form-label">اللون الأساسي (Primary Color)</label>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <input type="color" id="setPrimaryColor" style="width:44px;height:40px;border-radius:8px;border:none;cursor:pointer;">
+              <input type="text" id="setPrimaryColorHex" class="form-control" placeholder="#0B2545">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">اللون الثانوي (Secondary Color)</label>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <input type="color" id="setSecondaryColor" style="width:44px;height:40px;border-radius:8px;border:none;cursor:pointer;">
+              <input type="text" id="setSecondaryColorHex" class="form-control" placeholder="#134074">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">اللون المميز (Accent Color)</label>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <input type="color" id="setAccentColor" style="width:44px;height:40px;border-radius:8px;border:none;cursor:pointer;">
+              <input type="text" id="setAccentColorHex" class="form-control" placeholder="#d4af37">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom:14px;">
+          <label class="form-label">اسم المنصة (Platform Name)</label>
+          <input type="text" id="setPlatformName" class="form-control" placeholder="خطوة - منصتك التعليمية">
+        </div>
+
+        <div class="form-group" style="margin-bottom:14px;">
+          <label class="form-label">الشعار النصي الفرعي (Platform Subtitle)</label>
+          <input type="text" id="setPlatformSubtitle" class="form-control" placeholder="طريقك نحو التفوق والدرجات النهائية">
+        </div>
+
+        <div class="form-group" style="margin-bottom:14px;">
+          <label class="form-label">رابط لوجو المنصة (Logo URL)</label>
+          <input type="url" id="setLogoUrl" class="form-control" placeholder="logo/logo-khatwa.jpeg">
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">
+          <div class="form-group">
+            <label class="form-label">نسبة عمولة المنصة من الحصص (%)</label>
+            <input type="number" step="0.5" id="setDefaultCommission" class="form-control" value="15" min="0" max="100">
+          </div>
+          <div class="form-group">
+            <label class="form-label">سعر النقطة بالجنيه (Rate)</label>
+            <input type="number" step="0.1" id="setPointsRate" class="form-control" value="1.0" min="0.1">
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;gap:10px;">
+          <button type="submit" id="saveAppearanceBtn" class="btn btn-primary">حفظ وتطبيق التغييرات فوراً ✓</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Manual Grant Subscription -->
+  <div class="modal-overlay" id="grantSubModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:999;align-items:center;justify-content:center;">
+    <div style="background:var(--bg-card);border:1px solid var(--line);border-radius:18px;max-width:480px;width:90%;padding:24px;">
+      <h3 style="margin-top:0;">🔑 منح اشتراك محاضرة يدويًا لطالب</h3>
+      <form onsubmit="submitGrantSub(event)">
+        <div class="form-group" style="margin-bottom:12px;">
+          <label class="form-label">اختر الطالب</label>
+          <select id="grantStudentSelect" class="form-control" required>
+            <option value="">جارٍ تحميل الطلاب...</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom:18px;">
+          <label class="form-label">كود / معرف المحاضرة (Lesson ID)</label>
+          <input type="text" id="grantLessonIdInput" class="form-control" placeholder="معرف المحاضرة" required>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;">
+          <button type="button" class="btn btn-line btn-sm" onclick="closeGrantSubModal()">إلغاء</button>
+          <button type="submit" class="btn btn-primary btn-sm" id="confirmGrantBtn">منح الاشتراك الآن ✓</button>
+        </div>
+      </form>
+    </div>
+  </div>
   <div id="tabAccessCodes" class="admin-tab-content" style="display:none;">
     <!-- Batch Generator Box -->
     <div style="background:linear-gradient(135deg, rgba(11, 37, 69, 0.4) 0%, rgba(19, 64, 116, 0.25) 100%);border:1px solid var(--line);border-radius:var(--radius);padding:22px;margin-bottom:24px;">
@@ -865,9 +1058,11 @@
       tabBtn.classList.add('active');
     }
 
-    if (tabId === 'tabAccessCodes') {
-      loadAccessCodes();
-    }
+    if (tabId === 'tabAccessCodes') loadAccessCodes();
+    if (tabId === 'tabSubscriptions') loadAdminSubscriptions();
+    if (tabId === 'tabPayments') loadAdminPayments();
+    if (tabId === 'tabStages') loadAdminStages();
+    if (tabId === 'tabAppearance') loadAppearanceSettings();
   }
 
   async function refreshAdminData() {
@@ -875,10 +1070,241 @@
       loadAnalytics(),
       loadStudents(),
       loadTeachers(),
+      loadAdminSubscriptions(),
+      loadAdminPayments(),
+      loadAdminStages(),
+      loadAppearanceSettings(),
       loadAccessCodes(),
       loadPointRequests(),
       loadVideoLogs(),
     ]);
+  }
+
+  // ─── Appearance & Theming ──────────────────────────────────────────────────
+  async function loadAppearanceSettings() {
+    try {
+      const data = await window.KhatwaAPI.admin.getGeneralSettings();
+      if (!data) return;
+
+      const pColor = data.primaryColor || '#0B2545';
+      const sColor = data.secondaryColor || '#134074';
+      const aColor = data.accentColor || '#d4af37';
+
+      document.getElementById('setPrimaryColor').value = pColor;
+      document.getElementById('setPrimaryColorHex').value = pColor;
+      document.getElementById('setSecondaryColor').value = sColor;
+      document.getElementById('setSecondaryColorHex').value = sColor;
+      document.getElementById('setAccentColor').value = aColor;
+      document.getElementById('setAccentColorHex').value = aColor;
+
+      document.getElementById('setPlatformName').value = data.platformName || '';
+      document.getElementById('setPlatformSubtitle').value = data.platformSubtitle || '';
+      document.getElementById('setLogoUrl').value = data.logoUrl || '';
+      document.getElementById('setDefaultCommission').value = data.defaultTeacherCommissionPct || 15;
+      document.getElementById('setPointsRate').value = data.pointsToEgpRate || 1.0;
+
+      // sync hex inputs with color pickers
+      ['Primary', 'Secondary', 'Accent'].forEach(k => {
+        document.getElementById(`set${k}Color`)?.addEventListener('input', (e) => {
+          document.getElementById(`set${k}ColorHex`).value = e.target.value;
+        });
+        document.getElementById(`set${k}ColorHex`)?.addEventListener('input', (e) => {
+          if (e.target.value.startsWith('#') && e.target.value.length === 7) {
+            document.getElementById(`set${k}Color`).value = e.target.value;
+          }
+        });
+      });
+    } catch (e) {
+      console.warn('Failed to load appearance settings', e);
+    }
+  }
+
+  async function saveAppearanceSettings(e) {
+    e.preventDefault();
+    const btn = document.getElementById('saveAppearanceBtn');
+    btn.disabled = true;
+    btn.textContent = 'جارٍ الحفظ والتطبيق...';
+
+    const payload = {
+      primaryColor: document.getElementById('setPrimaryColorHex').value.trim(),
+      secondaryColor: document.getElementById('setSecondaryColorHex').value.trim(),
+      accentColor: document.getElementById('setAccentColorHex').value.trim(),
+      platformName: document.getElementById('setPlatformName').value.trim(),
+      platformSubtitle: document.getElementById('setPlatformSubtitle').value.trim(),
+      logoUrl: document.getElementById('setLogoUrl').value.trim(),
+      defaultTeacherCommissionPct: parseFloat(document.getElementById('setDefaultCommission').value) || 15,
+      pointsToEgpRate: parseFloat(document.getElementById('setPointsRate').value) || 1.0,
+    };
+
+    try {
+      await window.KhatwaAPI.admin.updateGeneralSettings(payload);
+      alert('تم حفظ إعدادات ومظهر المنصة وتطبيقها بنجاح! 🎨');
+      // Apply locally to test immediately
+      document.documentElement.style.setProperty('--primary', payload.primaryColor);
+      document.documentElement.style.setProperty('--secondary', payload.secondaryColor);
+      document.documentElement.style.setProperty('--accent', payload.accentColor);
+    } catch (err) {
+      alert(err.message || 'فشل حفظ الإعدادات');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'حفظ وتطبيق التغييرات فوراً ✓';
+    }
+  }
+
+  // ─── Subscriptions Monitor ─────────────────────────────────────────────────
+  async function loadAdminSubscriptions() {
+    const stage = document.getElementById('subStageFilter')?.value || '';
+    const status = document.getElementById('subStatusFilter')?.value || '';
+    const tbody = document.getElementById('adminSubscriptionsTableBody');
+
+    try {
+      const query = {};
+      if (stage) query.stage = stage;
+      if (status) query.status = status;
+
+      const subscriptions = await window.KhatwaAPI.admin.getSubscriptions(query);
+      document.getElementById('tabBadgeSubscriptions').textContent = subscriptions.length;
+
+      if (subscriptions.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--ink-dim);padding:30px;">لا توجد اشتراكات مطابقة</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = subscriptions.map(s => {
+        const studentName = s.student?.username || 'طالب';
+        const teacherName = s.teacherProfile?.displayName || 'المدرس';
+        const courseName = s.course?.title || '—';
+        const lessonName = s.lesson?.title || 'محاضرة';
+        const priceStr = s.pricePaid > 0 ? `${s.pricePaid} ج.م` : (s.pointsPaid > 0 ? `${s.pointsPaid} نقطة` : 'مجانية');
+        const isActive = s.status === 'ACTIVE';
+
+        return `
+          <tr>
+            <td><b>${escapeHtml(studentName)}</b></td>
+            <td><b>${escapeHtml(lessonName)}</b></td>
+            <td>${escapeHtml(courseName)}</td>
+            <td>${escapeHtml(teacherName)}</td>
+            <td><span class="tag">${s.academicStage}</span></td>
+            <td><b>${priceStr}</b></td>
+            <td><code>${s.paymentMethod}</code></td>
+            <td><span class="tag ${isActive ? 'tag-ok' : 'tag-err'}">${s.status}</span></td>
+            <td>${new Date(s.subscribedAt).toLocaleDateString('ar-EG')}</td>
+            <td>
+              ${isActive ? `
+                <button class="btn btn-line btn-sm" style="color:var(--err);padding:2px 8px;font-size:0.75rem;" onclick="revokeSub('${s.id}')">إلغاء الاشتراك ✕</button>
+              ` : '—'}
+            </td>
+          </tr>
+        `;
+      }).join('');
+    } catch (e) {
+      console.warn('Subscriptions load error', e);
+    }
+  }
+
+  function openGrantSubModal() {
+    const sel = document.getElementById('grantStudentSelect');
+    sel.innerHTML = allStudents.map(s => `<option value="${s.id}">${s.username} (${s.studentProfile?.academicStage || 'عام'})</option>`).join('');
+    document.getElementById('grantSubModal').style.display = 'flex';
+  }
+  function closeGrantSubModal() {
+    document.getElementById('grantSubModal').style.display = 'none';
+  }
+
+  async function submitGrantSub(e) {
+    e.preventDefault();
+    const studentId = document.getElementById('grantStudentSelect').value;
+    const lessonId = document.getElementById('grantLessonIdInput').value.trim();
+
+    try {
+      await window.KhatwaAPI.admin.grantSubscription(studentId, lessonId);
+      alert('تم منح اشتراك المحاضرة للطالب بنجاح! ✅');
+      closeGrantSubModal();
+      document.getElementById('grantLessonIdInput').value = '';
+      await loadAdminSubscriptions();
+    } catch (err) {
+      alert(err.message || 'فشل منح الاشتراك');
+    }
+  }
+
+  async function revokeSub(id) {
+    if (!confirm('هل أنت متأكد من إلغاء هذا الاشتراك؟ لن يتمكن الطالب من الوصول للمحاضرة.')) return;
+    try {
+      await window.KhatwaAPI.admin.revokeSubscription(id);
+      alert('تم إلغاء الاشتراك بنجاح');
+      await loadAdminSubscriptions();
+    } catch (err) {
+      alert(err.message || 'فشل إلغاء الاشتراك');
+    }
+  }
+
+  // ─── Traceable Payments Ledger ─────────────────────────────────────────────
+  async function loadAdminPayments() {
+    const stage = document.getElementById('paymentStageFilter')?.value || '';
+    const tbody = document.getElementById('adminPaymentsTableBody');
+
+    try {
+      const query = {};
+      if (stage) query.stage = stage;
+
+      const payments = await window.KhatwaAPI.admin.getPayments(query);
+      if (payments.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--ink-dim);padding:30px;">لا توجد معاملات مسجلة</td></tr>';
+        return;
+      }
+
+      const totalRevenue = payments.reduce((acc, p) => acc + (p.amount || 0), 0);
+      document.getElementById('paymentSummaryBadge').textContent = `إجمالي المدفوعات المسجلة: ${totalRevenue.toLocaleString('ar-EG')} ج.م`;
+
+      tbody.innerHTML = payments.map(p => `
+        <tr>
+          <td><code>${p.transactionNumber}</code></td>
+          <td><b>${escapeHtml(p.student?.username || 'طالب')}</b></td>
+          <td>${escapeHtml(p.teacherProfile?.displayName || 'المدرس')}</td>
+          <td><span class="tag">${p.academicStage}</span></td>
+          <td>${escapeHtml(p.course?.title || '')} / <b>${escapeHtml(p.lesson?.title || 'محاضرة')}</b></td>
+          <td><b style="color:#22c55e;">${p.amount} ج.م</b></td>
+          <td>${p.teacherEarning} ج.م</td>
+          <td>${p.platformFee} ج.م</td>
+          <td><code>${p.paymentMethod}</code></td>
+          <td>${new Date(p.createdAt).toLocaleDateString('ar-EG')}</td>
+        </tr>
+      `).join('');
+    } catch (e) {
+      console.warn('Payments load error', e);
+    }
+  }
+
+  // ─── Academic Stages Oversight ─────────────────────────────────────────────
+  async function loadAdminStages() {
+    const grid = document.getElementById('adminStagesGrid');
+    try {
+      const stages = await window.KhatwaAPI.admin.getStages();
+      grid.innerHTML = stages.map(st => `
+        <div class="card" style="padding:20px;border-radius:16px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <b style="font-size:1.1rem;color:var(--primary);">🏫 ${st.nameAr}</b>
+            <span class="tag tag-ok">مفعلة</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center;">
+            <div style="background:var(--bg-raised);padding:10px;border-radius:10px;">
+              <div style="font-size:1.3rem;font-weight:700;color:var(--primary);">${st.studentsCount}</div>
+              <div style="font-size:0.75rem;color:var(--ink-dim);">طلاب</div>
+            </div>
+            <div style="background:var(--bg-raised);padding:10px;border-radius:10px;">
+              <div style="font-size:1.3rem;font-weight:700;color:#22c55e;">${st.coursesCount}</div>
+              <div style="font-size:0.75rem;color:var(--ink-dim);">كورسات</div>
+            </div>
+            <div style="background:var(--bg-raised);padding:10px;border-radius:10px;">
+              <div style="font-size:1.3rem;font-weight:700;color:#f59e0b;">${st.subscriptionsCount}</div>
+              <div style="font-size:0.75rem;color:var(--ink-dim);">اشتراكات</div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    } catch (e) {
+      grid.innerHTML = '<div style="color:var(--err);">فشل تحميل إحصائيات المراحل.</div>';
+    }
   }
 
   async function loadAnalytics() {

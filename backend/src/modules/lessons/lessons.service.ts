@@ -6,18 +6,28 @@ import { hasPassed } from '../quizEngine/quizEngine.service';
 
 export async function createLesson(input: {
   teacherProfileId: string;
+  courseId?: string;
+  chapterId?: string;
+  academicStage?: any;
   title: string;
   description?: string;
-  pointCost: number;
+  price?: number;
+  pointCost?: number;
   orderIndex?: number;
+  isPublished?: boolean;
 }) {
   return prisma.lesson.create({
     data: {
       teacherProfileId: input.teacherProfileId,
+      courseId: input.courseId,
+      chapterId: input.chapterId,
+      academicStage: input.academicStage || 'SECONDARY_1',
       title: input.title,
       description: input.description,
-      pointCost: input.pointCost,
+      price: input.price ?? 0.0,
+      pointCost: input.pointCost ?? 0,
       orderIndex: input.orderIndex ?? 0,
+      isPublished: input.isPublished ?? true,
     },
   });
 }
@@ -30,11 +40,18 @@ export async function updateLesson(
   input: Partial<{
     title: string;
     description: string;
+    price: number;
     pointCost: number;
+    academicStage: any;
     orderIndex: number;
     openingQuizId: string;
     homeworkId: string;
+    assignmentQuizId: string;
+    examQuizId: string;
     isPublished: boolean;
+    videoUrl: string;
+    driveFileId: string;
+    pdfUrl: string;
   }>
 ) {
   const lesson = await prisma.lesson.findUnique({ where: { id: lessonId } });
@@ -57,7 +74,9 @@ export async function listLessons(teacherProfileId?: string) {
       id: true,
       title: true,
       description: true,
+      price: true,
       pointCost: true,
+      academicStage: true,
       orderIndex: true,
       openingQuizId: true,
       homeworkId: true,
@@ -69,7 +88,10 @@ export async function listLessons(teacherProfileId?: string) {
 // ─── Gating check before returning lesson content ────────────────────────────
 
 export type GateReasonCode =
+  | 'LESSON_LOCKED'
   | 'INSUFFICIENT_POINTS'
+  | 'ASSIGNMENT_REQUIRED'
+  | 'EXAM_REQUIRED'
   | 'QUIZ_NOT_PASSED'
   | 'HOMEWORK_NOT_SUBMITTED';
 
@@ -82,61 +104,108 @@ export async function getLessonContent(lessonId: string, studentId: string) {
   });
   if (!lesson || !lesson.isPublished) throw NotFoundError('Lesson');
 
-  // Gate 1: Must have unlocked (spent points)
-  const unlocked = await prisma.unlockedLesson.findUnique({
-    where: { studentId_lessonId: { studentId, lessonId } },
-  });
-  if (!unlocked) {
-    const gate: GateReasonCode = 'INSUFFICIENT_POINTS';
-    throw Object.assign(
-      new Error(`Access denied: ${gate}`),
-      { statusCode: 403, code: gate }
-    );
-  }
+  const isFree = lesson.price === 0 && lesson.pointCost === 0;
 
-  // Gate 2: Opening quiz must be passed
-  if (lesson.openingQuizId) {
-    const passed = await hasPassed(studentId, lesson.openingQuizId);
-    if (!passed) {
-      const gate: GateReasonCode = 'QUIZ_NOT_PASSED';
-      throw Object.assign(
-        new Error(`Access denied: ${gate}`),
-        { statusCode: 403, code: gate }
-      );
-    }
-  }
-
-  // Gate 3: Previous lesson's homework must be submitted
-  const previousLesson = await prisma.lesson.findFirst({
-    where: {
-      teacherProfileId: lesson.teacherProfileId,
-      orderIndex: { lt: lesson.orderIndex },
-      isPublished: true,
-    },
-    orderBy: { orderIndex: 'desc' },
-  });
-
-  if (previousLesson?.homeworkId) {
-    const homeworkSubmitted = await prisma.homeworkSubmission.findUnique({
-      where: { studentId_lessonId: { studentId, lessonId: previousLesson.id } },
+  // Gate 1: Must have active subscription or unlocked lesson
+  if (!isFree) {
+    const subscription = await prisma.lessonSubscription.findUnique({
+      where: { studentId_lessonId: { studentId, lessonId } },
     });
-    if (!homeworkSubmitted) {
-      const gate: GateReasonCode = 'HOMEWORK_NOT_SUBMITTED';
+
+    const legacyUnlocked = await prisma.unlockedLesson.findUnique({
+      where: { studentId_lessonId: { studentId, lessonId } },
+    });
+
+    if (!subscription || subscription.status !== 'ACTIVE') {
+      if (!legacyUnlocked) {
+        const gate: GateReasonCode = 'LESSON_LOCKED';
+        throw Object.assign(
+          new Error(`يجب شراء هذه المحاضرة أولاً للوصول إلى محتواها`),
+          { statusCode: 403, code: gate }
+        );
+      }
+    }
+  }
+
+  // Gate 2: Assignment / Opening quiz must be completed if required
+  if (lesson.assignmentQuizId) {
+    const attempt = await prisma.quizAttempt.findUnique({
+      where: { studentId_quizId: { studentId, quizId: lesson.assignmentQuizId } },
+    });
+    if (!attempt) {
       throw Object.assign(
-        new Error(`Access denied: ${gate}`),
-        { statusCode: 403, code: gate }
+        new Error(`يجب تسليم الواجب أولاً قبل فتح المحاضرة`),
+        { statusCode: 403, code: 'ASSIGNMENT_REQUIRED' }
       );
     }
   }
 
-  // All gates passed — return content metadata (actual video via stream endpoint)
+  if (lesson.examQuizId) {
+    const examAttempt = await prisma.quizAttempt.findUnique({
+      where: { studentId_quizId: { studentId, quizId: lesson.examQuizId } },
+    });
+    if (!examAttempt || !examAttempt.passed) {
+      throw Object.assign(
+        new Error(`يجب اجتياز الامتحان أولاً قبل فتح المحاضرة`),
+        { statusCode: 403, code: 'EXAM_REQUIRED' }
+      );
+    }
+  }
+
+  // All gates passed — return content metadata
   return {
     lessonId: lesson.id,
     title: lesson.title,
     description: lesson.description,
     teacher: lesson.teacherProfile.displayName,
-    driveFileId: lesson.driveFileId, // used internally by stream endpoint
-    hasVideo: !!lesson.driveFileId,
+    driveFileId: lesson.driveFileId,
+    videoUrl: lesson.videoUrl,
+    pdfUrl: lesson.pdfUrl,
+    pdfFileName: lesson.pdfFileName,
+    hasVideo: !!(lesson.driveFileId || lesson.videoUrl),
+  };
+}
+
+// ─── Teacher & Admin Content Preview (Bypasses Student Gates) ────────────────
+
+export async function getLessonPreview(lessonId: string, actorUserId: string, actorRole: string) {
+  const lesson = await prisma.lesson.findUnique({
+    where: { id: lessonId },
+    include: {
+      teacherProfile: { select: { id: true, userId: true, displayName: true } },
+      course: { select: { id: true, title: true, subject: true, academicStage: true } },
+      chapter: { select: { id: true, title: true } },
+      assignmentQuiz: { include: { questions: true } },
+      examQuiz: { include: { questions: true } },
+    },
+  });
+
+  if (!lesson) throw NotFoundError('Lesson');
+
+  // Permission check: Must be the owner teacher or an ADMIN
+  if (actorRole !== 'ADMIN' && lesson.teacherProfile.userId !== actorUserId) {
+    throw ForbiddenError('ليس لديك صلاحية لمعاينة محتوى هذا المعلم');
+  }
+
+  return {
+    lessonId: lesson.id,
+    title: lesson.title,
+    description: lesson.description,
+    price: lesson.price,
+    pointCost: lesson.pointCost,
+    academicStage: lesson.academicStage,
+    isPublished: lesson.isPublished,
+    teacher: lesson.teacherProfile.displayName,
+    teacherProfileId: lesson.teacherProfileId,
+    course: lesson.course,
+    chapter: lesson.chapter,
+    driveFileId: lesson.driveFileId,
+    videoUrl: lesson.videoUrl,
+    pdfUrl: lesson.pdfUrl,
+    pdfFileName: lesson.pdfFileName,
+    hasVideo: !!(lesson.driveFileId || lesson.videoUrl),
+    assignmentQuiz: lesson.assignmentQuiz,
+    examQuiz: lesson.examQuiz,
   };
 }
 
@@ -160,12 +229,11 @@ export async function submitHomework(studentId: string, lessonId: string) {
   });
 }
 
-// ─── Unlock lesson (called from points service after deduction) ───────────────
+// ─── Unlock lesson ───────────────────────────────────────────────────────────
 
 export async function unlockLesson(studentId: string, lessonId: string) {
-  // Delegate to points service which handles the deduction atomically
-  const { spendPoints } = await import('../points/points.service');
-  return spendPoints(studentId, lessonId);
+  const { purchaseLesson } = await import('../../services/subscription.service');
+  return purchaseLesson({ studentId, lessonId, paymentMethod: 'POINTS' });
 }
 
 // ─── Teacher: get lesson detail with quiz IDs ─────────────────────────────────
@@ -176,6 +244,8 @@ export async function getLessonDetail(lessonId: string, teacherProfileId?: strin
     include: {
       openingQuiz: { include: { questions: true } },
       homework: { include: { questions: true } },
+      assignmentQuiz: { include: { questions: true } },
+      examQuiz: { include: { questions: true } },
       teacherProfile: { select: { displayName: true } },
     },
   });
@@ -192,11 +262,12 @@ export async function getStudentProgress(studentId: string, teacherProfileId: st
   const lessons = await prisma.lesson.findMany({
     where: { teacherProfileId, isPublished: true },
     include: {
+      subscriptions: { where: { studentId, status: 'ACTIVE' } },
       unlockedBy: { where: { studentId } },
-      openingQuiz: {
+      assignmentQuiz: {
         include: { attempts: { where: { studentId } } },
       },
-      homework: {
+      examQuiz: {
         include: { attempts: { where: { studentId } } },
       },
     },
@@ -207,10 +278,9 @@ export async function getStudentProgress(studentId: string, teacherProfileId: st
     lessonId: lesson.id,
     title: lesson.title,
     orderIndex: lesson.orderIndex,
-    unlocked: lesson.unlockedBy.length > 0,
-    openingQuizPassed: lesson.openingQuiz?.attempts[0]?.passed ?? false,
-    openingQuizScore: lesson.openingQuiz?.attempts[0]?.score ?? null,
-    homeworkPassed: lesson.homework?.attempts[0]?.passed ?? false,
-    homeworkScore: lesson.homework?.attempts[0]?.score ?? null,
+    isSubscribed: lesson.subscriptions.length > 0 || lesson.unlockedBy.length > 0,
+    assignmentSubmitted: (lesson.assignmentQuiz?.attempts?.length || 0) > 0,
+    examPassed: lesson.examQuiz?.attempts[0]?.passed ?? false,
+    examScore: lesson.examQuiz?.attempts[0]?.score ?? null,
   }));
 }

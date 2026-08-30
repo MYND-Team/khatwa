@@ -2,13 +2,11 @@
  * /teacher/* — TEACHER role only (ADMIN can also bypass)
  *
  * Teacher capabilities:
- * - Manage their own profile
- * - Courses organized by Academic Year (PREPARATORY, SECONDARY_1, SECONDARY_2, SECONDARY_3)
- * - Create/manage Chapters inside courses
- * - Create/manage Lessons inside chapters
- * - Upload PDFs and videos for lessons
- * - Create quizzes (Assignment, Exam) with Multiple Choice, Essay, and Equation questions
- * - View own students and their performance
+ * - Manage profile & enabled academic stage workspaces
+ * - Stage-isolated Workspaces (PREPARATORY, SECONDARY_1, SECONDARY_2, SECONDARY_3)
+ * - Stage-isolated courses, chapters, lessons, students, and revenue
+ * - Teacher Content Preview (verify own PDFs, video streams, quizzes)
+ * - Lesson-level pricing (EGP & Points)
  */
 
 import { Router } from 'express';
@@ -35,14 +33,15 @@ router.get(
       where: { userId: req.user!.sub },
       include: {
         user: { select: { id: true, username: true, role: true, createdAt: true } },
+        workspaces: true,
         courses: {
           include: {
             chapters: {
               include: {
-                lessons: { select: { id: true, title: true, orderIndex: true, isPublished: true } },
+                lessons: { select: { id: true, title: true, price: true, pointCost: true, isPublished: true } },
               },
             },
-            _count: { select: { enrollments: true } },
+            _count: { select: { enrollments: true, lessonSubscriptions: true } },
           },
         },
       },
@@ -77,60 +76,287 @@ router.patch(
   })
 );
 
-// ─── Teacher Revenue & Analytics ─────────────────────────────────────────────
+// ─── Stage Workspaces (Requirement 2) ────────────────────────────────────────
+
+const VALID_STAGES = ['PREPARATORY', 'SECONDARY_1', 'SECONDARY_2', 'SECONDARY_3'];
+
+router.get(
+  '/workspaces',
+  asyncHandler(async (req, res) => {
+    const teacherProfile = await prisma.teacherProfile.findUnique({
+      where: { userId: req.user!.sub },
+      include: { workspaces: true },
+    });
+
+    if (!teacherProfile) {
+      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Teacher profile not found' } });
+      return;
+    }
+
+    // Auto-create default workspaces from academicStages if empty
+    if (teacherProfile.workspaces.length === 0) {
+      const stageList = (teacherProfile.academicStages || 'SECONDARY_1,SECONDARY_2,SECONDARY_3')
+        .split(',')
+        .map((s) => s.trim())
+        .filter((s) => VALID_STAGES.includes(s));
+
+      for (const st of stageList) {
+        await prisma.teacherStage.upsert({
+          where: { teacherProfileId_stage: { teacherProfileId: teacherProfile.id, stage: st as any } },
+          create: { teacherProfileId: teacherProfile.id, stage: st as any, isActive: true },
+          update: { isActive: true },
+        });
+      }
+    }
+
+    const updated = await prisma.teacherStage.findMany({
+      where: { teacherProfileId: teacherProfile.id, isActive: true },
+      orderBy: { stage: 'asc' },
+    });
+
+    res.status(200).json({ success: true, data: updated });
+  })
+);
+
+router.post(
+  '/workspaces',
+  asyncHandler(async (req, res) => {
+    const { stage } = req.body;
+    if (!stage || !VALID_STAGES.includes(stage)) {
+      res.status(400).json({ success: false, error: { code: 'INVALID_STAGE', message: 'المرحلة الدراسية غير صالحة' } });
+      return;
+    }
+
+    const teacherProfile = await prisma.teacherProfile.findUnique({ where: { userId: req.user!.sub } });
+    if (!teacherProfile) {
+      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Teacher profile not found' } });
+      return;
+    }
+
+    const workspace = await prisma.teacherStage.upsert({
+      where: { teacherProfileId_stage: { teacherProfileId: teacherProfile.id, stage: stage as any } },
+      create: { teacherProfileId: teacherProfile.id, stage: stage as any, isActive: true },
+      update: { isActive: true },
+    });
+
+    res.status(201).json({ success: true, data: workspace });
+  })
+);
+
+/**
+ * Stage-scoped Overview & Analytics
+ */
+router.get(
+  '/workspace/:stage/overview',
+  asyncHandler(async (req, res) => {
+    const stage = req.params.stage;
+    if (!VALID_STAGES.includes(stage)) {
+      res.status(400).json({ success: false, error: { code: 'INVALID_STAGE', message: 'المرحلة الدراسية غير صالحة' } });
+      return;
+    }
+
+    const teacherProfile = await prisma.teacherProfile.findUnique({ where: { userId: req.user!.sub } });
+    if (!teacherProfile) {
+      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Teacher profile not found' } });
+      return;
+    }
+
+    const [coursesCount, lessonsCount, subscriptions, paymentsAgg] = await Promise.all([
+      prisma.course.count({
+        where: { teacherProfileId: teacherProfile.id, academicStage: stage as any },
+      }),
+      prisma.lesson.count({
+        where: { teacherProfileId: teacherProfile.id, academicStage: stage as any },
+      }),
+      prisma.lessonSubscription.findMany({
+        where: { teacherProfileId: teacherProfile.id, academicStage: stage as any, status: 'ACTIVE' },
+        select: { studentId: true, pricePaid: true, pointsPaid: true },
+      }),
+      prisma.paymentTransaction.aggregate({
+        where: { teacherProfileId: teacherProfile.id, academicStage: stage as any, status: 'COMPLETED' },
+        _sum: { teacherEarning: true, pointsUsed: true },
+      }),
+    ]);
+
+    const uniqueStudents = new Set(subscriptions.map((s) => s.studentId)).size;
+    const totalRevenueEGP = paymentsAgg._sum.teacherEarning || 0.0;
+    const totalPointsEarned = paymentsAgg._sum.pointsUsed || 0;
+
+    res.status(200).json({
+      success: true,
+      data: {
+        stage,
+        coursesCount,
+        lessonsCount,
+        uniqueStudents,
+        totalSubscriptions: subscriptions.length,
+        totalRevenueEGP: Math.round(totalRevenueEGP * 100) / 100,
+        totalPointsEarned,
+      },
+    });
+  })
+);
+
+/**
+ * Stage-scoped Courses & Lessons
+ */
+router.get(
+  '/workspace/:stage/courses',
+  asyncHandler(async (req, res) => {
+    const stage = req.params.stage;
+    const teacherProfile = await prisma.teacherProfile.findUnique({ where: { userId: req.user!.sub } });
+    if (!teacherProfile) {
+      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Teacher profile not found' } });
+      return;
+    }
+
+    const courses = await prisma.course.findMany({
+      where: { teacherProfileId: teacherProfile.id, academicStage: stage as any },
+      include: {
+        chapters: {
+          orderBy: { orderIndex: 'asc' },
+          include: {
+            lessons: {
+              orderBy: { orderIndex: 'asc' },
+              include: {
+                _count: { select: { subscriptions: true } },
+              },
+            },
+          },
+        },
+        _count: { select: { lessonSubscriptions: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    res.status(200).json({ success: true, data: courses });
+  })
+);
+
+/**
+ * Stage-scoped Students
+ */
+router.get(
+  '/workspace/:stage/students',
+  asyncHandler(async (req, res) => {
+    const stage = req.params.stage;
+    const teacherProfile = await prisma.teacherProfile.findUnique({ where: { userId: req.user!.sub } });
+    if (!teacherProfile) {
+      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Teacher profile not found' } });
+      return;
+    }
+
+    const subscriptions = await prisma.lessonSubscription.findMany({
+      where: { teacherProfileId: teacherProfile.id, academicStage: stage as any, status: 'ACTIVE' },
+      include: {
+        student: {
+          select: {
+            id: true,
+            username: true,
+            isActive: true,
+            studentProfile: { select: { studentPhoneNumber: true } },
+          },
+        },
+        lesson: { select: { id: true, title: true } },
+        course: { select: { id: true, title: true } },
+      },
+      orderBy: { subscribedAt: 'desc' },
+    });
+
+    res.status(200).json({ success: true, data: subscriptions });
+  })
+);
+
+/**
+ * Stage-scoped Revenue Ledger
+ */
+router.get(
+  '/workspace/:stage/revenue',
+  asyncHandler(async (req, res) => {
+    const stage = req.params.stage;
+    const teacherProfile = await prisma.teacherProfile.findUnique({ where: { userId: req.user!.sub } });
+    if (!teacherProfile) {
+      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Teacher profile not found' } });
+      return;
+    }
+
+    const transactions = await prisma.paymentTransaction.findMany({
+      where: { teacherProfileId: teacherProfile.id, academicStage: stage as any, status: 'COMPLETED' },
+      include: {
+        student: { select: { username: true } },
+        course: { select: { title: true } },
+        lesson: { select: { title: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    res.status(200).json({ success: true, data: transactions });
+  })
+);
+
+// ─── Teacher Content Preview (Requirement 5) ─────────────────────────────────
+
+router.get(
+  '/lessons/:lessonId/preview',
+  asyncHandler(async (req, res) => {
+    const data = await LessonsService.getLessonPreview(
+      req.params.lessonId,
+      req.user!.sub,
+      req.user!.role
+    );
+    res.status(200).json({ success: true, data });
+  })
+);
+
+// ─── Global Teacher Revenue & Analytics ──────────────────────────────────────
 
 router.get(
   '/analytics',
   asyncHandler(async (req, res) => {
     const teacherProfile = await prisma.teacherProfile.findUnique({ where: { userId: req.user!.sub } });
     if (!teacherProfile) {
-      res.status(200).json({ success: true, data: { totalStudents: 0, totalEnrollments: 0, totalRevenue: 0, totalPoints: 0, freeEnrollments: 0, paidEnrollments: 0, courses: [] } });
+      res.status(200).json({ success: true, data: { totalStudents: 0, totalEnrollments: 0, totalRevenue: 0, totalPoints: 0, courses: [] } });
       return;
     }
 
-    const courses = await prisma.course.findMany({
-      where: { teacherProfileId: teacherProfile.id },
-      include: { _count: { select: { enrollments: true } } },
-    });
+    const [courses, subscriptions, payments] = await Promise.all([
+      prisma.course.findMany({
+        where: { teacherProfileId: teacherProfile.id },
+        include: { _count: { select: { lessonSubscriptions: true } } },
+      }),
+      prisma.lessonSubscription.findMany({
+        where: { teacherProfileId: teacherProfile.id, status: 'ACTIVE' },
+        select: { studentId: true },
+      }),
+      prisma.paymentTransaction.aggregate({
+        where: { teacherProfileId: teacherProfile.id, status: 'COMPLETED' },
+        _sum: { teacherEarning: true, pointsUsed: true },
+      }),
+    ]);
 
-    const enrollments = await prisma.courseEnrollment.findMany({
-      where: { course: { teacherProfileId: teacherProfile.id } },
-      include: { course: { select: { price: true, pointCost: true, title: true, id: true } } },
-    });
-
-    const uniqueStudents = new Set(enrollments.map((e: any) => e.studentId));
-    const paidEnrollments = enrollments.filter((e: any) => e.course.price > 0 || e.course.pointCost > 0);
-    const freeEnrollments = enrollments.filter((e: any) => e.course.price === 0 && e.course.pointCost === 0);
-    const totalRevenue = enrollments.reduce((sum: number, e: any) => sum + (e.course.price || 0), 0);
-    const totalPoints = enrollments.reduce((sum: number, e: any) => sum + (e.course.pointCost || 0), 0);
-
-    const courseBreakdown = courses.map((c: any) => ({
-      id: c.id,
-      title: c.title,
-      price: c.price,
-      pointCost: c.pointCost,
-      accessType: c.accessType,
-      enrollmentCount: c._count.enrollments,
-      revenueEGP: Math.round(c.price * c._count.enrollments * 100) / 100,
-      revenuePoints: c.pointCost * c._count.enrollments,
-    }));
+    const uniqueStudents = new Set(subscriptions.map((s) => s.studentId)).size;
+    const totalRevenue = payments._sum.teacherEarning || 0.0;
+    const totalPoints = payments._sum.pointsUsed || 0;
 
     res.status(200).json({
       success: true,
       data: {
-        totalStudents: uniqueStudents.size,
-        totalEnrollments: enrollments.length,
-        paidEnrollments: paidEnrollments.length,
-        freeEnrollments: freeEnrollments.length,
+        totalStudents: uniqueStudents,
+        totalEnrollments: subscriptions.length,
         totalRevenue: Math.round(totalRevenue * 100) / 100,
         totalPoints,
-        courses: courseBreakdown,
+        courses: courses.map((c: any) => ({
+          id: c.id,
+          title: c.title,
+          academicStage: c.academicStage,
+          subscriptionsCount: c._count.lessonSubscriptions,
+        })),
       },
     });
   })
 );
 
-// ─── Courses (Academic Year Folder Structure) ─────────────────────────────────
+// ─── Courses CRUD ────────────────────────────────────────────────────────────
 
 router.get(
   '/courses',
@@ -149,11 +375,11 @@ router.get(
           include: {
             lessons: {
               orderBy: { orderIndex: 'asc' },
-              select: { id: true, title: true, orderIndex: true, isPublished: true, pdfUrl: true, videoUrl: true, driveFileId: true },
+              select: { id: true, title: true, price: true, pointCost: true, orderIndex: true, isPublished: true, pdfUrl: true, videoUrl: true, driveFileId: true },
             },
           },
         },
-        _count: { select: { enrollments: true } },
+        _count: { select: { lessonSubscriptions: true } },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -175,11 +401,10 @@ router.post(
       return;
     }
 
-    const validStages = ['PREPARATORY', 'SECONDARY_1', 'SECONDARY_2', 'SECONDARY_3'];
-    if (!validStages.includes(academicStage)) {
+    if (!VALID_STAGES.includes(academicStage)) {
       res.status(400).json({
         success: false,
-        error: { code: 'INVALID_STAGE', message: `academicStage must be one of: ${validStages.join(', ')}` },
+        error: { code: 'INVALID_STAGE', message: `academicStage must be one of: ${VALID_STAGES.join(', ')}` },
       });
       return;
     }
@@ -192,6 +417,13 @@ router.post(
       res.status(403).json({ success: false, error: { code: 'FORBIDDEN', message: 'Teacher profile not found' } });
       return;
     }
+
+    // Ensure workspace exists
+    await prisma.teacherStage.upsert({
+      where: { teacherProfileId_stage: { teacherProfileId: teacherProfile.id, stage: academicStage as any } },
+      create: { teacherProfileId: teacherProfile.id, stage: academicStage as any, isActive: true },
+      update: { isActive: true },
+    });
 
     const course = await prisma.course.create({
       data: {
@@ -208,7 +440,7 @@ router.post(
       },
       include: {
         chapters: true,
-        _count: { select: { enrollments: true } },
+        _count: { select: { lessonSubscriptions: true } },
       },
     });
 
@@ -236,11 +468,12 @@ router.get(
               include: {
                 assignmentQuiz: { include: { questions: true } },
                 examQuiz: { include: { questions: true } },
+                _count: { select: { subscriptions: true } },
               },
             },
           },
         },
-        _count: { select: { enrollments: true } },
+        _count: { select: { lessonSubscriptions: true } },
       },
     });
 
@@ -273,6 +506,7 @@ router.patch(
     const { title, subject, academicStage, imageUrl, description, pointCost, price, isPublished, accessType, accessDurationDays } = req.body;
     const resolvedAccessType = accessType === 'LIMITED' ? 'LIMITED' : (accessType === 'PERMANENT' ? 'PERMANENT' : undefined);
     const resolvedDays = resolvedAccessType === 'LIMITED' && accessDurationDays ? parseInt(accessDurationDays) : (accessType === 'PERMANENT' ? null : undefined);
+
     const updated = await prisma.course.update({
       where: { id: course.id },
       data: {
@@ -315,7 +549,7 @@ router.delete(
   })
 );
 
-// ─── Chapters ─────────────────────────────────────────────────────────────────
+// ─── Chapters CRUD ────────────────────────────────────────────────────────────
 
 router.get(
   '/courses/:courseId/chapters',
@@ -332,7 +566,7 @@ router.get(
       include: {
         lessons: {
           orderBy: { orderIndex: 'asc' },
-          select: { id: true, title: true, orderIndex: true, isPublished: true },
+          select: { id: true, title: true, price: true, pointCost: true, orderIndex: true, isPublished: true },
         },
       },
     });
@@ -440,7 +674,7 @@ router.delete(
   })
 );
 
-// ─── Lessons ──────────────────────────────────────────────────────────────────
+// ─── Lessons CRUD ─────────────────────────────────────────────────────────────
 
 router.get('/lessons', LessonsController.listLessons);
 
@@ -469,7 +703,7 @@ router.get(
 router.post(
   '/chapters/:chapterId/lessons',
   asyncHandler(async (req, res) => {
-    const { title, description, pointCost, orderIndex, videoUrl, isPublished } = req.body;
+    const { title, description, price, pointCost, orderIndex, videoUrl, isPublished } = req.body;
 
     if (!title) {
       res.status(400).json({ success: false, error: { code: 'MISSING_FIELDS', message: 'title is required' } });
@@ -502,9 +736,11 @@ router.post(
         teacherProfileId: teacherProfile.id,
         courseId: chapter.courseId,
         chapterId: chapter.id,
+        academicStage: chapter.course.academicStage,
         title,
         description: description || null,
-        pointCost: parseInt(pointCost) || 0,
+        price: price !== undefined ? parseFloat(price) : 0.0,
+        pointCost: pointCost !== undefined ? parseInt(pointCost) : 0,
         orderIndex: orderIndex !== undefined ? parseInt(orderIndex) : nextOrder,
         videoUrl: videoUrl || null,
         isPublished: isPublished !== undefined ? Boolean(isPublished) : true,
@@ -543,7 +779,6 @@ router.post(
       return;
     }
 
-    // Store PDF as base64 data URL (for simple hosting) or use Drive if configured
     let pdfUrl: string;
     let pdfFileName: string;
 
@@ -559,7 +794,6 @@ router.post(
       pdfUrl = `drive:${result.fileId}`;
       pdfFileName = result.fileName;
     } catch {
-      // Fallback: store as base64
       const b64 = req.file.buffer.toString('base64');
       pdfUrl = `data:${req.file.mimetype};base64,${b64}`;
       pdfFileName = req.file.originalname;
@@ -631,11 +865,10 @@ router.delete(
   })
 );
 
-// Assign quiz to lesson as assignment or exam
 router.patch(
   '/lessons/:lessonId/assign-quiz',
   asyncHandler(async (req, res) => {
-    const { quizId, quizRole } = req.body; // quizRole: 'assignment' | 'exam'
+    const { quizId, quizRole } = req.body;
 
     if (!quizId || !quizRole) {
       res.status(400).json({ success: false, error: { code: 'MISSING_FIELDS', message: 'quizId and quizRole are required' } });
@@ -670,62 +903,5 @@ router.patch(
     res.status(200).json({ success: true, data: updated });
   })
 );
-
-// ─── Student dashboards (own students only) ───────────────────────────────────
-
-router.get(
-  '/students',
-  asyncHandler(async (req, res) => {
-    const teacherProfile = await prisma.teacherProfile.findUnique({ where: { userId: req.user!.sub } });
-    if (!teacherProfile) {
-      res.status(200).json({ success: true, data: [] });
-      return;
-    }
-
-    const { stage = '' } = req.query as Record<string, string>;
-    const validStages = ['PREPARATORY', 'SECONDARY_1', 'SECONDARY_2', 'SECONDARY_3'];
-    const stageFilter = stage && validStages.includes(stage) ? stage : null;
-
-    const enrollments = await prisma.courseEnrollment.findMany({
-      where: {
-        course: { teacherProfileId: teacherProfile.id },
-        ...(stageFilter ? { student: { studentProfile: { academicStage: stageFilter as any } } } : {}),
-      },
-      include: {
-        student: {
-          select: {
-            id: true,
-            username: true,
-            pointsBalance: true,
-            walletBalance: true,
-            isActive: true,
-            createdAt: true,
-            studentProfile: { select: { studentPhoneNumber: true, academicStage: true } },
-          },
-        },
-        course: { select: { id: true, title: true, academicStage: true } },
-      },
-      distinct: ['studentId'],
-    });
-
-    res.status(200).json({ success: true, data: enrollments.map((e: any) => ({ ...e.student, enrolledCourse: e.course })) });
-  })
-);
-
-router.get(
-  '/students/:studentId/performance',
-  asyncHandler(async (req, res) => {
-    const teacherProfile = await prisma.teacherProfile.findUnique({ where: { userId: req.user!.sub } });
-    if (!teacherProfile) {
-      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Teacher profile not found' } });
-      return;
-    }
-
-    const data = await LessonsService.getStudentProgress(req.params.studentId as string, teacherProfile.id);
-    res.status(200).json({ success: true, data });
-  })
-);
-
-// ─── Public Teacher Listing (for students discovering teachers/courses) ───────
 
 export default router;

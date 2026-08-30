@@ -1,6 +1,7 @@
 /**
  * Khatwa Platform — Unified Frontend API Client
- * Resilient multi-page client with automatic token refresh, token caching, and live DB sync.
+ * Resilient multi-page client with automatic token refresh, token caching, live DB sync,
+ * stage-isolated workspaces, lesson-level subscriptions, and dynamic theme engine.
  */
 
 (function (window) {
@@ -16,6 +17,7 @@
     ACCESS_TOKEN: 'khatwa_access_token',
     REFRESH_TOKEN: 'khatwa_refresh_token',
     USER: 'khatwa_user',
+    TEACHER_WORKSPACE: 'khatwa_teacher_workspace',
   };
 
   let _refreshPromise = null;
@@ -63,7 +65,30 @@
     } catch (_) {}
   }
 
-  // ─── Automated Token Refresh (Single Shared Promise) ─────────────────────────
+  // ─── Dynamic Branding / Theme Engine (Requirement 1) ──────────────────────
+  async function applyDynamicBranding() {
+    try {
+      const res = await fetch(DEFAULT_API_BASE + '/settings/branding').then((r) => r.json()).catch(() => null);
+      if (res && res.success && res.data) {
+        const { primaryColor, secondaryColor, accentColor, platformName, logoUrl } = res.data;
+        const root = document.documentElement;
+
+        if (primaryColor) root.style.setProperty('--primary', primaryColor);
+        if (secondaryColor) root.style.setProperty('--secondary', secondaryColor);
+        if (accentColor) root.style.setProperty('--accent', accentColor);
+
+        // Update brand elements in DOM if present
+        if (platformName) {
+          document.querySelectorAll('.brand-text').forEach((el) => (el.textContent = platformName));
+        }
+        if (logoUrl) {
+          document.querySelectorAll('.brand-logo').forEach((el) => el.setAttribute('src', logoUrl));
+        }
+      }
+    } catch (_) {}
+  }
+
+  // ─── Automated Token Refresh ───────────────────────────────────────────────
   async function performTokenRefresh() {
     if (_refreshPromise) return _refreshPromise;
 
@@ -98,7 +123,7 @@
     return _refreshPromise;
   }
 
-  // ─── HTTP Request Engine ─────────────────────────────────────────────────────
+  // ─── HTTP Request Engine ───────────────────────────────────────────────────
   async function request(endpoint, options = {}) {
     const url = endpoint.startsWith('http') ? endpoint : (DEFAULT_API_BASE + endpoint);
     let token = getStoredToken();
@@ -125,7 +150,7 @@
       throw new Error('فشل الاتصال بالخادم. تأكد من تشغيل السيرفر والاتصال بالإنترنت.');
     }
 
-    // Auto-refresh token on 401 and retry original request once
+    // Auto-refresh token on 401
     if (res.status === 401 && !endpoint.includes('/auth/login') && !endpoint.includes('/auth/refresh')) {
       const newToken = await performTokenRefresh();
       if (newToken) {
@@ -147,7 +172,7 @@
     return data;
   }
 
-  // ─── KhatwaAPI Interface ─────────────────────────────────────────────────────
+  // ─── KhatwaAPI Interface ───────────────────────────────────────────────────
   const KhatwaAPI = {
     BASE_URL: DEFAULT_API_BASE,
 
@@ -284,7 +309,26 @@
 
     // ─── Admin Portal ────────────────────────────────────────────────────────
     admin: {
+      async getGeneralSettings() { const res = await request('/admin/settings/general'); return res.data || {}; },
+      async updateGeneralSettings(data) { const res = await request('/admin/settings/general', { method: 'PATCH', body: data }); return res.data; },
+      async getStages() { const res = await request('/admin/stages'); return res.data || []; },
       async getAnalytics() { const res = await request('/admin/analytics'); return res.data || {}; },
+      async getSubscriptions(searchParams = {}) {
+        const query = new URLSearchParams(searchParams);
+        const res = await request('/admin/subscriptions?' + query.toString());
+        return res.data || [];
+      },
+      async grantSubscription(studentId, lessonId) {
+        return request('/admin/subscriptions/grant', { method: 'POST', body: { studentId, lessonId } });
+      },
+      async revokeSubscription(id) {
+        return request('/admin/subscriptions/' + id + '/revoke', { method: 'PATCH' });
+      },
+      async getPayments(searchParams = {}) {
+        const query = new URLSearchParams(searchParams);
+        const res = await request('/admin/payments?' + query.toString());
+        return res.data || [];
+      },
       async getStudents(search = '', page = 1, limit = 50, stage = '') {
         const query = new URLSearchParams({ search, page: String(page), limit: String(limit) });
         if (stage) query.set('stage', stage);
@@ -327,10 +371,24 @@
       async regenerateAccessCode(id) { const res = await request('/admin/access-codes/' + id + '/regenerate', { method: 'POST' }); return res.data; },
     },
 
-    // ─── Teacher Studio ──────────────────────────────────────────────────────
+    // ─── Teacher Studio & Workspaces ─────────────────────────────────────────
     teacher: {
+      getStoredWorkspace() {
+        return localStorage.getItem(STORAGE_KEYS.TEACHER_WORKSPACE) || 'SECONDARY_1';
+      },
+      setStoredWorkspace(stage) {
+        localStorage.setItem(STORAGE_KEYS.TEACHER_WORKSPACE, stage);
+      },
       async getProfile() { const res = await request('/teacher/profile'); return res.data || {}; },
       async updateProfile(data) { const res = await request('/teacher/profile', { method: 'PATCH', body: data }); return res.data; },
+      async getWorkspaces() { const res = await request('/teacher/workspaces'); return res.data || []; },
+      async addWorkspace(stage) { const res = await request('/teacher/workspaces', { method: 'POST', body: { stage } }); return res.data; },
+      async getWorkspaceOverview(stage) { const res = await request('/teacher/workspace/' + stage + '/overview'); return res.data || {}; },
+      async getWorkspaceCourses(stage) { const res = await request('/teacher/workspace/' + stage + '/courses'); return res.data || []; },
+      async getWorkspaceStudents(stage) { const res = await request('/teacher/workspace/' + stage + '/students'); return res.data || []; },
+      async getWorkspaceRevenue(stage) { const res = await request('/teacher/workspace/' + stage + '/revenue'); return res.data || []; },
+      async previewLesson(id) { const res = await request('/teacher/lessons/' + id + '/preview'); return res.data; },
+
       async getCourses() { const res = await request('/teacher/courses'); return res.data || []; },
       async createCourse(data) { const res = await request('/teacher/courses', { method: 'POST', body: data }); return res.data; },
       async getCourse(id) { const res = await request('/teacher/courses/' + id); return res.data; },
@@ -377,15 +435,26 @@
     student: {
       async getProfile() { const res = await request('/student/profile'); return res.data || {}; },
       async updateProfile(data) { const res = await request('/student/profile', { method: 'PUT', body: data }); return res.data; },
-      async getEnrolledCourses() { const res = await request('/student/courses/enrolled'); return res.data || []; },
+      async getCatalog() { const res = await request('/student/catalog'); return res.data || { courses: [] }; },
+      async getSubscriptions() { const res = await request('/student/subscriptions'); return res.data || []; },
+      async getSubscriptionsFlat() { const res = await request('/student/subscriptions/flat'); return res.data || []; },
+      async purchaseLesson(lessonId, paymentMethod = 'WALLET_EGP') {
+        const res = await request('/student/lessons/' + lessonId + '/purchase', {
+          method: 'POST',
+          body: { paymentMethod },
+        });
+        return res.data;
+      },
+      async getPaymentsHistory() { const res = await request('/student/payments/history'); return res.data || []; },
+      async getEnrolledCourses() { return this.getSubscriptions(); },
       async enrollCourse(courseId) { return request('/student/courses/' + courseId + '/enroll', { method: 'POST' }); },
       async getCourse(courseId) { const res = await request('/student/courses/' + courseId); return res.data; },
       async checkLessonAccess(lessonId) {
         const res = await request('/student/lessons/' + lessonId + '/access-check');
-        return res.data || { canAccess: false, reason: 'UNKNOWN', step: 'assignment' };
+        return res.data || { canAccess: false, reason: 'UNKNOWN', step: 'purchase' };
       },
       async getLessonContent(lessonId) { const res = await request('/student/lessons/' + lessonId + '/content'); return res.data; },
-      async unlockLesson(lessonId) { const res = await request('/student/lessons/' + lessonId + '/unlock', { method: 'POST' }); return res.data; },
+      async unlockLesson(lessonId) { return this.purchaseLesson(lessonId, 'POINTS'); },
       async getQuiz(quizId) { const res = await request('/student/quizzes/' + quizId); return res.data; },
       async submitQuizAttempt(quizId, answers) {
         const res = await request('/student/quizzes/' + quizId + '/attempt', {
@@ -404,17 +473,19 @@
       async markNotificationRead(id) { return request('/student/notifications/' + id + '/read', { method: 'PATCH' }); },
       async getStats() {
         const res = await request('/student/stats');
-        return res.data || { pointsBalance: 0, walletBalance: 0, enrolledCount: 0, completedLectures: 0, averageScore: '100%', enrolledCourses: [], quizAttempts: [] };
+        return res.data || { pointsBalance: 0, walletBalance: 0, enrolledCourses: 0, totalQuizzes: 0, passedQuizzes: 0 };
       },
       async getActivities() {
         try {
-          const [notifs, txs] = await Promise.all([
+          const [notifs, txs, payments] = await Promise.all([
             request('/student/notifications').then(r => r.data || []).catch(() => []),
             request('/student/points/transactions').then(r => r.data || []).catch(() => []),
+            request('/student/payments/history').then(r => r.data || []).catch(() => []),
           ]);
           return [
             ...notifs.map(n => ({ id: n.id, title: n.title, desc: n.message, time: n.createdAt, icon: '🔔', type: 'info' })),
             ...txs.map(t => ({ id: t.id, title: t.type === 'CREDIT' ? 'شحن نقاط' : 'استخدام نقاط', desc: (t.reason || 'معاملة') + ' (' + (t.type === 'CREDIT' ? '+' : '-') + t.amount + ' نقطة)', time: t.createdAt, icon: t.type === 'CREDIT' ? '💎' : '⚡', type: t.type === 'CREDIT' ? 'success' : 'warn' })),
+            ...payments.map(p => ({ id: p.id, title: 'شراء محاضرة', desc: (p.lesson?.title || 'محاضرة') + ' (' + p.amount + ' ج.م)', time: p.createdAt, icon: '💳', type: 'success' })),
           ].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
         } catch { return []; }
       },
@@ -431,10 +502,12 @@
         } catch { return null; }
       },
       async isEnrolled(courseId) {
-        try { const enrolled = await KhatwaAPI.student.getEnrolledCourses(); return enrolled.some(c => c.id === courseId || c.courseId === courseId); }
-        catch { return false; }
+        try {
+          const enrolled = await KhatwaAPI.student.getSubscriptions();
+          return enrolled.some(t => t.courses.some((c: any) => c.id === courseId));
+        } catch { return false; }
       },
-      async getMyCourses() { return KhatwaAPI.student.getEnrolledCourses(); },
+      async getMyCourses() { return KhatwaAPI.student.getSubscriptions(); },
       async enroll(courseId) { return KhatwaAPI.student.enrollCourse(courseId); },
       async getStudentStats() { return KhatwaAPI.student.getStats(); },
     },
@@ -453,6 +526,7 @@
   window.KhatwaAPI = KhatwaAPI;
 
   document.addEventListener('DOMContentLoaded', () => {
+    applyDynamicBranding();
     KhatwaAPI.syncNav();
     KhatwaAPI.fetchLiveUser().then(() => {
       KhatwaAPI.syncNav();

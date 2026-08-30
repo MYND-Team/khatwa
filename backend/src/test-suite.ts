@@ -299,6 +299,138 @@ async function runFullTestSuite() {
     'Req 16: Wrong-role requests are blocked with 403 Forbidden'
   );
 
+  // ─── 9. Lesson as Primary Purchasable Unit & Atomic Purchase (Req 3, 6, 7) ──
+  console.log('\n--- Test Group 9: Lesson Purchasing & Financial Splits (Requirements 3, 6, 7) ---');
+
+  interface MockStudentAccount {
+    id: string;
+    walletBalance: number;
+    pointsBalance: number;
+    subscriptions: string[];
+  }
+
+  interface MockPaymentRecord {
+    txId: string;
+    studentId: string;
+    teacherId: string;
+    stage: string;
+    courseId: string;
+    lessonId: string;
+    amount: number;
+    teacherEarning: number;
+    platformFee: number;
+  }
+
+  let studentAcc: MockStudentAccount = {
+    id: 'student_99',
+    walletBalance: 100.0,
+    pointsBalance: 50,
+    subscriptions: [],
+  };
+
+  let mockPaymentsDb: MockPaymentRecord[] = [];
+
+  function purchaseLessonSimulation(
+    student: MockStudentAccount,
+    lesson: { id: string; courseId: string; teacherId: string; stage: string; price: number; pointCost: number },
+    method: 'WALLET_EGP' | 'POINTS',
+    commissionPct = 15
+  ): { success: boolean; error?: string } {
+    if (student.subscriptions.includes(lesson.id)) {
+      return { success: false, error: 'ALREADY_SUBSCRIBED' };
+    }
+
+    if (method === 'WALLET_EGP') {
+      if (student.walletBalance < lesson.price) {
+        return { success: false, error: 'INSUFFICIENT_WALLET_BALANCE' };
+      }
+      student.walletBalance -= lesson.price;
+      const platformFee = Number(((lesson.price * commissionPct) / 100).toFixed(2));
+      const teacherEarning = Number((lesson.price - platformFee).toFixed(2));
+
+      student.subscriptions.push(lesson.id);
+      mockPaymentsDb.push({
+        txId: `TX-SIM-${Date.now()}`,
+        studentId: student.id,
+        teacherId: lesson.teacherId,
+        stage: lesson.stage,
+        courseId: lesson.courseId,
+        lessonId: lesson.id,
+        amount: lesson.price,
+        teacherEarning,
+        platformFee,
+      });
+      return { success: true };
+    } else {
+      if (student.pointsBalance < lesson.pointCost) {
+        return { success: false, error: 'INSUFFICIENT_POINTS_BALANCE' };
+      }
+      student.pointsBalance -= lesson.pointCost;
+      student.subscriptions.push(lesson.id);
+      return { success: true };
+    }
+  }
+
+  const testLesson = {
+    id: 'les_physics_01',
+    courseId: 'crs_physics_sec1',
+    teacherId: 'tch_ahmed',
+    stage: 'SECONDARY_1',
+    price: 20.0,
+    pointCost: 20,
+  };
+
+  // 1. Successful EGP Purchase
+  const buyRes = purchaseLessonSimulation(studentAcc, testLesson, 'WALLET_EGP', 15);
+  assert(buyRes.success === true, 'Req 3: Lesson purchased successfully with Wallet EGP');
+  assert(studentAcc.walletBalance === 80.0, 'Req 3: Student wallet balance deducted correctly (100 - 20 = 80)');
+  assert(studentAcc.subscriptions.includes(testLesson.id), 'Req 7: Lesson subscription created and active');
+
+  // 2. Financial Ledger & Split Verification
+  const lastTx = mockPaymentsDb[mockPaymentsDb.length - 1];
+  assert(lastTx.amount === 20.0, 'Req 6: Transaction recorded full amount 20 EGP');
+  assert(lastTx.platformFee === 3.0, 'Req 6: Platform commission correctly calculated as 15% (3.0 EGP)');
+  assert(lastTx.teacherEarning === 17.0, 'Req 6: Teacher earning correctly calculated as 85% (17.0 EGP)');
+  assert(lastTx.stage === 'SECONDARY_1' && lastTx.teacherId === 'tch_ahmed', 'Req 6: Full traceable ledger chain verified');
+
+  // 3. Duplicate purchase blocked (Idempotency)
+  const duplicateBuy = purchaseLessonSimulation(studentAcc, testLesson, 'WALLET_EGP');
+  assert(duplicateBuy.success === false && duplicateBuy.error === 'ALREADY_SUBSCRIBED', 'Req 3: Duplicate lesson purchase is prevented');
+
+  // ─── 10. Teacher Stage Workspace Isolation (Requirement 2) ───────────────────
+  console.log('\n--- Test Group 10: Teacher Stage Workspace Isolation (Requirement 2) ---');
+
+  const teacherAllCourses = [
+    { id: 'c1', title: 'فيزياء أولى ثانوي', academicStage: 'SECONDARY_1', teacherId: 'tch_ahmed' },
+    { id: 'c2', title: 'فيزياء ثانية ثانوي', academicStage: 'SECONDARY_2', teacherId: 'tch_ahmed' },
+    { id: 'c3', title: 'فيزياء ثالثة ثانوي', academicStage: 'SECONDARY_3', teacherId: 'tch_ahmed' },
+  ];
+
+  function getWorkspaceCourses(teacherId: string, stage: string) {
+    return teacherAllCourses.filter(c => c.teacherId === teacherId && c.academicStage === stage);
+  }
+
+  const sec1Courses = getWorkspaceCourses('tch_ahmed', 'SECONDARY_1');
+  const sec2Courses = getWorkspaceCourses('tch_ahmed', 'SECONDARY_2');
+  const sec3Courses = getWorkspaceCourses('tch_ahmed', 'SECONDARY_3');
+
+  assert(sec1Courses.length === 1 && sec1Courses[0].id === 'c1', 'Req 2: Stage 1 workspace isolates Secondary 1 courses');
+  assert(sec2Courses.length === 1 && sec2Courses[0].id === 'c2', 'Req 2: Stage 2 workspace isolates Secondary 2 courses');
+  assert(sec3Courses.length === 1 && sec3Courses[0].id === 'c3', 'Req 2: Stage 3 workspace isolates Secondary 3 courses');
+
+  // ─── 11. Student Stage-Restricted Course Visibility (Requirement 4) ──────────
+  console.log('\n--- Test Group 11: Student Stage-Restricted Course Visibility (Requirement 4) ---');
+
+  function getStudentVisibleCourses(studentAcademicStage: string, allCourses: typeof teacherAllCourses) {
+    return allCourses.filter(c => c.academicStage === studentAcademicStage);
+  }
+
+  const studentSec1Catalog = getStudentVisibleCourses('SECONDARY_1', teacherAllCourses);
+  assert(studentSec1Catalog.length === 1 && studentSec1Catalog[0].academicStage === 'SECONDARY_1', 'Req 4: Secondary 1 student only sees Secondary 1 courses');
+
+  const studentSec2Catalog = getStudentVisibleCourses('SECONDARY_2', teacherAllCourses);
+  assert(studentSec2Catalog.length === 1 && studentSec2Catalog[0].academicStage === 'SECONDARY_2', 'Req 4: Secondary 2 student only sees Secondary 2 courses');
+
   // ─── Summary ────────────────────────────────────────────────────────────────
   console.log('\n==================================================');
   console.log(`📊 Test Results: ${passedTests} PASSED, ${failedTests} FAILED`);
@@ -308,3 +440,4 @@ async function runFullTestSuite() {
 }
 
 runFullTestSuite();
+

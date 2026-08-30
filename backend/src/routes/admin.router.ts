@@ -2,26 +2,234 @@
  * /admin/* — ADMIN role only (full platform management)
  *
  * Full unrestricted platform access for administrator.
- * - Student management (DB-backed, persistent)
- * - Teacher creation
- * - Wallet (EGP) atomic transfers
- * - Points atomic adjustments
- * - Student notes
- * - Platform analytics
+ * - Platform Appearance & Theme Customizer (Primary/Secondary/Accent Colors, Logos, Platform Name)
+ * - Academic Stages Platform Oversight
+ * - Full Traceable Payments Ledger (Student -> Teacher -> Stage -> Course -> Lesson -> Amount)
+ * - Full Subscriptions Monitor (Grant / Revoke / Filter)
+ * - Teacher & Student Accounts Management
+ * - Content Inspection & Controls
+ * - Access Codes & Points Audit
  */
 
 import { Router } from 'express';
 import { requireAdmin } from '../middleware/requireAdmin';
 import * as AccessCodesController from '../modules/accessCodes/accessCodes.controller';
 import * as BrandingController from '../modules/branding/branding.controller';
+import * as LessonsService from '../modules/lessons/lessons.service';
 import { asyncHandler } from '../utils/asyncHandler';
 import { prisma } from '../config/prisma';
 import bcrypt from 'bcryptjs';
 
 const router = Router();
-
-// All routes require ADMIN role
 router.use(requireAdmin);
+
+// ─── Platform Appearance & General Settings (Requirement 1) ─────────────────
+
+router.get('/settings/general', BrandingController.getSettings);
+router.patch('/settings/general', BrandingController.updateSettings);
+
+// Branding alias
+router.get('/settings/branding', BrandingController.getSettings);
+router.patch('/settings/branding', BrandingController.updateSettings);
+
+// ─── Academic Stages Platform Oversight ──────────────────────────────────────
+
+router.get(
+  '/stages',
+  asyncHandler(async (_req, res) => {
+    const stages = [
+      { code: 'PREPARATORY', nameAr: 'المرحلة الإعدادية', nameEn: 'Preparatory Stage', order: 1 },
+      { code: 'SECONDARY_1', nameAr: 'الصف الأول الثانوي', nameEn: 'First Secondary', order: 2 },
+      { code: 'SECONDARY_2', nameAr: 'الصف الثاني الثانوي', nameEn: 'Second Secondary', order: 3 },
+      { code: 'SECONDARY_3', nameAr: 'الصف الثالث الثانوي', nameEn: 'Third Secondary', order: 4 },
+    ];
+
+    const [coursesCounts, studentsCounts, subscriptionsCounts] = await Promise.all([
+      prisma.course.groupBy({ by: ['academicStage'], _count: { id: true } }),
+      prisma.studentProfile.groupBy({ by: ['academicStage'], _count: { id: true } }),
+      prisma.lessonSubscription.groupBy({ by: ['academicStage'], _count: { id: true } }),
+    ]);
+
+    const result = stages.map((st) => {
+      const courses = coursesCounts.find((c: any) => c.academicStage === st.code)?._count.id || 0;
+      const students = studentsCounts.find((s: any) => s.academicStage === st.code)?._count.id || 0;
+      const subscriptions = subscriptionsCounts.find((sub: any) => sub.academicStage === st.code)?._count.id || 0;
+      return {
+        ...st,
+        coursesCount: courses,
+        studentsCount: students,
+        subscriptionsCount: subscriptions,
+      };
+    });
+
+    res.status(200).json({ success: true, data: result });
+  })
+);
+
+// ─── Full Traceable Payments Ledger (Requirement 6) ──────────────────────────
+
+router.get(
+  '/payments',
+  asyncHandler(async (req, res) => {
+    const { studentId, teacherId, stage, page = '1', limit = '50' } = req.query as Record<string, string>;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    const where: any = {};
+    if (studentId) where.studentId = studentId;
+    if (teacherId) where.teacherProfileId = teacherId;
+    if (stage) where.academicStage = stage as any;
+
+    const [payments, total, sumAgg] = await Promise.all([
+      prisma.paymentTransaction.findMany({
+        where,
+        include: {
+          student: { select: { id: true, username: true } },
+          teacherProfile: { select: { id: true, displayName: true } },
+          course: { select: { id: true, title: true, subject: true } },
+          lesson: { select: { id: true, title: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: parseInt(limit),
+      }),
+      prisma.paymentTransaction.count({ where }),
+      prisma.paymentTransaction.aggregate({
+        where: { ...where, status: 'COMPLETED' },
+        _sum: { amount: true, teacherEarning: true, platformFee: true, pointsUsed: true },
+      }),
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: payments,
+      meta: {
+        total,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalAmountEGP: sumAgg._sum.amount ?? 0,
+        totalTeacherEarnings: sumAgg._sum.teacherEarning ?? 0,
+        totalPlatformFees: sumAgg._sum.platformFee ?? 0,
+        totalPointsUsed: sumAgg._sum.pointsUsed ?? 0,
+      },
+    });
+  })
+);
+
+// ─── Platform-Wide Subscriptions Management (Requirements 1, 3, 7, 8) ────────
+
+router.get(
+  '/subscriptions',
+  asyncHandler(async (req, res) => {
+    const { studentId, teacherId, stage, status, page = '1', limit = '50' } = req.query as Record<string, string>;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    const where: any = {};
+    if (studentId) where.studentId = studentId;
+    if (teacherId) where.teacherProfileId = teacherId;
+    if (stage) where.academicStage = stage as any;
+    if (status) where.status = status;
+
+    const [subscriptions, total] = await Promise.all([
+      prisma.lessonSubscription.findMany({
+        where,
+        include: {
+          student: { select: { id: true, username: true, studentProfile: { select: { studentPhoneNumber: true } } } },
+          teacherProfile: { select: { id: true, displayName: true } },
+          course: { select: { id: true, title: true, subject: true } },
+          lesson: { select: { id: true, title: true, price: true, pointCost: true } },
+        },
+        orderBy: { subscribedAt: 'desc' },
+        skip,
+        take: parseInt(limit),
+      }),
+      prisma.lessonSubscription.count({ where }),
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: subscriptions,
+      meta: { total, page: parseInt(page), limit: parseInt(limit) },
+    });
+  })
+);
+
+router.post(
+  '/subscriptions/grant',
+  asyncHandler(async (req, res) => {
+    const { studentId, lessonId } = req.body;
+    if (!studentId || !lessonId) {
+      res.status(400).json({ success: false, error: { code: 'MISSING_FIELDS', message: 'studentId and lessonId are required' } });
+      return;
+    }
+
+    const [student, lesson] = await Promise.all([
+      prisma.user.findUnique({ where: { id: studentId } }),
+      prisma.lesson.findUnique({
+        where: { id: lessonId },
+        include: { course: true, teacherProfile: true },
+      }),
+    ]);
+
+    if (!student || student.role !== 'STUDENT') {
+      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Student not found' } });
+      return;
+    }
+    if (!lesson) {
+      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Lesson not found' } });
+      return;
+    }
+
+    const subscription = await prisma.lessonSubscription.upsert({
+      where: { studentId_lessonId: { studentId, lessonId } },
+      create: {
+        studentId,
+        lessonId,
+        courseId: lesson.courseId,
+        teacherProfileId: lesson.teacherProfileId,
+        academicStage: lesson.academicStage || lesson.course?.academicStage || 'SECONDARY_1',
+        status: 'ACTIVE',
+        paymentMethod: 'ADMIN_GRANT',
+        pricePaid: 0.0,
+        pointsPaid: 0,
+      },
+      update: {
+        status: 'ACTIVE',
+        paymentMethod: 'ADMIN_GRANT',
+      },
+    });
+
+    await prisma.unlockedLesson.upsert({
+      where: { studentId_lessonId: { studentId, lessonId } },
+      create: { studentId, lessonId },
+      update: {},
+    });
+
+    res.status(201).json({ success: true, data: subscription, message: 'تم منح اشتراك المحاضرة للطالب بنجاح' });
+  })
+);
+
+router.patch(
+  '/subscriptions/:id/revoke',
+  asyncHandler(async (req, res) => {
+    const sub = await prisma.lessonSubscription.findUnique({ where: { id: req.params.id } });
+    if (!sub) {
+      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Subscription not found' } });
+      return;
+    }
+
+    const updated = await prisma.lessonSubscription.update({
+      where: { id: sub.id },
+      data: { status: 'REVOKED' },
+    });
+
+    // Also remove from unlocked lessons
+    await prisma.unlockedLesson.deleteMany({
+      where: { studentId: sub.studentId, lessonId: sub.lessonId },
+    });
+
+    res.status(200).json({ success: true, data: updated, message: 'تم إلغاء اشتراك الطالب في المحاضرة' });
+  })
+);
 
 // ─── Points Access Codes Management ──────────────────────────────────────────
 
@@ -30,7 +238,7 @@ router.get('/access-codes', AccessCodesController.listCodes);
 router.patch('/access-codes/:id/revoke', AccessCodesController.revokeCode);
 router.post('/access-codes/:id/regenerate', AccessCodesController.regenerateCode);
 
-// ─── Student Management (Full DB-backed, IP-independent) ─────────────────────
+// ─── Student Management ──────────────────────────────────────────────────────
 
 router.get(
   '/students',
@@ -77,7 +285,6 @@ router.get(
   })
 );
 
-// Full student profile with notes, wallet, points, enrollments
 router.get(
   '/students/:id/full-profile',
   asyncHandler(async (req, res) => {
@@ -92,6 +299,23 @@ router.get(
         isActive: true,
         createdAt: true,
         studentProfile: { include: { parentInfo: true } },
+        lessonSubscriptions: {
+          where: { status: 'ACTIVE' },
+          include: {
+            lesson: { select: { id: true, title: true, price: true, pointCost: true } },
+            course: { select: { id: true, title: true, subject: true } },
+            teacherProfile: { select: { displayName: true } },
+          },
+          orderBy: { subscribedAt: 'desc' },
+        },
+        paymentTransactions: {
+          orderBy: { createdAt: 'desc' },
+          take: 20,
+          include: {
+            teacherProfile: { select: { displayName: true } },
+            lesson: { select: { title: true } },
+          },
+        },
         pointsTransactions: {
           orderBy: { createdAt: 'desc' },
           take: 20,
@@ -106,24 +330,6 @@ router.get(
           orderBy: { createdAt: 'desc' },
           take: 30,
           include: { author: { select: { username: true } } },
-        },
-        courseEnrollments: {
-          include: {
-            course: {
-              select: {
-                id: true,
-                title: true,
-                subject: true,
-                academicStage: true,
-                teacherProfile: { select: { displayName: true, avatarUrl: true } },
-              },
-            },
-          },
-        },
-        unlockedLessons: {
-          include: {
-            lesson: { select: { id: true, title: true, pointCost: true } },
-          },
         },
       },
     });
@@ -191,7 +397,7 @@ router.delete(
   })
 );
 
-// ─── Wallet (EGP) Management — Atomic ─────────────────────────────────────────
+// ─── Wallet & Points Adjustments ─────────────────────────────────────────────
 
 router.post(
   '/students/:id/adjust-wallet',
@@ -243,8 +449,6 @@ router.post(
     });
   })
 );
-
-// ─── Points Management — Atomic ───────────────────────────────────────────────
 
 router.post(
   '/students/:id/adjust-points',
@@ -323,11 +527,19 @@ router.get(
         teacherProfile: {
           select: { displayName: true, avatarUrl: true, user: { select: { username: true } } },
         },
-        _count: { select: { enrollments: true, chapters: true, lessons: true } },
+        _count: { select: { lessonSubscriptions: true, chapters: true, lessons: true } },
       },
       orderBy: { createdAt: 'desc' },
     });
     res.status(200).json({ success: true, data: courses });
+  })
+);
+
+router.get(
+  '/lessons/:id/preview',
+  asyncHandler(async (req, res) => {
+    const data = await LessonsService.getLessonPreview(req.params.id, req.user!.sub, 'ADMIN');
+    res.status(200).json({ success: true, data });
   })
 );
 
@@ -346,7 +558,8 @@ router.get(
       activeCodes,
       totalLessons,
       totalCourses,
-      totalEnrollments,
+      totalSubscriptions,
+      paymentsSummary,
     ] = await Promise.all([
       prisma.user.count({ where: { role: 'STUDENT' } }),
       prisma.user.count({ where: { role: 'TEACHER' } }),
@@ -357,7 +570,11 @@ router.get(
       prisma.accessCode.count({ where: { status: 'ACTIVE' } }),
       prisma.lesson.count(),
       prisma.course.count(),
-      prisma.courseEnrollment.count(),
+      prisma.lessonSubscription.count({ where: { status: 'ACTIVE' } }),
+      prisma.paymentTransaction.aggregate({
+        where: { status: 'COMPLETED' },
+        _sum: { amount: true, teacherEarning: true, platformFee: true },
+      }),
     ]);
 
     res.status(200).json({
@@ -368,7 +585,10 @@ router.get(
         totalStaff,
         totalLessons,
         totalCourses,
-        totalEnrollments,
+        totalSubscriptions,
+        totalRevenueEGP: paymentsSummary._sum.amount ?? 0,
+        totalTeacherEarnings: paymentsSummary._sum.teacherEarning ?? 0,
+        totalPlatformFees: paymentsSummary._sum.platformFee ?? 0,
         totalPointsCredited: totalPointsCredited._sum.amount ?? 0,
         totalWalletCredited: totalWalletCredited._sum.amount ?? 0,
         pendingPointRequests,
@@ -424,7 +644,6 @@ router.patch(
       return;
     }
 
-    // Determine points to credit: explicit body points > requestedPoints > amount
     const pointsToCredit = req.body?.points
       ? parseInt(req.body.points, 10)
       : (pr.requestedPoints > 0 ? pr.requestedPoints : Math.max(1, Math.round(pr.amount || 0)));
@@ -470,10 +689,7 @@ router.patch(
     res.status(200).json({
       success: true,
       message: `تم شحن ${pointsToCredit} نقطة للطالب بنجاح`,
-      data: {
-        pointsCredited: pointsToCredit,
-        user: updatedUser,
-      },
+      data: { pointsCredited: pointsToCredit, user: updatedUser },
     });
   })
 );
@@ -512,26 +728,7 @@ router.patch(
   })
 );
 
-// ─── Notifications ────────────────────────────────────────────────────────────
-
-router.post(
-  '/notifications',
-  asyncHandler(async (req, res) => {
-    const { userId, title, message, type = 'INFO' } = req.body;
-    if (!userId || !title || !message) {
-      res.status(400).json({ success: false, error: { code: 'MISSING_FIELDS', message: 'userId, title, and message are required' } });
-      return;
-    }
-
-    const notification = await prisma.notification.create({
-      data: { userId, title, message, type },
-    });
-
-    res.status(201).json({ success: true, data: notification });
-  })
-);
-
-// ─── Teachers Management (Full DB-backed) ───────────────────────────────────
+// ─── Teachers Management ──────────────────────────────────────────────────────
 
 router.get(
   '/teachers',
@@ -553,12 +750,14 @@ router.get(
             rating: true,
             ratingCount: true,
             academicStages: true,
+            workspaces: true,
             courses: {
               select: {
                 id: true,
                 title: true,
+                academicStage: true,
                 isPublished: true,
-                _count: { select: { chapters: true, enrollments: true, lessons: true } },
+                _count: { select: { chapters: true, lessons: true, lessonSubscriptions: true } },
               },
             },
           },
@@ -588,6 +787,8 @@ router.post(
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
+    const stagesString = academicStages || 'SECONDARY_1,SECONDARY_2,SECONDARY_3';
+    const stageList = stagesString.split(',').map((s: string) => s.trim()).filter(Boolean);
 
     const newTeacher = await prisma.user.create({
       data: {
@@ -601,9 +802,15 @@ router.post(
             subject: subject ? subject.trim() : null,
             avatarUrl: avatarUrl ? avatarUrl.trim() : null,
             bio: bio ? bio.trim() : null,
-            academicStages: academicStages || 'SECONDARY_1,SECONDARY_2,SECONDARY_3',
+            academicStages: stagesString,
             rating: 5.0,
             ratingCount: 1,
+            workspaces: {
+              create: stageList.map((stage: string) => ({
+                stage: stage as any,
+                isActive: true,
+              })),
+            },
           },
         },
       },
@@ -613,7 +820,7 @@ router.post(
         role: true,
         isActive: true,
         createdAt: true,
-        teacherProfile: true,
+        teacherProfile: { include: { workspaces: true } },
       },
     });
 
@@ -656,7 +863,7 @@ router.patch(
         username: true,
         role: true,
         isActive: true,
-        teacherProfile: true,
+        teacherProfile: { include: { workspaces: true } },
       },
     });
 
@@ -688,14 +895,7 @@ router.delete(
   asyncHandler(async (req, res) => {
     const user = await prisma.user.findUnique({
       where: { id: req.params.id as string },
-      include: {
-        teacherProfile: {
-          include: {
-            lessons: true,
-            courses: true,
-          },
-        },
-      },
+      include: { teacherProfile: { include: { lessons: true, courses: true } } },
     });
 
     if (!user || user.role !== 'TEACHER') {
@@ -705,31 +905,17 @@ router.delete(
 
     const lessonIds = user.teacherProfile?.lessons?.map((l: { id: string }) => l.id) || [];
 
-    // Safely delete and clean up all relations in a database transaction
     await prisma.$transaction(async (tx: any) => {
-      // 1. Unlink PointsTransactions that reference lessons belonging to this teacher
       if (lessonIds.length > 0) {
         await tx.pointsTransaction.updateMany({
           where: { relatedLessonId: { in: lessonIds } },
           data: { relatedLessonId: null },
         });
       }
-
-      // 2. Unlink any AccessCodes created or redeemed by this teacher user
-      await tx.accessCode.updateMany({
-        where: { createdById: user.id },
-        data: { createdById: null },
-      });
-      await tx.accessCode.updateMany({
-        where: { redeemedById: user.id },
-        data: { redeemedById: null },
-      });
-
-      // 3. Delete notifications and refresh tokens
+      await tx.accessCode.updateMany({ where: { createdById: user.id }, data: { createdById: null } });
+      await tx.accessCode.updateMany({ where: { redeemedById: user.id }, data: { redeemedById: null } });
       await tx.notification.deleteMany({ where: { userId: user.id } });
       await tx.refreshToken.deleteMany({ where: { userId: user.id } });
-
-      // 4. Delete the User record completely from DB (cascades TeacherProfile, Courses, Lessons)
       await tx.user.delete({ where: { id: user.id } });
     });
 
@@ -740,10 +926,4 @@ router.delete(
   })
 );
 
-// ─── Branding Settings ───────────────────────────────────────────────────────
-
-router.get('/settings/branding', BrandingController.getSettings);
-router.patch('/settings/branding', BrandingController.updateSettings);
-
 export default router;
-

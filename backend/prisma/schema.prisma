@@ -148,11 +148,17 @@ model User {
   // Homework submissions
   homeworkSubmissions HomeworkSubmission[]
 
-  // Unlocked lessons
+  // Unlocked lessons (Legacy support)
   unlockedLessons UnlockedLesson[]
 
-  // Course Enrollments
+  // Course Enrollments (Legacy support)
   courseEnrollments CourseEnrollment[]
+
+  // Lesson Subscriptions (Single source of truth for student lesson access)
+  lessonSubscriptions LessonSubscription[]
+
+  // Traceable Payment Transactions
+  paymentTransactions PaymentTransaction[]
 
   // Student Notes
   studentNotes  StudentNote[] @relation("StudentReceivedNotes")
@@ -196,8 +202,28 @@ model TeacherProfile {
   ratingCount    Int      @default(1)
   academicStages String?  // e.g. "PREPARATORY,SECONDARY_1,SECONDARY_2,SECONDARY_3"
 
+  workspaces     TeacherStage[]
   courses        Course[]
   lessons        Lesson[]
+  subscriptions  LessonSubscription[]
+  paymentTransactions PaymentTransaction[]
+}
+
+// ─────────────────────────────────────────────
+// TEACHER STAGE WORKSPACES
+// ─────────────────────────────────────────────
+
+model TeacherStage {
+  id               String         @id @default(cuid())
+  teacherProfileId String
+  teacherProfile   TeacherProfile @relation(fields: [teacherProfileId], references: [id], onDelete: Cascade)
+  stage            AcademicStage
+  isActive         Boolean        @default(true)
+  createdAt        DateTime       @default(now())
+
+  @@unique([teacherProfileId, stage])
+  @@index([stage])
+  @@index([teacherProfileId])
 }
 
 model RefreshToken {
@@ -235,6 +261,8 @@ model Course {
   chapters           Chapter[]
   lessons            Lesson[]
   enrollments        CourseEnrollment[]
+  lessonSubscriptions LessonSubscription[]
+  paymentTransactions PaymentTransaction[]
 
   createdAt          DateTime         @default(now())
   updatedAt          DateTime         @updatedAt
@@ -367,23 +395,27 @@ model Notification {
 }
 
 // ─────────────────────────────────────────────
-// LESSONS
+// LESSONS (The purchasable product)
 // ─────────────────────────────────────────────
 
 model Lesson {
-  id               String         @id @default(cuid())
+  id               String           @id @default(cuid())
   teacherProfileId String
-  teacherProfile   TeacherProfile @relation(fields: [teacherProfileId], references: [id], onDelete: Cascade)
+  teacherProfile   TeacherProfile   @relation(fields: [teacherProfileId], references: [id], onDelete: Cascade)
   courseId         String?
-  course           Course?        @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  course           Course?          @relation(fields: [courseId], references: [id], onDelete: SetNull)
   chapterId        String?
-  chapter          Chapter?       @relation(fields: [chapterId], references: [id], onDelete: SetNull)
+  chapter          Chapter?         @relation(fields: [chapterId], references: [id], onDelete: SetNull)
+  academicStage    AcademicStage    @default(SECONDARY_1)
   
   title            String
   description      String?
-  pointCost        Int            @default(0)
-  orderIndex       Int            @default(0)
-  isPublished      Boolean        @default(true)
+  pointCost        Int              @default(0)
+  price            Float            @default(0.0) // EGP price per lesson
+  accessType       CourseAccessType @default(PERMANENT)
+  accessDurationDays Int?
+  orderIndex       Int              @default(0)
+  isPublished      Boolean          @default(true)
 
   // Content URLs / Files
   videoUrl         String?
@@ -406,17 +438,82 @@ model Lesson {
   homework         Quiz?   @relation("Homework", fields: [homeworkId], references: [id])
 
   // Relations
-  unlockedBy         UnlockedLesson[]
-  pointsTransactions PointsTransaction[]
-  videoAccessLogs    VideoAccessLog[]
-  playbackTokens     PlaybackToken[]
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
+  unlockedBy           UnlockedLesson[]
+  subscriptions        LessonSubscription[]
+  paymentTransactions  PaymentTransaction[]
+  pointsTransactions   PointsTransaction[]
+  videoAccessLogs      VideoAccessLog[]
+  playbackTokens       PlaybackToken[]
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
 
   @@index([teacherProfileId])
   @@index([courseId])
   @@index([chapterId])
+  @@index([academicStage])
   @@index([orderIndex])
+}
+
+// ─────────────────────────────────────────────
+// LESSON SUBSCRIPTIONS (Single Source of Truth)
+// ─────────────────────────────────────────────
+
+model LessonSubscription {
+  id               String         @id @default(cuid())
+  studentId        String
+  student          User           @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  lessonId         String
+  lesson           Lesson         @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  courseId         String?
+  course           Course?        @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  teacherProfileId String
+  teacherProfile   TeacherProfile @relation(fields: [teacherProfileId], references: [id], onDelete: Cascade)
+  academicStage    AcademicStage  @default(SECONDARY_1)
+  status           String         @default("ACTIVE") // ACTIVE, EXPIRED, REFUNDED, REVOKED
+  paymentMethod    String         @default("WALLET_EGP") // WALLET_EGP, POINTS, FREE, ADMIN_GRANT
+  pricePaid        Float          @default(0.0)
+  pointsPaid       Int            @default(0)
+  subscribedAt     DateTime       @default(now())
+  expiresAt        DateTime?
+
+  paymentTransaction PaymentTransaction?
+
+  @@unique([studentId, lessonId])
+  @@index([studentId, status])
+  @@index([teacherProfileId, academicStage])
+  @@index([lessonId])
+}
+
+// ─────────────────────────────────────────────
+// TRACEABLE PAYMENT TRANSACTIONS (Financial Ledger)
+// ─────────────────────────────────────────────
+
+model PaymentTransaction {
+  id                   String              @id @default(cuid())
+  transactionNumber    String              @unique
+  studentId            String
+  student              User                @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  teacherProfileId     String
+  teacherProfile       TeacherProfile      @relation(fields: [teacherProfileId], references: [id], onDelete: Cascade)
+  academicStage        AcademicStage       @default(SECONDARY_1)
+  courseId             String?
+  course               Course?             @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  lessonId             String?
+  lesson               Lesson?             @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+  lessonSubscriptionId String?             @unique
+  lessonSubscription   LessonSubscription? @relation(fields: [lessonSubscriptionId], references: [id], onDelete: SetNull)
+  amount               Float               @default(0.0)
+  currency             String              @default("EGP")
+  pointsUsed           Int                 @default(0)
+  paymentMethod        String              @default("WALLET_EGP")
+  teacherEarning       Float               @default(0.0)
+  platformFee          Float               @default(0.0)
+  status               String              @default("COMPLETED") // PENDING, COMPLETED, FAILED, REFUNDED
+  createdAt            DateTime            @default(now())
+
+  @@index([studentId])
+  @@index([teacherProfileId, academicStage])
+  @@index([createdAt])
 }
 
 model UnlockedLesson {
@@ -547,15 +644,21 @@ model HomeworkSubmission {
 }
 
 // ─────────────────────────────────────────────
-// PLATFORM SETTINGS (Branding)
+// PLATFORM SETTINGS (Branding & Global Controls)
 // ─────────────────────────────────────────────
 
 model PlatformSettings {
-  id             String   @id @default(cuid())
-  logoUrl        String?
-  primaryColor   String   @default("#6C63FF")
-  secondaryColor String   @default("#FF6584")
-  fontFamily     String   @default("Inter")
-  updatedAt      DateTime @updatedAt
-  updatedById    String?
+  id                          String   @id @default(cuid())
+  platformName                String   @default("خطوة")
+  platformSubtitle            String?  @default("منصة التعليم الذكية")
+  logoUrl                     String?
+  primaryColor                String   @default("#6C63FF")
+  secondaryColor              String   @default("#FF6584")
+  accentColor                 String   @default("#F59E0B")
+  fontFamily                  String   @default("Inter")
+  pointsToEgpRate             Float    @default(1.0)
+  defaultTeacherCommissionPct Float    @default(80.0)
+  maintenanceMode             Boolean  @default(false)
+  updatedAt                   DateTime @updatedAt
+  updatedById                 String?
 }

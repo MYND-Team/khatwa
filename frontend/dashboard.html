@@ -6,6 +6,47 @@
 <title>لوحة الطالب | خطوة</title>
 <link rel="icon" type="image/jpeg" href="logo/logo-khatwa.jpeg">
 <link rel="stylesheet" href="css/style.css">
+<style>
+  .sub-teacher-group {
+    background: var(--bg-card);
+    border: 1px solid var(--line-soft);
+    border-radius: 18px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  .sub-teacher-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--line-soft);
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+  }
+  .sub-course-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin: 12px 0 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .sub-lesson-card {
+    background: var(--bg-raised);
+    border: 1px solid var(--line-soft);
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+  .sub-lesson-card:hover {
+    border-color: var(--line);
+    transform: translateY(-2px);
+  }
+</style>
 </head>
 <body>
 
@@ -15,7 +56,7 @@
     <ul class="nav-links">
       <li><a href="dashboard.html" class="active">الرئيسية</a></li>
       <li><a href="courses.html">الكورسات والمواد</a></li>
-      <li><a href="points.html">النقاط</a></li>
+      <li><a href="points.html">النقاط والمحفظة</a></li>
       <li><a href="notifications.html">الإشعارات</a></li>
     </ul>
     <div class="nav-cta">
@@ -36,14 +77,14 @@
   <aside class="sidebar">
     <div class="side-group">
       <h6>الرئيسية</h6>
-      <a href="dashboard.html" class="side-link active">نظرة عامة</a>
-      <a href="courses.html" class="side-link">الكورسات والمواد</a>
-      <a href="results.html" class="side-link">النتائج</a>
+      <a href="dashboard.html" class="side-link active">لوحة اشتراكاتي</a>
+      <a href="courses.html" class="side-link">تصفح الكورسات والمحاضرات</a>
+      <a href="results.html" class="side-link">النتائج والامتحانات</a>
     </div>
     <div class="side-group">
-      <h6>المحفظة</h6>
-      <a href="points.html" class="side-link">رصيد النقاط</a>
-      <a href="request-points.html" class="side-link">طلب شحن نقاط</a>
+      <h6>المحفظة والنقاط</h6>
+      <a href="points.html" class="side-link">الرصيد والمعاملات</a>
+      <a href="request-points.html" class="side-link">طلب شحن رصيد</a>
     </div>
     <div class="side-group">
       <h6>الحساب</h6>
@@ -54,55 +95,51 @@
   </aside>
 
   <main class="main">
-    <div class="breadcrumb">لوحة التحكم</div>
+    <div class="breadcrumb">لوحة التحكم / اشتراكاتي</div>
     <div class="page-head">
-      <h1 id="welcomeHeading">أهلًا بعودتك</h1>
+      <div>
+        <h1 id="welcomeHeading">أهلًا بعودتك</h1>
+        <p class="page-sub">المحاضرات والكورسات التي قمت بالاشتراك بها ومتابعة تقدمك الدراسي.</p>
+      </div>
+      <div>
+        <a href="courses.html" class="btn btn-primary btn-sm">🔍 تصفح وشراء محاضرات جديدة</a>
+      </div>
     </div>
-    <p class="page-sub">هذه نظرة سريعة على تقدمك الدراسي ومحاضراتك القادمة.</p>
 
     <!-- Dynamic Stats Row -->
     <div class="stat-row">
+      <div class="stat-cell"><b id="statWallet">0 ج.م</b><span>رصيد المحفظة</span></div>
       <div class="stat-cell"><b id="statPoints">0</b><span>رصيد النقاط</span></div>
-      <div class="stat-cell"><b id="statEnrolled">0</b><span>كورسات مشتركة</span></div>
-      <div class="stat-cell"><b id="statCompleted">0</b><span>حصة مكتملة</span></div>
-      <div class="stat-cell"><b id="statAvgScore">92%</b><span>متوسط الامتحانات</span></div>
+      <div class="stat-cell"><b id="statSubscriptions">0</b><span>محاضرة مشترك بها</span></div>
+      <div class="stat-cell"><b id="statPassedQuizzes">0</b><span>امتحان مجتاز</span></div>
     </div>
 
-    <!-- Next Lesson / Current Action Card -->
+    <!-- My Subscriptions (Fixes Requirements 7 & 8) -->
     <div class="block">
       <div class="block-head">
-        <h3>الحصة التالية في خطتك</h3>
-        <a href="courses.html">تصفح الكورسات</a>
+        <h3>📚 اشتراكاتي ومحاضراتي المدفوعة (My Subscriptions)</h3>
+        <span style="font-size:0.85rem;color:var(--ink-dim);" id="subTotalCountBadge">0 محاضرة</span>
       </div>
-      <div id="nextLessonContainer">
-        <!-- Rendered dynamically -->
-      </div>
-    </div>
 
-    <!-- My Courses Overview -->
-    <div class="block">
-      <div class="block-head">
-        <h3>كورساتي الدراسية</h3>
-        <a href="courses.html">عرض الكل</a>
-      </div>
-      <div class="row-list" id="dashboardCoursesList">
-        <!-- Dynamically rendered -->
+      <div id="subscriptionsContainer">
+        <div style="text-align:center;padding:40px;color:var(--ink-dim);">جارٍ جلب اشتراكاتك...</div>
       </div>
     </div>
 
-    <!-- Recent Results -->
+    <!-- Recent Payment Transactions -->
     <div class="block">
       <div class="block-head">
-        <h3>آخر نتائج الامتحانات</h3>
-        <a href="results.html">عرض السجل الكامل</a>
+        <h3>💳 آخر المعاملات وعمليات الشراء</h3>
+        <a href="points.html">عرض سجل المحفظة</a>
       </div>
-      <div class="row-list" id="dashboardResultsList">
+      <div class="row-list" id="dashboardPaymentsList">
         <!-- Rendered dynamically -->
       </div>
     </div>
   </main>
 </div>
 
+<script src="js/i18n.js"></script>
 <script src="js/api.js"></script>
 <script src="js/main.js"></script>
 <script>
@@ -113,173 +150,148 @@
       return;
     }
 
-    const studentId = user.id || 'student-default';
     const studentName = user.name || user.username || 'طالب خطوة';
-
     document.getElementById('welcomeHeading').textContent = `أهلًا بعودتك، ${studentName}`;
     document.getElementById('navName').textContent = studentName;
-    document.getElementById('navRole').textContent = user.role === 'ADMIN' ? 'مدير عام المنصة' : user.role === 'STAFF' ? 'مشرف' : user.role === 'TEACHER' ? 'مدرس' : 'طالب';
     document.getElementById('navAvatar').textContent = studentName.charAt(0);
 
-    let stats = {
-      pointsBalance: user.pointsBalance || 0,
-      enrolledCount: 0,
-      completedLectures: 0,
-      averageScore: '100%',
-      enrolledCourses: [],
-      quizAttempts: []
-    };
-
+    // Fetch Stats & Subscriptions
     try {
-      const liveStats = await window.KhatwaAPI.student.getStats();
-      if (liveStats) stats = { ...stats, ...liveStats };
-    } catch (e) {
-      console.warn('Could not load live student stats:', e);
-    }
+      const [stats, subscriptions, payments] = await Promise.all([
+        window.KhatwaAPI.student.getStats().catch(() => null),
+        window.KhatwaAPI.student.getSubscriptions().catch(() => []),
+        window.KhatwaAPI.student.getPaymentsHistory().catch(() => []),
+      ]);
 
-    document.getElementById('statPoints').textContent = stats.pointsBalance ?? 0;
-    document.getElementById('statEnrolled').textContent = stats.enrolledCount ?? 0;
-    document.getElementById('statCompleted').textContent = stats.completedLectures ?? 0;
-    document.getElementById('statAvgScore').textContent = stats.averageScore ?? '—';
-
-    // Render Next Lesson
-    const nextContainer = document.getElementById('nextLessonContainer');
-    const enrolled = stats.enrolledCourses || [];
-    let nextLecture = null;
-    let nextCourse = null;
-
-    for (const c of enrolled) {
-      if (c.lectures && c.lectures.length > 0) {
-        const uncompleted = c.lectures.find(l => !(c.completedLectureIds || []).includes(l.id));
-        if (uncompleted) {
-          nextLecture = uncompleted;
-          nextCourse = c;
-          break;
-        }
+      if (stats) {
+        document.getElementById('statWallet').textContent = `${stats.walletBalance || 0} ج.م`;
+        document.getElementById('statPoints').textContent = stats.pointsBalance || 0;
+        document.getElementById('statSubscriptions').textContent = stats.enrolledCourses || 0;
+        document.getElementById('statPassedQuizzes').textContent = stats.passedQuizzes || 0;
       }
+
+      renderSubscriptionsTree(subscriptions);
+      renderRecentPayments(payments);
+    } catch (e) {
+      console.warn('Dashboard fetch error:', e);
+    }
+  }
+
+  function renderSubscriptionsTree(teacherGroups) {
+    const container = document.getElementById('subscriptionsContainer');
+    if (!teacherGroups || teacherGroups.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state" style="padding:40px;text-align:center;">
+          <div style="font-size:3rem;margin-bottom:12px;">📂</div>
+          <h3 style="margin:0 0 6px;">لا توجد محاضرات مشتركة حتى الآن</h3>
+          <p style="color:var(--ink-dim);margin:0 0 16px;">تصفح الكورسات والمحاضرات المتاحة لمعلميك واشترك للبدء فورًا.</p>
+          <a href="courses.html" class="btn btn-primary btn-sm">تصفح المحاضرات والكورسات</a>
+        </div>
+      `;
+      document.getElementById('subTotalCountBadge').textContent = '0 محاضرة';
+      return;
     }
 
-    if (nextLecture && nextCourse) {
-      nextContainer.innerHTML = `
-        <div class="row-list">
-          <div class="row-item">
-            <div class="ri-main">
-              <span class="ri-idx">0${nextLecture.orderIndex || 1}</span>
-              <div class="ri-text">
-                <b>${escapeHtml(nextLecture.title)} — ${escapeHtml(nextCourse.teacherName)}</b>
-                <span>${escapeHtml(nextCourse.subject)} · مدة ${nextLecture.duration || 30} دقيقة</span>
-              </div>
-            </div>
-            <div class="ri-side">
-              <span class="tag tag-warn">${nextLecture.pointCost || 0} نقطة</span>
-              <a href="lesson.html?courseId=${nextCourse.id}&lessonId=${nextLecture.id}" class="btn btn-primary btn-sm">ابدأ الآن</a>
-            </div>
-          </div>
-        </div>
-      `;
-    } else if (enrolled.length > 0) {
-      nextContainer.innerHTML = `
-        <div class="row-list">
-          <div class="row-item">
-            <div class="ri-main">
-              <span class="ri-idx">✓</span>
-              <div class="ri-text">
-                <b>أحسنت! أنهيت جميع محاضرات كورساتك الحالية.</b>
-                <span>يمكنك مراجعة المحاضرات أو الاشتراك في كورس جديد.</span>
-              </div>
-            </div>
-            <div class="ri-side">
-              <a href="courses.html" class="btn btn-line btn-sm">استكشف الكورسات</a>
-            </div>
-          </div>
-        </div>
-      `;
-    } else {
-      nextContainer.innerHTML = `
-        <div class="row-list">
-          <div class="row-item">
-            <div class="ri-main">
-              <div class="ri-text">
-                <b>لم تشترك في أي كورس بعد</b>
-                <span>تصفح الكورسات المتاحة واشترك لبدء مذاكرتك.</span>
-              </div>
-            </div>
-            <div class="ri-side">
-              <a href="courses.html" class="btn btn-primary btn-sm">تصفح الكورسات</a>
-            </div>
-          </div>
-        </div>
-      `;
-    }
+    let totalLessonsCount = 0;
+    let html = '';
 
-    // Render Courses in Dashboard
-    const coursesList = document.getElementById('dashboardCoursesList');
-    if (enrolled.length === 0) {
-      coursesList.innerHTML = `
-        <div class="row-item">
-          <div class="ri-main">
-            <div class="ri-text">
-              <span style="color:var(--ink-faint);">لا توجد مواد مشتركة حاليًا</span>
-            </div>
-          </div>
-          <div class="ri-side">
-            <a href="courses.html" class="btn btn-line btn-sm">اشتراك الآن</a>
-          </div>
-        </div>
-      `;
-    } else {
-      coursesList.innerHTML = enrolled.map(c => `
-        <div class="row-item">
-          <div class="ri-main">
-            <div class="ri-text">
-              <b>${escapeHtml(c.title)} — ${escapeHtml(c.teacherName)}</b>
-              <span>${c.completedCount || 0} من ${c.totalLectures || 0} حصة مكتملة</span>
-            </div>
-          </div>
-          <div class="ri-side" style="width:200px;display:flex;align-items:center;gap:12px;">
-            <div class="progress-wrap" style="flex:1;">
-              <div class="progress"><span style="width:${c.progressPercent || 0}%;"></span></div>
-            </div>
-            <a href="subject.html?id=${c.id}" class="btn btn-line btn-sm" style="padding:4px 10px;font-size:.78rem;">فتح</a>
-          </div>
-        </div>
-      `).join('');
-    }
+    for (const group of teacherGroups) {
+      const teacherName = group.teacher?.displayName || 'المدرس';
+      const teacherSubject = group.teacher?.subject || 'المادة الدراسية';
 
-    // Render Recent Results
-    const resultsList = document.getElementById('dashboardResultsList');
-    const attempts = stats.quizAttempts || [];
-    if (attempts.length === 0) {
-      resultsList.innerHTML = `
-        <div class="row-item">
-          <div class="ri-main">
-            <div class="ri-text">
-              <span style="color:var(--ink-faint);">لم تؤدِ أي امتحانات أو واجبات بعد</span>
-            </div>
-          </div>
-          <div class="ri-side">
-            <a href="courses.html" class="btn btn-line btn-sm">بدء المذاكرة</a>
-          </div>
-        </div>
-      `;
-    } else {
-      resultsList.innerHTML = attempts.slice(0, 4).map(a => {
-        const timeStr = a.submittedAt ? new Date(a.submittedAt).toLocaleDateString('ar-EG', { month: 'short', day: 'numeric' }) : '';
-        return `
-          <div class="row-item">
-            <div class="ri-main">
-              <div class="ri-text">
-                <b>${escapeHtml(a.quizTitle)}</b>
-                <span>${timeStr}</span>
+      html += `
+        <div class="sub-teacher-group">
+          <div class="sub-teacher-head">
+            <div style="display:flex;align-items:center;gap:12px;">
+              <span style="font-size:1.8rem;">👨‍🏫</span>
+              <div>
+                <b style="font-size:1.05rem;display:block;">الأستاذ: ${escapeHtml(teacherName)}</b>
+                <span style="font-size:0.82rem;color:var(--ink-dim);">${escapeHtml(teacherSubject)}</span>
               </div>
             </div>
-            <div class="ri-side">
-              <span class="tag tag-${a.passed !== false ? 'ok' : 'err'}">${a.score} / ${a.totalQuestions}</span>
-            </div>
+            <span class="tag tag-ok">مدرس معتمد</span>
           </div>
+      `;
+
+      for (const course of group.courses) {
+        html += `
+          <div class="sub-course-title">
+            <span>📖</span> <b>${escapeHtml(course.title)}</b> (${escapeHtml(course.subject || '')})
+          </div>
+          <div class="sub-lessons-list">
         `;
-      }).join('');
+
+        for (const lesson of course.lessons) {
+          totalLessonsCount++;
+          const priceLabel = lesson.pricePaid > 0 ? `${lesson.pricePaid} ج.م` : (lesson.pointsPaid > 0 ? `${lesson.pointsPaid} نقطة` : 'مجانية');
+
+          html += `
+            <div class="sub-lesson-card">
+              <div style="display:flex;align-items:center;gap:12px;">
+                <span style="background:rgba(34,197,94,0.15);color:#22c55e;font-size:0.85rem;font-weight:700;padding:4px 8px;border-radius:8px;">✓ مدفوع</span>
+                <div>
+                  <b style="font-size:0.92rem;display:block;">${escapeHtml(lesson.title)}</b>
+                  <span style="font-size:0.8rem;color:var(--ink-dim);">
+                    ${lesson.hasVideo ? '🎬 فيديو محاضرة' : ''} ${lesson.hasPdf ? '· 📄 مذكرة PDF' : ''} · القيمة: ${priceLabel}
+                  </span>
+                </div>
+              </div>
+              <div>
+                <a href="lesson.html?lessonId=${lesson.lessonId}" class="btn btn-primary btn-sm" style="padding:6px 14px;font-size:0.85rem;">
+                  ▶ دخول للمحاضرة
+                </a>
+              </div>
+            </div>
+          `;
+        }
+
+        html += `</div>`;
+      }
+
+      html += `</div>`;
     }
+
+    container.innerHTML = html;
+    document.getElementById('subTotalCountBadge').textContent = `${totalLessonsCount} محاضرة`;
+  }
+
+  function renderRecentPayments(payments) {
+    const list = document.getElementById('dashboardPaymentsList');
+    if (!payments || payments.length === 0) {
+      list.innerHTML = `
+        <div class="row-item">
+          <div class="ri-main">
+            <div class="ri-text">
+              <span style="color:var(--ink-dim);">لا توجد عمليات شراء مسجلة بعد</span>
+            </div>
+          </div>
+          <div class="ri-side">
+            <a href="courses.html" class="btn btn-line btn-sm">شراء حصة</a>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    list.innerHTML = payments.slice(0, 5).map((p) => {
+      const dateStr = p.createdAt ? new Date(p.createdAt).toLocaleDateString('ar-EG', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+      const amountStr = p.amount > 0 ? `${p.amount} ج.م` : `${p.pointsUsed} نقطة`;
+
+      return `
+        <div class="row-item">
+          <div class="ri-main">
+            <span style="font-size:1.3rem;margin-left:10px;">💳</span>
+            <div class="ri-text">
+              <b>شراء: ${escapeHtml(p.lesson?.title || 'محاضرة')} — ${escapeHtml(p.teacherProfile?.displayName || 'المدرس')}</b>
+              <span>${escapeHtml(p.course?.title || '')} · ${dateStr} · كود المعاملة: ${p.transactionNumber}</span>
+            </div>
+          </div>
+          <div class="ri-side">
+            <span class="tag tag-ok">${amountStr}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
   }
 
   function escapeHtml(str) {
@@ -297,6 +309,5 @@
     renderDashboard();
   });
 </script>
-<script src="js/i18n.js"></script>
 </body>
 </html>
