@@ -238,6 +238,10 @@
       },
     },
 
+    logout() {
+      return this.auth.logout();
+    },
+
     getUser() {
       return getStoredUser();
     },
@@ -485,7 +489,11 @@
           console.warn('Direct upload session failed, falling back to standard upload:', directErr);
         }
 
-        // Standard multipart upload fallback
+        // Standard multipart upload fallback (only for files <= 4.5MB on serverless)
+        if (file && file.size > 4.5 * 1024 * 1024) {
+          throw new Error('حجم ملف الفيديو كبير (أكبر من 4.5MB). يُرجى وضع رابط الفيديو من Google Drive أو YouTube لتشغيله بسلاسة وأعلى جودة بدون قيود!');
+        }
+
         const formData = new FormData();
         formData.append('video', file);
         const res = await request('/teacher/lessons/' + lessonId + '/video', { method: 'POST', body: formData });
