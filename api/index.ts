@@ -1,6 +1,4 @@
-import type { Request, Response } from 'express';
-
-export default async function handler(req: Request, res: Response) {
+export default async function handler(req: any, res: any) {
   try {
     const appModule = await import('../backend/src/app');
     const app = appModule.default || appModule;
