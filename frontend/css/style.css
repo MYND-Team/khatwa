@@ -1,21 +1,21 @@
 /* ===========================================================
    Khatwa — Educational Platform Front-End
-   Official White & Blue Design System matching Khatwa Logo.
-   Academic, modern, crisp, high-contrast & clean typography.
+   Official Warm Beige & White Design System matching Khatwa Logo.
+   Academic, premium, elegant, high-contrast & clean typography.
    =========================================================== */
 
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&display=swap');
 
 :root {
-  /* Brand Blue Palette (Matched directly to the official Khatwa logo) */
-  --primary-deep: #0B2545;
-  --primary: #134074;
-  --primary-rgb: 19, 64, 116;
-  --primary-hover: #0B2545;
-  --primary-light: #1D5D9B;
-  --primary-bright: #2563EB;
-  --primary-faint: #EEF4FA;
-  --primary-border: #BCD3E8;
+  /* Brand Warm Golden Beige Palette (Matched directly to the official Khatwa logo) */
+  --primary-deep: #8C6527;
+  --primary: #B88E4F;
+  --primary-rgb: 184, 142, 79;
+  --primary-hover: #9E7432;
+  --primary-light: #CBA264;
+  --primary-bright: #DDB97F;
+  --primary-faint: #FAF6EE;
+  --primary-border: #E5D3B3;
 
   /* Backward Compatibility Aliases */
   --gold: var(--primary);
@@ -23,19 +23,19 @@
   --gold-border: var(--primary-border);
   --gold-light: var(--primary-light);
 
-  /* Surface & Background (Crisp Clean White & Soft Slate-White) */
-  --bg: #F8FAFD;
+  /* Surface & Background (Crisp Clean White & Warm Pearl Beige) */
+  --bg: #FAF8F5;
   --bg-raised: #FFFFFF;
   --bg-card: #FFFFFF;
   --panel: #FFFFFF;
-  --panel-alt: #F1F6FB;
-  --line: rgba(19, 64, 116, 0.16);
-  --line-soft: #E2EBF4;
+  --panel-alt: #F5EFE6;
+  --line: rgba(184, 142, 79, 0.18);
+  --line-soft: #EFE7DA;
 
-  /* Typography / Inks */
-  --ink: #0C2340;
-  --ink-dim: #334E68;
-  --ink-faint: #627D98;
+  /* Typography / Inks (Warm Deep Espresso & Coffee) */
+  --ink: #241E17;
+  --ink-dim: #4A3F31;
+  --ink-faint: #7A6D5D;
   --ink-white: #FFFFFF;
 
   /* Status Colors */
@@ -45,13 +45,13 @@
   --info: #0284C7;
 
   /* Geometry & Typography */
-  --radius: 8px;
-  --radius-lg: 12px;
+  --radius: 10px;
+  --radius-lg: 14px;
   --maxw: 1160px;
   --serif: 'Cairo', 'Source Serif 4', system-ui, sans-serif;
-  --shadow-sm: 0 1px 3px rgba(11, 37, 69, 0.05);
-  --shadow-md: 0 4px 14px rgba(11, 37, 69, 0.07);
-  --shadow-lg: 0 10px 30px rgba(11, 37, 69, 0.12);
+  --shadow-sm: 0 1px 3px rgba(74, 63, 49, 0.05);
+  --shadow-md: 0 4px 14px rgba(74, 63, 49, 0.08);
+  --shadow-lg: 0 10px 30px rgba(74, 63, 49, 0.12);
 }
 
 *,*::before,*::after{box-sizing:border-box;}
@@ -103,13 +103,13 @@ p{margin:0;}
 .btn-primary{
   background:var(--primary);
   color:#FFFFFF;
-  box-shadow: 0 2px 8px rgba(19, 64, 116, 0.25);
+  box-shadow: 0 2px 8px rgba(184, 142, 79, 0.28);
 }
 .btn-primary:hover{
   background:var(--primary-hover);
   color:#FFFFFF;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(19, 64, 116, 0.32);
+  box-shadow: 0 4px 14px rgba(184, 142, 79, 0.35);
 }
 .btn-primary:active{transform: translateY(0);opacity:.9;}
 .btn-line{

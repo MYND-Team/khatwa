@@ -14,14 +14,17 @@ async function main() {
     where: { id: 'default' },
     create: {
       id: 'default',
-      logoUrl: null,
-      primaryColor: '#134074',
-      secondaryColor: '#1D5D9B',
+      logoUrl: 'logo/logo-khatwa.png',
+      primaryColor: '#B88E4F',
+      secondaryColor: '#8C6527',
+      accentColor: '#CBA264',
       fontFamily: 'Cairo',
     },
     update: {
-      primaryColor: '#134074',
-      secondaryColor: '#1D5D9B',
+      logoUrl: 'logo/logo-khatwa.png',
+      primaryColor: '#B88E4F',
+      secondaryColor: '#8C6527',
+      accentColor: '#CBA264',
       fontFamily: 'Cairo',
     },
   });
