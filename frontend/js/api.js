@@ -232,6 +232,15 @@
         window.location.href = 'login.html';
       },
 
+      async me() {
+        const res = await request('/auth/me');
+        if (res.success && res.data) {
+          setStoredUser(res.data);
+          return res.data;
+        }
+        return null;
+      },
+
       async silentRefresh() {
         const token = await performTokenRefresh();
         return Boolean(token);

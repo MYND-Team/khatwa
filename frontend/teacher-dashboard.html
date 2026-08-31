@@ -401,10 +401,12 @@
       }
       user = verified;
     } catch (err) {
-      alert('انتهت صلاحية جلسة تسجيل الدخول. يرجى تسجيل الدخول مجدداً.');
-      window.KhatwaAPI.logout();
-      window.location.href = 'login.html';
-      return;
+      if (err.status === 401 || err.message?.includes('401') || err.message?.includes('غير مصرح')) {
+        alert('انتهت صلاحية جلسة تسجيل الدخول. يرجى تسجيل الدخول مجدداً.');
+        window.KhatwaAPI.logout();
+        return;
+      }
+      console.warn('Auth check warning:', err);
     }
 
     document.getElementById('teacherGreeting').textContent = `أهلاً بك، ${user.name || user.username}`;
