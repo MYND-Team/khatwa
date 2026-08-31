@@ -346,7 +346,39 @@
     const user = window.KhatwaAPI.getUser();
     const container = document.getElementById('lessonContentContainer');
 
-    const videoSrc = lesson.videoUrl || (lesson.driveFileId ? `/student/lessons/${lesson.id}/stream` : null);
+    const videoUrl = lesson.videoUrl;
+    const ytMatch = videoUrl ? videoUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/) : null;
+    const driveMatch = videoUrl ? videoUrl.match(/drive\.google\.com\/(?:file\/d\/|open\?id=)([\w-]+)/) : null;
+    const streamSrc = lesson.driveFileId ? `${window.KhatwaAPI?.BASE_URL || ''}/student/lessons/${lesson.id}/stream` : (videoUrl || null);
+
+    let playerHtml = '';
+    if (ytMatch && ytMatch[1]) {
+      playerHtml = `
+        <div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:14px;background:#000;">
+          <iframe src="https://www.youtube-nocookie.com/embed/${ytMatch[1]}?rel=0&modestbranding=1&autoplay=0" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
+        </div>
+      `;
+    } else if (driveMatch && driveMatch[1]) {
+      playerHtml = `
+        <div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:14px;background:#000;">
+          <iframe src="https://drive.google.com/file/d/${driveMatch[1]}/preview" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" allow="autoplay"></iframe>
+        </div>
+      `;
+    } else if (streamSrc) {
+      playerHtml = `
+        <video controls playsinline controlsList="nodownload" style="width:100%;max-height:540px;display:block;background:#000;border-radius:14px;">
+          <source src="${streamSrc}" type="video/mp4">
+          متصفحك لا يدعم تشغيل هذا الفيديو.
+        </video>
+      `;
+    } else {
+      playerHtml = `
+        <div style="padding:80px;text-align:center;color:var(--ink-dim);">
+          <div style="font-size:3rem;margin-bottom:10px;">🎬</div>
+          <p>فيديو المحاضرة غير متوفر حالياً، يرجى مراجعة المذكرة أدناه.</p>
+        </div>
+      `;
+    }
 
     container.innerHTML = `
       <div class="card" style="padding:28px;border-radius:20px;">
@@ -362,22 +394,12 @@
           ` : ''}
         </div>
 
-        <!-- Video Player -->
-        <div class="security-video-wrapper" style="margin-bottom:24px;">
-          <div id="videoWatermark" class="dynamic-watermark">
+        <!-- Video Player with Security Watermark -->
+        <div class="security-video-wrapper" style="margin-bottom:24px;position:relative;overflow:hidden;border-radius:14px;">
+          <div id="videoWatermark" class="dynamic-watermark" style="position:absolute;z-index:20;pointer-events:none;color:rgba(255,255,255,0.4);font-size:0.85rem;font-weight:700;text-shadow:0 0 4px #000;">
             👤 ${user?.name || user?.username || 'Student'} | 🔒 Khatwa Platform
           </div>
-          ${videoSrc ? `
-            <video controls playsinline controlsList="nodownload" style="width:100%;max-height:540px;display:block;background:#000;">
-              <source src="${videoSrc}" type="video/mp4">
-              متصفحك لا يدعم تشغيل الفيديو.
-            </video>
-          ` : `
-            <div style="padding:80px;text-align:center;color:var(--ink-dim);">
-              <div style="font-size:3rem;margin-bottom:10px;">🎬</div>
-              <p>فيديو المحاضرة غير متوفر حالياً، يرجى مراجعة المذكرة أدناه.</p>
-            </div>
-          `}
+          ${playerHtml}
         </div>
 
         <!-- Lesson Description & PDF View -->

@@ -317,8 +317,11 @@
     modal.style.display = 'flex';
     document.getElementById('modalTeacherCoursesList').innerHTML = 'جارٍ جلب كورسات المعلم...';
 
+    const user = window.KhatwaAPI.getUser();
+    const effectiveStage = currentStageFilter || user?.studentProfile?.academicStage || user?.academicStage || '';
+
     try {
-      const teacher = await window.KhatwaAPI.public.getTeacher(teacherId);
+      const teacher = await window.KhatwaAPI.public.getTeacher(teacherId, effectiveStage);
       if (!teacher) return;
 
       document.getElementById('modalTeacherName').textContent = teacher.displayName || 'معلم المادة';
@@ -332,9 +335,12 @@
         photoBox.innerHTML = `<span class="teacher-ref-photo-placeholder">👨‍🏫</span>`;
       }
 
-      const courses = teacher.courses || [];
+      let courses = teacher.courses || [];
+      if (effectiveStage) {
+        courses = courses.filter(c => c.academicStage === effectiveStage);
+      }
       if (courses.length === 0) {
-        document.getElementById('modalTeacherCoursesList').innerHTML = '<p style="color:var(--ink-dim);">لا توجد كورسات منشورة لهذا المعلم حالياً.</p>';
+        document.getElementById('modalTeacherCoursesList').innerHTML = '<p style="color:var(--ink-dim);">لا توجد كورسات منشورة لهذا المعلم في هذه المرحلة الدراسية.</p>';
         return;
       }
 

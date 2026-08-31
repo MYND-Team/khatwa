@@ -70,12 +70,16 @@
     try {
       const res = await fetch(DEFAULT_API_BASE + '/settings/branding').then((r) => r.json()).catch(() => null);
       if (res && res.success && res.data) {
-        const { primaryColor, secondaryColor, accentColor, platformName, logoUrl } = res.data;
+        const { primaryColor, secondaryColor, accentColor, backgroundColor, platformName, logoUrl } = res.data;
         const root = document.documentElement;
 
         if (primaryColor) root.style.setProperty('--primary', primaryColor);
         if (secondaryColor) root.style.setProperty('--secondary', secondaryColor);
         if (accentColor) root.style.setProperty('--accent', accentColor);
+        if (backgroundColor) {
+          root.style.setProperty('--bg', backgroundColor);
+          document.body.style.backgroundColor = backgroundColor;
+        }
 
         // Update brand elements in DOM if present
         if (platformName) {
@@ -303,8 +307,16 @@
         const res = await request('/courses?' + query.toString());
         return res.data || [];
       },
-      async getTeachers() { const res = await request('/teachers'); return res.data || []; },
-      async getTeacher(id) { const res = await request('/teachers/' + id); return res.data || null; },
+      async getTeachers(stage = '') {
+        const query = stage ? ('?stage=' + encodeURIComponent(stage)) : '';
+        const res = await request('/teachers' + query);
+        return res.data || [];
+      },
+      async getTeacher(id, stage = '') {
+        const query = stage ? ('?stage=' + encodeURIComponent(stage)) : '';
+        const res = await request('/teachers/' + id + query);
+        return res.data || null;
+      },
     },
 
     // ─── Admin Portal ────────────────────────────────────────────────────────

@@ -247,10 +247,23 @@
       </div>
       <span style="font-size:0.8rem;color:var(--ink-dim);display:block;margin-bottom:12px;">ضع 0 لتكون المحاضرة مجانية لجميع طلاب هذه المرحلة.</span>
 
-      <div class="form-group" style="margin-bottom:14px;">
-        <label class="form-label">🎬 تحميل ورفع فيديو المحاضرة (اختر ملف الفيديو من جهازك)</label>
-        <input type="file" id="lessonVideoFile" accept="video/mp4,video/mkv,video/webm,video/*" class="form-control">
-        <span style="font-size:0.8rem;color:var(--ink-dim);">اختر ملف الفيديو من الـ Disk وسيتم رفعه وتخزينه في Google Drive وتأمينه تلقائياً بدون أي روابط خارجية.</span>
+      <!-- Video Selection: Disk File OR External URL / Drive / YouTube -->
+      <div style="background:var(--bg-raised);border:1px solid var(--line-soft);padding:14px;border-radius:14px;margin-bottom:14px;">
+        <label class="form-label" style="margin-bottom:8px;font-weight:700;">🎬 مصدر فيديو المحاضرة (اختر إحدى الطريقتين):</label>
+        
+        <div class="form-group" style="margin-bottom:10px;">
+          <label style="font-size:0.88rem;color:var(--ink);font-weight:600;display:block;margin-bottom:4px;">1) 📁 رفع ملف فيديو من جهازك (Disk Upload):</label>
+          <input type="file" id="lessonVideoFile" accept="video/mp4,video/mkv,video/webm,video/*" class="form-control">
+          <span style="font-size:0.78rem;color:var(--ink-dim);">سيتم رفعه وتخزينه في Google Drive وتأمينه داخل المنصة تلقائياً.</span>
+        </div>
+
+        <div style="text-align:center;color:var(--ink-dim);font-size:0.85rem;margin:8px 0;font-weight:700;">— أو —</div>
+
+        <div class="form-group" style="margin-bottom:4px;">
+          <label style="font-size:0.88rem;color:var(--ink);font-weight:600;display:block;margin-bottom:4px;">2) 🔗 رابط YouTube أو Google Drive أو فيديو مباشر:</label>
+          <input type="url" id="lessonVideoUrlInput" placeholder="https://www.youtube.com/watch?v=... أو رابط Google Drive" class="form-control">
+          <span style="font-size:0.78rem;color:var(--ink-dim);">يمكنك إدخال رابط يوتيوب أو رابط Google Drive أو استضافة فيديو وسيتم تشغيله داخل المنصة.</span>
+        </div>
       </div>
       <div class="form-group" style="margin-bottom:14px;">
         <label class="form-label">📄 رفع مذكرة الدرس (PDF Document)</label>
@@ -660,12 +673,25 @@
       `;
 
       if (data.driveFileId || data.videoUrl) {
-        const streamUrl = data.driveFileId ? `${window.KhatwaAPI.BASE_URL}/student/lessons/${data.id}/stream` : data.videoUrl;
+        let playerHtml = '';
+        const videoUrl = data.videoUrl;
+        const ytMatch = videoUrl ? videoUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/) : null;
+        const driveMatch = videoUrl ? videoUrl.match(/drive\.google\.com\/(?:file\/d\/|open\?id=)([\w-]+)/) : null;
+
+        if (ytMatch && ytMatch[1]) {
+          playerHtml = `<iframe src="https://www.youtube-nocookie.com/embed/${ytMatch[1]}?rel=0&modestbranding=1" style="width:100%;height:380px;border:none;border-radius:12px;" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>`;
+        } else if (driveMatch && driveMatch[1]) {
+          playerHtml = `<iframe src="https://drive.google.com/file/d/${driveMatch[1]}/preview" style="width:100%;height:380px;border:none;border-radius:12px;" allow="autoplay"></iframe>`;
+        } else {
+          const streamUrl = data.driveFileId ? `${window.KhatwaAPI.BASE_URL}/student/lessons/${data.id}/stream` : data.videoUrl;
+          playerHtml = `<video src="${streamUrl}" controls controlsList="nodownload" style="width:100%;max-height:400px;display:block;background:#000;border-radius:12px;"></video>`;
+        }
+
         previewContent += `
           <div style="margin-bottom:16px;">
             <h4>🎬 فيديو المحاضرة (معاينة التشغيل المباشر):</h4>
             <div style="position:relative;background:#000;border-radius:12px;overflow:hidden;">
-              <video src="${streamUrl}" controls controlsList="nodownload" style="width:100%;max-height:400px;display:block;"></video>
+              ${playerHtml}
             </div>
           </div>
         `;
@@ -806,6 +832,7 @@
     const price = parseFloat(document.getElementById('lessonPriceInput').value) || 0;
     const pointCost = parseInt(document.getElementById('lessonPointCostInput').value) || 0;
     const description = document.getElementById('lessonDescInput').value.trim();
+    const videoUrl = document.getElementById('lessonVideoUrlInput')?.value.trim() || null;
     const videoFile = document.getElementById('lessonVideoFile')?.files[0];
     const pdfFile = document.getElementById('lessonPdfFile')?.files[0];
 
@@ -814,7 +841,7 @@
     btn.textContent = 'جارٍ إنشاء الدرس...';
 
     try {
-      const lesson = await window.KhatwaAPI.teacher.createLesson(chapterId, { title, price, pointCost, description });
+      const lesson = await window.KhatwaAPI.teacher.createLesson(chapterId, { title, price, pointCost, description, videoUrl });
 
       if (videoFile && lesson?.id) {
         btn.textContent = 'جارٍ رفع الفيديو وتأمينه في Google Drive... ⏳';
@@ -826,7 +853,7 @@
         await window.KhatwaAPI.teacher.uploadPdf(lesson.id, pdfFile);
       }
 
-      alert('تم حفظ الدرس ورفع المحاضرة والمذكرة بنجاح! ✅');
+      alert('تم حفظ الدرس ونشر المحاضرة والمذكرة بنجاح! ✅');
       closeAddLessonModal();
       document.getElementById('addLessonForm').reset();
       await refreshWorkspace();

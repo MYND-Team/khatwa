@@ -134,14 +134,21 @@ app.get('/courses', asyncHandler(async (req, res) => {
   res.status(200).json({ success: true, data: courses });
 }));
 
-app.get('/teachers', asyncHandler(async (_req, res) => {
+app.get('/teachers', asyncHandler(async (req, res) => {
+  const { stage } = req.query as Record<string, string>;
+  const courseWhere: any = { isPublished: true };
+  if (stage) courseWhere.academicStage = stage;
+
   const teachers = await prisma.teacherProfile.findMany({
-    where: { user: { isActive: true } },
+    where: {
+      user: { isActive: true },
+      ...(stage ? { courses: { some: { isPublished: true, academicStage: stage as any } } } : {}),
+    },
     select: {
       id: true, displayName: true, bio: true, subject: true,
       avatarUrl: true, rating: true, ratingCount: true, academicStages: true,
       courses: {
-        where: { isPublished: true },
+        where: courseWhere,
         select: {
           id: true, title: true, subject: true, academicStage: true,
           imageUrl: true, pointCost: true, price: true,
@@ -155,11 +162,15 @@ app.get('/teachers', asyncHandler(async (_req, res) => {
 }));
 
 app.get('/teachers/:id', asyncHandler(async (req, res) => {
+  const { stage } = req.query as Record<string, string>;
+  const courseWhere: any = { isPublished: true };
+  if (stage) courseWhere.academicStage = stage;
+
   const profile = await prisma.teacherProfile.findUnique({
     where: { id: req.params.id },
     include: {
       courses: {
-        where: { isPublished: true },
+        where: courseWhere,
         include: {
           chapters: {
             orderBy: { orderIndex: 'asc' },

@@ -646,6 +646,13 @@
             </div>
           </div>
           <div class="form-group">
+            <label class="form-label">لون خلفية المنصة (Background Color)</label>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <input type="color" id="setBackgroundColor" style="width:44px;height:40px;border-radius:8px;border:none;cursor:pointer;">
+              <input type="text" id="setBackgroundColorHex" class="form-control" placeholder="#FAF8F5">
+            </div>
+          </div>
+          <div class="form-group">
             <label class="form-label">اللون الثانوي (Secondary Color)</label>
             <div style="display:flex;gap:8px;align-items:center;">
               <input type="color" id="setSecondaryColor" style="width:44px;height:40px;border-radius:8px;border:none;cursor:pointer;">
@@ -656,7 +663,7 @@
             <label class="form-label">اللون المميز (Accent Color)</label>
             <div style="display:flex;gap:8px;align-items:center;">
               <input type="color" id="setAccentColor" style="width:44px;height:40px;border-radius:8px;border:none;cursor:pointer;">
-              <input type="text" id="setAccentColorHex" class="form-control" placeholder="#d4af37">
+              <input type="text" id="setAccentColorHex" class="form-control" placeholder="#CBA264">
             </div>
           </div>
         </div>
@@ -1108,11 +1115,14 @@
       if (!data) return;
 
       const pColor = data.primaryColor || '#B88E4F';
+      const bgColor = data.backgroundColor || '#FAF8F5';
       const sColor = data.secondaryColor || '#8C6527';
       const aColor = data.accentColor || '#CBA264';
 
       document.getElementById('setPrimaryColor').value = pColor;
       document.getElementById('setPrimaryColorHex').value = pColor;
+      document.getElementById('setBackgroundColor').value = bgColor;
+      document.getElementById('setBackgroundColorHex').value = bgColor;
       document.getElementById('setSecondaryColor').value = sColor;
       document.getElementById('setSecondaryColorHex').value = sColor;
       document.getElementById('setAccentColor').value = aColor;
@@ -1125,7 +1135,7 @@
       document.getElementById('setPointsRate').value = data.pointsToEgpRate || 1.0;
 
       // sync hex inputs with color pickers
-      ['Primary', 'Secondary', 'Accent'].forEach(k => {
+      ['Primary', 'Background', 'Secondary', 'Accent'].forEach(k => {
         document.getElementById(`set${k}Color`)?.addEventListener('input', (e) => {
           document.getElementById(`set${k}ColorHex`).value = e.target.value;
         });
@@ -1148,6 +1158,7 @@
 
     const payload = {
       primaryColor: document.getElementById('setPrimaryColorHex').value.trim(),
+      backgroundColor: document.getElementById('setBackgroundColorHex').value.trim(),
       secondaryColor: document.getElementById('setSecondaryColorHex').value.trim(),
       accentColor: document.getElementById('setAccentColorHex').value.trim(),
       platformName: document.getElementById('setPlatformName').value.trim(),
@@ -1161,9 +1172,13 @@
       await window.KhatwaAPI.admin.updateGeneralSettings(payload);
       alert('تم حفظ إعدادات ومظهر المنصة وتطبيقها بنجاح! 🎨');
       // Apply locally to test immediately
-      document.documentElement.style.setProperty('--primary', payload.primaryColor);
-      document.documentElement.style.setProperty('--secondary', payload.secondaryColor);
-      document.documentElement.style.setProperty('--accent', payload.accentColor);
+      if (payload.primaryColor) document.documentElement.style.setProperty('--primary', payload.primaryColor);
+      if (payload.backgroundColor) {
+        document.documentElement.style.setProperty('--bg', payload.backgroundColor);
+        document.body.style.backgroundColor = payload.backgroundColor;
+      }
+      if (payload.secondaryColor) document.documentElement.style.setProperty('--secondary', payload.secondaryColor);
+      if (payload.accentColor) document.documentElement.style.setProperty('--accent', payload.accentColor);
     } catch (err) {
       alert(err.message || 'فشل حفظ الإعدادات');
     } finally {
