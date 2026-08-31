@@ -129,6 +129,79 @@ export async function ensureLessonFolder(
   return findOrCreateFolder(drive, `lesson-${lessonId}`, teacherFolderId);
 }
 
+/**
+ * Initiates a Google Drive Direct Resumable Upload session for the browser.
+ * Returns the resumable upload URL where the browser can directly PUT the file bytes.
+ */
+export async function createResumableUploadSession(input: {
+  filename: string;
+  mimeType: string;
+  fileSize?: number;
+  teacherId: string;
+  lessonId: string;
+}): Promise<{ uploadUrl: string } | null> {
+  const drive = getDriveClient();
+  if (!drive || !env.GOOGLE_DRIVE_ROOT_FOLDER_ID) {
+    return null;
+  }
+
+  try {
+    const lessonFolderId = await ensureLessonFolder(input.teacherId, input.lessonId);
+    
+    // Obtain active OAuth / Auth access token
+    let accessToken: string | null = null;
+    if (GoogleDriveAuth.hasStoredTokens()) {
+      const oauthClient = GoogleDriveAuth.getOAuth2Client();
+      const tokenRes = await oauthClient.getAccessToken();
+      accessToken = tokenRes.token || null;
+    } else if (env.GOOGLE_SERVICE_ACCOUNT_KEY_JSON) {
+      const credentials = loadServiceAccountCredentials();
+      const auth = new google.auth.GoogleAuth({
+        credentials,
+        scopes: ['https://www.googleapis.com/auth/drive'],
+      });
+      const client = await auth.getClient();
+      const tokenRes = await client.getAccessToken();
+      accessToken = tokenRes.token || null;
+    }
+
+    if (!accessToken) return null;
+
+    const metadata = {
+      name: input.filename,
+      parents: [lessonFolderId],
+    };
+
+    const headers: Record<string, string> = {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json; charset=UTF-8',
+      'X-Upload-Content-Type': input.mimeType || 'video/mp4',
+    };
+    if (input.fileSize) {
+      headers['X-Upload-Content-Length'] = String(input.fileSize);
+    }
+
+    const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&supportsAllDrives=true', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(metadata),
+    });
+
+    if (!res.ok) {
+      console.warn('Google Drive resumable upload session error:', res.status, await res.text());
+      return null;
+    }
+
+    const uploadUrl = res.headers.get('location') || res.headers.get('Location');
+    if (!uploadUrl) return null;
+
+    return { uploadUrl };
+  } catch (err: any) {
+    console.warn('Failed to create resumable upload session:', err.message);
+    return null;
+  }
+}
+
 // ─── Upload a video directly to Google Drive (with local fallback) ───────────
 
 export async function uploadVideo(input: {

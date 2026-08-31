@@ -841,34 +841,94 @@ router.post(
   LessonsController.uploadVideo
 );
 
+// ─── Direct Resumable Upload to Google Drive (Bypasses Vercel payload limits) ─
+
 router.post(
-  '/upload-video',
-  LessonsController.upload.single('video'),
+  '/lessons/:id/resumable-upload-url',
   asyncHandler(async (req, res) => {
-    if (!req.file) {
-      res.status(400).json({ success: false, error: { code: 'NO_FILE', message: 'No video file provided' } });
+    const teacherProfile = await prisma.teacherProfile.findUnique({ where: { userId: req.user!.sub } });
+    if (!teacherProfile) {
+      res.status(403).json({ success: false, error: { code: 'FORBIDDEN', message: 'Not authorized' } });
       return;
     }
 
-    const { uploadVideo } = await import('../services/googleDrive');
-    const teacherId = req.user?.sub || 'teacher-default';
-    const lessonId = (req.body.lessonId as string) || `lec-${Date.now()}`;
+    const lesson = await prisma.lesson.findFirst({
+      where: { id: req.params.id, teacherProfileId: teacherProfile.id },
+    });
+    if (!lesson) {
+      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Lesson not found' } });
+      return;
+    }
 
-    const { fileId, fileName, isGoogleDrive } = await uploadVideo({
-      buffer: req.file.buffer,
-      filename: req.file.originalname,
-      mimeType: req.file.mimetype,
-      teacherId,
-      lessonId,
+    const { filename, mimeType, fileSize } = req.body;
+    if (!filename) {
+      res.status(400).json({ success: false, error: { code: 'MISSING_FIELDS', message: 'filename is required' } });
+      return;
+    }
+
+    const { createResumableUploadSession } = await import('../services/googleDrive');
+    const session = await createResumableUploadSession({
+      filename,
+      mimeType: mimeType || 'video/mp4',
+      fileSize: fileSize ? parseInt(fileSize) : undefined,
+      teacherId: req.user!.sub,
+      lessonId: lesson.id,
+    });
+
+    if (!session || !session.uploadUrl) {
+      res.status(200).json({
+        success: false,
+        message: 'Google Drive direct upload not configured or unavailable. Use direct upload fallback or paste YouTube/Drive link.',
+      });
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        uploadUrl: session.uploadUrl,
+      },
+    });
+  })
+);
+
+router.post(
+  '/lessons/:id/direct-upload-complete',
+  asyncHandler(async (req, res) => {
+    const teacherProfile = await prisma.teacherProfile.findUnique({ where: { userId: req.user!.sub } });
+    if (!teacherProfile) {
+      res.status(403).json({ success: false, error: { code: 'FORBIDDEN', message: 'Not authorized' } });
+      return;
+    }
+
+    const lesson = await prisma.lesson.findFirst({
+      where: { id: req.params.id, teacherProfileId: teacherProfile.id },
+    });
+    if (!lesson) {
+      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Lesson not found' } });
+      return;
+    }
+
+    const { driveFileId, fileName } = req.body;
+    if (!driveFileId) {
+      res.status(400).json({ success: false, error: { code: 'MISSING_FIELDS', message: 'driveFileId is required' } });
+      return;
+    }
+
+    const updated = await prisma.lesson.update({
+      where: { id: lesson.id },
+      data: {
+        driveFileId,
+        driveFileName: fileName || 'video.mp4',
+      },
     });
 
     res.status(200).json({
       success: true,
       data: {
-        message: isGoogleDrive ? 'تم رفع الفيديو في Google Drive' : 'تم رفع الفيديو',
-        driveFileId: fileId,
-        fileName,
-        isGoogleDrive,
+        lessonId: updated.id,
+        driveFileId: updated.driveFileId,
+        message: 'Video linked to lesson successfully in Google Drive',
       },
     });
   })
