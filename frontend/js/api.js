@@ -166,7 +166,12 @@
     const data = await res.json().catch(() => ({}));
 
     if (!res.ok) {
-      const errorMsg = data.error?.message || data.message || ('خطأ ' + res.status + ': حدث خطأ غير متوقع');
+      let errorMsg = data.error?.message || data.message;
+      if (!errorMsg && res.status === 413) {
+        errorMsg = 'حجم الملف كبير جداً وتجاوز الحد الأقصى للرفع المباشر عبر السيرفر. يُرجى نسخ رابط الفيديو من Google Drive أو YouTube ولصقه في خانة الرابط لتشغيله بسلاسة وأعلى جودة بدون قيود!';
+      } else if (!errorMsg) {
+        errorMsg = 'خطأ ' + res.status + ': حدث خطأ غير متوقع';
+      }
       const err = new Error(errorMsg);
       err.status = res.status;
       err.code = data.error?.code;

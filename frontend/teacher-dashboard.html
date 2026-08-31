@@ -253,8 +253,11 @@
         
         <div class="form-group" style="margin-bottom:10px;">
           <label style="font-size:0.88rem;color:var(--ink);font-weight:600;display:block;margin-bottom:4px;">1) 📁 رفع ملف فيديو من جهازك (Disk Upload):</label>
-          <input type="file" id="lessonVideoFile" accept="video/mp4,video/mkv,video/webm,video/*" class="form-control">
-          <span style="font-size:0.78rem;color:var(--ink-dim);">سيتم رفعه وتخزينه في Google Drive وتأمينه داخل المنصة تلقائياً.</span>
+          <input type="file" id="lessonVideoFile" accept="video/mp4,video/mkv,video/webm,video/*" class="form-control" onchange="handleVideoFileSelection(this)">
+          <div id="videoSizeNotice" style="display:none;background:#fffbeb;border:1px solid #fde68a;padding:10px 12px;border-radius:10px;margin-top:8px;font-size:0.82rem;color:#92400e;line-height:1.5;">
+            ⚠️ <b>حجم الفيديو كبير (<span id="videoFileSizeText"></span>):</b> نظراً لحدود حجم السيرفر السحابي (4.5MB)، يُرجى نسخ رابط الفيديو من <b>Google Drive</b> أو <b>YouTube</b> ووضعه في خانة <b>(2) رابط الفيديو</b> بالأسفل لتشغيله بسلاسة وأعلى جودة بدون قيود!
+          </div>
+          <span style="font-size:0.78rem;color:var(--ink-dim);display:block;margin-top:4px;">للملفات الأكبر من 4.5MB، يُرجى استخدام رابط Google Drive أو YouTube لتشغيله بدون قيود على الحجم.</span>
         </div>
 
         <div style="text-align:center;color:var(--ink-dim);font-size:0.85rem;margin:8px 0;font-weight:700;">— أو —</div>
@@ -817,12 +820,29 @@
   }
 
   // ─── Lesson Modal ─────────────────────────────────────────────────────────
+  function handleVideoFileSelection(input) {
+    const file = input.files?.[0];
+    const notice = document.getElementById('videoSizeNotice');
+    const sizeText = document.getElementById('videoFileSizeText');
+    if (file && file.size > 4.5 * 1024 * 1024) {
+      const mb = (file.size / (1024 * 1024)).toFixed(1);
+      if (sizeText) sizeText.textContent = `${mb} MB`;
+      if (notice) notice.style.display = 'block';
+    } else {
+      if (notice) notice.style.display = 'none';
+    }
+  }
+
   function openAddLessonModal(chapterId) {
     document.getElementById('lessonChapterId').value = chapterId;
+    const notice = document.getElementById('videoSizeNotice');
+    if (notice) notice.style.display = 'none';
     document.getElementById('addLessonModal').style.display = 'flex';
   }
   function closeAddLessonModal() {
     document.getElementById('addLessonModal').style.display = 'none';
+    const notice = document.getElementById('videoSizeNotice');
+    if (notice) notice.style.display = 'none';
   }
 
   async function submitAddLesson(e) {
@@ -836,6 +856,13 @@
     const videoFile = document.getElementById('lessonVideoFile')?.files[0];
     const pdfFile = document.getElementById('lessonPdfFile')?.files[0];
 
+    // If teacher selected a large file (> 4.5MB) and didn't provide a URL, guide them
+    if (videoFile && videoFile.size > 4.5 * 1024 * 1024 && !videoUrl) {
+      const mb = (videoFile.size / (1024 * 1024)).toFixed(1);
+      const proceed = confirm(`حجم ملف الفيديو كبير (${mb} ميجابايت) وقد يرفضه السيرفر بسبب قيود الحجم السحابي (4.5MB).\n\n💡 هل ترغب في المتابعة ومحاولة الرفع المباشر، أم تفضل وضع رابط الفيديو من Google Drive أو YouTube؟\n\n- اضغط OK للمحاولة.\n- اضغط Cancel لوضع رابط Google Drive/YouTube.`);
+      if (!proceed) return;
+    }
+
     const btn = document.getElementById('saveLessonBtn');
     btn.disabled = true;
     btn.textContent = 'جارٍ إنشاء الدرس...';
@@ -845,7 +872,15 @@
 
       if (videoFile && lesson?.id) {
         btn.textContent = 'جارٍ رفع الفيديو وتأمينه في Google Drive... ⏳';
-        await window.KhatwaAPI.teacher.uploadVideo(lesson.id, videoFile);
+        try {
+          await window.KhatwaAPI.teacher.uploadVideo(lesson.id, videoFile);
+        } catch (uploadErr) {
+          if (uploadErr.status === 413 || (uploadErr.message && uploadErr.message.includes('413'))) {
+            alert('⚠️ تنبيه: حجم ملف الفيديو كبير وتجاوز سعة الرفع المباشر بالسيرفر. تم إنشاء الدرس بنجاح بدون الملف، ويمكنك الآن إضافة رابط YouTube أو Google Drive لتشغيل الفيديو فوراً وبدون أي قيود.');
+          } else {
+            throw uploadErr;
+          }
+        }
       }
 
       if (pdfFile && lesson?.id) {
