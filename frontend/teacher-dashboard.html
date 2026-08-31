@@ -247,36 +247,44 @@
       </div>
       <span style="font-size:0.8rem;color:var(--ink-dim);display:block;margin-bottom:12px;">ضع 0 لتكون المحاضرة مجانية لجميع طلاب هذه المرحلة.</span>
 
-      <!-- Video Selection: Disk File OR External URL / Drive / YouTube -->
-      <div style="background:var(--bg-raised);border:1px solid var(--line-soft);padding:14px;border-radius:14px;margin-bottom:14px;">
-        <label class="form-label" style="margin-bottom:8px;font-weight:700;">🎬 مصدر فيديو المحاضرة (اختر إحدى الطريقتين):</label>
+      <!-- Video Selection: Mode Switcher -->
+      <div style="background:var(--bg-raised);border:1px solid var(--line-soft);padding:16px;border-radius:14px;margin-bottom:14px;">
+        <label class="form-label" style="margin-bottom:10px;font-weight:700;">🎬 حدد طريقة إضافة فيديو المحاضرة:</label>
         
-        <div class="form-group" style="margin-bottom:10px;">
-          <label style="font-size:0.88rem;color:var(--ink);font-weight:600;display:block;margin-bottom:4px;">1) 📁 رفع ملف فيديو من جهازك (Direct Upload إلى Google Drive):</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+          <button type="button" id="btnVideoModeUrl" class="btn btn-primary btn-sm" onclick="setVideoSourceMode('url')" style="justify-content:center;font-weight:700;">
+            🔗 رابط Drive أو YouTube (فوري)
+          </button>
+          <button type="button" id="btnVideoModeFile" class="btn btn-line btn-sm" onclick="setVideoSourceMode('file')" style="justify-content:center;font-weight:700;">
+            📁 رفع ملف من جهازي (Disk)
+          </button>
+        </div>
+
+        <!-- Panel 1: URL Input (Default & Recommended) -->
+        <div id="videoSourceUrlPanel">
+          <label style="font-size:0.88rem;color:var(--ink);font-weight:600;display:block;margin-bottom:4px;">رابط Google Drive أو YouTube أو استضافة مباشرة:</label>
+          <input type="text" id="lessonVideoUrlInput" placeholder="مثال: https://drive.google.com/file/d/1.../view أو https://youtu.be/..." class="form-control">
+          <span style="font-size:0.8rem;color:var(--ink-dim);display:block;margin-top:6px;line-height:1.5;">
+            💡 <b>تنبيه لروابط Google Drive:</b> تأكد من ضبط إذن المشاركة في Drive على <b>(أي شخص لديه الرابط يمكنه العرض - Anyone with the link)</b> حتى يفتح الفيديو للطلاب بدون طلب إذن.
+          </span>
+        </div>
+
+        <!-- Panel 2: File Upload Input -->
+        <div id="videoSourceFilePanel" style="display:none;">
+          <label style="font-size:0.88rem;color:var(--ink);font-weight:600;display:block;margin-bottom:4px;">اختر ملف الفيديو من جهازك:</label>
           <input type="file" id="lessonVideoFile" accept="video/mp4,video/mkv,video/webm,video/*" class="form-control" onchange="handleVideoFileSelection(this)">
-          <div id="videoSizeNotice" style="display:none;background:#eff6ff;border:1px solid #bfdbfe;padding:10px 12px;border-radius:10px;margin-top:8px;font-size:0.82rem;color:#1e40af;line-height:1.5;">
-            🚀 <b>حجم الفيديو (<span id="videoFileSizeText"></span>):</b> سيتم رفعه بتقنية <b>Direct Resumable Upload</b> مباشرة إلى Google Drive مع شريط تقدم مباشر وبدون أي وسيط!
+          <div id="videoSizeNotice" style="display:none;background:#fffbeb;border:1px solid #fde68a;padding:10px 12px;border-radius:10px;margin-top:8px;font-size:0.82rem;color:#92400e;line-height:1.5;">
+            ⚠️ <b>حجم الفيديو (<span id="videoFileSizeText"></span>):</b> أكبر من 4.5MB. ننصحك بالضغط على زر <b>(رابط Drive أو YouTube)</b> بالأعلى ولصق الرابط لتشغيله بأي حجم وجودة فوراً بدون قيود!
           </div>
           <div id="videoUploadProgressWrapper" style="display:none;margin-top:10px;background:#f8fafc;border:1px solid #e2e8f0;padding:12px;border-radius:12px;">
             <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:0.82rem;font-weight:700;">
-              <span id="uploadProgressStatus" style="color:var(--primary);">🚀 جارٍ بدء الرفع المباشر إلى Google Drive...</span>
+              <span id="uploadProgressStatus" style="color:var(--primary);">🚀 جارٍ الرفع...</span>
               <span id="uploadProgressPct" style="color:#22c55e;">0%</span>
             </div>
             <div style="background:#e2e8f0;border-radius:999px;height:10px;overflow:hidden;">
               <div id="uploadProgressBar" style="background:linear-gradient(90deg, var(--primary) 0%, #22c55e 100%);height:100%;width:0%;transition:width 0.2s;"></div>
             </div>
           </div>
-          <span style="font-size:0.78rem;color:var(--ink-dim);display:block;margin-top:4px;">اختر ملف الفيديو وسيتم رفعه وتخزينه في Google Drive وتأمينه داخل المنصة تلقائياً.</span>
-        </div>
-
-        <div style="text-align:center;color:var(--ink-dim);font-size:0.85rem;margin:8px 0;font-weight:700;">— أو —</div>
-
-        <div class="form-group" style="margin-bottom:4px;">
-          <label style="font-size:0.88rem;color:var(--ink);font-weight:600;display:block;margin-bottom:4px;">2) 🔗 رابط YouTube أو Google Drive أو فيديو مباشر:</label>
-          <input type="url" id="lessonVideoUrlInput" placeholder="https://drive.google.com/file/d/... أو https://youtu.be/..." class="form-control">
-          <span style="font-size:0.78rem;color:var(--ink-dim);display:block;margin-top:4px;">
-            💡 <b>تنبيه هام لروابط Google Drive:</b> تأكد من ضبط مشاركة الملف في Drive على <b>(أي شخص لديه الرابط يمكنه العرض - Anyone with the link)</b> حتى يتمكن الطلاب من مشاهدته مباشرة داخل المنصة.
-          </span>
         </div>
       </div>
       <div class="form-group" style="margin-bottom:14px;">
@@ -863,8 +871,31 @@
     }
   }
 
+  let currentVideoSourceMode = 'url'; // 'url' or 'file'
+
+  function setVideoSourceMode(mode) {
+    currentVideoSourceMode = mode;
+    const btnUrl = document.getElementById('btnVideoModeUrl');
+    const btnFile = document.getElementById('btnVideoModeFile');
+    const panelUrl = document.getElementById('videoSourceUrlPanel');
+    const panelFile = document.getElementById('videoSourceFilePanel');
+
+    if (mode === 'url') {
+      if (btnUrl) { btnUrl.className = 'btn btn-primary btn-sm'; }
+      if (btnFile) { btnFile.className = 'btn btn-line btn-sm'; }
+      if (panelUrl) panelUrl.style.display = 'block';
+      if (panelFile) panelFile.style.display = 'none';
+    } else {
+      if (btnUrl) { btnUrl.className = 'btn btn-line btn-sm'; }
+      if (btnFile) { btnFile.className = 'btn btn-primary btn-sm'; }
+      if (panelUrl) panelUrl.style.display = 'none';
+      if (panelFile) panelFile.style.display = 'block';
+    }
+  }
+
   function openAddLessonModal(chapterId) {
     document.getElementById('lessonChapterId').value = chapterId;
+    setVideoSourceMode('url');
     const notice = document.getElementById('videoSizeNotice');
     if (notice) notice.style.display = 'none';
     const progressWrapper = document.getElementById('videoUploadProgressWrapper');
@@ -886,9 +917,23 @@
     const price = parseFloat(document.getElementById('lessonPriceInput').value) || 0;
     const pointCost = parseInt(document.getElementById('lessonPointCostInput').value) || 0;
     const description = document.getElementById('lessonDescInput').value.trim();
-    const videoUrl = document.getElementById('lessonVideoUrlInput')?.value.trim() || null;
-    const videoFile = document.getElementById('lessonVideoFile')?.files[0];
     const pdfFile = document.getElementById('lessonPdfFile')?.files[0];
+
+    let videoUrl = null;
+    let videoFile = null;
+
+    if (currentVideoSourceMode === 'url') {
+      let rawUrl = (document.getElementById('lessonVideoUrlInput')?.value || '').trim();
+      if (rawUrl) {
+        rawUrl = rawUrl.replace(/^\/+/, '');
+        if (!rawUrl.startsWith('http://') && !rawUrl.startsWith('https://')) {
+          rawUrl = 'https://' + rawUrl;
+        }
+        videoUrl = rawUrl;
+      }
+    } else {
+      videoFile = document.getElementById('lessonVideoFile')?.files[0];
+    }
 
     const btn = document.getElementById('saveLessonBtn');
     btn.disabled = true;
@@ -904,7 +949,7 @@
 
       if (videoFile && lesson?.id) {
         if (progressWrapper) progressWrapper.style.display = 'block';
-        btn.textContent = 'جارٍ الرفع المباشر إلى Google Drive... ⏳';
+        btn.textContent = 'جارٍ رفع ملف الفيديو... ⏳';
         try {
           await window.KhatwaAPI.teacher.uploadVideo(lesson.id, videoFile, (p) => {
             if (progressBar && progressPct) {
@@ -913,16 +958,12 @@
               const mbUploaded = (p.loaded / (1024 * 1024)).toFixed(1);
               const mbTotal = (p.total / (1024 * 1024)).toFixed(1);
               if (progressStatus) {
-                progressStatus.textContent = `🚀 تم رفع ${mbUploaded} MB من ${mbTotal} MB (${p.percentage}%) مباشرة إلى Google Drive...`;
+                progressStatus.textContent = `🚀 تم رفع ${mbUploaded} MB من ${mbTotal} MB (${p.percentage}%)...`;
               }
             }
           });
         } catch (uploadErr) {
-          if (uploadErr.status === 413 || (uploadErr.message && uploadErr.message.includes('413'))) {
-            alert('⚠️ تنبيه: حجم ملف الفيديو كبير جداً. تم حفظ الدرس بنجاح، ويمكنك إضافة رابط YouTube أو Google Drive لتشغيله بأي حجم بدون قيود.');
-          } else {
-            console.warn('Video upload notice:', uploadErr);
-          }
+          alert('⚠️ تم حفظ المحاضرة ولكن تعذر رفع ملف الفيديو من الجهاز: ' + (uploadErr.message || 'حجم الملف كبير') + '\n\n💡 يُرجى استخدام خيار (رابط Drive أو YouTube) لتشغيل الفيديو بأي حجم وجودة.');
         }
       }
 
@@ -931,7 +972,7 @@
         await window.KhatwaAPI.teacher.uploadPdf(lesson.id, pdfFile);
       }
 
-      alert('تم حفظ الدرس ونشر المحاضرة والمذكرة بنجاح! ✅');
+      alert('تم حفظ ونشر المحاضرة بنجاح! ✅');
       closeAddLessonModal();
       document.getElementById('addLessonForm').reset();
       await refreshWorkspace();
