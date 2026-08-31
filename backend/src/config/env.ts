@@ -46,6 +46,8 @@ const envSchema = z.object({
 
   // Google Drive configuration
   GOOGLE_DRIVE_ROOT_FOLDER_ID: z.string().optional(),
+  GOOGLE_OAUTH_CLIENT_JSON: z.string().optional(),
+  GOOGLE_DRIVE_TOKEN_JSON: z.string().optional(),
   GOOGLE_OAUTH_CLIENT_JSON_PATH: z.string().default('secrets/google-oauth-client.json'),
   GOOGLE_DRIVE_TOKEN_PATH: z.string().default('secrets/google-drive-token.json'),
   GOOGLE_OAUTH_REDIRECT_URI: z.string().default('http://localhost:3000/auth/google/callback'),

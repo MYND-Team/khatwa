@@ -70,13 +70,22 @@ function resolveTokenPath(): string {
  * Ensures the credentials file is of type WEB APPLICATION.
  */
 export function loadOAuthClientCredentials(): { clientId: string; clientSecret: string; redirectUri: string } {
-  const filePath = resolveOAuthClientPath();
   let parsed: OAuthWebClientJson;
-  try {
-    const content = fs.readFileSync(filePath, 'utf-8');
-    parsed = JSON.parse(content);
-  } catch (err: any) {
-    throw new Error(`Failed to read or parse OAuth client file at "${filePath}": ${err.message}`);
+
+  if (env.GOOGLE_OAUTH_CLIENT_JSON) {
+    try {
+      parsed = JSON.parse(env.GOOGLE_OAUTH_CLIENT_JSON.trim());
+    } catch (err: any) {
+      throw new Error(`Failed to parse GOOGLE_OAUTH_CLIENT_JSON env var: ${err.message}`);
+    }
+  } else {
+    const filePath = resolveOAuthClientPath();
+    try {
+      const content = fs.readFileSync(filePath, 'utf-8');
+      parsed = JSON.parse(content);
+    } catch (err: any) {
+      throw new Error(`Failed to read or parse OAuth client file at "${filePath}": ${err.message}`);
+    }
   }
 
   if (parsed.installed && !parsed.web) {
@@ -103,9 +112,17 @@ export function loadOAuthClientCredentials(): { clientId: string; clientSecret: 
 }
 
 /**
- * Checks if a valid refresh token exists on disk.
+ * Checks if a valid refresh token exists on disk or in env.
  */
 export function hasStoredTokens(): boolean {
+  if (env.GOOGLE_DRIVE_TOKEN_JSON) {
+    try {
+      const data = JSON.parse(env.GOOGLE_DRIVE_TOKEN_JSON.trim());
+      return typeof data.refresh_token === 'string' && data.refresh_token.length > 0;
+    } catch {
+      return false;
+    }
+  }
   const tokenPath = resolveTokenPath();
   if (!fs.existsSync(tokenPath)) return false;
   try {
@@ -117,9 +134,16 @@ export function hasStoredTokens(): boolean {
 }
 
 /**
- * Loads stored tokens from disk.
+ * Loads stored tokens from disk or env.
  */
 export function loadStoredTokens(): StoredTokens | null {
+  if (env.GOOGLE_DRIVE_TOKEN_JSON) {
+    try {
+      return JSON.parse(env.GOOGLE_DRIVE_TOKEN_JSON.trim());
+    } catch {
+      return null;
+    }
+  }
   const tokenPath = resolveTokenPath();
   if (!fs.existsSync(tokenPath)) return null;
   try {
