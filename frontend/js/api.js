@@ -504,7 +504,7 @@
       async isEnrolled(courseId) {
         try {
           const enrolled = await KhatwaAPI.student.getSubscriptions();
-          return enrolled.some(t => t.courses.some((c: any) => c.id === courseId));
+          return enrolled.some(t => t.courses.some(c => c.id === courseId));
         } catch { return false; }
       },
       async getMyCourses() { return KhatwaAPI.student.getSubscriptions(); },
