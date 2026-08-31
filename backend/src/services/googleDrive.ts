@@ -1,9 +1,12 @@
-import { google } from 'googleapis';
+import { google as _google } from 'googleapis';
+import * as googleapisModule from 'googleapis';
 import { Readable } from 'stream';
 import fs from 'fs';
 import path from 'path';
 import { env } from '../config/env';
 import * as GoogleDriveAuth from './googleDriveAuth';
+
+const google: typeof _google = _google || (googleapisModule as any).google || (googleapisModule as any).default?.google || googleapisModule;
 
 let _driveClient: ReturnType<typeof google.drive> | null = null;
 

@@ -107,7 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('a[href="#logout"]').forEach(link => {
     link.addEventListener('click', async (e) => {
       e.preventDefault();
-      if (window.KhatwaAPI) await window.KhatwaAPI.auth.logout();
+      if (window.KhatwaAPI?.auth?.logout) await window.KhatwaAPI.auth.logout();
       else window.location.href = 'index.html';
     });
   });
