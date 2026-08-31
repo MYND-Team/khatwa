@@ -596,13 +596,17 @@ router.get(
 
 // Get lesson content
 router.get(
+  '/lessons/:id/content',
+  LessonsController.getLessonContent
+);
+router.get(
   '/lessons/:lessonId/content',
-  asyncHandler(async (req, res) => {
-    const studentId = req.user!.sub;
-    const lessonId = req.params.lessonId;
-
-    const data = await LessonsController.getLessonContent(req, res);
-  })
+  (req: any, res, next) => {
+    if (!req.params.id && req.params.lessonId) {
+      req.params.id = req.params.lessonId;
+    }
+    return LessonsController.getLessonContent(req, res, next);
+  }
 );
 
 // Legacy lesson endpoints

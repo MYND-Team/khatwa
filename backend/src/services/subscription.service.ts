@@ -4,7 +4,7 @@ import { NotFoundError, PaymentRequiredError, ConflictError } from '../utils/err
 export interface PurchaseLessonInput {
   studentId: string;
   lessonId: string;
-  paymentMethod?: 'WALLET_EGP' | 'POINTS';
+  paymentMethod?: 'WALLET_EGP' | 'POINTS' | 'FREE';
 }
 
 export async function purchaseLesson({
@@ -53,7 +53,7 @@ export async function purchaseLesson({
     const settings = await tx.platformSettings.findFirst();
     const commissionPct = settings?.defaultTeacherCommissionPct ?? 80.0;
 
-    let resolvedPaymentMethod = paymentMethod;
+    let resolvedPaymentMethod: 'WALLET_EGP' | 'POINTS' | 'FREE' = paymentMethod;
     let pricePaid = 0.0;
     let pointsPaid = 0;
 
