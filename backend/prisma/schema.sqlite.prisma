@@ -12,6 +12,7 @@ datasource db {
 
 model AccessCode {
   id           String   @id @default(cuid())
+  code         String?
   codeHash     String   @unique
   points       Int      @default(0)
   status       String   @default("ACTIVE")

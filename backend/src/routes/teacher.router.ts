@@ -150,7 +150,8 @@ router.get(
   '/workspace/:stage/overview',
   asyncHandler(async (req, res) => {
     const stage = req.params.stage;
-    if (!VALID_STAGES.includes(stage)) {
+    const isAll = stage === 'ALL';
+    if (!isAll && !VALID_STAGES.includes(stage)) {
       res.status(400).json({ success: false, error: { code: 'INVALID_STAGE', message: 'المرحلة الدراسية غير صالحة' } });
       return;
     }
@@ -161,19 +162,21 @@ router.get(
       return;
     }
 
+    const stageFilter = isAll ? {} : { academicStage: stage as any };
+
     const [coursesCount, lessonsCount, subscriptions, paymentsAgg] = await Promise.all([
       prisma.course.count({
-        where: { teacherProfileId: teacherProfile.id, academicStage: stage as any },
+        where: { teacherProfileId: teacherProfile.id, ...stageFilter },
       }),
       prisma.lesson.count({
-        where: { teacherProfileId: teacherProfile.id, academicStage: stage as any },
+        where: { teacherProfileId: teacherProfile.id, ...stageFilter },
       }),
       prisma.lessonSubscription.findMany({
-        where: { teacherProfileId: teacherProfile.id, academicStage: stage as any, status: 'ACTIVE' },
+        where: { teacherProfileId: teacherProfile.id, ...stageFilter, status: 'ACTIVE' },
         select: { studentId: true, pricePaid: true, pointsPaid: true },
       }),
       prisma.paymentTransaction.aggregate({
-        where: { teacherProfileId: teacherProfile.id, academicStage: stage as any, status: 'COMPLETED' },
+        where: { teacherProfileId: teacherProfile.id, ...stageFilter, status: 'COMPLETED' },
         _sum: { teacherEarning: true, pointsUsed: true },
       }),
     ]);
@@ -204,14 +207,17 @@ router.get(
   '/workspace/:stage/courses',
   asyncHandler(async (req, res) => {
     const stage = req.params.stage;
+    const isAll = stage === 'ALL';
     const teacherProfile = await prisma.teacherProfile.findUnique({ where: { userId: req.user!.sub } });
     if (!teacherProfile) {
       res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Teacher profile not found' } });
       return;
     }
 
+    const stageFilter = isAll ? {} : { academicStage: stage as any };
+
     const courses = await prisma.course.findMany({
-      where: { teacherProfileId: teacherProfile.id, academicStage: stage as any },
+      where: { teacherProfileId: teacherProfile.id, ...stageFilter },
       include: {
         chapters: {
           orderBy: { orderIndex: 'asc' },
@@ -240,24 +246,37 @@ router.get(
   '/workspace/:stage/students',
   asyncHandler(async (req, res) => {
     const stage = req.params.stage;
+    const isAll = stage === 'ALL';
     const teacherProfile = await prisma.teacherProfile.findUnique({ where: { userId: req.user!.sub } });
     if (!teacherProfile) {
       res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Teacher profile not found' } });
       return;
     }
 
+    const stageFilter = isAll ? {} : { academicStage: stage as any };
+
     const subscriptions = await prisma.lessonSubscription.findMany({
-      where: { teacherProfileId: teacherProfile.id, academicStage: stage as any, status: 'ACTIVE' },
+      where: { teacherProfileId: teacherProfile.id, ...stageFilter, status: 'ACTIVE' },
       include: {
         student: {
           select: {
             id: true,
             username: true,
             isActive: true,
-            studentProfile: { select: { studentPhoneNumber: true } },
+            studentProfile: {
+              select: {
+                studentPhoneNumber: true,
+                parentInfo: {
+                  select: {
+                    parentPhoneNumber: true,
+                    fatherJob: true,
+                  },
+                },
+              },
+            },
           },
         },
-        lesson: { select: { id: true, title: true } },
+        lesson: { select: { id: true, title: true, price: true } },
         course: { select: { id: true, title: true } },
       },
       orderBy: { subscribedAt: 'desc' },
@@ -274,14 +293,17 @@ router.get(
   '/workspace/:stage/revenue',
   asyncHandler(async (req, res) => {
     const stage = req.params.stage;
+    const isAll = stage === 'ALL';
     const teacherProfile = await prisma.teacherProfile.findUnique({ where: { userId: req.user!.sub } });
     if (!teacherProfile) {
       res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Teacher profile not found' } });
       return;
     }
 
+    const stageFilter = isAll ? {} : { academicStage: stage as any };
+
     const transactions = await prisma.paymentTransaction.findMany({
-      where: { teacherProfileId: teacherProfile.id, academicStage: stage as any, status: 'COMPLETED' },
+      where: { teacherProfileId: teacherProfile.id, ...stageFilter, status: 'COMPLETED' },
       include: {
         student: { select: { username: true } },
         course: { select: { title: true } },

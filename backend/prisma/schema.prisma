@@ -82,7 +82,8 @@ enum QuestionType {
 
 model AccessCode {
   id           String           @id @default(cuid())
-  codeHash     String           @unique // SHA-256 of the uppercase code; plaintext never stored in DB
+  code         String?          // Plaintext code (FG-XXXX-XXXX) for admin oversight and reprint
+  codeHash     String           @unique // SHA-256 of the uppercase code for fast lookup
   points       Int              @default(0)
   status       AccessCodeStatus @default(ACTIVE)
   expiresAt    DateTime?

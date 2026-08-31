@@ -473,7 +473,12 @@
         </select>
         <button class="btn btn-line btn-sm" onclick="document.getElementById('studentStageFilter').value=''; document.getElementById('studentSearchInput').value=''; filterStudents()">↺ إعادة ضبط</button>
       </div>
-      <span style="font-size:0.85rem;color:var(--ink-dim);" id="studentsCountLabel">عرض 0 طالب</span>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <span style="font-size:0.85rem;color:var(--ink-dim);" id="studentsCountLabel">عرض 0 طالب</span>
+        <button class="btn btn-line btn-sm" onclick="exportStudentsToExcel()" style="color:#059669;border-color:rgba(5,150,105,0.4);font-weight:700;display:inline-flex;align-items:center;gap:6px;">
+          <span>📊 تصدير إلى Excel</span>
+        </button>
+      </div>
     </div>
 
     <div class="table-container">
@@ -501,9 +506,14 @@
 
   <!-- Tab 2: Teachers Management -->
   <div id="tabTeachers" class="admin-tab-content" style="display:none;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
       <h3>الكادر الأكاديمي والمدرسين المعتمدين</h3>
-      <button class="btn btn-primary btn-sm" onclick="openAddTeacherModal()">＋ إنشاء حساب مدرس جديد</button>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <button class="btn btn-line btn-sm" onclick="exportTeachersToExcel()" style="color:#059669;border-color:rgba(5,150,105,0.4);font-weight:700;display:inline-flex;align-items:center;gap:6px;">
+          <span>📊 تصدير المدرسين إلى Excel</span>
+        </button>
+        <button class="btn btn-primary btn-sm" onclick="openAddTeacherModal()">＋ إنشاء حساب مدرس جديد</button>
+      </div>
     </div>
     <div class="table-container">
       <table class="data-table">
@@ -1545,8 +1555,8 @@
         <tr>
           <td>
             <div style="display:flex;align-items:center;gap:6px;">
-              <span style="font-family:monospace;font-weight:700;font-size:0.88rem;color:var(--ink-dim);">${c.id.slice(-8)}</span>
-              <button class="btn btn-text btn-sm" onclick="copyCodeToClipboard('${c.id}')" title="نسخ المعرف" style="padding:2px 4px;font-size:0.75rem;">📋</button>
+              <code style="font-family:monospace;font-weight:700;font-size:0.92rem;color:var(--primary);background:rgba(11,37,69,0.06);padding:3px 8px;border-radius:6px;letter-spacing:1px;">${c.code || c.id}</code>
+              <button class="btn btn-text btn-sm" onclick="copyCodeToClipboard('${c.code || c.id}')" title="نسخ الكود" style="padding:2px 6px;font-size:0.85rem;">📋</button>
             </div>
           </td>
           <td><b style="color:var(--gold-light);font-size:1.05rem;">+${c.points}</b> 💎 نقطة</td>
@@ -2124,6 +2134,104 @@
       renderNotesList(notes);
     } catch (err) {
       alert(err.message || 'فشل حفظ الملاحظة');
+    }
+  }
+
+  // ─── CSV / Excel Exporter Helper (with UTF-8 BOM) ──────────────────────────
+  function downloadCsv(filename, headers, rows) {
+    const escapeCsv = (val) => {
+      if (val === null || val === undefined) return '""';
+      const str = String(val).replace(/"/g, '""');
+      return `"${str}"`;
+    };
+
+    const csvContent = '\uFEFF' + [
+      headers.map(escapeCsv).join(','),
+      ...rows.map(row => row.map(escapeCsv).join(','))
+    ].join('\r\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `${filename}_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+
+  function exportStudentsToExcel() {
+    if (!allStudents || allStudents.length === 0) {
+      alert('لا توجد بيانات طلاب متاحة للتصدير حالياً');
+      return;
+    }
+
+    const headers = [
+      'اسم الطالب',
+      'اسم المستخدم',
+      'المرحلة الدراسية',
+      'رقم هاتف الطالب',
+      'رقم هاتف ولي الأمر',
+      'وظيفة الأب',
+      'رصيد المحفظة (EGP)',
+      'رصيد النقاط',
+      'حالة الحساب',
+      'تاريخ التسجيل'
+    ];
+
+    const rows = allStudents.map(s => [
+      s.name || s.username,
+      s.username,
+      s.studentProfile?.academicStage ? (STAGE_LABELS[s.studentProfile.academicStage] || s.studentProfile.academicStage) : 'غير محدد',
+      s.studentProfile?.studentPhoneNumber || '',
+      s.studentProfile?.parentInfo?.parentPhoneNumber || '',
+      s.studentProfile?.parentInfo?.fatherJob || '',
+      (s.walletBalance || 0).toFixed(2),
+      s.pointsBalance || 0,
+      s.isActive !== false ? 'نشط' : 'معطل',
+      s.createdAt ? new Date(s.createdAt).toLocaleDateString('ar-EG') : ''
+    ]);
+
+    downloadCsv('بيانات_الطلاب_منصة_خطوة', headers, rows);
+  }
+
+  async function exportTeachersToExcel() {
+    try {
+      const teachers = await window.KhatwaAPI.admin.getTeachers();
+      if (!teachers || teachers.length === 0) {
+        alert('لا توجد بيانات مدرسين متاحة للتصدير');
+        return;
+      }
+
+      const headers = [
+        'اسم المدرس',
+        'اسم المستخدم',
+        'المادة التخصصية',
+        'المراحل الدراسية',
+        'عدد الكورسات',
+        'التقييم',
+        'حالة الحساب',
+        'تاريخ الانضمام'
+      ];
+
+      const rows = teachers.map(t => {
+        const p = t.teacherProfile || {};
+        return [
+          p.displayName || t.username,
+          t.username,
+          p.subject || 'عام',
+          p.academicStages || 'الكل',
+          p.courses?.length || 0,
+          (p.rating || 5.0).toFixed(1),
+          t.isActive !== false ? 'نشط' : 'معطل',
+          t.createdAt ? new Date(t.createdAt).toLocaleDateString('ar-EG') : ''
+        ];
+      });
+
+      downloadCsv('بيانات_المدرسين_منصة_خطوة', headers, rows);
+    } catch (e) {
+      alert('فشل تصدير بيانات المدرسين');
     }
   }
 </script>

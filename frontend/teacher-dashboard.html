@@ -95,6 +95,7 @@
       <button class="stage-folder-tab active" onclick="switchStage('SECONDARY_1', this)">أولى ثانوي</button>
       <button class="stage-folder-tab" onclick="switchStage('SECONDARY_2', this)">ثانية ثانوي</button>
       <button class="stage-folder-tab" onclick="switchStage('SECONDARY_3', this)">ثالثة ثانوي</button>
+      <button class="stage-folder-tab" onclick="switchStage('ALL', this)" style="background:rgba(217,119,6,0.12);color:#d97706;border-color:rgba(217,119,6,0.3);">🌐 جميع المراحل (إجمالي)</button>
     </div>
   </div>
 
@@ -354,7 +355,8 @@
     PREPARATORY: 'المرحلة الإعدادية',
     SECONDARY_1: 'الصف الأول الثانوي',
     SECONDARY_2: 'الصف الثاني الثانوي',
-    SECONDARY_3: 'الصف الثالث الثانوي'
+    SECONDARY_3: 'الصف الثالث الثانوي',
+    ALL: 'جميع المراحل (المجموع الشامل)'
   };
 
   document.addEventListener('DOMContentLoaded', async () => {
@@ -493,42 +495,109 @@
     }
   }
 
+  let cachedStageStudents = [];
+
   async function loadStageStudents() {
     const container = document.getElementById('stageStudentsList');
     try {
       const students = await window.KhatwaAPI.teacher.getWorkspaceStudents(currentStage);
+      cachedStageStudents = students || [];
       if (!students || students.length === 0) {
         container.innerHTML = '<div style="text-align:center;padding:24px;color:var(--ink-dim);">لا يوجد طلاب مشتركون في هذه المرحلة حتى الآن.</div>';
         return;
       }
 
       container.innerHTML = `
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>اسم الطالب</th>
-              <th>رقم الهاتف</th>
-              <th>المحاضرة المشترك بها</th>
-              <th>الكورس</th>
-              <th>تاريخ الاشتراك</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${students.map(s => `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+          <span style="font-size:0.88rem;color:var(--ink-dim);">إجمالي المشتركين في هذه البيئة: <b>${students.length}</b> اشتراك</span>
+          <button class="btn btn-line btn-sm" onclick="exportTeacherStudentsToExcel()" style="color:#059669;border-color:rgba(5,150,105,0.4);font-weight:700;display:inline-flex;align-items:center;gap:6px;">
+            <span>📊 تصدير طلاب المرحلة إلى Excel</span>
+          </button>
+        </div>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
               <tr>
-                <td><b>${escapeHtml(s.student?.username || 'طالب')}</b></td>
-                <td>${escapeHtml(s.student?.studentProfile?.studentPhoneNumber || '—')}</td>
-                <td><span class="tag tag-ok">${escapeHtml(s.lesson?.title || 'محاضرة')}</span></td>
-                <td>${escapeHtml(s.course?.title || '—')}</td>
-                <td>${new Date(s.subscribedAt).toLocaleDateString('ar-EG')}</td>
+                <th>اسم الطالب</th>
+                <th>اسم المستخدم</th>
+                <th>رقم هاتف الطالب</th>
+                <th>رقم هاتف ولي الأمر</th>
+                <th>وظيفة الأب</th>
+                <th>المحاضرة المشترك بها</th>
+                <th>الكورس</th>
+                <th>تاريخ الاشتراك</th>
               </tr>
-            `).join('')}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              ${students.map(s => `
+                <tr>
+                  <td><b>${escapeHtml(s.student?.name || s.student?.username || 'طالب')}</b></td>
+                  <td>@${escapeHtml(s.student?.username || '—')}</td>
+                  <td>${escapeHtml(s.student?.studentProfile?.studentPhoneNumber || '—')}</td>
+                  <td>${escapeHtml(s.student?.studentProfile?.parentInfo?.parentPhoneNumber || '—')}</td>
+                  <td>${escapeHtml(s.student?.studentProfile?.parentInfo?.fatherJob || '—')}</td>
+                  <td><span class="tag tag-ok">${escapeHtml(s.lesson?.title || 'محاضرة')}</span></td>
+                  <td>${escapeHtml(s.course?.title || '—')}</td>
+                  <td>${new Date(s.subscribedAt).toLocaleDateString('ar-EG')}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
       `;
     } catch (e) {
       container.innerHTML = '<div style="color:var(--err);">فشل تحميل قائمة الطلاب.</div>';
     }
+  }
+
+  function exportTeacherStudentsToExcel() {
+    if (!cachedStageStudents || cachedStageStudents.length === 0) {
+      alert('لا توجد بيانات طلاب للتصدير');
+      return;
+    }
+
+    const escapeCsv = (val) => {
+      if (val === null || val === undefined) return '""';
+      const str = String(val).replace(/"/g, '""');
+      return `"${str}"`;
+    };
+
+    const headers = [
+      'اسم الطالب',
+      'اسم المستخدم',
+      'رقم هاتف الطالب',
+      'رقم هاتف ولي الأمر',
+      'وظيفة الأب',
+      'المحاضرة',
+      'الكورس',
+      'تاريخ الاشتراك'
+    ];
+
+    const rows = cachedStageStudents.map(s => [
+      s.student?.name || s.student?.username || 'طالب',
+      s.student?.username || '',
+      s.student?.studentProfile?.studentPhoneNumber || '',
+      s.student?.studentProfile?.parentInfo?.parentPhoneNumber || '',
+      s.student?.studentProfile?.parentInfo?.fatherJob || '',
+      s.lesson?.title || '',
+      s.course?.title || '',
+      s.subscribedAt ? new Date(s.subscribedAt).toLocaleDateString('ar-EG') : ''
+    ]);
+
+    const csvContent = '\uFEFF' + [
+      headers.map(escapeCsv).join(','),
+      ...rows.map(row => row.map(escapeCsv).join(','))
+    ].join('\r\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `طلاب_${stageTitles[currentStage] || currentStage}_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   }
 
   async function loadStageRevenue() {

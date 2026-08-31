@@ -48,6 +48,7 @@ export async function createAccessCode(input: CreateAccessCodeInput) {
 
   const record = await prisma.accessCode.create({
     data: {
+      code: plainCode,
       codeHash,
       points: input.points,
       expiresAt,
@@ -56,6 +57,7 @@ export async function createAccessCode(input: CreateAccessCodeInput) {
     },
     select: {
       id: true,
+      code: true,
       points: true,
       status: true,
       expiresAt: true,
@@ -222,6 +224,7 @@ export async function regenerateAccessCode(codeId: string, actorId: string) {
 
   const newCode = await prisma.accessCode.create({
     data: {
+      code: plainCode,
       codeHash,
       points: oldCode.points,
       expiresAt: oldCode.expiresAt,
@@ -249,6 +252,7 @@ export async function listAccessCodes(filter?: { status?: AccessCodeStatus; crea
     },
     select: {
       id: true,
+      code: true,
       points: true,
       status: true,
       expiresAt: true,
