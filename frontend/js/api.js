@@ -479,6 +479,9 @@
             }
           }
         } catch (directErr) {
+          if (directErr?.status === 401) {
+            throw new Error('انتهت صلاحية جلسة تسجيل الدخول. يرجى تسجيل الدخول مجدداً.');
+          }
           console.warn('Direct upload session failed, falling back to standard upload:', directErr);
         }
 
