@@ -149,10 +149,10 @@
     transform: translateY(-1px);
   }
   .admin-nav-tab.active {
-    background: linear-gradient(135deg, #0B2545 0%, #134074 100%);
+    background: linear-gradient(135deg, var(--primary-deep, #8C6527) 0%, var(--primary, #B88E4F) 100%);
     color: #ffffff;
-    border-color: #f59e0b;
-    box-shadow: 0 4px 15px rgba(11, 37, 69, 0.45);
+    border-color: var(--primary-light, #CBA264);
+    box-shadow: 0 4px 15px rgba(140, 101, 39, 0.35);
   }
   .admin-nav-tab .tab-count-badge {
     background: rgba(255, 255, 255, 0.15);
@@ -642,14 +642,14 @@
             <label class="form-label">اللون الأساسي (Primary Color)</label>
             <div style="display:flex;gap:8px;align-items:center;">
               <input type="color" id="setPrimaryColor" style="width:44px;height:40px;border-radius:8px;border:none;cursor:pointer;">
-              <input type="text" id="setPrimaryColorHex" class="form-control" placeholder="#0B2545">
+              <input type="text" id="setPrimaryColorHex" class="form-control" placeholder="#B88E4F">
             </div>
           </div>
           <div class="form-group">
             <label class="form-label">اللون الثانوي (Secondary Color)</label>
             <div style="display:flex;gap:8px;align-items:center;">
               <input type="color" id="setSecondaryColor" style="width:44px;height:40px;border-radius:8px;border:none;cursor:pointer;">
-              <input type="text" id="setSecondaryColorHex" class="form-control" placeholder="#134074">
+              <input type="text" id="setSecondaryColorHex" class="form-control" placeholder="#8C6527">
             </div>
           </div>
           <div class="form-group">
@@ -862,15 +862,15 @@
   <div class="modal-card" style="max-width:580px;width:95%;padding:0;border-radius:20px;overflow:hidden;">
 
     <!-- Modal Header — branded with site colours -->
-    <div style="background:linear-gradient(135deg, #0B2545 0%, #134074 60%, #1D5D9B 100%);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;">
+    <div style="background:linear-gradient(135deg, var(--primary-deep, #8C6527) 0%, var(--primary, #B88E4F) 60%, var(--primary-light, #CBA264) 100%);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;">
       <div style="display:flex;align-items:center;gap:14px;">
         <img src="logo/logo-khatwa.png" alt="خطوة" style="height:44px;width:44px;border-radius:10px;object-fit:cover;border:2px solid rgba(255,255,255,0.3);flex-shrink:0;">
         <div>
           <h3 style="margin:0 0 2px;color:#FFFFFF;font-size:1.15rem;font-weight:700;font-family:'Cairo',sans-serif;">إنشاء حساب مدرس جديد</h3>
-          <p style="margin:0;color:rgba(255,255,255,0.72);font-size:0.82rem;font-family:'Cairo',sans-serif;">اعتماد المدرس في الكادر الأكاديمي للمنصة</p>
+          <p style="margin:0;color:rgba(255,255,255,0.85);font-size:0.82rem;font-family:'Cairo',sans-serif;">اعتماد المدرس في الكادر الأكاديمي للمنصة</p>
         </div>
       </div>
-      <button type="button" onclick="closeAddTeacherModal()" title="إغلاق" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.28)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'">✕</button>
+      <button type="button" onclick="closeAddTeacherModal()" title="إغلاق" style="background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.3);color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.32)'" onmouseout="this.style.background='rgba(255,255,255,0.18)'">✕</button>
     </div>
 
     <!-- Modal Body -->
@@ -975,7 +975,7 @@
         <h4 style="margin:0 0 10px; color:#10b981; font-size:0.95rem; font-weight:700; display:flex; align-items:center; gap:6px;">💵 تحويل رصيد مالي (EGP)</h4>
         <input type="number" id="quickWalletAmount" placeholder="المبلغ (مثال: 150)" class="form-control" style="margin-bottom:8px; border-radius:10px; background:#fff; color:#0f172a; border:1px solid #cbd5e1;">
         <input type="text" id="quickWalletReason" placeholder="السبب (اختياري)" class="form-control" style="margin-bottom:10px; border-radius:10px; background:#fff; color:#0f172a; border:1px solid #cbd5e1;">
-        <button type="button" class="btn btn-primary btn-sm" style="width:100%; border-radius:10px; font-weight:700; background:#0B2545; color:#fff;" onclick="submitQuickWallet()">تحويل الرصيد الآن ✓</button>
+        <button type="button" class="btn btn-primary btn-sm" style="width:100%; border-radius:10px; font-weight:700; background:var(--primary, #B88E4F); color:#fff;" onclick="submitQuickWallet()">تحويل الرصيد الآن ✓</button>
       </div>
 
       <!-- Points Adjust -->
@@ -983,7 +983,7 @@
         <h4 style="margin:0 0 10px; color:#d97706; font-size:0.95rem; font-weight:700; display:flex; align-items:center; gap:6px;">💎 تعديل النقاط</h4>
         <input type="number" id="quickPointsAmount" placeholder="النقاط (مثال: 150 أو -50)" class="form-control" style="margin-bottom:8px; border-radius:10px; background:#fff; color:#0f172a; border:1px solid #cbd5e1;">
         <input type="text" id="quickPointsReason" placeholder="السبب (اختياري)" class="form-control" style="margin-bottom:10px; border-radius:10px; background:#fff; color:#0f172a; border:1px solid #cbd5e1;">
-        <button type="button" class="btn btn-primary btn-sm" style="width:100%; border-radius:10px; font-weight:700; background:#0B2545; color:#fff;" onclick="submitQuickPoints()">تعديل النقاط الآن ✓</button>
+        <button type="button" class="btn btn-primary btn-sm" style="width:100%; border-radius:10px; font-weight:700; background:var(--primary, #B88E4F); color:#fff;" onclick="submitQuickPoints()">تعديل النقاط الآن ✓</button>
       </div>
     </div>
 
@@ -1005,7 +1005,7 @@
   <div class="modal-card" style="max-width:850px;width:95%;padding:0;border-radius:20px;overflow:hidden;background:var(--bg-card);border:1px solid var(--line);max-height:92vh;display:flex;flex-direction:column;">
     
     <!-- Modal Header (hidden on print) -->
-    <div class="print-hide" style="background:linear-gradient(135deg, #0B2545 0%, #134074 100%);padding:18px 24px;display:flex;align-items:center;justify-content:space-between;">
+    <div class="print-hide" style="background:linear-gradient(135deg, var(--primary-deep, #8C6527) 0%, var(--primary, #B88E4F) 100%);padding:18px 24px;display:flex;align-items:center;justify-content:space-between;">
       <div style="display:flex;align-items:center;gap:12px;">
         <span style="font-size:1.6rem;">🎟️</span>
         <div>
@@ -1107,9 +1107,9 @@
       const data = await window.KhatwaAPI.admin.getGeneralSettings();
       if (!data) return;
 
-      const pColor = data.primaryColor || '#0B2545';
-      const sColor = data.secondaryColor || '#134074';
-      const aColor = data.accentColor || '#d4af37';
+      const pColor = data.primaryColor || '#B88E4F';
+      const sColor = data.secondaryColor || '#8C6527';
+      const aColor = data.accentColor || '#CBA264';
 
       document.getElementById('setPrimaryColor').value = pColor;
       document.getElementById('setPrimaryColorHex').value = pColor;

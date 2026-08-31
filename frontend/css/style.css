@@ -822,7 +822,7 @@ table.plain tr:hover td{background:var(--primary-faint);}
 
 .teacher-ref-photo-placeholder {
   font-size: 3rem;
-  color: var(--primary, #0B2545);
+  color: var(--primary, #B88E4F);
 }
 
 .teacher-ref-name {
@@ -884,10 +884,10 @@ table.plain tr:hover td{background:var(--primary-faint);}
 }
 
 .stage-folder-tab.active {
-  background: var(--primary, #0B2545);
+  background: var(--primary, #B88E4F);
   color: #FFFFFF;
   border-color: var(--primary);
-  box-shadow: 0 4px 14px rgba(11, 37, 69, 0.2);
+  box-shadow: 0 4px 14px rgba(184, 142, 79, 0.25);
 }
 
 /* Course Folder Cards */
