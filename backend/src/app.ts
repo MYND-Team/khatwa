@@ -86,6 +86,22 @@ app.get('/health', (_req, res) => {
 app.get('/api/health', (_req, res) => {
   res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 });
+app.get(['/health/drive', '/api/health/drive'], asyncHandler(async (_req, res) => {
+  const { getDriveClientWithDiagnostics } = await import('./services/googleDrive');
+  const diag = getDriveClientWithDiagnostics();
+  res.status(200).json({
+    status: diag.drive ? 'connected' : 'unconfigured',
+    isConfigured: Boolean(diag.drive),
+    error: diag.error || null,
+    diagnostics: {
+      hasOauthClientJson: Boolean(process.env.GOOGLE_OAUTH_CLIENT_JSON || env.GOOGLE_OAUTH_CLIENT_JSON),
+      hasTokenJson: Boolean(process.env.GOOGLE_DRIVE_TOKEN_JSON || env.GOOGLE_DRIVE_TOKEN_JSON),
+      hasServiceAccountJson: Boolean(process.env.GOOGLE_SERVICE_ACCOUNT_KEY_JSON || env.GOOGLE_SERVICE_ACCOUNT_KEY_JSON),
+      rootFolderId: env.GOOGLE_DRIVE_ROOT_FOLDER_ID || process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID || '10UIthh8w7lzepkyqoHEQN_Ukx_Ih9VKw',
+    },
+    timestamp: new Date().toISOString(),
+  });
+}));
 
 // ─── Rate limiting (targeted specifically to auth endpoints) ──────────────────
 
