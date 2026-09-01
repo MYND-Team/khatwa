@@ -37,22 +37,7 @@ export async function createLesson(input: {
 export async function updateLesson(
   lessonId: string,
   teacherProfileId: string,
-  input: Partial<{
-    title: string;
-    description: string | null;
-    price: number;
-    pointCost: number;
-    academicStage: any;
-    orderIndex: number;
-    openingQuizId: string | null;
-    homeworkId: string | null;
-    assignmentQuizId: string | null;
-    examQuizId: string | null;
-    isPublished: boolean;
-    videoUrl: string | null;
-    driveFileId: string | null;
-    pdfUrl: string | null;
-  }>
+  input: any
 ) {
   const lesson = await prisma.lesson.findUnique({ where: { id: lessonId } });
   if (!lesson) throw NotFoundError('Lesson');
