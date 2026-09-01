@@ -121,11 +121,8 @@ export async function ensureTeacherFolder(teacherId: string): Promise<string> {
   const drive = getDriveClient();
   if (!drive) throw new Error('Google Drive client is not available');
 
-  if (!env.GOOGLE_DRIVE_ROOT_FOLDER_ID) {
-    throw new Error('GOOGLE_DRIVE_ROOT_FOLDER_ID is not configured in .env');
-  }
-
-  return findOrCreateFolder(drive, `teacher-${teacherId}`, env.GOOGLE_DRIVE_ROOT_FOLDER_ID);
+  const rootFolderId = env.GOOGLE_DRIVE_ROOT_FOLDER_ID || process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID || '10UIthh8w7lzepkyqoHEQN_Ukx_Ih9VKw';
+  return findOrCreateFolder(drive, `teacher-${teacherId}`, rootFolderId);
 }
 
 // ─── Ensure lesson folder exists inside the teacher folder ────────────────────
@@ -232,7 +229,8 @@ export async function uploadVideo(input: {
 }): Promise<{ fileId: string; fileName: string; isGoogleDrive: boolean }> {
   const drive = getDriveClient();
 
-  if (drive && env.GOOGLE_DRIVE_ROOT_FOLDER_ID) {
+  const rootFolderId = env.GOOGLE_DRIVE_ROOT_FOLDER_ID || process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID || '10UIthh8w7lzepkyqoHEQN_Ukx_Ih9VKw';
+  if (drive && rootFolderId) {
     try {
       const driveUploadPromise = (async () => {
         const lessonFolderId = await ensureLessonFolder(input.teacherId, input.lessonId);
