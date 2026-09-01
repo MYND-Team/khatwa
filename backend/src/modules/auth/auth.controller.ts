@@ -16,8 +16,8 @@ const REFRESH_COOKIE = 'khatwa_rt';
 const COOKIE_OPTIONS = {
   httpOnly: true,
   secure: process.env.NODE_ENV === 'production',
-  sameSite: 'strict' as const,
-  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in ms
+  sameSite: 'lax' as const,
+  maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in ms
   path: '/',
 };
 
@@ -26,7 +26,7 @@ function setRefreshCookie(res: Response, token: string) {
 }
 
 function clearRefreshCookie(res: Response) {
-  res.clearCookie(REFRESH_COOKIE, { path: '/', sameSite: 'strict', httpOnly: true, secure: process.env.NODE_ENV === 'production' });
+  res.clearCookie(REFRESH_COOKIE, { path: '/', sameSite: 'lax', httpOnly: true, secure: process.env.NODE_ENV === 'production' });
 }
 
 // ─── Register Student ─────────────────────────────────────────────────────────
@@ -40,7 +40,7 @@ export const registerStudent = asyncHandler(async (req: Request, res: Response) 
     data: {
       user: result.user,
       accessToken: result.accessToken,
-      // refreshToken intentionally NOT returned in body anymore
+      refreshToken: result.refreshToken,
     },
   });
 });
@@ -55,6 +55,7 @@ export const registerWithCode = asyncHandler(async (req: Request, res: Response)
     data: {
       user: result.user,
       accessToken: result.accessToken,
+      refreshToken: result.refreshToken,
     },
   });
 });
@@ -70,7 +71,7 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
     data: {
       user: result.user,
       accessToken: result.accessToken,
-      // refreshToken intentionally NOT returned in body anymore
+      refreshToken: result.refreshToken,
     },
   });
 });
@@ -94,7 +95,7 @@ export const refresh = asyncHandler(async (req: Request, res: Response) => {
     success: true,
     data: {
       accessToken: tokens.accessToken,
-      // refreshToken intentionally NOT returned in body
+      refreshToken: tokens.refreshToken,
     },
   });
 });
