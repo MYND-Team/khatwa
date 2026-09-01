@@ -15,6 +15,7 @@ import * as LessonsController from '../modules/lessons/lessons.controller';
 import * as QuizController from '../modules/quizEngine/quizEngine.controller';
 import { asyncHandler } from '../utils/asyncHandler';
 import { prisma } from '../config/prisma';
+import { env } from '../config/env';
 import * as LessonsService from '../modules/lessons/lessons.service';
 import multer from 'multer';
 
@@ -842,6 +843,25 @@ router.post(
 );
 
 // ─── Direct Resumable Upload to Google Drive (Bypasses Vercel payload limits) ─
+
+router.get(
+  '/drive-status',
+  asyncHandler(async (_req, res) => {
+    const { getDriveClientWithDiagnostics } = await import('../services/googleDrive');
+    const diag = getDriveClientWithDiagnostics();
+    res.status(200).json({
+      success: true,
+      isConfigured: Boolean(diag.drive),
+      error: diag.error || null,
+      diagnostics: {
+        hasOauthClientJson: Boolean(process.env.GOOGLE_OAUTH_CLIENT_JSON || env.GOOGLE_OAUTH_CLIENT_JSON),
+        hasTokenJson: Boolean(process.env.GOOGLE_DRIVE_TOKEN_JSON || env.GOOGLE_DRIVE_TOKEN_JSON),
+        hasServiceAccountJson: Boolean(process.env.GOOGLE_SERVICE_ACCOUNT_KEY_JSON || env.GOOGLE_SERVICE_ACCOUNT_KEY_JSON),
+        rootFolderId: env.GOOGLE_DRIVE_ROOT_FOLDER_ID || process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID || '10UIthh8w7lzepkyqoHEQN_Ukx_Ih9VKw',
+      },
+    });
+  })
+);
 
 router.post(
   '/lessons/:id/resumable-upload-url',
