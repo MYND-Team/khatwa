@@ -348,8 +348,9 @@
 
     const videoUrl = (lesson.videoUrl || '').trim();
     const ytMatch = videoUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/))([a-zA-Z0-9_-]{11})/);
-    const driveMatch = videoUrl.match(/(?:drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?id=)|docs\.google\.com\/file\/d\/)([a-zA-Z0-9_-]+)/);
-    const streamSrc = lesson.driveFileId ? `${window.KhatwaAPI?.BASE_URL || ''}/student/lessons/${lesson.id}/stream` : null;
+    const streamSrc = lesson.playbackToken
+      ? `${window.KhatwaAPI?.BASE_URL || ''}/student/lessons/${lesson.id}/stream?token=${encodeURIComponent(lesson.playbackToken)}`
+      : (lesson.driveFileId ? `${window.KhatwaAPI?.BASE_URL || ''}/student/lessons/${lesson.id}/stream` : null);
 
     let playerHtml = '';
     if (ytMatch && ytMatch[1]) {
