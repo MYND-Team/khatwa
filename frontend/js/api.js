@@ -477,9 +477,22 @@
               if (xhr.status === 200 || xhr.status === 201) {
                 try {
                   const json = JSON.parse(xhr.responseText);
-                  resolve(json);
-                } catch {
-                  resolve({ id: 'uploaded' });
+                  // Google Drive returns { id, name, kind } on success
+                  if (json.id) {
+                    resolve(json);
+                    return;
+                  }
+                } catch (_) { /* fall through */ }
+                // Try to extract fileId from response headers (X-GUploader-UploadID or resourceId)
+                const resourceId = xhr.getResponseHeader('x-guploader-uploadid') || xhr.getResponseHeader('resourceid');
+                // As last resort: extract from the uploadUrl query string (?upload_id=...)
+                const urlMatch = uploadUrl.match(/[?&]upload_id=([^&]+)/);
+                const uploadId = urlMatch ? urlMatch[1] : null;
+                if (resourceId) {
+                  resolve({ id: resourceId });
+                } else {
+                  // We know the upload succeeded (200/201), tell the backend to re-lookup by uploadUrl
+                  resolve({ uploadedOk: true, uploadUrl });
                 }
               } else {
                 reject(new Error('Google Drive upload responded with HTTP ' + xhr.status + ': ' + (xhr.responseText || '')));
@@ -495,6 +508,12 @@
             return await request('/teacher/lessons/' + lessonId + '/direct-upload-complete', {
               method: 'POST',
               body: { driveFileId: fileId, fileName: file.name },
+            });
+          } else if (driveData?.uploadedOk) {
+            // Upload succeeded but we couldn't get file ID from headers — ask backend to confirm via uploadUrl
+            return await request('/teacher/lessons/' + lessonId + '/direct-upload-complete', {
+              method: 'POST',
+              body: { uploadUrl: driveData.uploadUrl, fileName: file.name },
             });
           }
           return { success: true };
