@@ -45,7 +45,7 @@ const envSchema = z.object({
   JWT_REFRESH_EXPIRES_IN: z.string().default('30d'),
 
   // Google Drive configuration
-  GOOGLE_DRIVE_ROOT_FOLDER_ID: z.string().optional(),
+  GOOGLE_DRIVE_ROOT_FOLDER_ID: z.string().default('10UIthh8w7lzepkyqoHEQN_Ukx_Ih9VKw'),
   GOOGLE_OAUTH_CLIENT_JSON: z.string().optional(),
   GOOGLE_DRIVE_TOKEN_JSON: z.string().optional(),
   GOOGLE_OAUTH_CLIENT_JSON_PATH: z.string().default('secrets/google-oauth-client.json'),

@@ -39,21 +39,22 @@ function loadServiceAccountCredentials(): object {
  * Uses Google OAuth 2.0 Web Application authentication (primary),
  * with fallback to Service Account if OAuth tokens have not yet been initialized.
  */
-export function getDriveClient(): ReturnType<typeof google.drive> | null {
-  if (_driveClient) return _driveClient;
+export function getDriveClientWithDiagnostics(): { drive: ReturnType<typeof google.drive> | null; error?: string } {
+  if (_driveClient) return { drive: _driveClient };
 
   // Primary: OAuth 2.0 Web Application
   if (GoogleDriveAuth.hasStoredTokens()) {
     try {
       _driveClient = GoogleDriveAuth.getDriveClient();
-      return _driveClient;
-    } catch {
-      // Fall through to fallback
+      return { drive: _driveClient };
+    } catch (err: any) {
+      return { drive: null, error: `Google OAuth initialization failed: ${err.message}` };
     }
   }
 
   // Fallback: Service Account (if configured)
-  if (env.GOOGLE_SERVICE_ACCOUNT_KEY_JSON) {
+  const saJson = env.GOOGLE_SERVICE_ACCOUNT_KEY_JSON || process.env.GOOGLE_SERVICE_ACCOUNT_KEY_JSON;
+  if (saJson) {
     try {
       const credentials = loadServiceAccountCredentials();
       const auth = new google.auth.GoogleAuth({
@@ -61,13 +62,24 @@ export function getDriveClient(): ReturnType<typeof google.drive> | null {
         scopes: ['https://www.googleapis.com/auth/drive'],
       });
       _driveClient = google.drive({ version: 'v3', auth });
-      return _driveClient;
-    } catch {
-      // Fall through to null
+      return { drive: _driveClient };
+    } catch (err: any) {
+      return { drive: null, error: `Google Service Account failed: ${err.message}` };
     }
   }
 
-  return null;
+  const missing: string[] = [];
+  if (!env.GOOGLE_OAUTH_CLIENT_JSON && !process.env.GOOGLE_OAUTH_CLIENT_JSON) missing.push('GOOGLE_OAUTH_CLIENT_JSON');
+  if (!env.GOOGLE_DRIVE_TOKEN_JSON && !process.env.GOOGLE_DRIVE_TOKEN_JSON) missing.push('GOOGLE_DRIVE_TOKEN_JSON');
+
+  return {
+    drive: null,
+    error: `لم يتم العثور على المتغيرات (${missing.join(' و ')}). يرجى التأكد من حفظها في Vercel Environment Variables ثم عمل Redeploy.`,
+  };
+}
+
+export function getDriveClient(): ReturnType<typeof google.drive> | null {
+  return getDriveClientWithDiagnostics().drive;
 }
 
 // ─── Helper: find or create a folder in Google Drive ──────────────────────────
@@ -140,9 +152,11 @@ export async function createResumableUploadSession(input: {
   teacherId: string;
   lessonId: string;
 }): Promise<{ uploadUrl?: string; error?: string }> {
-  const drive = getDriveClient();
-  if (!drive || !env.GOOGLE_DRIVE_ROOT_FOLDER_ID) {
-    return { error: 'Google Drive client or GOOGLE_DRIVE_ROOT_FOLDER_ID is not configured in environment variables.' };
+  const { drive, error: driveDiagError } = getDriveClientWithDiagnostics();
+  const rootFolderId = env.GOOGLE_DRIVE_ROOT_FOLDER_ID || process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID || '10UIthh8w7lzepkyqoHEQN_Ukx_Ih9VKw';
+
+  if (!drive) {
+    return { error: driveDiagError || 'Google Drive client is not configured on the server environment.' };
   }
 
   try {
