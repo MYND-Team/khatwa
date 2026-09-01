@@ -22,6 +22,7 @@
     { "source": "/courses", "destination": "/api" },
     { "source": "/teachers/:path*", "destination": "/api" },
     { "source": "/teachers", "destination": "/api" },
+    { "source": "/health/:path*", "destination": "/api" },
     { "source": "/health", "destination": "/api" },
     { "source": "/api/:path*", "destination": "/api" }
   ],
