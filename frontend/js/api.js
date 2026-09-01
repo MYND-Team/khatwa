@@ -438,8 +438,9 @@
       },
       async uploadVideo(lessonId, file, onProgress = null) {
         // ─── Direct Resumable Upload to Google Drive (Bypasses Vercel payload limits) ─
+        let sessionRes;
         try {
-          const sessionRes = await request('/teacher/lessons/' + lessonId + '/resumable-upload-url', {
+          sessionRes = await request('/teacher/lessons/' + lessonId + '/resumable-upload-url', {
             method: 'POST',
             body: {
               filename: file.name,
@@ -447,66 +448,60 @@
               fileSize: file.size,
             },
           });
-
-          if (sessionRes?.success && sessionRes.data?.uploadUrl) {
-            const uploadUrl = sessionRes.data.uploadUrl;
-
-            // Stream bytes directly to Google Drive servers
-            const driveData = await new Promise((resolve, reject) => {
-              const xhr = new XMLHttpRequest();
-              xhr.open('PUT', uploadUrl, true);
-              xhr.setRequestHeader('Content-Type', file.type || 'video/mp4');
-
-              if (onProgress && xhr.upload) {
-                xhr.upload.onprogress = (e) => {
-                  if (e.lengthComputable) {
-                    const pct = Math.round((e.loaded / e.total) * 100);
-                    onProgress({ loaded: e.loaded, total: e.total, percentage: pct });
-                  }
-                };
-              }
-
-              xhr.onload = () => {
-                if (xhr.status === 200 || xhr.status === 201) {
-                  try {
-                    const json = JSON.parse(xhr.responseText);
-                    resolve(json);
-                  } catch {
-                    resolve({ id: 'uploaded' });
-                  }
-                } else {
-                  reject(new Error('Google Drive upload responded with HTTP ' + xhr.status));
-                }
-              };
-
-              xhr.onerror = () => reject(new Error('فشل نقل الفيديو إلى Google Drive'));
-              xhr.send(file);
-            });
-
-            const fileId = driveData?.id;
-            if (fileId) {
-              return await request('/teacher/lessons/' + lessonId + '/direct-upload-complete', {
-                method: 'POST',
-                body: { driveFileId: fileId, fileName: file.name },
-              });
-            }
-          }
-        } catch (directErr) {
-          if (directErr?.status === 401) {
+        } catch (err) {
+          if (err.status === 401) {
             throw new Error('انتهت صلاحية جلسة تسجيل الدخول. يرجى تسجيل الدخول مجدداً.');
           }
-          console.warn('Direct upload session failed, falling back to standard upload:', directErr);
+          throw new Error(err.message || 'فشل الاتصال بخدمة رفع الفيديوهات المباشرة');
         }
 
-        // Standard multipart upload fallback (only for files <= 4.5MB on serverless)
-        if (file && file.size > 4.5 * 1024 * 1024) {
-          throw new Error('حجم ملف الفيديو كبير (أكبر من 4.5MB). يُرجى وضع رابط الفيديو من Google Drive أو YouTube لتشغيله بسلاسة وأعلى جودة بدون قيود!');
-        }
+        if (sessionRes?.success && sessionRes.data?.uploadUrl) {
+          const uploadUrl = sessionRes.data.uploadUrl;
 
-        const formData = new FormData();
-        formData.append('video', file);
-        const res = await request('/teacher/lessons/' + lessonId + '/video', { method: 'POST', body: formData });
-        return res.data;
+          // Stream bytes directly to Google Drive servers
+          const driveData = await new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open('PUT', uploadUrl, true);
+            xhr.setRequestHeader('Content-Type', file.type || 'video/mp4');
+
+            if (onProgress && xhr.upload) {
+              xhr.upload.onprogress = (e) => {
+                if (e.lengthComputable) {
+                  const pct = Math.round((e.loaded / e.total) * 100);
+                  onProgress({ loaded: e.loaded, total: e.total, percentage: pct });
+                }
+              };
+            }
+
+            xhr.onload = () => {
+              if (xhr.status === 200 || xhr.status === 201) {
+                try {
+                  const json = JSON.parse(xhr.responseText);
+                  resolve(json);
+                } catch {
+                  resolve({ id: 'uploaded' });
+                }
+              } else {
+                reject(new Error('Google Drive upload responded with HTTP ' + xhr.status + ': ' + (xhr.responseText || '')));
+              }
+            };
+
+            xhr.onerror = () => reject(new Error('فشل نقل الفيديو إلى Google Drive. يرجى التحقق من اتصال الإنترنت.'));
+            xhr.send(file);
+          });
+
+          const fileId = driveData?.id;
+          if (fileId) {
+            return await request('/teacher/lessons/' + lessonId + '/direct-upload-complete', {
+              method: 'POST',
+              body: { driveFileId: fileId, fileName: file.name },
+            });
+          }
+          return { success: true };
+        } else {
+          const errorMsg = sessionRes?.message || 'تعذر بدء جلسة الرفع المباشر إلى Google Drive على السيرفر';
+          throw new Error(errorMsg);
+        }
       },
       async createQuiz(data) { const res = await request('/teacher/quizzes', { method: 'POST', body: data }); return res.data; },
       async addQuizQuestion(quizId, data) { const res = await request('/teacher/quizzes/' + quizId + '/questions', { method: 'POST', body: data }); return res.data; },
