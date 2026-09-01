@@ -139,10 +139,10 @@ export async function createResumableUploadSession(input: {
   fileSize?: number;
   teacherId: string;
   lessonId: string;
-}): Promise<{ uploadUrl: string } | null> {
+}): Promise<{ uploadUrl?: string; error?: string }> {
   const drive = getDriveClient();
   if (!drive || !env.GOOGLE_DRIVE_ROOT_FOLDER_ID) {
-    return null;
+    return { error: 'Google Drive client or GOOGLE_DRIVE_ROOT_FOLDER_ID is not configured in environment variables.' };
   }
 
   try {
@@ -165,7 +165,9 @@ export async function createResumableUploadSession(input: {
       accessToken = tokenRes.token || null;
     }
 
-    if (!accessToken) return null;
+    if (!accessToken) {
+      return { error: 'Unable to obtain active Google Drive access token. Please verify GOOGLE_DRIVE_TOKEN_JSON or GOOGLE_SERVICE_ACCOUNT_KEY_JSON in environment variables.' };
+    }
 
     const metadata = {
       name: input.filename,
@@ -188,17 +190,20 @@ export async function createResumableUploadSession(input: {
     });
 
     if (!res.ok) {
-      console.warn('Google Drive resumable upload session error:', res.status, await res.text());
-      return null;
+      const errText = await res.text();
+      console.warn('Google Drive resumable upload session error:', res.status, errText);
+      return { error: `Google Drive API responded with ${res.status}: ${errText}` };
     }
 
     const uploadUrl = res.headers.get('location') || res.headers.get('Location');
-    if (!uploadUrl) return null;
+    if (!uploadUrl) {
+      return { error: 'Google Drive did not return upload location header.' };
+    }
 
     return { uploadUrl };
   } catch (err: any) {
     console.warn('Failed to create resumable upload session:', err.message);
-    return null;
+    return { error: err.message || 'Failed to initialize Google Drive upload session' };
   }
 }
 

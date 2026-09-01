@@ -878,7 +878,7 @@ router.post(
     if (!session || !session.uploadUrl) {
       res.status(200).json({
         success: false,
-        message: 'Google Drive direct upload not configured or unavailable. Use direct upload fallback or paste YouTube/Drive link.',
+        message: session?.error || 'Google Drive direct upload not configured or unavailable on server.',
       });
       return;
     }
