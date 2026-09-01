@@ -203,6 +203,9 @@ model TeacherProfile {
   ratingCount    Int      @default(1)
   academicStages String?  // e.g. "PREPARATORY,SECONDARY_1,SECONDARY_2,SECONDARY_3"
 
+  /// Override platform default commission. NULL = use platform default.
+  commissionPct  Float?   // Teacher's earning % (e.g. 80.0 means teacher gets 80%)
+
   workspaces     TeacherStage[]
   courses        Course[]
   lessons        Lesson[]

@@ -358,15 +358,47 @@ router.post(
   })
 );
 
+// ─── Student Stats ────────────────────────────────────────────────────────────
+
+router.get(
+  '/stats',
+  asyncHandler(async (req, res) => {
+    const studentId = req.user!.sub;
+    const [user, subsCount, passedQuizzes] = await Promise.all([
+      prisma.user.findUnique({
+        where: { id: studentId },
+        select: { walletBalance: true, pointsBalance: true },
+      }),
+      prisma.lessonSubscription.count({
+        where: { studentId, status: 'ACTIVE' },
+      }),
+      prisma.quizAttempt.count({
+        where: { userId: studentId, passed: true },
+      }),
+    ]);
+    res.status(200).json({
+      success: true,
+      data: {
+        walletBalance: user?.walletBalance ?? 0,
+        pointsBalance: user?.pointsBalance ?? 0,
+        enrolledCourses: subsCount,
+        passedQuizzes,
+      },
+    });
+  })
+);
+
 /**
  * Returns student subscriptions structured hierarchically:
- * Teacher -> Course -> Lessons with immediate direct access. (Fixes Section 7 bug)
+ * Teacher -> Course -> Lessons with immediate direct access.
+ * Supports optional ?stage= filter for per-stage view.
  */
 router.get(
   '/subscriptions',
   asyncHandler(async (req, res) => {
     const studentId = req.user!.sub;
-    const subscriptions = await SubscriptionService.getStudentSubscriptions(studentId);
+    const stage = req.query.stage as string | undefined;
+    const subscriptions = await SubscriptionService.getStudentSubscriptions(studentId, stage);
     res.status(200).json({ success: true, data: subscriptions });
   })
 );

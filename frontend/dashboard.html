@@ -46,6 +46,42 @@
     border-color: var(--line);
     transform: translateY(-2px);
   }
+
+  /* Stage Filter Tabs */
+  .stage-filter-tabs {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    margin-bottom: 18px;
+    border-bottom: 1px solid var(--line-soft);
+    scrollbar-width: thin;
+  }
+  .stage-filter-tab {
+    background: var(--bg-raised);
+    border: 1px solid var(--line-soft);
+    color: var(--ink);
+    padding: 8px 18px;
+    border-radius: 999px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .stage-filter-tab:hover {
+    border-color: var(--primary);
+    background: var(--bg-card);
+  }
+  .stage-filter-tab.active {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+    box-shadow: 0 4px 12px rgba(184, 142, 79, 0.25);
+  }
 </style>
 </head>
 <body>
@@ -114,11 +150,30 @@
       <div class="stat-cell"><b id="statPassedQuizzes">0</b><span>امتحان مجتاز</span></div>
     </div>
 
-    <!-- My Subscriptions (Fixes Requirements 7 & 8) -->
+    <!-- My Subscriptions with Stage Tabs -->
     <div class="block">
       <div class="block-head">
         <h3>📚 اشتراكاتي ومحاضراتي المدفوعة (My Subscriptions)</h3>
         <span style="font-size:0.85rem;color:var(--ink-dim);" id="subTotalCountBadge">0 محاضرة</span>
+      </div>
+
+      <!-- Stage Filtering Tabs -->
+      <div class="stage-filter-tabs" id="stageTabsBar">
+        <button type="button" class="stage-filter-tab active" data-stage="" onclick="selectStageTab('', this)">
+          <span>🏫 جميع المراحل</span>
+        </button>
+        <button type="button" class="stage-filter-tab" data-stage="PREPARATORY" onclick="selectStageTab('PREPARATORY', this)">
+          <span>🎒 المرحلة الإعدادية</span>
+        </button>
+        <button type="button" class="stage-filter-tab" data-stage="SECONDARY_1" onclick="selectStageTab('SECONDARY_1', this)">
+          <span>📘 الصف الأول الثانوي</span>
+        </button>
+        <button type="button" class="stage-filter-tab" data-stage="SECONDARY_2" onclick="selectStageTab('SECONDARY_2', this)">
+          <span>📙 الصف الثاني الثانوي</span>
+        </button>
+        <button type="button" class="stage-filter-tab" data-stage="SECONDARY_3" onclick="selectStageTab('SECONDARY_3', this)">
+          <span>📕 الصف الثالث الثانوي</span>
+        </button>
       </div>
 
       <div id="subscriptionsContainer">
@@ -143,6 +198,24 @@
 <script src="js/api.js"></script>
 <script src="js/main.js"></script>
 <script>
+  let currentStageFilter = '';
+
+  async function selectStageTab(stage, tabBtn) {
+    currentStageFilter = stage;
+    document.querySelectorAll('.stage-filter-tab').forEach(b => b.classList.remove('active'));
+    if (tabBtn) tabBtn.classList.add('active');
+
+    const container = document.getElementById('subscriptionsContainer');
+    container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--ink-dim);">جارٍ جلب اشتراكات المرحلة...</div>';
+
+    try {
+      const subscriptions = await window.KhatwaAPI.student.getSubscriptions(currentStageFilter);
+      renderSubscriptionsTree(subscriptions);
+    } catch (e) {
+      container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--err);">فشل جلب الاشتراكات.</div>';
+    }
+  }
+
   async function renderDashboard() {
     const user = window.KhatwaAPI.getUser();
     if (!user) {
@@ -155,11 +228,22 @@
     document.getElementById('navName').textContent = studentName;
     document.getElementById('navAvatar').textContent = studentName.charAt(0);
 
+    // Auto-select student's registered stage tab if available
+    const userStage = user.studentProfile?.academicStage;
+    if (userStage) {
+      const matchedTab = document.querySelector(`.stage-filter-tab[data-stage="${userStage}"]`);
+      if (matchedTab) {
+        document.querySelectorAll('.stage-filter-tab').forEach(b => b.classList.remove('active'));
+        matchedTab.classList.add('active');
+        currentStageFilter = userStage;
+      }
+    }
+
     // Fetch Stats & Subscriptions
     try {
       const [stats, subscriptions, payments] = await Promise.all([
         window.KhatwaAPI.student.getStats().catch(() => null),
-        window.KhatwaAPI.student.getSubscriptions().catch(() => []),
+        window.KhatwaAPI.student.getSubscriptions(currentStageFilter).catch(() => []),
         window.KhatwaAPI.student.getPaymentsHistory().catch(() => []),
       ]);
 

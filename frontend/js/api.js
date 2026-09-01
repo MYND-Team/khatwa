@@ -65,29 +65,46 @@
     } catch (_) {}
   }
 
-  // ─── Dynamic Branding / Theme Engine (Requirement 1) ──────────────────────
+  // ─── Dynamic Branding / Theme Engine ──────────────────────────────────────
+  const BRANDING_CACHE_KEY = 'khatwa_branding_cache';
+
+  function applyBrandingToDOM(data) {
+    if (!data) return;
+    const { primaryColor, secondaryColor, accentColor, backgroundColor, platformName, logoUrl } = data;
+    const root = document.documentElement;
+    if (primaryColor) {
+      root.style.setProperty('--primary', primaryColor);
+      root.style.setProperty('--primary-hover', primaryColor);
+      root.style.setProperty('--gold', primaryColor);
+      root.style.setProperty('--gold-light', primaryColor);
+    }
+    if (secondaryColor) root.style.setProperty('--secondary', secondaryColor);
+    if (accentColor) root.style.setProperty('--accent', accentColor);
+    if (backgroundColor) {
+      root.style.setProperty('--bg', backgroundColor);
+      document.body && (document.body.style.backgroundColor = backgroundColor);
+    }
+    if (platformName) {
+      document.querySelectorAll('.brand-text').forEach((el) => (el.textContent = platformName));
+    }
+    if (logoUrl) {
+      document.querySelectorAll('.brand-logo').forEach((el) => el.setAttribute('src', logoUrl));
+    }
+  }
+
+  // Apply cached branding IMMEDIATELY (before API call) — eliminates color flash
+  try {
+    const cached = localStorage.getItem(BRANDING_CACHE_KEY);
+    if (cached) applyBrandingToDOM(JSON.parse(cached));
+  } catch (_) {}
+
   async function applyDynamicBranding() {
     try {
       const res = await fetch(DEFAULT_API_BASE + '/settings/branding').then((r) => r.json()).catch(() => null);
       if (res && res.success && res.data) {
-        const { primaryColor, secondaryColor, accentColor, backgroundColor, platformName, logoUrl } = res.data;
-        const root = document.documentElement;
-
-        if (primaryColor) root.style.setProperty('--primary', primaryColor);
-        if (secondaryColor) root.style.setProperty('--secondary', secondaryColor);
-        if (accentColor) root.style.setProperty('--accent', accentColor);
-        if (backgroundColor) {
-          root.style.setProperty('--bg', backgroundColor);
-          document.body.style.backgroundColor = backgroundColor;
-        }
-
-        // Update brand elements in DOM if present
-        if (platformName) {
-          document.querySelectorAll('.brand-text').forEach((el) => (el.textContent = platformName));
-        }
-        if (logoUrl) {
-          document.querySelectorAll('.brand-logo').forEach((el) => el.setAttribute('src', logoUrl));
-        }
+        applyBrandingToDOM(res.data);
+        // Cache for next page load (eliminates flash)
+        try { localStorage.setItem(BRANDING_CACHE_KEY, JSON.stringify(res.data)); } catch (_) {}
       }
     } catch (_) {}
   }
@@ -546,7 +563,11 @@
       async getProfile() { const res = await request('/student/profile'); return res.data || {}; },
       async updateProfile(data) { const res = await request('/student/profile', { method: 'PUT', body: data }); return res.data; },
       async getCatalog() { const res = await request('/student/catalog'); return res.data || { courses: [] }; },
-      async getSubscriptions() { const res = await request('/student/subscriptions'); return res.data || []; },
+      async getSubscriptions(stage = '') {
+        const query = stage ? ('?stage=' + encodeURIComponent(stage)) : '';
+        const res = await request('/student/subscriptions' + query);
+        return res.data || [];
+      },
       async getSubscriptionsFlat() { const res = await request('/student/subscriptions/flat'); return res.data || []; },
       async purchaseLesson(lessonId, paymentMethod = 'WALLET_EGP') {
         const res = await request('/student/lessons/' + lessonId + '/purchase', {

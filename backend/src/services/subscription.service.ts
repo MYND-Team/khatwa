@@ -18,7 +18,7 @@ export async function purchaseLesson({
       where: { id: lessonId },
       include: {
         course: { select: { id: true, title: true, subject: true, academicStage: true } },
-        teacherProfile: { select: { id: true, displayName: true } },
+        teacherProfile: { select: { id: true, displayName: true, commissionPct: true } },
       },
     });
 
@@ -49,9 +49,10 @@ export async function purchaseLesson({
       throw NotFoundError('حساب الطالب غير موجود');
     }
 
-    // Fetch platform settings for commission
+    // Resolve commission: teacher-specific override takes priority over platform default
     const settings = await tx.platformSettings.findFirst();
-    const commissionPct = settings?.defaultTeacherCommissionPct ?? 80.0;
+    const platformDefault = settings?.defaultTeacherCommissionPct ?? 80.0;
+    const commissionPct = lesson.teacherProfile?.commissionPct ?? platformDefault;
 
     let resolvedPaymentMethod: 'WALLET_EGP' | 'POINTS' | 'FREE' = paymentMethod;
     let pricePaid = 0.0;
@@ -211,10 +212,14 @@ export async function purchaseLesson({
 /**
  * Returns student subscriptions structured hierarchically:
  * Teacher -> Subject/Course -> Lessons
+ * Optional stage filter (e.g. 'SECONDARY_1') narrows results to a specific academic stage.
  */
-export async function getStudentSubscriptions(studentId: string) {
+export async function getStudentSubscriptions(studentId: string, stage?: string) {
+  const where: any = { studentId, status: 'ACTIVE' };
+  if (stage) where.academicStage = stage as any;
+
   const subscriptions = await prisma.lessonSubscription.findMany({
-    where: { studentId, status: 'ACTIVE' },
+    where,
     include: {
       lesson: {
         select: {

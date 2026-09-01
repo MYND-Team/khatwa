@@ -809,6 +809,7 @@ router.get(
             rating: true,
             ratingCount: true,
             academicStages: true,
+            commissionPct: true,
             workspaces: true,
             courses: {
               select: {
@@ -831,7 +832,7 @@ router.get(
 router.post(
   '/teachers',
   asyncHandler(async (req, res) => {
-    const { username, password, displayName, subject, avatarUrl, bio, academicStages } = req.body;
+    const { username, password, displayName, subject, avatarUrl, bio, academicStages, commissionPct } = req.body;
     if (!username || !password || !displayName) {
       res.status(400).json({ success: false, error: { code: 'MISSING_FIELDS', message: 'Username, password, and display name are required' } });
       return;
@@ -848,6 +849,7 @@ router.post(
     const passwordHash = await bcrypt.hash(password, 12);
     const stagesString = academicStages || 'SECONDARY_1,SECONDARY_2,SECONDARY_3';
     const stageList = stagesString.split(',').map((s: string) => s.trim()).filter(Boolean);
+    const parsedCommission = commissionPct !== undefined && commissionPct !== '' && !isNaN(Number(commissionPct)) ? Number(commissionPct) : null;
 
     const newTeacher = await prisma.user.create({
       data: {
@@ -862,6 +864,7 @@ router.post(
             avatarUrl: avatarUrl ? avatarUrl.trim() : null,
             bio: bio ? bio.trim() : null,
             academicStages: stagesString,
+            commissionPct: parsedCommission,
             rating: 5.0,
             ratingCount: 1,
             workspaces: {
@@ -890,7 +893,7 @@ router.post(
 router.patch(
   '/teachers/:id',
   asyncHandler(async (req, res) => {
-    const { displayName, subject, avatarUrl, bio, academicStages, password, isActive } = req.body;
+    const { displayName, subject, avatarUrl, bio, academicStages, commissionPct, password, isActive } = req.body;
     const user = await prisma.user.findUnique({ where: { id: req.params.id as string } });
     if (!user || user.role !== 'TEACHER') {
       res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Teacher not found' } });
@@ -900,6 +903,11 @@ router.patch(
     let passwordHash: string | undefined = undefined;
     if (password && password.trim().length >= 6) {
       passwordHash = await bcrypt.hash(password.trim(), 12);
+    }
+
+    let resolvedCommission: number | null | undefined = undefined;
+    if (commissionPct !== undefined) {
+      resolvedCommission = (commissionPct === null || commissionPct === '' || isNaN(Number(commissionPct))) ? null : Number(commissionPct);
     }
 
     const updated = await prisma.user.update({
@@ -914,6 +922,7 @@ router.patch(
             ...(avatarUrl !== undefined && { avatarUrl: avatarUrl ? avatarUrl.trim() : null }),
             ...(bio !== undefined && { bio: bio ? bio.trim() : null }),
             ...(academicStages !== undefined && { academicStages }),
+            ...(resolvedCommission !== undefined && { commissionPct: resolvedCommission }),
           },
         },
       },

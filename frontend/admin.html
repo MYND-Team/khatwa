@@ -523,13 +523,14 @@
             <th>التخصص</th>
             <th>المراحل الدراسية</th>
             <th>الكورسات المرفوعة</th>
+            <th>نسبة أرباح المدرس (%)</th>
             <th>التقييم</th>
             <th>الحالة</th>
             <th>الإجراءات</th>
           </tr>
         </thead>
         <tbody id="teachersTableBody">
-          <tr><td colspan="7" style="text-align:center;color:var(--ink-dim);padding:30px;">جارٍ تحميل قائمة المدرسين...</td></tr>
+          <tr><td colspan="8" style="text-align:center;color:var(--ink-dim);padding:30px;">جارٍ تحميل قائمة المدرسين...</td></tr>
         </tbody>
       </table>
     </div>
@@ -908,6 +909,11 @@
           <label class="form-label" style="font-weight:600;color:var(--ink);margin-bottom:6px;display:block;">المادة التخصصية</label>
           <input type="text" class="form-control" id="newTeacherSubject" placeholder="مثال: الفيزياء، الكيمياء..." style="border-radius:10px;padding:10px 14px;">
         </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom:14px;">
+        <label class="form-label" style="font-weight:600;color:var(--ink);margin-bottom:6px;display:block;">نسبة أرباح المدرس % (اختياري - اتركه فارغاً لاستخدام النسبة العامة للمنصة)</label>
+        <input type="number" step="0.5" min="0" max="100" class="form-control" id="newTeacherCommissionPct" placeholder="مثال: 80 (يعني 80% للمدرس و20% للمنصة)" style="border-radius:10px;padding:10px 14px;">
       </div>
 
       <div class="form-group" style="margin-bottom:14px;">
@@ -1465,13 +1471,17 @@
       document.getElementById('tabBadgeTeachers').textContent = teachers.length;
       const tbody = document.getElementById('teachersTableBody');
       if (teachers.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--ink-dim);padding:30px;">لا يوجد مدرسون مضافون بعد. اضغط "إضافة مدرس جديد" لإنشاء أول مدرس.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--ink-dim);padding:30px;">لا يوجد مدرسون مضافون بعد. اضغط "إضافة مدرس جديد" لإنشاء أول مدرس.</td></tr>';
         return;
       }
       tbody.innerHTML = teachers.map(t => {
         const profile = t.teacherProfile || {};
         const coursesCount = profile.courses?.length || 0;
         const statusBadge = t.isActive !== false ? '<span class="tag tag-ok">نشط ✓</span>' : '<span class="tag tag-err">معطل ✕</span>';
+        const commissionLabel = profile.commissionPct != null
+          ? `<b style="color:var(--primary);font-size:0.95rem;">${profile.commissionPct}%</b>`
+          : `<span style="color:var(--ink-dim);font-size:0.82rem;">الافتراضي للمنصة</span>`;
+
         return `
           <tr>
             <td>
@@ -1483,6 +1493,12 @@
             <td>${profile.subject || 'عام'}</td>
             <td><span class="tag">${profile.academicStages || 'الكل'}</span></td>
             <td><b>${coursesCount}</b> كورس</td>
+            <td>
+              <div style="display:flex;align-items:center;gap:6px;">
+                ${commissionLabel}
+                <button type="button" class="btn btn-text btn-sm" onclick="editTeacherCommission('${t.id}', '${profile.commissionPct ?? ''}', '${(profile.displayName || t.username).replace(/'/g, "\\'")}')" title="تعديل نسبة أرباح المدرس" style="padding:2px 6px;font-size:0.8rem;">✏️</button>
+              </div>
+            </td>
             <td>⭐ ${(profile.rating || 5.0).toFixed(1)}</td>
             <td>${statusBadge}</td>
             <td>
@@ -1502,6 +1518,30 @@
       if (window.KhatwaI18n) window.KhatwaI18n.applyLanguage();
     } catch (e) {
       console.error('Failed to load teachers:', e);
+    }
+  }
+
+  async function editTeacherCommission(id, currentPct, displayName) {
+    const promptMsg = `تعديل نسبة أرباح المدرس (${displayName}):\n\nأدخل النسبة المئوية لأرباح المدرس من كل حصة (مثال: 80 يعني 80% للمدرس و20% للمنصة).\n\n* اتركه فارغاً إذا أردت الرجوع للنسبة الافتراضية للمنصة.`;
+    const input = prompt(promptMsg, currentPct !== '' ? currentPct : '');
+    if (input === null) return;
+
+    let commissionPct = null;
+    if (input.trim() !== '') {
+      const num = parseFloat(input.trim());
+      if (isNaN(num) || num < 0 || num > 100) {
+        alert('يرجى إدخال نسبة مئوية صحيحة بين 0 و 100');
+        return;
+      }
+      commissionPct = num;
+    }
+
+    try {
+      await window.KhatwaAPI.admin.updateTeacher(id, { commissionPct });
+      alert(`تم تحديث نسبة الأرباح للمدرس (${displayName}) بنجاح! ✅`);
+      await loadTeachers();
+    } catch (err) {
+      alert(err.message || 'فشل تحديث نسبة الأرباح');
     }
   }
 
@@ -1879,6 +1919,8 @@
     const password = document.getElementById('newTeacherPassword').value;
     const displayName = document.getElementById('newTeacherDisplayName').value.trim();
     const subject = document.getElementById('newTeacherSubject').value.trim();
+    const commissionPctRaw = document.getElementById('newTeacherCommissionPct')?.value?.trim();
+    const commissionPct = commissionPctRaw !== '' && !isNaN(Number(commissionPctRaw)) ? Number(commissionPctRaw) : undefined;
     const avatarUrl = document.getElementById('newTeacherAvatar').value.trim();
     const bio = document.getElementById('newTeacherBio').value.trim();
 
@@ -1906,6 +1948,7 @@
         password,
         displayName,
         subject,
+        commissionPct,
         avatarUrl,
         bio,
         academicStages: selectedStages
