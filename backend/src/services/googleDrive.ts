@@ -151,6 +151,7 @@ export async function createResumableUploadSession(input: {
   fileSize?: number;
   teacherId: string;
   lessonId: string;
+  origin?: string;
 }): Promise<{ uploadUrl?: string; error?: string }> {
   const { drive, error: driveDiagError } = getDriveClientWithDiagnostics();
   const rootFolderId = env.GOOGLE_DRIVE_ROOT_FOLDER_ID || process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID || '10UIthh8w7lzepkyqoHEQN_Ukx_Ih9VKw';
@@ -213,6 +214,9 @@ export async function createResumableUploadSession(input: {
       'Content-Type': 'application/json; charset=UTF-8',
       'X-Upload-Content-Type': input.mimeType || 'video/mp4',
     };
+    if (input.origin) {
+      headers['Origin'] = input.origin;
+    }
     if (input.fileSize) {
       headers['X-Upload-Content-Length'] = String(input.fileSize);
     }

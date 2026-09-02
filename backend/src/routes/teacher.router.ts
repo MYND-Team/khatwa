@@ -886,6 +886,9 @@ router.post(
       return;
     }
 
+    const rawOrigin = req.headers.origin || (req.headers.referer ? new URL(req.headers.referer).origin : undefined);
+    const origin = (typeof rawOrigin === 'string' && rawOrigin.startsWith('http')) ? rawOrigin : 'https://www.khatwa-academy.com';
+
     const { createResumableUploadSession } = await import('../services/googleDrive');
     const session = await createResumableUploadSession({
       filename,
@@ -893,6 +896,7 @@ router.post(
       fileSize: fileSize ? parseInt(fileSize) : undefined,
       teacherId: req.user!.sub,
       lessonId: lesson.id,
+      origin,
     });
 
     if (!session || !session.uploadUrl) {
