@@ -228,6 +228,14 @@
     document.getElementById('navName').textContent = studentName;
     document.getElementById('navAvatar').textContent = studentName.charAt(0);
 
+    // Initial binding from local user session
+    if (typeof user.walletBalance === 'number') {
+      document.getElementById('statWallet').textContent = `${user.walletBalance} ج.م`;
+    }
+    if (typeof user.pointsBalance === 'number') {
+      document.getElementById('statPoints').textContent = user.pointsBalance;
+    }
+
     // Auto-select student's registered stage tab if available
     const userStage = user.studentProfile?.academicStage;
     if (userStage) {
@@ -248,10 +256,18 @@
       ]);
 
       if (stats) {
-        document.getElementById('statWallet').textContent = `${stats.walletBalance || 0} ج.م`;
-        document.getElementById('statPoints').textContent = stats.pointsBalance || 0;
+        document.getElementById('statWallet').textContent = `${stats.walletBalance ?? user.walletBalance ?? 0} ج.م`;
+        document.getElementById('statPoints').textContent = stats.pointsBalance ?? user.pointsBalance ?? 0;
         document.getElementById('statSubscriptions').textContent = stats.enrolledCourses || 0;
         document.getElementById('statPassedQuizzes').textContent = stats.passedQuizzes || 0;
+
+        if (typeof stats.walletBalance === 'number' || typeof stats.pointsBalance === 'number') {
+          window.KhatwaAPI.setUser({
+            ...user,
+            walletBalance: stats.walletBalance ?? user.walletBalance,
+            pointsBalance: stats.pointsBalance ?? user.pointsBalance,
+          });
+        }
       }
 
       renderSubscriptionsTree(subscriptions);

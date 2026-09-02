@@ -364,16 +364,18 @@ router.get(
   '/stats',
   asyncHandler(async (req, res) => {
     const studentId = req.user!.sub;
-    const [user, subsCount, passedQuizzes] = await Promise.all([
+    const [user, attempts, subsCount] = await Promise.all([
       prisma.user.findUnique({
         where: { id: studentId },
         select: { walletBalance: true, pointsBalance: true },
       }),
+      prisma.quizAttempt.findMany({
+        where: { studentId },
+        include: { quiz: { select: { id: true, title: true, type: true } } },
+        orderBy: { submittedAt: 'desc' },
+      }),
       prisma.lessonSubscription.count({
         where: { studentId, status: 'ACTIVE' },
-      }),
-      prisma.quizAttempt.count({
-        where: { userId: studentId, passed: true },
       }),
     ]);
     res.status(200).json({
@@ -382,7 +384,9 @@ router.get(
         walletBalance: user?.walletBalance ?? 0,
         pointsBalance: user?.pointsBalance ?? 0,
         enrolledCourses: subsCount,
-        passedQuizzes,
+        quizAttempts: attempts,
+        totalQuizzes: attempts.length,
+        passedQuizzes: attempts.filter((a: any) => a.passed).length,
       },
     });
   })
@@ -433,15 +437,68 @@ router.get(
   })
 );
 
-// ─── Legacy Course Enrollment (Maintained for Backwards Compatibility) ──────
+// ─── Course Enrollment ───────────────────────────────────────────────────────
 
 router.get(
   '/courses/enrolled',
   asyncHandler(async (req, res) => {
     const studentId = req.user!.sub;
-    // Map to hierarchical subscriptions for rich client UI
-    const subscriptions = await SubscriptionService.getStudentSubscriptions(studentId);
-    res.status(200).json({ success: true, data: subscriptions });
+
+    const enrollments = await prisma.courseEnrollment.findMany({
+      where: { studentId },
+      include: {
+        course: {
+          include: {
+            teacherProfile: {
+              select: { id: true, displayName: true, avatarUrl: true, subject: true },
+            },
+            _count: { select: { lessons: true } },
+          },
+        },
+      },
+      orderBy: { enrolledAt: 'desc' },
+    });
+
+    const enrolledCourseIds = new Set(enrollments.map((e) => e.courseId));
+    const lessonSubs = await prisma.lessonSubscription.findMany({
+      where: { studentId, status: 'ACTIVE' },
+      select: { courseId: true },
+    });
+
+    const otherCourseIds = Array.from(
+      new Set(lessonSubs.map((s) => s.courseId).filter((id): id is string => !!id && !enrolledCourseIds.has(id)))
+    );
+
+    let extraCourses: any[] = [];
+    if (otherCourseIds.length > 0) {
+      const foundCourses = await prisma.course.findMany({
+        where: { id: { in: otherCourseIds } },
+        include: {
+          teacherProfile: {
+            select: { id: true, displayName: true, avatarUrl: true, subject: true },
+          },
+          _count: { select: { lessons: true } },
+        },
+      });
+      extraCourses = foundCourses.map((c) => ({
+        id: `sub-${c.id}`,
+        courseId: c.id,
+        course: c,
+        enrolledAt: new Date(),
+      }));
+    }
+
+    const allEnrolled = [
+      ...enrollments.map((e) => ({
+        id: e.id,
+        courseId: e.courseId,
+        course: e.course,
+        enrolledAt: e.enrolledAt,
+      })),
+      ...extraCourses,
+    ];
+
+    res.status(200).json({ success: true, data: allEnrolled });
   })
 );
 
@@ -453,7 +510,10 @@ router.post(
 
     const course = await prisma.course.findUnique({
       where: { id: courseId },
-      include: { lessons: { where: { isPublished: true } } },
+      include: {
+        teacherProfile: true,
+        lessons: { where: { isPublished: true } },
+      },
     });
 
     if (!course || !course.isPublished) {
@@ -461,18 +521,81 @@ router.post(
       return;
     }
 
-    // Auto-subscribe student to all lessons in course
-    for (const lesson of course.lessons) {
-      try {
-        await SubscriptionService.purchaseLesson({
-          studentId,
-          lessonId: lesson.id,
-          paymentMethod: 'WALLET_EGP',
-        });
-      } catch (_) {}
+    const student = await prisma.user.findUnique({
+      where: { id: studentId },
+      select: { id: true, pointsBalance: true, walletBalance: true },
+    });
+
+    if (!student) {
+      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'الطالب غير موجود' } });
+      return;
     }
 
-    res.status(201).json({ success: true, message: `تم تفعيل اشتراك المحاضرات في كورس ${course.title}` });
+    const requiredPoints = course.pointCost || 0;
+    if (requiredPoints > 0 && student.pointsBalance < requiredPoints) {
+      res.status(402).json({
+        success: false,
+        error: {
+          code: 'PAYMENT_REQUIRED',
+          message: `رصيد النقاط غير كافٍ. تحتاج إلى ${requiredPoints} نقطة للاشتراك في هذا الكورس.`,
+        },
+      });
+      return;
+    }
+
+    await prisma.$transaction(async (tx: any) => {
+      if (requiredPoints > 0) {
+        const updateRes = await tx.user.updateMany({
+          where: { id: studentId, pointsBalance: { gte: requiredPoints } },
+          data: { pointsBalance: { decrement: requiredPoints } },
+        });
+        if (updateRes.count === 0) {
+          throw new Error('فشل خصم النقاط، يرجى إعادة المحاولة');
+        }
+
+        await tx.pointsTransaction.create({
+          data: {
+            studentId,
+            type: 'DEBIT',
+            amount: requiredPoints,
+            reason: `اشتراك في كورس: ${course.title} (الأستاذ: ${course.teacherProfile?.displayName || 'المدرس'})`,
+            actorId: studentId,
+          },
+        });
+      }
+
+      await tx.courseEnrollment.upsert({
+        where: { studentId_courseId: { studentId, courseId } },
+        create: { studentId, courseId },
+        update: {},
+      });
+
+      for (const lesson of course.lessons) {
+        await tx.lessonSubscription.upsert({
+          where: { studentId_lessonId: { studentId, lessonId: lesson.id } },
+          create: {
+            studentId,
+            lessonId: lesson.id,
+            courseId: course.id,
+            teacherProfileId: course.teacherProfileId,
+            academicStage: course.academicStage,
+            status: 'ACTIVE',
+            paymentMethod: requiredPoints > 0 ? 'POINTS' : 'FREE',
+            pricePaid: 0,
+            pointsPaid: 0,
+          },
+          update: {
+            status: 'ACTIVE',
+          },
+        });
+      }
+    });
+
+    res.status(201).json({
+      success: true,
+      message: `تم الاشتراك في كورس ${course.title} بنجاح!`,
+      data: { courseId: course.id, title: course.title },
+    });
   })
 );
 
@@ -760,39 +883,6 @@ router.patch(
       data: { isRead: true },
     });
     res.status(200).json({ success: true });
-  })
-);
-
-// ─── Performance Stats ────────────────────────────────────────────────────────
-
-router.get(
-  '/stats',
-  asyncHandler(async (req, res) => {
-    const studentId = req.user!.sub;
-    const [user, attempts, subscriptionsCount] = await Promise.all([
-      prisma.user.findUnique({
-        where: { id: studentId },
-        select: { pointsBalance: true, walletBalance: true },
-      }),
-      prisma.quizAttempt.findMany({
-        where: { studentId },
-        include: { quiz: { select: { id: true, title: true, type: true } } },
-        orderBy: { submittedAt: 'desc' },
-      }),
-      prisma.lessonSubscription.count({ where: { studentId, status: 'ACTIVE' } }),
-    ]);
-
-    res.status(200).json({
-      success: true,
-      data: {
-        pointsBalance: user?.pointsBalance || 0,
-        walletBalance: user?.walletBalance || 0,
-        enrolledCourses: subscriptionsCount,
-        quizAttempts: attempts,
-        totalQuizzes: attempts.length,
-        passedQuizzes: attempts.filter((a: any) => a.passed).length,
-      },
-    });
   })
 );
 

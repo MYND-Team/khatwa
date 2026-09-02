@@ -1183,8 +1183,14 @@
         document.documentElement.style.setProperty('--bg', payload.backgroundColor);
         document.body.style.backgroundColor = payload.backgroundColor;
       }
-      if (payload.secondaryColor) document.documentElement.style.setProperty('--secondary', payload.secondaryColor);
-      if (payload.accentColor) document.documentElement.style.setProperty('--accent', payload.accentColor);
+      if (payload.secondaryColor) {
+        document.documentElement.style.setProperty('--secondary', payload.secondaryColor);
+        document.documentElement.style.setProperty('--secondary-color', payload.secondaryColor);
+      }
+      if (payload.accentColor) {
+        document.documentElement.style.setProperty('--accent', payload.accentColor);
+        document.documentElement.style.setProperty('--accent-color', payload.accentColor);
+      }
     } catch (err) {
       alert(err.message || 'فشل حفظ الإعدادات');
     } finally {

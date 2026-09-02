@@ -158,16 +158,39 @@ app.get('/teachers', asyncHandler(async (req, res) => {
   const teachers = await prisma.teacherProfile.findMany({
     where: {
       user: { isActive: true },
-      ...(stage ? { courses: { some: { isPublished: true, academicStage: stage as any } } } : {}),
+      ...(stage
+        ? {
+            OR: [
+              { academicStages: { contains: stage } },
+              { courses: { some: { isPublished: true, academicStage: stage as any } } },
+              { workspaces: { some: { stage: stage as any, isActive: true } } },
+            ],
+          }
+        : {}),
     },
     select: {
-      id: true, displayName: true, bio: true, subject: true,
-      avatarUrl: true, rating: true, ratingCount: true, academicStages: true,
+      id: true,
+      displayName: true,
+      bio: true,
+      subject: true,
+      avatarUrl: true,
+      rating: true,
+      ratingCount: true,
+      academicStages: true,
+      workspaces: {
+        where: { isActive: true },
+        select: { stage: true },
+      },
       courses: {
         where: courseWhere,
         select: {
-          id: true, title: true, subject: true, academicStage: true,
-          imageUrl: true, pointCost: true, price: true,
+          id: true,
+          title: true,
+          subject: true,
+          academicStage: true,
+          imageUrl: true,
+          pointCost: true,
+          price: true,
           _count: { select: { chapters: true, enrollments: true } },
         },
       },

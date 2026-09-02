@@ -137,6 +137,32 @@
   let allCoursesList = [];
   let enrolledCoursesList = [];
 
+  const STAGE_NAMES = {
+    PREPARATORY: 'المرحلة الإعدادية',
+    SECONDARY_1: 'الصف الأول الثانوي',
+    SECONDARY_2: 'الصف الثاني الثانوي',
+    SECONDARY_3: 'الصف الثالث الثانوي',
+  };
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function getTeacherStages(teacher) {
+    const stages = new Set();
+    if (teacher.academicStages) {
+      teacher.academicStages.split(',').map(s => s.trim()).filter(Boolean).forEach(s => stages.add(s));
+    }
+    if (Array.isArray(teacher.workspaces)) {
+      teacher.workspaces.forEach(w => { if (w.stage) stages.add(w.stage); });
+    }
+    if (Array.isArray(teacher.courses)) {
+      teacher.courses.forEach(c => { if (c.academicStage) stages.add(c.academicStage); });
+    }
+    return Array.from(stages);
+  }
+
   document.addEventListener('DOMContentLoaded', async () => {
     const user = window.KhatwaAPI.getUser();
     if (user) {
@@ -166,7 +192,7 @@
   function filterByStage(stage, tabBtn) {
     currentStageFilter = stage;
     document.querySelectorAll('.stage-folder-tab').forEach(b => b.classList.remove('active'));
-    tabBtn.classList.add('active');
+    if (tabBtn) tabBtn.classList.add('active');
     renderTeachers();
     renderAllCourses();
   }
@@ -184,7 +210,10 @@
     const grid = document.getElementById('teachersGrid');
     let list = allTeachersList;
     if (currentStageFilter) {
-      list = list.filter(t => !t.academicStages || t.academicStages.includes(currentStageFilter));
+      list = list.filter(t => {
+        const stages = getTeacherStages(t);
+        return stages.includes(currentStageFilter);
+      });
     }
 
     if (list.length === 0) {
@@ -194,8 +223,11 @@
 
     grid.innerHTML = list.map(t => {
       const name = t.displayName || t.user?.username || 'معلم المادة';
-      const subject = t.subject || 'Lectures';
-      const avatar = t.avatarUrl ? `<img src="${t.avatarUrl}" alt="${name}">` : `<span class="teacher-ref-photo-placeholder">👨‍🏫</span>`;
+      const subject = t.subject || 'المادة الدراسية';
+      const avatar = t.avatarUrl ? `<img src="${t.avatarUrl}" alt="${escapeHtml(name)}">` : `<span class="teacher-ref-photo-placeholder">👨‍🏫</span>`;
+      const stages = getTeacherStages(t);
+      const stageLabels = stages.map(s => STAGE_NAMES[s] || s).join(' · ');
+      const displaySubtitle = stageLabels ? `${subject} — ${stageLabels}` : subject;
 
       return `
         <div class="teacher-ref-card" onclick="openTeacherModal('${t.id}')">
@@ -203,9 +235,12 @@
           <div class="teacher-ref-photo-frame">
             ${avatar}
           </div>
-          <div class="teacher-ref-name">${name}</div>
-          <div class="teacher-ref-subtitle">${subject}</div>
-          <div class="teacher-ref-badge">${t.courses?.length || 0} كورس متاح</div>
+          <div class="teacher-ref-name">${escapeHtml(name)}</div>
+          <div class="teacher-ref-subtitle" style="font-weight:600;">${escapeHtml(displaySubtitle)}</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:6px 0;">
+            ${stages.map(s => `<span class="tag tag-stage">${escapeHtml(STAGE_NAMES[s] || s)}</span>`).join('')}
+            <span class="teacher-ref-badge">${t.courses?.length || 0} كورس متاح</span>
+          </div>
           <div class="teacher-ref-stars-bottom">★★★★★</div>
         </div>
       `;
@@ -224,7 +259,7 @@
 
   function renderEnrolledCourses() {
     const grid = document.getElementById('enrolledCoursesGrid');
-    if (enrolledCoursesList.length === 0) {
+    if (!enrolledCoursesList || enrolledCoursesList.length === 0) {
       grid.innerHTML = `
         <div style="grid-column:1/-1;text-align:center;padding:50px;background:var(--bg-card);border-radius:18px;border:1px solid var(--line-soft);">
           <div style="font-size:3rem;margin-bottom:10px;">📚</div>
@@ -237,20 +272,24 @@
     }
 
     grid.innerHTML = enrolledCoursesList.map(e => {
-      const c = e.course || {};
+      const c = e.course || e;
       const teacher = c.teacherProfile || {};
       const teacherName = teacher.displayName || 'أستاذ المادة';
       const teacherImg = teacher.avatarUrl ? `<img src="${teacher.avatarUrl}" style="width:100%;height:100%;object-fit:cover;">` : '👨‍🏫';
+      const stageName = STAGE_NAMES[c.academicStage] || c.academicStage || '';
 
       return `
-        <div class="folder-card" onclick="window.location.href='subject.html?courseId=${c.id}'">
+        <div class="folder-card" onclick="window.location.href='subject.html?courseId=${c.id || e.courseId}'">
           <div class="folder-card-header">
             <div class="folder-icon-box" style="overflow:hidden;padding:0;">
               ${teacherImg}
             </div>
             <div>
-              <h4 style="margin:0 0 2px;">${c.title}</h4>
-              <span style="font-size:0.82rem;color:var(--ink-dim);">${teacherName} · <b style="color:var(--primary);">${c.subject}</b></span>
+              <h4 style="margin:0 0 2px;">${escapeHtml(c.title || 'كورس')}</h4>
+              <span style="font-size:0.82rem;color:var(--ink-dim);">
+                ${escapeHtml(teacherName)} · <b style="color:var(--primary);">${escapeHtml(c.subject || '')}</b>
+                ${stageName ? ` · <span class="tag tag-stage">${escapeHtml(stageName)}</span>` : ''}
+              </span>
             </div>
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line-soft);padding-top:12px;margin-top:10px;">
@@ -285,26 +324,26 @@
 
     grid.innerHTML = list.map(c => {
       const teacher = c.teacherProfile || {};
-      const isEnrolled = enrolledCoursesList.some(e => e.courseId === c.id);
-      const stageMap = { PREPARATORY: 'المرحلة الإعدادية', SECONDARY_1: 'أولى ثانوي', SECONDARY_2: 'ثانية ثانوي', SECONDARY_3: 'ثالثة ثانوي' };
+      const isEnrolled = enrolledCoursesList.some(e => (e.courseId === c.id || e.id === c.id || e.course?.id === c.id));
+      const stageName = STAGE_NAMES[c.academicStage] || c.academicStage || '';
 
       return `
         <div class="card" style="padding:20px;border-radius:18px;">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
-            <span class="tag">${stageMap[c.academicStage] || c.academicStage}</span>
-            <span style="font-weight:700;color:var(--gold-light);">${c.pointCost > 0 ? c.pointCost + ' نقطة' : 'مجاني'}</span>
+            <span class="tag tag-stage">${escapeHtml(stageName)}</span>
+            <span style="font-weight:700;color:var(--accent);">${c.pointCost > 0 ? c.pointCost + ' نقطة' : 'مجاني'}</span>
           </div>
-          <h3 style="margin:0 0 6px;">${c.title}</h3>
-          <p style="font-size:0.85rem;color:var(--ink-dim);margin:0 0 14px;">${c.description || 'كورس شامل ومكثف مع أستاذ المادة'}</p>
+          <h3 style="margin:0 0 6px;">${escapeHtml(c.title)}</h3>
+          <p style="font-size:0.85rem;color:var(--ink-dim);margin:0 0 14px;">${escapeHtml(c.description || 'كورس شامل ومكثف مع أستاذ المادة')}</p>
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
             <span style="font-size:1.3rem;">👨‍🏫</span>
-            <span style="font-size:0.9rem;font-weight:600;">${teacher.displayName || 'أستاذ المادة'} (${teacher.subject || c.subject})</span>
+            <span style="font-size:0.9rem;font-weight:600;">${escapeHtml(teacher.displayName || 'أستاذ المادة')} (${escapeHtml(teacher.subject || c.subject)})</span>
           </div>
           <div style="border-top:1px solid var(--line-soft);padding-top:14px;">
             ${isEnrolled ? `
               <button class="btn btn-line btn-sm" style="width:100%;" onclick="window.location.href='subject.html?courseId=${c.id}'">فتح محتوى الكورس ↗</button>
             ` : `
-              <button class="btn btn-primary btn-sm" style="width:100%;" onclick="enrollInCourse('${c.id}', '${c.title}', ${c.pointCost})">اشتراك في الكورس ＋</button>
+              <button class="btn btn-primary btn-sm" style="width:100%;" onclick="enrollInCourse('${c.id}', '${escapeHtml(c.title)}', ${c.pointCost || 0})">اشتراك في الكورس ＋</button>
             `}
           </div>
         </div>
@@ -347,10 +386,10 @@
       document.getElementById('modalTeacherCoursesList').innerHTML = courses.map(c => `
         <div style="display:flex;justify-content:space-between;align-items:center;background:var(--bg-raised);padding:14px;border-radius:14px;border:1px solid var(--line-soft);">
           <div>
-            <h4 style="margin:0 0 3px;">${c.title}</h4>
-            <span style="font-size:0.8rem;color:var(--ink-dim);">${c.subject} · ${c.pointCost > 0 ? c.pointCost + ' نقطة' : 'مجاني'}</span>
+            <h4 style="margin:0 0 3px;">${escapeHtml(c.title)}</h4>
+            <span style="font-size:0.8rem;color:var(--ink-dim);">${escapeHtml(c.subject || '')} · ${c.pointCost > 0 ? c.pointCost + ' نقطة' : 'مجاني'} · <span class="tag tag-stage">${escapeHtml(STAGE_NAMES[c.academicStage] || c.academicStage)}</span></span>
           </div>
-          <button class="btn btn-primary btn-sm" onclick="enrollInCourse('${c.id}', '${c.title}', ${c.pointCost})">اشتراك ومتابعة ＋</button>
+          <button class="btn btn-primary btn-sm" onclick="enrollInCourse('${c.id}', '${escapeHtml(c.title)}', ${c.pointCost || 0})">اشتراك ومتابعة ＋</button>
         </div>
       `).join('');
     } catch (e) {
@@ -382,7 +421,14 @@
       await window.KhatwaAPI.student.enrollCourse(courseId);
       alert('تم الاشتراك في الكورس بنجاح! ✅ يمكنك الآن متابعة المحاضرات والواجبات.');
       closeTeacherModal();
-      await loadEnrolledCourses();
+      try {
+        const profile = await window.KhatwaAPI.student.getProfile();
+        if (profile) {
+          window.KhatwaAPI.setUser({ ...user, ...profile });
+          document.getElementById('studentPointsTag').textContent = `رصيدك: ${profile.pointsBalance || 0} نقطة`;
+        }
+      } catch (_) {}
+      await Promise.all([loadEnrolledCourses(), loadAllCourses()]);
       switchTab('panel-enrolled', document.getElementById('tabEnrolledBtn'));
     } catch (err) {
       alert(err.message || 'حدث خطأ أثناء الاشتراك');
