@@ -218,6 +218,84 @@ export async function createResumableUploadSession(input: {
   }
 }
 
+/**
+ * Queries a Google Drive resumable upload session URL to retrieve the resulting file ID.
+ *
+ * Protocol: send PUT with Content-Range: bytes star/fileSize and an empty body.
+ * - HTTP 200/201 → upload is complete; parse file ID from the JSON response body.
+ * - HTTP 308 → upload is still in progress / incomplete; returns null.
+ * - Other / error → returns null.
+ *
+ * NOTE: The session URL is self-authenticating (Google embeds auth in the upload_id).
+ * Do NOT add an Authorization header here — it is not needed and can interfere.
+ */
+export async function queryResumableSessionFileId(
+  uploadUrl: string,
+  fileSize: number
+): Promise<string | null> {
+  try {
+    const res = await fetch(uploadUrl, {
+      method: 'PUT',
+      headers: {
+        'Content-Range': 'bytes */' + fileSize,
+        'Content-Length': '0',
+      },
+    });
+
+    if (res.status === 200 || res.status === 201) {
+      const json: any = await res.json().catch(() => null);
+      return json?.id ?? null;
+    }
+
+    // 308 = Incomplete; anything else is an error — either way we cannot retrieve the ID here
+    return null;
+  } catch (err: any) {
+    console.warn('queryResumableSessionFileId failed:', err.message);
+    return null;
+  }
+}
+
+/**
+ * Last-resort fallback: searches for a file within a specific lesson's Google Drive folder.
+ *
+ * Scoped to the lesson folder (not the entire Drive), filtered by:
+ *   - Exact filename match
+ *   - Created within the last 10 minutes (reduces race-condition risk for concurrent uploads)
+ *   - Ordered by most-recent creation time
+ *
+ * This is intentionally conservative: it should only be called when the Drive file ID
+ * could not be obtained from the upload response body or session status query.
+ */
+export async function findFileInLessonFolder(
+  teacherId: string,
+  lessonId: string,
+  filename: string
+): Promise<string | null> {
+  const drive = getDriveClient();
+  if (!drive) return null;
+
+  try {
+    const lessonFolderId = await ensureLessonFolder(teacherId, lessonId);
+    const safeName = filename.replace(/'/g, "\\'");
+    // Only look at files created in the last 10 minutes to avoid stale matches
+    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+
+    const res = await drive.files.list({
+      q: "name='" + safeName + "' and '" + lessonFolderId + "' in parents and trashed=false and createdTime>='" + tenMinutesAgo + "'",
+      orderBy: 'createdTime desc',
+      pageSize: 5,
+      fields: 'files(id, name, createdTime)',
+      supportsAllDrives: true,
+      includeItemsFromAllDrives: true,
+    });
+
+    return res.data.files?.[0]?.id ?? null;
+  } catch (err: any) {
+    console.warn('findFileInLessonFolder failed:', err.message);
+    return null;
+  }
+}
+
 // ─── Upload a video directly to Google Drive (with local fallback) ───────────
 
 export async function uploadVideo(input: {

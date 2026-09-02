@@ -929,54 +929,43 @@ router.post(
       return;
     }
 
-    let { driveFileId, fileName, uploadUrl } = req.body;
+    let { driveFileId, fileName, uploadUrl, fileSize } = req.body;
 
-    // If no driveFileId but we have an uploadUrl, query Google Drive to get the actual file ID
+    // ── Strategy 1 (Primary): driveFileId sent directly by the browser from the upload response body.
+    //    Google Drive returns {id, name, kind} in the 200/201 response to the PUT.
+    //    This is the most reliable path and should succeed in the vast majority of cases.
+
+    // ── Strategy 2: Query session URL for completion status.
+    //    Used when the browser succeeded in uploading but could not parse json.id from the response
+    //    (e.g. response was empty or non-JSON). The session URL is self-authenticating — no
+    //    Authorization header is needed or wanted here.
     if (!driveFileId && uploadUrl) {
       try {
-        const { getDriveClient } = await import('../services/googleDrive');
-        const { getOAuth2Client, hasStoredTokens } = await import('../services/googleDriveAuth');
-        let accessToken: string | null = null;
-        if (hasStoredTokens()) {
-          const oauthClient = getOAuth2Client();
-          const tokenRes = await oauthClient.getAccessToken();
-          accessToken = tokenRes.token || null;
-        }
-        if (accessToken) {
-          // Query the resumable upload status to get the uploaded file metadata
-          const statusRes = await fetch(uploadUrl, {
-            method: 'PUT',
-            headers: {
-              'Authorization': `Bearer ${accessToken}`,
-              'Content-Range': '*/0',
-              'Content-Length': '0',
-            },
-          });
-          if (statusRes.status === 200 || statusRes.status === 201) {
-            const json: any = await statusRes.json().catch(() => null);
-            if (json?.id) driveFileId = json.id;
-          }
-          // Fallback: search Drive for a recently created file in the lesson folder
-          if (!driveFileId) {
-            const drive = getDriveClient();
-            if (drive) {
-              const searchRes = await drive.files.list({
-                q: `name = '${(fileName || 'video').replace(/'/g, "\\'")}' and trashed = false`,
-                orderBy: 'createdTime desc',
-                pageSize: 1,
-                fields: 'files(id, name)',
-                supportsAllDrives: true,
-                includeItemsFromAllDrives: true,
-              });
-              driveFileId = searchRes.data.files?.[0]?.id || null;
-            }
-          }
-        }
-      } catch (_) { /* ignore — save whatever we have */ }
+        const { queryResumableSessionFileId } = await import('../services/googleDrive');
+        const parsedSize = fileSize ? parseInt(String(fileSize), 10) : 0;
+        driveFileId = await queryResumableSessionFileId(uploadUrl, parsedSize);
+      } catch (_) { /* non-fatal — fall through to strategy 3 */ }
+    }
+
+    // ── Strategy 3 (Last resort): Folder-scoped Drive search.
+    //    Searches strictly within the lesson's folder (not the entire Drive).
+    //    Filtered by exact filename AND createdTime within the last 10 minutes to
+    //    minimise race-condition risk when multiple uploads happen concurrently.
+    if (!driveFileId && fileName) {
+      try {
+        const { findFileInLessonFolder } = await import('../services/googleDrive');
+        driveFileId = await findFileInLessonFolder(req.user!.sub, lesson.id, fileName);
+      } catch (_) { /* non-fatal — will return 400 below */ }
     }
 
     if (!driveFileId) {
-      res.status(400).json({ success: false, error: { code: 'MISSING_FIELDS', message: 'driveFileId is required and could not be determined automatically' } });
+      res.status(400).json({
+        success: false,
+        error: {
+          code: 'MISSING_FILE_ID',
+          message: 'لم يتم العثور على معرف الملف في Google Drive. يرجى المحاولة مرة أخرى.',
+        },
+      });
       return;
     }
 
@@ -993,7 +982,7 @@ router.post(
       data: {
         lessonId: updated.id,
         driveFileId: updated.driveFileId,
-        message: 'Video linked to lesson successfully in Google Drive',
+        message: 'تم ربط الفيديو بالدرس بنجاح في Google Drive',
       },
     });
   })

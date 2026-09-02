@@ -70,7 +70,7 @@
 
   function applyBrandingToDOM(data) {
     if (!data) return;
-    const { primaryColor, secondaryColor, accentColor, backgroundColor, platformName, logoUrl } = data;
+    const { primaryColor, secondaryColor, accentColor, backgroundColor, backgroundGradient, platformName, logoUrl } = data;
     const root = document.documentElement;
     if (primaryColor) {
       root.style.setProperty('--primary', primaryColor);
@@ -78,11 +78,21 @@
       root.style.setProperty('--gold', primaryColor);
       root.style.setProperty('--gold-light', primaryColor);
     }
-    if (secondaryColor) root.style.setProperty('--secondary', secondaryColor);
-    if (accentColor) root.style.setProperty('--accent', accentColor);
+    if (secondaryColor) {
+      root.style.setProperty('--secondary', secondaryColor);
+      root.style.setProperty('--secondary-color', secondaryColor);
+    }
+    if (accentColor) {
+      root.style.setProperty('--accent', accentColor);
+      root.style.setProperty('--accent-color', accentColor);
+    }
+    if (backgroundGradient) {
+      root.style.setProperty('--bg-gradient', backgroundGradient);
+      if (document.body) document.body.style.backgroundImage = backgroundGradient;
+    }
     if (backgroundColor) {
       root.style.setProperty('--bg', backgroundColor);
-      document.body && (document.body.style.backgroundColor = backgroundColor);
+      if (document.body) document.body.style.backgroundColor = backgroundColor;
     }
     if (platformName) {
       document.querySelectorAll('.brand-text').forEach((el) => (el.textContent = platformName));
@@ -454,7 +464,8 @@
         return res.data;
       },
       async uploadVideo(lessonId, file, onProgress = null) {
-        // ─── Direct Resumable Upload to Google Drive (Bypasses Vercel payload limits) ─
+        // ─── Step 1: Obtain a resumable upload session URL from the backend.
+        //     Only tiny JSON metadata passes through Vercel — the video bytes never do.
         let sessionRes;
         try {
           sessionRes = await request('/teacher/lessons/' + lessonId + '/resumable-upload-url', {
@@ -466,79 +477,145 @@
             },
           });
         } catch (err) {
-          if (err.status === 401) {
-            throw new Error('انتهت صلاحية جلسة تسجيل الدخول. يرجى تسجيل الدخول مجدداً.');
-          }
+          if (err.status === 401) throw new Error('انتهت صلاحية جلسة تسجيل الدخول. يرجى تسجيل الدخول مجدداً.');
           throw new Error(err.message || 'فشل الاتصال بخدمة رفع الفيديوهات المباشرة');
         }
 
-        if (sessionRes?.success && sessionRes.data?.uploadUrl) {
-          const uploadUrl = sessionRes.data.uploadUrl;
+        if (!sessionRes?.success || !sessionRes.data?.uploadUrl) {
+          throw new Error(sessionRes?.message || 'تعذر بدء جلسة الرفع المباشر إلى Google Drive على السيرفر');
+        }
 
-          // Stream bytes directly to Google Drive servers
-          const driveData = await new Promise((resolve, reject) => {
+        const uploadUrl = sessionRes.data.uploadUrl;
+        const mimeType  = file.type || 'video/mp4';
+        const totalSize = file.size;
+        const MAX_RETRIES = 3;
+
+        // ─── Helper: query session progress (Google Drive resumable upload protocol).
+        //     Sends a zero-byte PUT with Content-Range: bytes */{totalSize}.
+        //     HTTP 200/201 → upload complete, parse file ID from response body.
+        //     HTTP 308    → incomplete, parse last received byte from Range header.
+        //     The session URL is self-authenticating; no Authorization header is sent.
+        async function querySessionProgress() {
+          try {
+            const res = await fetch(uploadUrl, {
+              method: 'PUT',
+              headers: { 'Content-Range': 'bytes */' + totalSize },
+            });
+            if (res.status === 200 || res.status === 201) {
+              const json = await res.json().catch(() => null);
+              return { complete: true, fileId: json && json.id ? json.id : null };
+            }
+            if (res.status === 308) {
+              const range = res.headers.get('Range'); // e.g. "bytes=0-524287"
+              if (range) {
+                const m = range.match(/bytes=0-(\d+)/);
+                if (m) return { complete: false, nextByte: parseInt(m[1], 10) + 1 };
+              }
+              // No Range header on 308 = Google received nothing yet
+              return { complete: false, nextByte: 0 };
+            }
+          } catch (_) { /* fall through */ }
+          return { complete: false, nextByte: 0 };
+        }
+
+        // ─── Helper: upload a slice of the file via XHR (XHR is used for upload progress events).
+        //     startByte = 0 → first upload attempt (full file).
+        //     startByte > 0 → resume after a failure (file.slice skips already-uploaded bytes).
+        //     Content-Range is always set so Google can correctly assemble partial uploads.
+        function uploadSlice(startByte) {
+          return new Promise((resolve, reject) => {
+            const endByte = totalSize - 1;
+            const slice   = startByte > 0 ? file.slice(startByte) : file;
+
             const xhr = new XMLHttpRequest();
             xhr.open('PUT', uploadUrl, true);
-            xhr.setRequestHeader('Content-Type', file.type || 'video/mp4');
+            xhr.setRequestHeader('Content-Type', mimeType);
+            xhr.setRequestHeader('Content-Range', 'bytes ' + startByte + '-' + endByte + '/' + totalSize);
 
             if (onProgress && xhr.upload) {
               xhr.upload.onprogress = (e) => {
                 if (e.lengthComputable) {
-                  const pct = Math.round((e.loaded / e.total) * 100);
-                  onProgress({ loaded: e.loaded, total: e.total, percentage: pct });
+                  const uploaded = startByte + e.loaded;
+                  const pct = Math.min(100, Math.round((uploaded / totalSize) * 100));
+                  onProgress({ loaded: uploaded, total: totalSize, percentage: pct });
                 }
               };
             }
 
             xhr.onload = () => {
               if (xhr.status === 200 || xhr.status === 201) {
+                // Google Drive returns {id, name, kind} in the response body on success.
+                let fileId = null;
                 try {
                   const json = JSON.parse(xhr.responseText);
-                  // Google Drive returns { id, name, kind } on success
-                  if (json.id) {
-                    resolve(json);
-                    return;
-                  }
-                } catch (_) { /* fall through */ }
-                // Try to extract fileId from response headers (X-GUploader-UploadID or resourceId)
-                const resourceId = xhr.getResponseHeader('x-guploader-uploadid') || xhr.getResponseHeader('resourceid');
-                // As last resort: extract from the uploadUrl query string (?upload_id=...)
-                const urlMatch = uploadUrl.match(/[?&]upload_id=([^&]+)/);
-                const uploadId = urlMatch ? urlMatch[1] : null;
-                if (resourceId) {
-                  resolve({ id: resourceId });
-                } else {
-                  // We know the upload succeeded (200/201), tell the backend to re-lookup by uploadUrl
-                  resolve({ uploadedOk: true, uploadUrl });
-                }
+                  if (json && json.id) fileId = json.id;
+                } catch (_) { /* body may be empty in some edge cases */ }
+                resolve({ complete: true, fileId: fileId });
+              } else if (xhr.status === 308) {
+                // Partial: Google received some bytes but not all.
+                const range = xhr.getResponseHeader('Range');
+                const m = range ? range.match(/bytes=0-(\d+)/) : null;
+                resolve({ complete: false, nextByte: m ? parseInt(m[1], 10) + 1 : startByte });
               } else {
-                reject(new Error('Google Drive upload responded with HTTP ' + xhr.status + ': ' + (xhr.responseText || '')));
+                reject(new Error('رفض Google Drive الرفع (HTTP ' + xhr.status + '): ' + (xhr.responseText || '')));
               }
             };
 
-            xhr.onerror = () => reject(new Error('فشل نقل الفيديو إلى Google Drive. يرجى التحقق من اتصال الإنترنت.'));
-            xhr.send(file);
+            xhr.onerror = () => reject(new Error('انقطع الاتصال أثناء رفع الفيديو. سيتم إعادة المحاولة تلقائياً...'));
+            xhr.send(slice);
           });
-
-          const fileId = driveData?.id;
-          if (fileId) {
-            return await request('/teacher/lessons/' + lessonId + '/direct-upload-complete', {
-              method: 'POST',
-              body: { driveFileId: fileId, fileName: file.name },
-            });
-          } else if (driveData?.uploadedOk) {
-            // Upload succeeded but we couldn't get file ID from headers — ask backend to confirm via uploadUrl
-            return await request('/teacher/lessons/' + lessonId + '/direct-upload-complete', {
-              method: 'POST',
-              body: { uploadUrl: driveData.uploadUrl, fileName: file.name },
-            });
-          }
-          return { success: true };
-        } else {
-          const errorMsg = sessionRes?.message || 'تعذر بدء جلسة الرفع المباشر إلى Google Drive على السيرفر';
-          throw new Error(errorMsg);
         }
+
+        // ─── Step 2: Upload with resume-on-failure (up to MAX_RETRIES retries).
+        //     On each retry: query session to find exact resume byte → upload only the missing data.
+        let startByte = 0;
+        let result    = null;
+
+        for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+          if (attempt > 0) {
+            // Exponential backoff: 1 s, 2 s, 4 s
+            await new Promise(r => setTimeout(r, Math.pow(2, attempt - 1) * 1000));
+
+            // Ask Google where it left off before resuming
+            const progress = await querySessionProgress();
+            if (progress.complete) { result = { complete: true, fileId: progress.fileId }; break; }
+            startByte = progress.nextByte;
+          }
+
+          try {
+            result = await uploadSlice(startByte);
+            if (result.complete) break;
+            startByte = result.nextByte; // 308 partial — loop to send next chunk
+          } catch (err) {
+            if (attempt === MAX_RETRIES) {
+              throw new Error('فشل رفع الفيديو بعد ' + MAX_RETRIES + ' محاولات: ' + err.message);
+            }
+            // else: loop to retry
+          }
+        }
+
+        if (!result || !result.complete) {
+          throw new Error('فشل اكتمال رفع الفيديو. يرجى المحاولة مرة أخرى.');
+        }
+
+        // ─── Step 3: Notify the backend with the Drive file ID to save in the database.
+        //     Primary path: file ID came from the upload response body (most reliable).
+        //     Fallback path: backend queries the session URL or searches the lesson folder.
+        const completeBody = { fileName: file.name, fileSize: totalSize };
+        if (result.fileId) {
+          completeBody.driveFileId = result.fileId;
+        } else {
+          // Upload succeeded (200/201) but response body had no parseable id.
+          // Pass the session URL so the backend can query it with the correct fileSize.
+          completeBody.uploadUrl = uploadUrl;
+        }
+
+        return await request('/teacher/lessons/' + lessonId + '/direct-upload-complete', {
+          method: 'POST',
+          body: completeBody,
+        });
       },
+
       async createQuiz(data) { const res = await request('/teacher/quizzes', { method: 'POST', body: data }); return res.data; },
       async addQuizQuestion(quizId, data) { const res = await request('/teacher/quizzes/' + quizId + '/questions', { method: 'POST', body: data }); return res.data; },
       async deleteQuizQuestion(quizId, questionId) { return request('/teacher/quizzes/' + quizId + '/questions/' + questionId, { method: 'DELETE' }); },
@@ -577,7 +654,10 @@
         return res.data;
       },
       async getPaymentsHistory() { const res = await request('/student/payments/history'); return res.data || []; },
-      async getEnrolledCourses() { return this.getSubscriptions(); },
+      async getEnrolledCourses() {
+        const res = await request('/student/courses/enrolled');
+        return res.data || [];
+      },
       async enrollCourse(courseId) { return request('/student/courses/' + courseId + '/enroll', { method: 'POST' }); },
       async getCourse(courseId) { const res = await request('/student/courses/' + courseId); return res.data; },
       async checkLessonAccess(lessonId) {
@@ -634,8 +714,13 @@
       },
       async isEnrolled(courseId) {
         try {
-          const enrolled = await KhatwaAPI.student.getSubscriptions();
-          return enrolled.some(t => t.courses.some(c => c.id === courseId));
+          const [enrolled, subs] = await Promise.all([
+            request('/student/courses/enrolled').then(r => r.data || []).catch(() => []),
+            KhatwaAPI.student.getSubscriptions().catch(() => [])
+          ]);
+          const inEnrolled = enrolled.some(e => e.courseId === courseId || e.id === courseId || e.course?.id === courseId);
+          const inSubs = subs.some(t => t.courses?.some(c => c.id === courseId));
+          return inEnrolled || inSubs;
         } catch { return false; }
       },
       async getMyCourses() { return KhatwaAPI.student.getSubscriptions(); },
