@@ -37,32 +37,44 @@ let _driveClient: ReturnType<typeof google.drive> | null = null;
  */
 function resolveOAuthClientPath(): string {
   const configured = env.GOOGLE_OAUTH_CLIENT_JSON_PATH;
-  const resolved = path.resolve(process.cwd(), configured);
-  if (fs.existsSync(resolved)) {
-    return resolved;
+  if (configured && configured.trim() && configured !== '.' && configured !== './') {
+    const resolved = path.resolve(process.cwd(), configured);
+    if (fs.existsSync(resolved) && !fs.statSync(resolved).isDirectory()) {
+      return resolved;
+    }
   }
 
   // Fallback: search secrets/ directory for client_secret_*.json
   const secretsDir = path.resolve(process.cwd(), 'secrets');
-  if (fs.existsSync(secretsDir)) {
-    const files = fs.readdirSync(secretsDir);
-    const clientSecretFile = files.find(f => f.startsWith('client_secret_') && f.endsWith('.json'));
-    if (clientSecretFile) {
-      return path.join(secretsDir, clientSecretFile);
-    }
+  if (fs.existsSync(secretsDir) && fs.statSync(secretsDir).isDirectory()) {
+    try {
+      const files = fs.readdirSync(secretsDir);
+      const clientSecretFile = files.find(f => f.startsWith('client_secret_') && f.endsWith('.json'));
+      if (clientSecretFile) {
+        return path.join(secretsDir, clientSecretFile);
+      }
+    } catch (_) {}
   }
 
   throw new Error(
-    `OAuth client configuration file not found at "${resolved}". ` +
-    'Please ensure secrets/google-oauth-client.json exists.'
+    'OAuth client configuration file not found. ' +
+    'Please ensure GOOGLE_OAUTH_CLIENT_JSON is configured in environment variables.'
   );
 }
 
 /**
  * Resolves the path to the stored OAuth token file.
  */
-function resolveTokenPath(): string {
-  return path.resolve(process.cwd(), env.GOOGLE_DRIVE_TOKEN_PATH);
+function resolveTokenPath(): string | null {
+  const configured = env.GOOGLE_DRIVE_TOKEN_PATH;
+  if (!configured || !configured.trim() || configured === '.' || configured === './') {
+    return null;
+  }
+  const resolved = path.resolve(process.cwd(), configured);
+  if (fs.existsSync(resolved) && !fs.statSync(resolved).isDirectory()) {
+    return resolved;
+  }
+  return null;
 }
 
 /**
@@ -124,8 +136,9 @@ export function hasStoredTokens(): boolean {
     }
   }
   const tokenPath = resolveTokenPath();
-  if (!fs.existsSync(tokenPath)) return false;
+  if (!tokenPath || !fs.existsSync(tokenPath)) return false;
   try {
+    if (fs.statSync(tokenPath).isDirectory()) return false;
     const data = JSON.parse(fs.readFileSync(tokenPath, 'utf-8'));
     return typeof data.refresh_token === 'string' && data.refresh_token.length > 0;
   } catch {
@@ -145,8 +158,9 @@ export function loadStoredTokens(): StoredTokens | null {
     }
   }
   const tokenPath = resolveTokenPath();
-  if (!fs.existsSync(tokenPath)) return null;
+  if (!tokenPath || !fs.existsSync(tokenPath)) return null;
   try {
+    if (fs.statSync(tokenPath).isDirectory()) return null;
     return JSON.parse(fs.readFileSync(tokenPath, 'utf-8'));
   } catch {
     return null;
@@ -158,21 +172,30 @@ export function loadStoredTokens(): StoredTokens | null {
  * Only the long-lived refresh token is persisted; access tokens remain ephemeral in memory.
  */
 export function saveStoredTokens(tokens: StoredTokens): void {
-  const tokenPath = resolveTokenPath();
-  const dir = path.dirname(tokenPath);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
+  // In serverless environments like Vercel, the filesystem is read-only.
+  if (process.env.VERCEL || env.NODE_ENV === 'production') {
+    return;
   }
 
-  const existing = loadStoredTokens();
-  const refreshToken = tokens.refresh_token || existing?.refresh_token;
+  try {
+    const tokenPath = resolveTokenPath() || path.resolve(process.cwd(), 'secrets/google-drive-token.json');
+    const dir = path.dirname(tokenPath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
 
-  if (refreshToken) {
-    fs.writeFileSync(
-      tokenPath,
-      JSON.stringify({ refresh_token: refreshToken }, null, 2),
-      'utf-8'
-    );
+    const existing = loadStoredTokens();
+    const refreshToken = tokens.refresh_token || existing?.refresh_token;
+
+    if (refreshToken) {
+      fs.writeFileSync(
+        tokenPath,
+        JSON.stringify({ refresh_token: refreshToken }, null, 2),
+        'utf-8'
+      );
+    }
+  } catch (err: any) {
+    console.warn('Skipping token file write:', err.message);
   }
 }
 

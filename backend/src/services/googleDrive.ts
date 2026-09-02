@@ -24,8 +24,11 @@ function loadServiceAccountCredentials(): object {
   const trimmed = raw.trim();
 
   if (trimmed.startsWith('./') || trimmed.startsWith('../') || trimmed.startsWith('/') || trimmed.startsWith('\\')) {
+    if (trimmed === '.' || trimmed === './' || trimmed === '/' || trimmed === '\\') {
+      throw new Error('Invalid GOOGLE_SERVICE_ACCOUNT_KEY_JSON path');
+    }
     const resolved = path.resolve(process.cwd(), trimmed);
-    if (!fs.existsSync(resolved)) {
+    if (!fs.existsSync(resolved) || fs.statSync(resolved).isDirectory()) {
       throw new Error(`Service account key file not found at "${resolved}".`);
     }
     return JSON.parse(fs.readFileSync(resolved, 'utf-8'));
