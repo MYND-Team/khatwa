@@ -159,25 +159,45 @@ export async function createResumableUploadSession(input: {
   try {
     const lessonFolderId = await ensureLessonFolder(input.teacherId, input.lessonId);
     
-    // Obtain active OAuth / Auth access token
+    // ── Obtain a valid access token ───────────────────────────────────────────
+    // Strategy 1: OAuth 2.0 (primary — tokens stored in GOOGLE_DRIVE_TOKEN_JSON)
     let accessToken: string | null = null;
     if (GoogleDriveAuth.hasStoredTokens()) {
-      const oauthClient = GoogleDriveAuth.getOAuth2Client();
-      const tokenRes = await oauthClient.getAccessToken();
-      accessToken = tokenRes.token || null;
-    } else if (env.GOOGLE_SERVICE_ACCOUNT_KEY_JSON) {
-      const credentials = loadServiceAccountCredentials();
-      const auth = new google.auth.GoogleAuth({
-        credentials,
-        scopes: ['https://www.googleapis.com/auth/drive'],
-      });
-      const client = await auth.getClient();
-      const tokenRes = await client.getAccessToken();
-      accessToken = tokenRes.token || null;
+      try {
+        const oauthClient = GoogleDriveAuth.getOAuth2Client();
+        const tokenRes = await oauthClient.getAccessToken();
+        accessToken = tokenRes.token || null;
+      } catch (oauthErr: any) {
+        // invalid_grant → refresh token expired/revoked. Reset cached drive client so
+        // the next request rebuilds it, then fall through to service account.
+        console.warn('OAuth token refresh failed (will try service account):', oauthErr.message);
+        _driveClient = null;
+      }
+    }
+
+    // Strategy 2: Service Account (fallback — used when OAuth is absent or expired)
+    if (!accessToken) {
+      const saJson = env.GOOGLE_SERVICE_ACCOUNT_KEY_JSON || process.env.GOOGLE_SERVICE_ACCOUNT_KEY_JSON;
+      if (saJson) {
+        try {
+          const credentials = loadServiceAccountCredentials();
+          const auth = new google.auth.GoogleAuth({
+            credentials,
+            scopes: ['https://www.googleapis.com/auth/drive'],
+          });
+          const client = await auth.getClient();
+          const tokenRes = await client.getAccessToken();
+          accessToken = tokenRes.token || null;
+        } catch (saErr: any) {
+          console.warn('Service account token also failed:', saErr.message);
+        }
+      }
     }
 
     if (!accessToken) {
-      return { error: 'Unable to obtain active Google Drive access token. Please verify GOOGLE_DRIVE_TOKEN_JSON or GOOGLE_SERVICE_ACCOUNT_KEY_JSON in environment variables.' };
+      return {
+        error: 'تعذر الاتصال بـ Google Drive: رمز المصادقة منتهي الصلاحية أو غير صالح. يرجى التواصل مع مدير المنصة لإعادة ربط حساب Google Drive، أو استخدم خيار رابط YouTube أو Drive بدلاً من رفع الملف مباشرة.',
+      };
     }
 
     const metadata = {
