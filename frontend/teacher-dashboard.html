@@ -716,13 +716,15 @@
         const videoUrl = (data.videoUrl || '').trim();
         const ytMatch = videoUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/))([a-zA-Z0-9_-]{11})/);
         const driveMatch = videoUrl.match(/(?:drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?id=)|docs\.google\.com\/file\/d\/)([a-zA-Z0-9_-]+)/);
+        const resolvedLessonId = data.id || data.lessonId || lessonId;
 
         if (ytMatch && ytMatch[1]) {
           playerHtml = `<iframe src="https://www.youtube-nocookie.com/embed/${ytMatch[1]}?rel=0&modestbranding=1" style="width:100%;height:380px;border:none;border-radius:12px;" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>`;
         } else if (driveMatch && driveMatch[1]) {
           playerHtml = `<iframe src="https://drive.google.com/file/d/${driveMatch[1]}/preview" style="width:100%;height:380px;border:none;border-radius:12px;" allow="autoplay" allowfullscreen></iframe>`;
         } else if (data.driveFileId) {
-          const streamUrl = `${window.KhatwaAPI.BASE_URL}/student/lessons/${data.id}/stream`;
+          const accessToken = window.KhatwaAPI.getToken() || '';
+          const streamUrl = `${window.KhatwaAPI.BASE_URL}/teacher/lessons/${resolvedLessonId}/stream?token=${encodeURIComponent(accessToken)}`;
           playerHtml = `<video src="${streamUrl}" controls controlsList="nodownload" style="width:100%;max-height:400px;display:block;background:#000;border-radius:12px;"></video>`;
         } else if (videoUrl) {
           playerHtml = `<video src="${videoUrl}" controls controlsList="nodownload" style="width:100%;max-height:400px;display:block;background:#000;border-radius:12px;"></video>`;

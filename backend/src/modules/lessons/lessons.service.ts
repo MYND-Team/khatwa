@@ -173,6 +173,7 @@ export async function getLessonPreview(lessonId: string, actorUserId: string, ac
   }
 
   return {
+    id: lesson.id,
     lessonId: lesson.id,
     title: lesson.title,
     description: lesson.description,

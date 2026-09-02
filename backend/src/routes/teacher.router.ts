@@ -331,6 +331,56 @@ router.get(
   })
 );
 
+router.get(
+  '/lessons/:lessonId/stream',
+  asyncHandler(async (req, res) => {
+    const lessonId = req.params.lessonId;
+    const lesson = await prisma.lesson.findUnique({
+      where: { id: lessonId },
+      include: {
+        teacherProfile: { select: { id: true, userId: true } },
+      },
+    });
+
+    if (!lesson) {
+      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Lesson not found' } });
+      return;
+    }
+
+    if (req.user!.role !== 'ADMIN' && lesson.teacherProfile?.userId !== req.user!.sub) {
+      res.status(403).json({ success: false, error: { code: 'FORBIDDEN', message: 'Not authorized to preview this video' } });
+      return;
+    }
+
+    if (!lesson.driveFileId) {
+      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'No video uploaded for this lesson' } });
+      return;
+    }
+
+    const { streamVideo } = await import('../services/googleDrive');
+    const range = req.headers.range;
+    const { stream, mimeType, contentLength, contentRange, statusCode } = await streamVideo(
+      lesson.driveFileId,
+      range
+    );
+
+    res.status(statusCode ?? 200);
+    res.setHeader('Content-Type', mimeType);
+    res.setHeader('Cache-Control', 'no-store');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Accept-Ranges', 'bytes');
+    if (contentLength) res.setHeader('Content-Length', contentLength);
+    if (contentRange) res.setHeader('Content-Range', contentRange);
+
+    stream.pipe(res);
+    stream.on('error', () => {
+      if (!res.headersSent) {
+        res.status(500).json({ success: false, error: { code: 'STREAM_ERROR', message: 'Video stream failed' } });
+      }
+    });
+  })
+);
+
 // ─── Global Teacher Revenue & Analytics ──────────────────────────────────────
 
 router.get(

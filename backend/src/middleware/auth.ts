@@ -21,11 +21,21 @@ export function authenticate(
   next: NextFunction
 ): void {
   const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return next(UnauthorizedError('No token provided'));
+  let token: string | undefined;
+
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    token = authHeader.slice(7);
+  } else if (req.query?.authToken && typeof req.query.authToken === 'string') {
+    token = req.query.authToken;
+  } else if (req.query?.token && typeof req.query.token === 'string' && !req.originalUrl?.includes('/student/lessons/')) {
+    token = req.query.token;
+  } else if (req.cookies?.accessToken) {
+    token = req.cookies.accessToken;
   }
 
-  const token = authHeader.slice(7);
+  if (!token) {
+    return next(UnauthorizedError('No token provided'));
+  }
 
   try {
     req.user = verifyAccessToken(token);
