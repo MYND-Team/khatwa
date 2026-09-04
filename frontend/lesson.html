@@ -147,43 +147,65 @@
         return;
       }
 
-      // ─── Lesson Locked (requires individual points purchase) ───────────────
+      // ─── Lesson Locked (requires individual purchase) ───────────────
       if (access.reason === 'LESSON_LOCKED') {
         step1.className = 'progression-step completed';
         step2.className = 'progression-step completed';
         step3.className = 'progression-step active';
 
-        // Fetch current balance
-        let currentBalance = 0;
+        let pointsBalance = 0;
+        let walletBalance = 0;
         try {
           const wallet = await window.KhatwaAPI.student.getWallet();
-          currentBalance = wallet.pointsBalance || 0;
+          pointsBalance = wallet.pointsBalance || 0;
+          walletBalance = wallet.walletBalance || 0;
         } catch (_) {}
 
-        const canAfford = currentBalance >= access.pointCost;
+        const priceEGP = Number(access.price) || 0;
+        const pointCost = Number(access.pointCost) || 0;
+        const canAffordPoints = pointCost > 0 && pointsBalance >= pointCost;
+        const canAffordWallet = priceEGP > 0 && walletBalance >= priceEGP;
 
         container.innerHTML = `
-          <div class="card" style="padding:32px;border-radius:20px;text-align:center;max-width:500px;margin:0 auto;">
-            <div style="font-size:3rem;margin-bottom:10px;">💎</div>
-            <h2 style="margin:0 0 8px;">هذه المحاضرة مدفوعة</h2>
-            <p style="color:var(--ink-dim);margin-bottom:20px;">يجب فتح هذه المحاضرة بشكل منفرد بخصم نقاط من رصيدك.</p>
-            <div style="background:var(--bg-raised);padding:16px;border-radius:14px;margin-bottom:20px;border:1px solid var(--line-soft);">
+          <div class="card" style="padding:32px;border-radius:20px;text-align:center;max-width:520px;margin:0 auto;">
+            <div style="font-size:3rem;margin-bottom:10px;">🔒</div>
+            <h2 style="margin:0 0 8px;">هذه المحاضرة تتطلب الشراء</h2>
+            <p style="color:var(--ink-dim);margin-bottom:20px;">يجب شراء وتفعيل هذه المحاضرة لمتابعة الشرح والفيديو والمرفقات.</p>
+            
+            <div style="background:var(--bg-raised);padding:18px;border-radius:14px;margin-bottom:20px;border:1px solid var(--line-soft);text-align:right;">
+              <div style="display:flex;justify-content:space-between;margin-bottom:10px;padding-bottom:8px;border-bottom:1px dashed var(--line-soft);">
+                <span>رصيد محفظتك الحالي:</span>
+                <strong style="color:var(--primary);">${walletBalance} ج.م · ${pointsBalance} نقطة</strong>
+              </div>
               <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
-                <span>تكلفة المحاضرة:</span>
-                <strong style="color:var(--primary);">${access.pointCost} نقطة</strong>
+                <span>سعر المحاضرة بالجنيه:</span>
+                <strong style="color:#22c55e;">${priceEGP} ج.م</strong>
               </div>
               <div style="display:flex;justify-content:space-between;">
-                <span>رصيدك الحالي:</span>
-                <strong style="color:${canAfford ? '#22c55e' : 'var(--err)'};">${currentBalance} نقطة</strong>
+                <span>سعر المحاضرة بالنقاط:</span>
+                <strong style="color:#f59e0b;">${pointCost} نقطة</strong>
               </div>
             </div>
-            ${canAfford
-              ? `<button id="unlockLessonBtn" class="btn btn-primary" style="padding:12px 32px;font-size:1rem;width:100%;" onclick="doUnlockLesson(${access.pointCost})">
-                  💎 فتح المحاضرة الآن (${access.pointCost} نقطة)
-                </button>`
-              : `<div style="color:var(--err);font-weight:700;margin-bottom:12px;">⚠️ رصيدك غير كافٍ لفتح هذه المحاضرة</div>
-                 <a href="request-points.html" class="btn btn-primary" style="padding:12px 32px;font-size:1rem;">شحن نقاط الآن ←</a>`
-            }
+
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              ${priceEGP > 0 ? `
+                <button id="unlockLessonBtnWALLET_EGP" class="btn btn-primary" style="padding:12px;font-size:0.95rem;justify-content:center;background:#16a34a;border-color:#16a34a;" ${!canAffordWallet ? 'disabled' : ''} onclick="doPurchaseLesson('WALLET_EGP')">
+                  💳 دفع بالجنيه من المحفظة (${priceEGP} ج.م) ${!canAffordWallet ? '— رصيدك لا يكفي' : ''}
+                </button>
+              ` : ''}
+
+              ${pointCost > 0 ? `
+                <button id="unlockLessonBtnPOINTS" class="btn btn-primary" style="padding:12px;font-size:0.95rem;justify-content:center;" ${!canAffordPoints ? 'disabled' : ''} onclick="doPurchaseLesson('POINTS')">
+                  💎 دفع برصيد النقاط (${pointCost} نقطة) ${!canAffordPoints ? '— رصيدك لا يكفي' : ''}
+                </button>
+              ` : ''}
+
+              ${(!canAffordWallet && !canAffordPoints) ? `
+                <div style="margin-top:10px;display:flex;gap:10px;justify-content:center;">
+                  <a href="request-points.html" class="btn btn-line btn-sm">شحن نقاط / رصيد المحفظة ←</a>
+                </div>
+              ` : ''}
+            </div>
           </div>
         `;
         return;
@@ -216,31 +238,32 @@
     }
   }
 
-  // Unlock lesson handler — guarded against double-click
+  // Purchase lesson handler — guarded against double-click
   let _unlocking = false;
-  async function doUnlockLesson(pointCost) {
-    if (_unlocking) return; // prevent double-click/concurrent
+  async function doPurchaseLesson(paymentMethod) {
+    if (_unlocking) return;
     _unlocking = true;
-    const btn = document.getElementById('unlockLessonBtn');
-    if (btn) { btn.disabled = true; btn.textContent = 'جارٍ الفتح...'; }
+    const btn = document.getElementById('unlockLessonBtn' + paymentMethod);
+    if (btn) { btn.disabled = true; btn.textContent = 'جارٍ معالجة الدفع...'; }
 
     try {
-      await window.KhatwaAPI.student.unlockLesson(lessonId);
-      // Re-evaluate so lesson content loads immediately
+      await window.KhatwaAPI.student.purchaseLesson(lessonId, paymentMethod);
       await evaluateLessonFlow();
     } catch (err) {
       const msg = err.message || 'حدث خطأ';
-      // Handle specific codes
-      if (msg.includes('ALREADY_UNLOCKED') || msg.includes('already')) {
-        // Already unlocked — just re-evaluate to show content
+      if (msg.includes('ALREADY_UNLOCKED') || msg.includes('already') || msg.includes('بالفعل')) {
         await evaluateLessonFlow();
         return;
       }
-      alert('فشل فتح المحاضرة: ' + msg);
-      if (btn) { btn.disabled = false; btn.textContent = `💎 فتح المحاضرة الآن (${pointCost} نقطة)`; }
+      alert('فشل تفعيل المحاضرة: ' + msg);
+      if (btn) { btn.disabled = false; btn.textContent = 'إعادة المحاولة'; }
     } finally {
       _unlocking = false;
     }
+  }
+
+  async function doUnlockLesson(pointCost) {
+    return doPurchaseLesson('POINTS');
   }
 
   function renderQuizInterface(quiz, type, subtitle) {

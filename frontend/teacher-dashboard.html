@@ -101,6 +101,10 @@
 
   <!-- Stage-Scoped Analytics Stat Cards (Requirement 2) -->
   <div id="analyticsCards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:24px;">
+    <div class="card" style="padding:16px;text-align:center;border-radius:16px;background:linear-gradient(135deg,rgba(16,185,129,0.08),rgba(16,185,129,0.02));border:1px solid rgba(16,185,129,0.3);">
+      <div style="font-size:1.6rem;font-weight:700;color:#10b981;" id="statTeacherWallet">—</div>
+      <div style="font-size:0.82rem;color:var(--ink-dim);margin-top:2px;font-weight:600;">💰 رصيد محفظتك المجمّع</div>
+    </div>
     <div class="card" style="padding:16px;text-align:center;border-radius:16px;">
       <div style="font-size:1.6rem;font-weight:700;color:var(--primary);" id="statStudents">—</div>
       <div style="font-size:0.82rem;color:var(--ink-dim);margin-top:2px;">طلاب المرحلة</div>
@@ -301,6 +305,54 @@
       </div>
     </form>
   </div>
+<!-- Modal: Edit Lesson & Price -->
+<div class="modal-overlay" id="editLessonModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999;align-items:center;justify-content:center;">
+  <div style="background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius);max-width:600px;width:95%;padding:26px;max-height:90vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <h3 style="margin:0;">✏️ تعديل سعر وبيانات المحاضرة</h3>
+      <button type="button" class="btn btn-line btn-sm" onclick="closeEditLessonModal()">✕</button>
+    </div>
+    <form id="editLessonForm" onsubmit="submitEditLesson(event)">
+      <input type="hidden" id="editLessonId">
+      <div class="form-group" style="margin-bottom:12px;">
+        <label class="form-label">عنوان المحاضرة</label>
+        <input type="text" class="form-control" id="editLessonTitleInput" required>
+      </div>
+      
+      <!-- Pricing Fields -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+        <div class="form-group">
+          <label class="form-label">💵 سعر المحاضرة بالجنيه (EGP)</label>
+          <input type="number" step="0.5" class="form-control" id="editLessonPriceInput" min="0" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">💎 سعر المحاضرة بالنقاط</label>
+          <input type="number" class="form-control" id="editLessonPointCostInput" min="0" required>
+        </div>
+      </div>
+      <span style="font-size:0.8rem;color:var(--ink-dim);display:block;margin-bottom:12px;">ضع 0 إذا أردت أن تكون المحاضرة مجانية للجميع.</span>
+
+      <div class="form-group" style="margin-bottom:12px;">
+        <label class="form-label">رابط الفيديو (Drive / YouTube / استضافة):</label>
+        <input type="text" class="form-control" id="editLessonVideoUrlInput" placeholder="رابط فيديو المحاضرة">
+      </div>
+
+      <div class="form-group" style="margin-bottom:16px;">
+        <label class="form-label">وصف المحاضرة / ملاحظات:</label>
+        <textarea class="form-control" id="editLessonDescInput" rows="2"></textarea>
+      </div>
+
+      <div class="form-group" style="margin-bottom:20px;display:flex;align-items:center;gap:8px;">
+        <input type="checkbox" id="editLessonIsPublished" style="width:18px;height:18px;">
+        <label for="editLessonIsPublished" style="font-weight:600;font-size:0.9rem;cursor:pointer;">نشر المحاضرة (متاحة للطلاب في الكورس)</label>
+      </div>
+
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button type="button" class="btn btn-line btn-sm" onclick="closeEditLessonModal()">إلغاء</button>
+        <button type="submit" class="btn btn-primary btn-sm" id="saveEditLessonBtn">حفظ التعديلات ✓</button>
+      </div>
+    </form>
+  </div>
 </div>
 
 <!-- Modal: Teacher Content Preview (Requirement 5) -->
@@ -458,11 +510,23 @@
 
   async function loadStageOverview() {
     try {
-      const data = await window.KhatwaAPI.teacher.getWorkspaceOverview(currentStage);
-      document.getElementById('statStudents').textContent = data.uniqueStudents || 0;
-      document.getElementById('statSubscriptions').textContent = data.totalSubscriptions || 0;
-      document.getElementById('statRevenue').textContent = (data.totalRevenueEGP || 0).toLocaleString('ar-EG') + ' ج.م';
-      document.getElementById('statPoints').textContent = (data.totalPointsEarned || 0).toLocaleString('ar-EG') + ' نقطة';
+      const [overviewData, profileData] = await Promise.all([
+        window.KhatwaAPI.teacher.getWorkspaceOverview(currentStage).catch(() => ({})),
+        window.KhatwaAPI.teacher.getProfile().catch(() => ({})),
+      ]);
+
+      const walletBal = profileData?.user?.walletBalance || 0;
+      if (document.getElementById('statTeacherWallet')) {
+        document.getElementById('statTeacherWallet').textContent = walletBal.toLocaleString('ar-EG') + ' ج.م';
+      }
+      if (document.getElementById('navRole')) {
+        document.getElementById('navRole').textContent = `مدرس معتمد · المحفظة: ${walletBal} ج.م`;
+      }
+
+      document.getElementById('statStudents').textContent = overviewData.uniqueStudents || 0;
+      document.getElementById('statSubscriptions').textContent = overviewData.totalSubscriptions || 0;
+      document.getElementById('statRevenue').textContent = (overviewData.totalRevenueEGP || 0).toLocaleString('ar-EG') + ' ج.م';
+      document.getElementById('statPoints').textContent = (overviewData.totalPointsEarned || 0).toLocaleString('ar-EG') + ' نقطة';
     } catch (e) {
       console.warn('Workspace overview error', e);
     }
@@ -522,11 +586,12 @@
                           <div class="lesson-item">
                             <div>
                               <b>${lIdx + 1}. ${escapeHtml(l.title)}</b>
-                              <span class="tag tag-warn" style="margin-inline-start:6px;">💵 ${l.price || 0} ج.م · 💎 ${l.pointCost || 0} نقطة</span>
+                              <span class="tag tag-warn" style="margin-inline-start:6px;font-weight:700;">💵 ${l.price || 0} ج.م · 💎 ${l.pointCost || 0} نقطة</span>
                               ${l.pdfUrl ? '<span class="tag" style="margin-inline-start:6px;">📄 PDF</span>' : ''}
                               ${l.videoUrl || l.driveFileId ? '<span class="tag tag-ok" style="margin-inline-start:4px;">🎬 فيديو</span>' : ''}
                             </div>
-                            <div style="display:flex;gap:6px;align-items:center;">
+                            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+                              <button class="btn btn-line btn-sm" style="padding:3px 10px;font-size:.8rem;color:var(--primary);" onclick='openEditLessonModal(${JSON.stringify(l).replace(/'/g, "&#39;")})'>✏️ تعديل السعر والبيانات</button>
                               <button class="btn btn-text btn-sm" onclick="openQuizBuilderForLesson('${l.id}', 'assignment')">📝 الواجب</button>
                               <button class="btn btn-text btn-sm" onclick="openQuizBuilderForLesson('${l.id}', 'exam')">🏆 الامتحان</button>
                               <button class="btn btn-line btn-sm" style="padding:3px 10px;font-size:.8rem;" onclick="openTeacherPreview('${l.id}')">👁 معاينة المحاضرة</button>
@@ -573,26 +638,33 @@
                 <th>اسم الطالب</th>
                 <th>اسم المستخدم</th>
                 <th>رقم هاتف الطالب</th>
-                <th>رقم هاتف ولي الأمر</th>
-                <th>وظيفة الأب</th>
-                <th>المحاضرة المشترك بها</th>
+                <th>المحاضرة</th>
                 <th>الكورس</th>
+                <th>المبلغ المدفوع</th>
+                <th>طريقة الدفع</th>
+                <th>أرباحك المضافة</th>
                 <th>تاريخ الاشتراك</th>
               </tr>
             </thead>
             <tbody>
-              ${students.map(s => `
-                <tr>
-                  <td><b>${escapeHtml(s.student?.name || s.student?.username || 'طالب')}</b></td>
-                  <td>@${escapeHtml(s.student?.username || '—')}</td>
-                  <td>${escapeHtml(s.student?.studentProfile?.studentPhoneNumber || '—')}</td>
-                  <td>${escapeHtml(s.student?.studentProfile?.parentInfo?.parentPhoneNumber || '—')}</td>
-                  <td>${escapeHtml(s.student?.studentProfile?.parentInfo?.fatherJob || '—')}</td>
-                  <td><span class="tag tag-ok">${escapeHtml(s.lesson?.title || 'محاضرة')}</span></td>
-                  <td>${escapeHtml(s.course?.title || '—')}</td>
-                  <td>${new Date(s.subscribedAt).toLocaleDateString('ar-EG')}</td>
-                </tr>
-              `).join('')}
+              ${students.map(s => {
+                const priceStr = s.pricePaid > 0 ? `${s.pricePaid} ج.م` : (s.pointsPaid > 0 ? `${s.pointsPaid} نقطة` : 'مجانية');
+                const methodStr = s.paymentMethod === 'WALLET_EGP' ? '💳 محفظة EGP' : (s.paymentMethod === 'POINTS' ? '💎 نقاط' : 'مجاني');
+                const earningStr = s.paymentTransaction?.teacherEarning !== undefined ? `${s.paymentTransaction.teacherEarning} ج.م` : (s.pricePaid > 0 ? `${Math.round(s.pricePaid * 0.8)} ج.م` : '—');
+                return `
+                  <tr>
+                    <td><b>${escapeHtml(s.student?.name || s.student?.username || 'طالب')}</b></td>
+                    <td>@${escapeHtml(s.student?.username || '—')}</td>
+                    <td>${escapeHtml(s.student?.studentProfile?.studentPhoneNumber || '—')}</td>
+                    <td><span class="tag tag-ok">${escapeHtml(s.lesson?.title || 'محاضرة')}</span></td>
+                    <td>${escapeHtml(s.course?.title || '—')}</td>
+                    <td><b style="color:var(--ink);">${priceStr}</b></td>
+                    <td><span class="tag">${methodStr}</span></td>
+                    <td><b style="color:#22c55e;">+ ${earningStr}</b></td>
+                    <td>${new Date(s.subscribedAt).toLocaleDateString('ar-EG')}</td>
+                  </tr>
+                `;
+              }).join('')}
             </tbody>
           </table>
         </div>
@@ -622,6 +694,9 @@
       'وظيفة الأب',
       'المحاضرة',
       'الكورس',
+      'المبلغ المدفوع',
+      'طريقة الدفع',
+      'أرباح المدرس',
       'تاريخ الاشتراك'
     ];
 
@@ -633,6 +708,9 @@
       s.student?.studentProfile?.parentInfo?.fatherJob || '',
       s.lesson?.title || '',
       s.course?.title || '',
+      s.pricePaid > 0 ? `${s.pricePaid} ج.م` : (s.pointsPaid > 0 ? `${s.pointsPaid} نقطة` : 'مجانية'),
+      s.paymentMethod || 'FREE',
+      s.paymentTransaction?.teacherEarning !== undefined ? `${s.paymentTransaction.teacherEarning} ج.م` : (s.pricePaid > 0 ? `${Math.round(s.pricePaid * 0.8)} ج.م` : '—'),
       s.subscribedAt ? new Date(s.subscribedAt).toLocaleDateString('ar-EG') : ''
     ]);
 
@@ -985,6 +1063,59 @@
       btn.textContent = 'حفظ ونشر الدرس ✓';
       if (progressWrapper) progressWrapper.style.display = 'none';
       if (progressBar) progressBar.style.width = '0%';
+    }
+  }
+
+  // ─── Edit Lesson & Price Handlers ─────────────────────────────────────────
+  let activeEditingLesson = null;
+  function openEditLessonModal(lesson) {
+    activeEditingLesson = lesson;
+    document.getElementById('editLessonId').value = lesson.id;
+    document.getElementById('editLessonTitleInput').value = lesson.title || '';
+    document.getElementById('editLessonPriceInput').value = lesson.price !== undefined ? lesson.price : 10;
+    document.getElementById('editLessonPointCostInput').value = lesson.pointCost !== undefined ? lesson.pointCost : 10;
+    document.getElementById('editLessonVideoUrlInput').value = lesson.videoUrl || '';
+    document.getElementById('editLessonDescInput').value = lesson.description || '';
+    document.getElementById('editLessonIsPublished').checked = lesson.isPublished !== false;
+    document.getElementById('editLessonModal').style.display = 'flex';
+  }
+
+  function closeEditLessonModal() {
+    document.getElementById('editLessonModal').style.display = 'none';
+    activeEditingLesson = null;
+  }
+
+  async function submitEditLesson(e) {
+    e.preventDefault();
+    const id = document.getElementById('editLessonId').value;
+    const title = document.getElementById('editLessonTitleInput').value.trim();
+    const price = parseFloat(document.getElementById('editLessonPriceInput').value) || 0;
+    const pointCost = parseInt(document.getElementById('editLessonPointCostInput').value) || 0;
+    const videoUrl = document.getElementById('editLessonVideoUrlInput').value.trim() || null;
+    const description = document.getElementById('editLessonDescInput').value.trim() || null;
+    const isPublished = document.getElementById('editLessonIsPublished').checked;
+
+    const btn = document.getElementById('saveEditLessonBtn');
+    btn.disabled = true;
+    btn.textContent = 'جارٍ الحفظ...';
+
+    try {
+      await window.KhatwaAPI.teacher.updateLesson(id, {
+        title,
+        price,
+        pointCost,
+        videoUrl,
+        description,
+        isPublished,
+      });
+      alert('تم تحديث سعر وبيانات المحاضرة بنجاح! ✅');
+      closeEditLessonModal();
+      await refreshWorkspace();
+    } catch (err) {
+      alert(err.message || 'حدث خطأ أثناء حفظ التعديلات');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'حفظ التعديلات ✓';
     }
   }
 

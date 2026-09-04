@@ -327,11 +327,15 @@
       const isEnrolled = enrolledCoursesList.some(e => (e.courseId === c.id || e.id === c.id || e.course?.id === c.id));
       const stageName = STAGE_NAMES[c.academicStage] || c.academicStage || '';
 
+      const priceBadge = (c.price > 0)
+        ? `<span style="font-weight:700;color:#22c55e;">💵 ${c.price} ج.م</span>`
+        : (c.pointCost > 0 ? `<span style="font-weight:700;color:var(--accent);">${c.pointCost} نقطة</span>` : '<span style="font-weight:700;color:var(--primary);">محاضرات بالدرس</span>');
+
       return `
         <div class="card" style="padding:20px;border-radius:18px;">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
             <span class="tag tag-stage">${escapeHtml(stageName)}</span>
-            <span style="font-weight:700;color:var(--accent);">${c.pointCost > 0 ? c.pointCost + ' نقطة' : 'مجاني'}</span>
+            ${priceBadge}
           </div>
           <h3 style="margin:0 0 6px;">${escapeHtml(c.title)}</h3>
           <p style="font-size:0.85rem;color:var(--ink-dim);margin:0 0 14px;">${escapeHtml(c.description || 'كورس شامل ومكثف مع أستاذ المادة')}</p>
@@ -339,11 +343,12 @@
             <span style="font-size:1.3rem;">👨‍🏫</span>
             <span style="font-size:0.9rem;font-weight:600;">${escapeHtml(teacher.displayName || 'أستاذ المادة')} (${escapeHtml(teacher.subject || c.subject)})</span>
           </div>
-          <div style="border-top:1px solid var(--line-soft);padding-top:14px;">
+          <div style="border-top:1px solid var(--line-soft);padding-top:14px;display:flex;gap:8px;">
+            <button class="btn btn-line btn-sm" style="flex:1;" onclick="window.location.href='subject.html?courseId=${c.id}'">عرض المحاضرات ↗</button>
             ${isEnrolled ? `
-              <button class="btn btn-line btn-sm" style="width:100%;" onclick="window.location.href='subject.html?courseId=${c.id}'">فتح محتوى الكورس ↗</button>
+              <span class="tag tag-ok" style="align-self:center;">✓ مشترك</span>
             ` : `
-              <button class="btn btn-primary btn-sm" style="width:100%;" onclick="enrollInCourse('${c.id}', '${escapeHtml(c.title)}', ${c.pointCost || 0})">اشتراك في الكورس ＋</button>
+              <button class="btn btn-primary btn-sm" onclick="enrollInCourse('${c.id}', '${escapeHtml(c.title)}', ${c.pointCost || 0})">اشتراك ＋</button>
             `}
           </div>
         </div>

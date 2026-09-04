@@ -33,7 +33,7 @@ router.get(
     const profile = await prisma.teacherProfile.findUnique({
       where: { userId: req.user!.sub },
       include: {
-        user: { select: { id: true, username: true, role: true, createdAt: true } },
+        user: { select: { id: true, username: true, role: true, walletBalance: true, pointsBalance: true, createdAt: true } },
         workspaces: true,
         courses: {
           include: {
@@ -277,8 +277,18 @@ router.get(
             },
           },
         },
-        lesson: { select: { id: true, title: true, price: true } },
+        lesson: { select: { id: true, title: true, price: true, pointCost: true } },
         course: { select: { id: true, title: true } },
+        paymentTransaction: {
+          select: {
+            transactionNumber: true,
+            amount: true,
+            pointsUsed: true,
+            paymentMethod: true,
+            teacherEarning: true,
+            createdAt: true,
+          },
+        },
       },
       orderBy: { subscribedAt: 'desc' },
     });

@@ -18,7 +18,7 @@ export async function purchaseLesson({
       where: { id: lessonId },
       include: {
         course: { select: { id: true, title: true, subject: true, academicStage: true } },
-        teacherProfile: { select: { id: true, displayName: true, commissionPct: true } },
+        teacherProfile: { select: { id: true, displayName: true, commissionPct: true, userId: true } },
       },
     });
 
@@ -42,7 +42,7 @@ export async function purchaseLesson({
 
     const student = await tx.user.findUnique({
       where: { id: studentId },
-      select: { id: true, walletBalance: true, pointsBalance: true, role: true },
+      select: { id: true, username: true, walletBalance: true, pointsBalance: true, role: true },
     });
 
     if (!student || student.role !== 'STUDENT') {
@@ -84,7 +84,7 @@ export async function purchaseLesson({
 
       pointsPaid = requiredPoints;
 
-      // Audit Points Transaction
+      // Audit Points Transaction for Student
       await tx.pointsTransaction.create({
         data: {
           studentId,
@@ -117,7 +117,7 @@ export async function purchaseLesson({
 
       pricePaid = requiredPrice;
 
-      // Audit Wallet Transaction
+      // Audit Wallet Transaction for Student
       await tx.walletTransaction.create({
         data: {
           studentId,
@@ -175,7 +175,7 @@ export async function purchaseLesson({
       update: {},
     });
 
-    // 4. Record Traceable PaymentTransaction (Full Relational Chain)
+    // 4. Record Traceable PaymentTransaction (Financial Ledger)
     const teacherEarning = Math.round(pricePaid * (commissionPct / 100) * 100) / 100;
     const platformFee = Math.round((pricePaid - teacherEarning) * 100) / 100;
     const txnNumber = `TXN-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
@@ -199,6 +199,64 @@ export async function purchaseLesson({
       },
     });
 
+    // 5. Credit Teacher Account & Record Teacher Financial Ledger
+    const teacherUserId = lesson.teacherProfile?.userId;
+    if (teacherUserId) {
+      if (teacherEarning > 0) {
+        const teacherUser = await tx.user.findUnique({
+          where: { id: teacherUserId },
+          select: { id: true, walletBalance: true },
+        });
+        if (teacherUser) {
+          const newTeacherBalance = Math.round(((teacherUser.walletBalance || 0) + teacherEarning) * 100) / 100;
+          await tx.user.update({
+            where: { id: teacherUserId },
+            data: { walletBalance: newTeacherBalance },
+          });
+
+          // Audit Wallet Transaction (CREDIT) for the Teacher
+          await tx.walletTransaction.create({
+            data: {
+              studentId: teacherUserId,
+              type: 'CREDIT',
+              amount: teacherEarning,
+              balanceAfter: newTeacherBalance,
+              reason: `أرباح محاضرة: ${lesson.title} - الطالب: ${student.username || studentId}`,
+              actorId: studentId,
+            },
+          });
+        }
+      }
+
+      if (pointsPaid > 0) {
+        await tx.user.update({
+          where: { id: teacherUserId },
+          data: { pointsBalance: { increment: pointsPaid } },
+        });
+
+        await tx.pointsTransaction.create({
+          data: {
+            studentId: teacherUserId,
+            type: 'CREDIT',
+            amount: pointsPaid,
+            reason: `أرباح نقاط محاضرة: ${lesson.title} - الطالب: ${student.username || studentId}`,
+            relatedLessonId: lesson.id,
+            actorId: studentId,
+          },
+        });
+      }
+
+      // Send real-time notification to teacher
+      await tx.notification.create({
+        data: {
+          userId: teacherUserId,
+          title: 'اشتراك ودفع جديد في المحاضرة 💰',
+          message: `قام الطالب (@${student.username || 'طالب'}) بالاشتراك في محاضرة "${lesson.title}". تم تسجيل الدفع وإيداع أرباحك (${teacherEarning > 0 ? teacherEarning + ' ج.م' : pointsPaid + ' نقطة'}) في محفظتك.`,
+          type: 'PAYMENT',
+        },
+      });
+    }
+
     return {
       success: true,
       alreadySubscribed: false,
@@ -206,7 +264,7 @@ export async function purchaseLesson({
       paymentTransaction: paymentTxn,
       message: `تم شراء المحاضرة (${lesson.title}) بنجاح!`,
     };
-  });
+  }, { maxWait: 10000, timeout: 30000 });
 }
 
 /**

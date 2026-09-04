@@ -571,23 +571,27 @@ router.post(
       });
 
       for (const lesson of course.lessons) {
-        await tx.lessonSubscription.upsert({
-          where: { studentId_lessonId: { studentId, lessonId: lesson.id } },
-          create: {
-            studentId,
-            lessonId: lesson.id,
-            courseId: course.id,
-            teacherProfileId: course.teacherProfileId,
-            academicStage: course.academicStage,
-            status: 'ACTIVE',
-            paymentMethod: requiredPoints > 0 ? 'POINTS' : 'FREE',
-            pricePaid: 0,
-            pointsPaid: 0,
-          },
-          update: {
-            status: 'ACTIVE',
-          },
-        });
+        // Only genuinely free lessons (price is 0 and pointCost is 0) are granted for free
+        const isFree = (lesson.price === 0 || lesson.price === null) && (lesson.pointCost === 0 || lesson.pointCost === null);
+        if (isFree) {
+          await tx.lessonSubscription.upsert({
+            where: { studentId_lessonId: { studentId, lessonId: lesson.id } },
+            create: {
+              studentId,
+              lessonId: lesson.id,
+              courseId: course.id,
+              teacherProfileId: course.teacherProfileId,
+              academicStage: course.academicStage,
+              status: 'ACTIVE',
+              paymentMethod: 'FREE',
+              pricePaid: 0,
+              pointsPaid: 0,
+            },
+            update: {
+              status: 'ACTIVE',
+            },
+          });
+        }
       }
     });
 
@@ -636,6 +640,29 @@ router.get(
                   select: { id: true },
                 },
               },
+            },
+          },
+        },
+        lessons: {
+          where: { isPublished: true, chapterId: null },
+          orderBy: { orderIndex: 'asc' },
+          select: {
+            id: true,
+            title: true,
+            description: true,
+            orderIndex: true,
+            pointCost: true,
+            price: true,
+            isPublished: true,
+            assignmentQuizId: true,
+            examQuizId: true,
+            subscriptions: {
+              where: { studentId, status: 'ACTIVE' },
+              select: { id: true, status: true, pricePaid: true, pointsPaid: true },
+            },
+            unlockedBy: {
+              where: { studentId },
+              select: { id: true },
             },
           },
         },
