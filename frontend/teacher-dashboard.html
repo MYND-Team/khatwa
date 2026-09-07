@@ -4,8 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>استوديو المدرس وبيئات المراحل | خطوة</title>
-<link rel="icon" type="image/png" href="logo/logo-khatwa.png">
 <link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 <style>
   .chapter-box {
     background: var(--bg-card);
@@ -305,6 +307,8 @@
       </div>
     </form>
   </div>
+</div>
+
 <!-- Modal: Edit Lesson & Price -->
 <div class="modal-overlay" id="editLessonModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999;align-items:center;justify-content:center;">
   <div style="background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius);max-width:600px;width:95%;padding:26px;max-height:90vh;overflow-y:auto;">
@@ -391,16 +395,22 @@
         </select>
       </div>
       <div class="form-group" style="margin-bottom:10px;">
-        <label class="form-label">نص السؤال</label>
-        <textarea class="form-control" id="qTextInput" rows="2" placeholder="اكتب نص السؤال هنا..." required></textarea>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+          <label class="form-label" style="margin:0;">نص السؤال</label>
+          <span style="font-size:0.75rem;color:var(--primary);cursor:pointer;" onclick="insertLatexTemplate('qTextInput')">＋ إضافة رمز/معادلة LaTeX</span>
+        </div>
+        <textarea class="form-control" id="qTextInput" rows="2" placeholder="اكتب نص السؤال هنا... (يدعم LaTeX مثل: $x^2 + y^2 = r^2$)" oninput="updateQuizLatexPreview()" required></textarea>
       </div>
 
       <div id="qMCOptionsWrap">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <label class="form-label" style="margin:0;">خيارات الإجابة (يدعم صيغ LaTeX في كل خيار مثل: $\sqrt{x}$ أو $\frac{a}{b}$)</label>
+        </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
-          <input type="text" class="form-control" id="qOptA" placeholder="الخيار (أ)">
-          <input type="text" class="form-control" id="qOptB" placeholder="الخيار (ب)">
-          <input type="text" class="form-control" id="qOptC" placeholder="الخيار (ج)">
-          <input type="text" class="form-control" id="qOptD" placeholder="الخيار (د)">
+          <input type="text" class="form-control" id="qOptA" placeholder="الخيار (أ) مثلا: $\sqrt{16}$" oninput="updateQuizLatexPreview()">
+          <input type="text" class="form-control" id="qOptB" placeholder="الخيار (ب) مثلا: $4$" oninput="updateQuizLatexPreview()">
+          <input type="text" class="form-control" id="qOptC" placeholder="الخيار (ج) مثلا: $\pm 4$" oninput="updateQuizLatexPreview()">
+          <input type="text" class="form-control" id="qOptD" placeholder="الخيار (د) مثلا: $16$" oninput="updateQuizLatexPreview()">
         </div>
         <div class="form-group" style="margin-bottom:10px;">
           <label class="form-label">الإجابة الصحيحة</label>
@@ -415,12 +425,20 @@
 
       <div id="qEquationWrap" style="display:none;margin-bottom:10px;">
         <label class="form-label">كود المعادلة الرياضية (LaTeX / Math Formula)</label>
-        <input type="text" class="form-control" id="qEquationLatex" placeholder="مثال: x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}">
+        <input type="text" class="form-control" id="qEquationLatex" placeholder="مثال: x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}" oninput="updateQuizLatexPreview()">
       </div>
 
       <div id="qEssayWrap" style="display:none;margin-bottom:10px;">
         <label class="form-label">نموذج الإجابة وملاحظات التصحيح (Rubric)</label>
         <input type="text" class="form-control" id="qSampleAnswer" placeholder="النقاط الأساسية المطلوبة في إجابة الطالب">
+      </div>
+
+      <!-- Live KaTeX Preview Box -->
+      <div id="qLatexPreviewBox" style="display:none;background:var(--bg-card);border:1px dashed var(--primary);border-radius:10px;padding:12px 14px;margin-bottom:14px;">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;font-size:0.8rem;color:var(--primary);font-weight:700;">
+          <span>👁️ معاينة شكل السؤال والخيارات بالرموز الرياضية (LaTeX Live Preview):</span>
+        </div>
+        <div id="qPreviewContent" style="font-size:0.95rem;line-height:1.6;"></div>
       </div>
 
       <button type="button" class="btn btn-primary btn-sm" onclick="submitAddQuestionToQuiz()">إضافة هذا السؤال للقائمة ＋</button>
@@ -437,6 +455,7 @@
   let currentStage = window.KhatwaAPI.teacher.getStoredWorkspace() || 'SECONDARY_1';
   let currentEditingQuizId = null;
   let currentEditingLessonId = null;
+  const cachedLessonsMap = new Map();
 
   const stageTitles = {
     PREPARATORY: 'المرحلة الإعدادية',
@@ -582,22 +601,27 @@
                     <!-- Lessons inside chapter -->
                     ${ch.lessons && ch.lessons.length > 0 ? `
                       <div style="display:flex;flex-direction:column;gap:8px;">
-                        ${ch.lessons.map((l, lIdx) => `
+                        ${ch.lessons.map((l, lIdx) => {
+                          cachedLessonsMap.set(l.id, l);
+                          return `
                           <div class="lesson-item">
                             <div>
                               <b>${lIdx + 1}. ${escapeHtml(l.title)}</b>
                               <span class="tag tag-warn" style="margin-inline-start:6px;font-weight:700;">💵 ${l.price || 0} ج.م · 💎 ${l.pointCost || 0} نقطة</span>
                               ${l.pdfUrl ? '<span class="tag" style="margin-inline-start:6px;">📄 PDF</span>' : ''}
                               ${l.videoUrl || l.driveFileId ? '<span class="tag tag-ok" style="margin-inline-start:4px;">🎬 فيديو</span>' : ''}
+                              ${l.assignmentQuizId ? '<span class="tag tag-ok" style="margin-inline-start:4px;">📝 به واجب</span>' : ''}
+                              ${l.examQuizId ? '<span class="tag tag-ok" style="margin-inline-start:4px;">🏆 به امتحان</span>' : ''}
                             </div>
                             <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
-                              <button class="btn btn-line btn-sm" style="padding:3px 10px;font-size:.8rem;color:var(--primary);" onclick='openEditLessonModal(${JSON.stringify(l).replace(/'/g, "&#39;")})'>✏️ تعديل السعر والبيانات</button>
-                              <button class="btn btn-text btn-sm" onclick="openQuizBuilderForLesson('${l.id}', 'assignment')">📝 الواجب</button>
-                              <button class="btn btn-text btn-sm" onclick="openQuizBuilderForLesson('${l.id}', 'exam')">🏆 الامتحان</button>
-                              <button class="btn btn-line btn-sm" style="padding:3px 10px;font-size:.8rem;" onclick="openTeacherPreview('${l.id}')">👁 معاينة المحاضرة</button>
+                              <button type="button" class="btn btn-line btn-sm" style="padding:3px 10px;font-size:.8rem;color:var(--primary);" onclick="openEditLessonModal('${l.id}')">✏️ تعديل السعر والبيانات</button>
+                              <button type="button" class="btn btn-text btn-sm" onclick="openQuizBuilderForLesson('${l.id}', 'assignment')">📝 الواجب</button>
+                              <button type="button" class="btn btn-text btn-sm" onclick="openQuizBuilderForLesson('${l.id}', 'exam')">🏆 الامتحان</button>
+                              <button type="button" class="btn btn-line btn-sm" style="padding:3px 10px;font-size:.8rem;" onclick="openTeacherPreview('${l.id}')">👁 معاينة المحاضرة</button>
                             </div>
                           </div>
-                        `).join('')}
+                          `;
+                        }).join('')}
                       </div>
                     ` : '<p style="font-size:.84rem;color:var(--ink-dim);margin:4px 0;">لا توجد محاضرات في هذا الفصل بعد. اضغط "إضافة درس".</p>'}
                   </div>
@@ -785,7 +809,7 @@
 
       let previewContent = `
         <div style="background:var(--bg-raised);padding:14px;border-radius:12px;margin-bottom:16px;border:1px solid var(--line-soft);">
-          <b>الكورس:</b> ${escapeHtml(data.course?.title || 'عام')} · <b>المرحلة:</b> ${stageTitles[data.academicStage]} · <b>السعر:</b> ${data.price} ج.م (${data.pointCost} نقطة)
+          <b>الكورس:</b> ${escapeHtml(data.course?.title || 'عام')} · <b>المرحلة:</b> ${stageTitles[data.academicStage] || data.academicStage} · <b>السعر:</b> ${data.price || 0} ج.م (${data.pointCost || 0} نقطة)
         </div>
       `;
 
@@ -832,6 +856,15 @@
           <div style="margin-bottom:16px;">
             <h4>📝 الواجب المرتبط (${data.assignmentQuiz.questions?.length || 0} أسئلة):</h4>
             <p style="font-size:0.85rem;color:var(--ink-dim);">${escapeHtml(data.assignmentQuiz.title)}</p>
+          </div>
+        `;
+      }
+
+      if (data.examQuiz) {
+        previewContent += `
+          <div style="margin-bottom:16px;">
+            <h4>🏆 الامتحان المرتبط (${data.examQuiz.questions?.length || 0} أسئلة):</h4>
+            <p style="font-size:0.85rem;color:var(--ink-dim);">${escapeHtml(data.examQuiz.title)}</p>
           </div>
         `;
       }
@@ -1068,12 +1101,21 @@
 
   // ─── Edit Lesson & Price Handlers ─────────────────────────────────────────
   let activeEditingLesson = null;
-  function openEditLessonModal(lesson) {
+  function openEditLessonModal(lessonOrId) {
+    const lesson = (typeof lessonOrId === 'object' && lessonOrId !== null)
+      ? lessonOrId
+      : (cachedLessonsMap.get(lessonOrId) || null);
+
+    if (!lesson) {
+      alert('لم يتم العثور على بيانات المحاضرة');
+      return;
+    }
+
     activeEditingLesson = lesson;
     document.getElementById('editLessonId').value = lesson.id;
     document.getElementById('editLessonTitleInput').value = lesson.title || '';
-    document.getElementById('editLessonPriceInput').value = lesson.price !== undefined ? lesson.price : 10;
-    document.getElementById('editLessonPointCostInput').value = lesson.pointCost !== undefined ? lesson.pointCost : 10;
+    document.getElementById('editLessonPriceInput').value = (lesson.price !== undefined && lesson.price !== null) ? lesson.price : 10;
+    document.getElementById('editLessonPointCostInput').value = (lesson.pointCost !== undefined && lesson.pointCost !== null) ? lesson.pointCost : 10;
     document.getElementById('editLessonVideoUrlInput').value = lesson.videoUrl || '';
     document.getElementById('editLessonDescInput').value = lesson.description || '';
     document.getElementById('editLessonIsPublished').checked = lesson.isPublished !== false;
@@ -1122,17 +1164,34 @@
   // ─── Quiz Modal ───────────────────────────────────────────────────────────
   async function openQuizBuilderForLesson(lessonId, quizRole) {
     currentEditingLessonId = lessonId;
-    const quizTitle = quizRole === 'assignment' ? 'واجب المحاضرة' : 'امتحان المحاضرة';
-    document.getElementById('quizBuilderModalTitle').textContent = `📝 ${quizTitle}`;
+    const lesson = cachedLessonsMap.get(lessonId);
+    const isAssignment = quizRole === 'assignment';
+    const quizTitle = isAssignment ? 'واجب المحاضرة' : 'امتحان المحاضرة';
+    document.getElementById('quizBuilderModalTitle').textContent = `📝 ${quizTitle}${lesson?.title ? ' (' + escapeHtml(lesson.title) + ')' : ''}`;
     document.getElementById('quizBuilderModal').style.display = 'flex';
+    document.getElementById('addedQuestionsList').innerHTML = '<p style="color:var(--ink-dim);font-size:.85rem;">جارٍ جلب الأسئلة...</p>';
+
+    const existingQuizId = isAssignment ? lesson?.assignmentQuizId : lesson?.examQuizId;
 
     try {
-      const newQuiz = await window.KhatwaAPI.teacher.createQuiz({ title: quizTitle, type: quizRole === 'assignment' ? 'HOMEWORK' : 'EXAM' });
-      currentEditingQuizId = newQuiz.id;
-      await window.KhatwaAPI.teacher.assignQuizToLesson(lessonId, newQuiz.id, quizRole);
-      renderQuizQuestions();
+      if (existingQuizId) {
+        currentEditingQuizId = existingQuizId;
+      } else {
+        const newQuiz = await window.KhatwaAPI.teacher.createQuiz({
+          title: `${quizTitle} - ${lesson?.title || ''}`,
+          type: isAssignment ? 'HOMEWORK' : 'EXAM'
+        });
+        currentEditingQuizId = newQuiz.id;
+        await window.KhatwaAPI.teacher.assignQuizToLesson(lessonId, newQuiz.id, quizRole);
+        if (lesson) {
+          if (isAssignment) lesson.assignmentQuizId = newQuiz.id;
+          else lesson.examQuizId = newQuiz.id;
+        }
+      }
+      await renderQuizQuestions();
     } catch (err) {
       console.error(err);
+      alert('حدث خطأ أثناء تحميل أو تهيئة الأسئلة: ' + (err.message || ''));
     }
   }
 
@@ -1180,6 +1239,70 @@
     }
   }
 
+  function insertLatexTemplate(targetId) {
+    const el = document.getElementById(targetId);
+    if (!el) return;
+    const formula = '$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$';
+    el.value = el.value ? (el.value + ' ' + formula) : formula;
+    updateQuizLatexPreview();
+  }
+
+  function updateQuizLatexPreview() {
+    const previewBox = document.getElementById('qLatexPreviewBox');
+    const previewContent = document.getElementById('qPreviewContent');
+    const qType = document.getElementById('qTypeSelect')?.value;
+    const text = document.getElementById('qTextInput')?.value.trim();
+
+    if (!text) {
+      if (previewBox) previewBox.style.display = 'none';
+      return;
+    }
+
+    if (previewBox) previewBox.style.display = 'block';
+
+    let html = `<div><b>السؤال:</b> ${escapeHtml(text)}</div>`;
+
+    if (qType === 'MULTIPLE_CHOICE') {
+      const optA = document.getElementById('qOptA')?.value.trim() || 'أ';
+      const optB = document.getElementById('qOptB')?.value.trim() || 'ب';
+      const optC = document.getElementById('qOptC')?.value.trim() || 'ج';
+      const optD = document.getElementById('qOptD')?.value.trim() || 'د';
+      html += `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;">
+          <div>أ) ${escapeHtml(optA)}</div>
+          <div>ب) ${escapeHtml(optB)}</div>
+          <div>ج) ${escapeHtml(optC)}</div>
+          <div>د) ${escapeHtml(optD)}</div>
+        </div>
+      `;
+    } else if (qType === 'EQUATION') {
+      const eq = document.getElementById('qEquationLatex')?.value.trim();
+      if (eq) html += `<div style="margin-top:6px;">$$${escapeHtml(eq)}$$</div>`;
+    }
+
+    if (previewContent) {
+      previewContent.innerHTML = html;
+      triggerKaTeX(previewContent);
+    }
+  }
+
+  function triggerKaTeX(el) {
+    if (!el) return;
+    if (window.renderMathInElement) {
+      try {
+        window.renderMathInElement(el, {
+          delimiters: [
+            { left: '$$', right: '$$', display: true },
+            { left: '$', right: '$', display: false },
+            { left: '\\[', right: '\\]', display: true },
+            { left: '\\(', right: '\\)', display: false },
+          ],
+          throwOnError: false,
+        });
+      } catch (_) {}
+    }
+  }
+
   async function renderQuizQuestions() {
     if (!currentEditingQuizId) return;
     const quiz = await window.KhatwaAPI.teacher.getQuizWithAnswers(currentEditingQuizId);
@@ -1193,14 +1316,26 @@
     }
 
     list.innerHTML = questions.map((q, idx) => `
-      <div style="background:var(--bg-raised);padding:10px 14px;border-radius:10px;border:1px solid var(--line-soft);display:flex;justify-content:space-between;align-items:center;">
-        <div>
+      <div style="background:var(--bg-raised);padding:12px 14px;border-radius:10px;border:1px solid var(--line-soft);display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
+        <div style="flex:1;">
           <b>${idx + 1}. ${escapeHtml(q.questionText)}</b>
           <span class="tag" style="margin-inline-start:6px;font-size:.75rem;">${q.questionType}</span>
+          ${q.questionType === 'MULTIPLE_CHOICE' ? `
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:6px;font-size:0.85rem;color:var(--ink-dim);">
+              <span>أ) ${escapeHtml(q.optionA || '—')}</span>
+              <span>ب) ${escapeHtml(q.optionB || '—')}</span>
+              <span>ج) ${escapeHtml(q.optionC || '—')}</span>
+              <span>د) ${escapeHtml(q.optionD || '—')}</span>
+            </div>
+            <div style="margin-top:4px;font-size:0.8rem;color:#16a34a;font-weight:700;">الإجابة الصحيحة: (${q.correctOption || 'A'})</div>
+          ` : ''}
+          ${q.equationLatex ? `<div style="margin-top:4px;font-size:0.9rem;">$$${escapeHtml(q.equationLatex)}$$</div>` : ''}
         </div>
         <button class="btn btn-text btn-sm" style="color:var(--err);" onclick="deleteQuestion('${q.id}')">✕</button>
       </div>
     `).join('');
+
+    triggerKaTeX(list);
   }
 
   async function deleteQuestion(qId) {

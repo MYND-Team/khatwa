@@ -271,54 +271,151 @@ export async function purchaseLesson({
  * Returns student subscriptions structured hierarchically:
  * Teacher -> Subject/Course -> Lessons
  * Optional stage filter (e.g. 'SECONDARY_1') narrows results to a specific academic stage.
+ * Includes both direct lesson subscriptions and full course enrollments.
  */
 export async function getStudentSubscriptions(studentId: string, stage?: string) {
-  const where: any = { studentId, status: 'ACTIVE' };
-  if (stage) where.academicStage = stage as any;
+  const subWhere: any = { studentId, status: 'ACTIVE' };
+  if (stage) subWhere.academicStage = stage as any;
 
-  const subscriptions = await prisma.lessonSubscription.findMany({
-    where,
-    include: {
-      lesson: {
-        select: {
-          id: true,
-          title: true,
-          description: true,
-          price: true,
-          pointCost: true,
-          videoUrl: true,
-          driveFileId: true,
-          pdfUrl: true,
-          pdfFileName: true,
-          assignmentQuizId: true,
-          examQuizId: true,
-          orderIndex: true,
+  const enrollmentWhere: any = { studentId };
+  if (stage) {
+    enrollmentWhere.course = { academicStage: stage as any };
+  }
+
+  const [subscriptions, enrollments] = await Promise.all([
+    prisma.lessonSubscription.findMany({
+      where: subWhere,
+      include: {
+        lesson: {
+          select: {
+            id: true,
+            title: true,
+            description: true,
+            price: true,
+            pointCost: true,
+            videoUrl: true,
+            driveFileId: true,
+            pdfUrl: true,
+            pdfFileName: true,
+            assignmentQuizId: true,
+            examQuizId: true,
+            orderIndex: true,
+          },
+        },
+        course: {
+          select: {
+            id: true,
+            title: true,
+            subject: true,
+            academicStage: true,
+            imageUrl: true,
+          },
+        },
+        teacherProfile: {
+          select: {
+            id: true,
+            displayName: true,
+            subject: true,
+            avatarUrl: true,
+          },
         },
       },
-      course: {
-        select: {
-          id: true,
-          title: true,
-          subject: true,
-          academicStage: true,
-          imageUrl: true,
+      orderBy: { subscribedAt: 'desc' },
+    }),
+    prisma.courseEnrollment.findMany({
+      where: enrollmentWhere,
+      include: {
+        course: {
+          include: {
+            teacherProfile: {
+              select: {
+                id: true,
+                displayName: true,
+                subject: true,
+                avatarUrl: true,
+              },
+            },
+            lessons: {
+              where: { isPublished: true },
+              orderBy: { orderIndex: 'asc' },
+              select: {
+                id: true,
+                title: true,
+                description: true,
+                price: true,
+                pointCost: true,
+                videoUrl: true,
+                driveFileId: true,
+                pdfUrl: true,
+                pdfFileName: true,
+                assignmentQuizId: true,
+                examQuizId: true,
+                orderIndex: true,
+              },
+            },
+          },
         },
       },
-      teacherProfile: {
-        select: {
-          id: true,
-          displayName: true,
-          subject: true,
-          avatarUrl: true,
-        },
-      },
-    },
-    orderBy: { subscribedAt: 'desc' },
-  });
+      orderBy: { enrolledAt: 'desc' },
+    }),
+  ]);
 
   // Group by Teacher -> Course -> Lessons
   const teachersMap = new Map<string, any>();
 
+  // 1. Process Course Enrollments first so all enrolled courses are registered with their teacher & image
+  for (const enr of enrollments) {
+    const course = enr.course;
+    if (!course) continue;
+    const teacher = course.teacherProfile;
+    const teacherId = teacher?.id || 'unknown-teacher';
+
+    if (!teachersMap.has(teacherId)) {
+      teachersMap.set(teacherId, {
+        teacher: teacher || {
+          id: teacherId,
+          displayName: 'معلم المادة',
+          subject: course.subject || 'عام',
+          avatarUrl: null,
+        },
+        courses: new Map<string, any>(),
+      });
+    }
+
+    const teacherEntry = teachersMap.get(teacherId);
+    const courseId = course.id;
+
+    if (!teacherEntry.courses.has(courseId)) {
+      teacherEntry.courses.set(courseId, {
+        id: course.id,
+        title: course.title,
+        subject: course.subject,
+        academicStage: course.academicStage,
+        imageUrl: course.imageUrl,
+        isEnrolled: true,
+        enrolledAt: enr.enrolledAt,
+        lessons: course.lessons.map((l) => ({
+          subscriptionId: `enr-${enr.id}-${l.id}`,
+          lessonId: l.id,
+          title: l.title,
+          description: l.description,
+          orderIndex: l.orderIndex,
+          pricePaid: 0,
+          pointsPaid: 0,
+          paymentMethod: 'COURSE_ENROLLMENT',
+          subscribedAt: enr.enrolledAt,
+          expiresAt: null,
+          hasVideo: !!(l.driveFileId || l.videoUrl),
+          hasPdf: !!l.pdfUrl,
+          hasAssignment: !!l.assignmentQuizId,
+          hasExam: !!l.examQuizId,
+          isCourseEnrollment: true,
+        })),
+      });
+    }
+  }
+
+  // 2. Process Individual Lesson Subscriptions
   for (const sub of subscriptions) {
     const teacherId = sub.teacherProfileId;
     if (!teachersMap.has(teacherId)) {
@@ -341,12 +438,15 @@ export async function getStudentSubscriptions(studentId: string, stage?: string)
     if (!teacherEntry.courses.has(courseId)) {
       teacherEntry.courses.set(courseId, {
         ...courseInfo,
+        isEnrolled: false,
         lessons: [],
       });
     }
 
     const courseEntry = teacherEntry.courses.get(courseId);
-    courseEntry.lessons.push({
+    // If course had default lessons from enrollment, check if this specific lesson is already there
+    const existingLessonIdx = courseEntry.lessons.findIndex((l: any) => l.lessonId === sub.lesson.id);
+    const lessonData = {
       subscriptionId: sub.id,
       lessonId: sub.lesson.id,
       title: sub.lesson.title,
@@ -361,7 +461,14 @@ export async function getStudentSubscriptions(studentId: string, stage?: string)
       hasPdf: !!sub.lesson.pdfUrl,
       hasAssignment: !!sub.lesson.assignmentQuizId,
       hasExam: !!sub.lesson.examQuizId,
-    });
+      isCourseEnrollment: false,
+    };
+
+    if (existingLessonIdx >= 0) {
+      courseEntry.lessons[existingLessonIdx] = lessonData;
+    } else {
+      courseEntry.lessons.push(lessonData);
+    }
   }
 
   // Convert maps to array structure

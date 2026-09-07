@@ -1065,43 +1065,45 @@ router.delete(
   })
 );
 
-router.patch(
-  '/lessons/:lessonId/assign-quiz',
-  asyncHandler(async (req, res) => {
-    const { quizId, quizRole } = req.body;
+router.delete('/quizzes/:id/questions/:questionId', QuizController.deleteQuestion);
 
-    if (!quizId || !quizRole) {
-      res.status(400).json({ success: false, error: { code: 'MISSING_FIELDS', message: 'quizId and quizRole are required' } });
-      return;
-    }
+const handleAssignQuiz = asyncHandler(async (req, res) => {
+  const { quizId, quizRole } = req.body;
 
-    const teacherProfile = await prisma.teacherProfile.findUnique({ where: { userId: req.user!.sub } });
-    if (!teacherProfile) {
-      res.status(403).json({ success: false, error: { code: 'FORBIDDEN', message: 'Not authorized' } });
-      return;
-    }
+  if (!quizId || !quizRole) {
+    res.status(400).json({ success: false, error: { code: 'MISSING_FIELDS', message: 'quizId and quizRole are required' } });
+    return;
+  }
 
-    const lesson = await prisma.lesson.findFirst({
-      where: { id: req.params.lessonId, teacherProfileId: teacherProfile.id },
-    });
-    if (!lesson) {
-      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Lesson not found' } });
-      return;
-    }
+  const teacherProfile = await prisma.teacherProfile.findUnique({ where: { userId: req.user!.sub } });
+  if (!teacherProfile) {
+    res.status(403).json({ success: false, error: { code: 'FORBIDDEN', message: 'Not authorized' } });
+    return;
+  }
 
-    const updateData: any = {};
-    if (quizRole === 'assignment') updateData.assignmentQuizId = quizId;
-    else if (quizRole === 'exam') updateData.examQuizId = quizId;
-    else if (quizRole === 'opening') updateData.openingQuizId = quizId;
-    else if (quizRole === 'homework') updateData.homeworkId = quizId;
-    else {
-      res.status(400).json({ success: false, error: { code: 'INVALID_ROLE', message: 'quizRole must be assignment, exam, opening, or homework' } });
-      return;
-    }
+  const lesson = await prisma.lesson.findFirst({
+    where: { id: req.params.lessonId, teacherProfileId: teacherProfile.id },
+  });
+  if (!lesson) {
+    res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Lesson not found' } });
+    return;
+  }
 
-    const updated = await prisma.lesson.update({ where: { id: lesson.id }, data: updateData });
-    res.status(200).json({ success: true, data: updated });
-  })
-);
+  const updateData: any = {};
+  if (quizRole === 'assignment') updateData.assignmentQuizId = quizId;
+  else if (quizRole === 'exam') updateData.examQuizId = quizId;
+  else if (quizRole === 'opening') updateData.openingQuizId = quizId;
+  else if (quizRole === 'homework') updateData.homeworkId = quizId;
+  else {
+    res.status(400).json({ success: false, error: { code: 'INVALID_ROLE', message: 'quizRole must be assignment, exam, opening, or homework' } });
+    return;
+  }
+
+  const updated = await prisma.lesson.update({ where: { id: lesson.id }, data: updateData });
+  res.status(200).json({ success: true, data: updated });
+});
+
+router.patch('/lessons/:lessonId/assign-quiz', handleAssignQuiz);
+router.post('/lessons/:lessonId/assign-quiz', handleAssignQuiz);
 
 export default router;

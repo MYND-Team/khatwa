@@ -200,6 +200,13 @@
 <script>
   let currentStageFilter = '';
 
+  const STAGE_NAMES = {
+    PREPARATORY: 'المرحلة الإعدادية',
+    SECONDARY_1: 'الصف الأول الثانوي',
+    SECONDARY_2: 'الصف الثاني الثانوي',
+    SECONDARY_3: 'الصف الثالث الثانوي',
+  };
+
   async function selectStageTab(stage, tabBtn) {
     currentStageFilter = stage;
     document.querySelectorAll('.stage-filter-tab').forEach(b => b.classList.remove('active'));
@@ -236,16 +243,8 @@
       document.getElementById('statPoints').textContent = user.pointsBalance;
     }
 
-    // Auto-select student's registered stage tab if available
-    const userStage = user.studentProfile?.academicStage;
-    if (userStage) {
-      const matchedTab = document.querySelector(`.stage-filter-tab[data-stage="${userStage}"]`);
-      if (matchedTab) {
-        document.querySelectorAll('.stage-filter-tab').forEach(b => b.classList.remove('active'));
-        matchedTab.classList.add('active');
-        currentStageFilter = userStage;
-      }
-    }
+    // Default to 'All Stages' so all active enrolled courses/lessons appear immediately
+    currentStageFilter = '';
 
     // Fetch Stats & Subscriptions
     try {
@@ -298,51 +297,74 @@
     for (const group of teacherGroups) {
       const teacherName = group.teacher?.displayName || 'المدرس';
       const teacherSubject = group.teacher?.subject || 'المادة الدراسية';
+      const teacherAvatar = group.teacher?.avatarUrl
+        ? `<img src="${group.teacher.avatarUrl}" class="sub-avatar-img" alt="${escapeHtml(teacherName)}">`
+        : `<div class="sub-avatar-placeholder">${escapeHtml(teacherName.charAt(0))}</div>`;
 
       html += `
         <div class="sub-teacher-group">
           <div class="sub-teacher-head">
-            <div style="display:flex;align-items:center;gap:12px;">
-              <span style="font-size:1.8rem;">👨‍🏫</span>
+            <div style="display:flex;align-items:center;gap:14px;">
+              ${teacherAvatar}
               <div>
-                <b style="font-size:1.05rem;display:block;">الأستاذ: ${escapeHtml(teacherName)}</b>
-                <span style="font-size:0.82rem;color:var(--ink-dim);">${escapeHtml(teacherSubject)}</span>
+                <b style="font-size:1.1rem;display:block;">الأستاذ: ${escapeHtml(teacherName)}</b>
+                <span style="font-size:0.84rem;color:var(--ink-dim);">${escapeHtml(teacherSubject)}</span>
               </div>
             </div>
-            <span class="tag tag-ok">مدرس معتمد</span>
+            <span class="tag tag-ok">مدرس معتمد ✓</span>
           </div>
       `;
 
       for (const course of group.courses) {
+        const courseThumb = course.imageUrl
+          ? `<img src="${course.imageUrl}" class="sub-course-thumb" alt="${escapeHtml(course.title)}">`
+          : `<div class="sub-course-thumb" style="display:flex;align-items:center;justify-content:center;font-size:1.4rem;">📖</div>`;
+
         html += `
-          <div class="sub-course-title">
-            <span>📖</span> <b>${escapeHtml(course.title)}</b> (${escapeHtml(course.subject || '')})
+          <div class="sub-course-title" style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--bg);border-radius:12px;margin:12px 0 8px;">
+            ${courseThumb}
+            <div style="flex:1;">
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <b style="font-size:1rem;">${escapeHtml(course.title)}</b>
+                <span style="font-size:0.84rem;color:var(--ink-dim);">(${escapeHtml(course.subject || '')})</span>
+                ${course.academicStage ? `<span class="tag tag-stage" style="font-size:0.75rem;">${escapeHtml(STAGE_NAMES[course.academicStage] || course.academicStage)}</span>` : ''}
+              </div>
+            </div>
+            <a href="subject.html?courseId=${course.id}" class="btn btn-line btn-sm" style="padding:5px 12px;font-size:0.82rem;">تصفح الكورس ↗</a>
           </div>
           <div class="sub-lessons-list">
         `;
 
-        for (const lesson of course.lessons) {
-          totalLessonsCount++;
-          const priceLabel = lesson.pricePaid > 0 ? `${lesson.pricePaid} ج.م` : (lesson.pointsPaid > 0 ? `${lesson.pointsPaid} نقطة` : 'مجانية');
-
+        if (!course.lessons || course.lessons.length === 0) {
           html += `
-            <div class="sub-lesson-card">
-              <div style="display:flex;align-items:center;gap:12px;">
-                <span style="background:rgba(34,197,94,0.15);color:#22c55e;font-size:0.85rem;font-weight:700;padding:4px 8px;border-radius:8px;">✓ مدفوع</span>
-                <div>
-                  <b style="font-size:0.92rem;display:block;">${escapeHtml(lesson.title)}</b>
-                  <span style="font-size:0.8rem;color:var(--ink-dim);">
-                    ${lesson.hasVideo ? '🎬 فيديو محاضرة' : ''} ${lesson.hasPdf ? '· 📄 مذكرة PDF' : ''} · القيمة: ${priceLabel}
-                  </span>
-                </div>
-              </div>
-              <div>
-                <a href="lesson.html?lessonId=${lesson.lessonId}" class="btn btn-primary btn-sm" style="padding:6px 14px;font-size:0.85rem;">
-                  ▶ دخول للمحاضرة
-                </a>
-              </div>
+            <div style="padding:12px 18px;color:var(--ink-dim);font-size:0.85rem;background:var(--bg-raised);border-radius:10px;border:1px solid var(--line-soft);margin-bottom:8px;">
+              ✓ أنت مشترك في هذا الكورس بالكامل. يمكنك تصفح المحاضرات مباشرة بالضغط على "تصفح الكورس ↗".
             </div>
           `;
+        } else {
+          for (const lesson of course.lessons) {
+            totalLessonsCount++;
+            const priceLabel = lesson.pricePaid > 0 ? `${lesson.pricePaid} ج.م` : (lesson.pointsPaid > 0 ? `${lesson.pointsPaid} نقطة` : 'مجانية');
+
+            html += `
+              <div class="sub-lesson-card">
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <span style="background:rgba(34,197,94,0.15);color:#22c55e;font-size:0.85rem;font-weight:700;padding:4px 8px;border-radius:8px;">✓ مدفوع</span>
+                  <div>
+                    <b style="font-size:0.92rem;display:block;">${escapeHtml(lesson.title)}</b>
+                    <span style="font-size:0.8rem;color:var(--ink-dim);">
+                      ${lesson.hasVideo ? '🎬 فيديو محاضرة' : ''} ${lesson.hasPdf ? '· 📄 مذكرة PDF' : ''} · القيمة: ${priceLabel}
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <a href="lesson.html?lessonId=${lesson.lessonId}" class="btn btn-primary btn-sm" style="padding:6px 14px;font-size:0.85rem;">
+                    ▶ دخول للمحاضرة
+                  </a>
+                </div>
+              </div>
+            `;
+          }
         }
 
         html += `</div>`;

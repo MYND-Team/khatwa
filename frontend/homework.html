@@ -4,8 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>الواجب الإلكتروني | خطوة</title>
-<link rel="icon" type="image/png" href="logo/logo-khatwa.png">
 <link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 </head>
 <body>
 
@@ -114,19 +116,21 @@
     container.innerHTML = activeQuestions.map((q, idx) => `
       <div class="q-block" id="hwQ_${idx}" style="${idx === 0 ? '' : 'display:none;'}">
         <p class="q-text" style="font-size:1.05rem;font-weight:600;margin-bottom:16px;">
-          <span style="color:var(--gold-light);">س ${idx + 1}:</span> ${escapeHtml(q.text)}
+          <span style="color:var(--gold-light);">س ${idx + 1}:</span> ${escapeHtml(q.text || q.questionText || '')}
         </p>
+
+        ${q.equationLatex ? `<div style="margin-bottom:14px;font-size:1.1rem;direction:ltr;text-align:center;">$$${escapeHtml(q.equationLatex)}$$</div>` : ''}
 
         <div style="display:flex;flex-direction:column;gap:10px;">
           <label class="opt">
             <input type="radio" name="hq_${q.id}" value="A">
             <span class="letter">أ</span>
-            <span>${escapeHtml(q.optionA)}</span>
+            <span>${escapeHtml(q.optionA || '')}</span>
           </label>
           <label class="opt">
             <input type="radio" name="hq_${q.id}" value="B">
             <span class="letter">ب</span>
-            <span>${escapeHtml(q.optionB)}</span>
+            <span>${escapeHtml(q.optionB || '')}</span>
           </label>
           ${q.optionC ? `
             <label class="opt">
@@ -146,7 +150,29 @@
       </div>
     `).join('');
 
+    renderHwLatexMath(container);
     updateProgress();
+  }
+
+  function renderHwLatexMath(element) {
+    if (!element) return;
+    if (window.renderMathInElement) {
+      try {
+        window.renderMathInElement(element, {
+          delimiters: [
+            { left: '$$', right: '$$', display: true },
+            { left: '$', right: '$', display: false },
+            { left: '\\[', right: '\\]', display: true },
+            { left: '\\(', right: '\\)', display: false },
+          ],
+          throwOnError: false,
+        });
+      } catch (err) {
+        console.warn('KaTeX homework error:', err);
+      }
+    } else {
+      setTimeout(() => renderHwLatexMath(element), 200);
+    }
   }
 
   function updateProgress() {

@@ -427,6 +427,17 @@
       async createAccessCode(data) { const res = await request('/admin/access-codes', { method: 'POST', body: data }); return res.data; },
       async revokeAccessCode(id) { const res = await request('/admin/access-codes/' + id + '/revoke', { method: 'PATCH' }); return res.data; },
       async regenerateAccessCode(id) { const res = await request('/admin/access-codes/' + id + '/regenerate', { method: 'POST' }); return res.data; },
+      async getProfileRequests(status = '') {
+        const query = status ? ('?status=' + encodeURIComponent(status)) : '';
+        const res = await request('/admin/profile-requests' + query);
+        return res.data || [];
+      },
+      async approveProfileRequest(id) {
+        return request('/admin/profile-requests/' + id + '/approve', { method: 'PATCH' });
+      },
+      async rejectProfileRequest(id, reason = '') {
+        return request('/admin/profile-requests/' + id + '/reject', { method: 'PATCH', body: { reason } });
+      },
     },
 
     // ─── Teacher Studio & Workspaces ─────────────────────────────────────────
@@ -446,6 +457,17 @@
       async getWorkspaceStudents(stage) { const res = await request('/teacher/workspace/' + stage + '/students'); return res.data || []; },
       async getWorkspaceRevenue(stage) { const res = await request('/teacher/workspace/' + stage + '/revenue'); return res.data || []; },
       async previewLesson(id) { const res = await request('/teacher/lessons/' + id + '/preview'); return res.data; },
+      async createQuiz(data) { const res = await request('/teacher/quizzes', { method: 'POST', body: data }); return res.data; },
+      async addQuizQuestion(quizId, data) { const res = await request('/teacher/quizzes/' + quizId + '/questions', { method: 'POST', body: data }); return res.data; },
+      async getQuizWithAnswers(quizId) { const res = await request('/teacher/quizzes/' + quizId); return res.data; },
+      async deleteQuiz(quizId) { return request('/teacher/quizzes/' + quizId, { method: 'DELETE' }); },
+      async deleteQuizQuestion(quizId, questionId) { return request('/teacher/quizzes/' + quizId + '/questions/' + questionId, { method: 'DELETE' }); },
+      async assignQuizToLesson(lessonId, quizId, quizRole) {
+        return request('/teacher/lessons/' + lessonId + '/assign-quiz', {
+          method: 'POST',
+          body: { quizId, quizRole },
+        });
+      },
 
       async getCourses() { const res = await request('/teacher/courses'); return res.data || []; },
       async createCourse(data) { const res = await request('/teacher/courses', { method: 'POST', body: data }); return res.data; },
@@ -638,7 +660,8 @@
     // ─── Student Portal ──────────────────────────────────────────────────────
     student: {
       async getProfile() { const res = await request('/student/profile'); return res.data || {}; },
-      async updateProfile(data) { const res = await request('/student/profile', { method: 'PUT', body: data }); return res.data; },
+      async updateProfile(data) { const res = await request('/student/profile', { method: 'PUT', body: data }); return res; },
+      async getProfileRequest() { const res = await request('/student/profile-request'); return res.data || null; },
       async getCatalog() { const res = await request('/student/catalog'); return res.data || { courses: [] }; },
       async getSubscriptions(stage = '') {
         const query = stage ? ('?stage=' + encodeURIComponent(stage)) : '';

@@ -123,7 +123,13 @@
 
     <p style="color:var(--ink-dim);font-size:0.92rem;line-height:1.6;" id="modalTeacherBio">نبذة عن المدرس والخبرات الأكاديمية.</p>
 
-    <h3 style="margin:24px 0 14px;border-top:1px solid var(--line-soft);padding-top:18px;">📚 الكورسات والمحاضرات المتاحة لهذا المعلم:</h3>
+    <!-- Side-by-Side Stages Bar -->
+    <div style="margin-top:20px;border-top:1px solid var(--line-soft);padding-top:16px;">
+      <div style="font-size:0.92rem;font-weight:700;color:var(--ink);margin-bottom:8px;">🏫 المراحل الدراسية للمدرس (اختر المرحلة لعرض كورساتها):</div>
+      <div class="modal-stages-bar" id="modalTeacherStagesBar"></div>
+    </div>
+
+    <h3 style="margin:16px 0 14px;" id="modalCoursesHeading">📚 الكورسات والمحاضرات المتاحة:</h3>
     <div id="modalTeacherCoursesList" style="display:flex;flex-direction:column;gap:12px;"></div>
   </div>
 </div>
@@ -226,8 +232,27 @@
       const subject = t.subject || 'المادة الدراسية';
       const avatar = t.avatarUrl ? `<img src="${t.avatarUrl}" alt="${escapeHtml(name)}">` : `<span class="teacher-ref-photo-placeholder">👨‍🏫</span>`;
       const stages = getTeacherStages(t);
-      const stageLabels = stages.map(s => STAGE_NAMES[s] || s).join(' · ');
-      const displaySubtitle = stageLabels ? `${subject} — ${stageLabels}` : subject;
+
+      let stagesHtml = '';
+      if (currentStageFilter) {
+        // Single stage selected: 1 styled rectangle
+        stagesHtml = `
+          <div class="teacher-single-stage-badge">
+            ${escapeHtml(STAGE_NAMES[currentStageFilter] || currentStageFilter)}
+          </div>
+        `;
+      } else {
+        // All stages selected: rectangles side-by-side representing the academic stages taught
+        stagesHtml = `
+          <div class="teacher-stages-row">
+            ${stages.map(s => `
+              <div class="teacher-stage-badge" title="${escapeHtml(STAGE_NAMES[s] || s)}">
+                ${escapeHtml(STAGE_NAMES[s] || s)}
+              </div>
+            `).join('')}
+          </div>
+        `;
+      }
 
       return `
         <div class="teacher-ref-card" onclick="openTeacherModal('${t.id}')">
@@ -236,11 +261,8 @@
             ${avatar}
           </div>
           <div class="teacher-ref-name">${escapeHtml(name)}</div>
-          <div class="teacher-ref-subtitle" style="font-weight:600;">${escapeHtml(displaySubtitle)}</div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:6px 0;">
-            ${stages.map(s => `<span class="tag tag-stage">${escapeHtml(STAGE_NAMES[s] || s)}</span>`).join('')}
-            <span class="teacher-ref-badge">${t.courses?.length || 0} كورس متاح</span>
-          </div>
+          <div class="teacher-ref-subject">${escapeHtml(subject)}</div>
+          ${stagesHtml}
           <div class="teacher-ref-stars-bottom">★★★★★</div>
         </div>
       `;
@@ -275,19 +297,25 @@
       const c = e.course || e;
       const teacher = c.teacherProfile || {};
       const teacherName = teacher.displayName || 'أستاذ المادة';
-      const teacherImg = teacher.avatarUrl ? `<img src="${teacher.avatarUrl}" style="width:100%;height:100%;object-fit:cover;">` : '👨‍🏫';
+      const teacherImg = teacher.avatarUrl
+        ? `<img src="${teacher.avatarUrl}" class="sub-avatar-img" alt="${escapeHtml(teacherName)}">`
+        : `<div class="sub-avatar-placeholder">${escapeHtml(teacherName.charAt(0))}</div>`;
+      const courseImg = c.imageUrl
+        ? `<img src="${c.imageUrl}" class="sub-course-thumb" alt="${escapeHtml(c.title)}">`
+        : '';
       const stageName = STAGE_NAMES[c.academicStage] || c.academicStage || '';
 
       return `
         <div class="folder-card" onclick="window.location.href='subject.html?courseId=${c.id || e.courseId}'">
           <div class="folder-card-header">
-            <div class="folder-icon-box" style="overflow:hidden;padding:0;">
-              ${teacherImg}
-            </div>
-            <div>
-              <h4 style="margin:0 0 2px;">${escapeHtml(c.title || 'كورس')}</h4>
-              <span style="font-size:0.82rem;color:var(--ink-dim);">
-                ${escapeHtml(teacherName)} · <b style="color:var(--primary);">${escapeHtml(c.subject || '')}</b>
+            ${teacherImg}
+            <div style="flex:1;">
+              <div style="display:flex;align-items:center;gap:8px;justify-content:space-between;">
+                <h4 style="margin:0 0 2px;font-size:1.05rem;">${escapeHtml(c.title || 'كورس')}</h4>
+                ${courseImg}
+              </div>
+              <span style="font-size:0.84rem;color:var(--ink-dim);">
+                الأستاذ: <b>${escapeHtml(teacherName)}</b> · <b style="color:var(--primary);">${escapeHtml(c.subject || '')}</b>
                 ${stageName ? ` · <span class="tag tag-stage">${escapeHtml(stageName)}</span>` : ''}
               </span>
             </div>
@@ -356,21 +384,24 @@
     }).join('');
   }
 
+  let activeModalTeacher = null;
+  let activeModalStage = '';
+
   async function openTeacherModal(teacherId) {
     const modal = document.getElementById('teacherProfileModal');
     modal.style.display = 'flex';
+    document.getElementById('modalTeacherStagesBar').innerHTML = '<span style="font-size:0.85rem;color:var(--ink-dim);">جارٍ جلب المراحل...</span>';
     document.getElementById('modalTeacherCoursesList').innerHTML = 'جارٍ جلب كورسات المعلم...';
 
-    const user = window.KhatwaAPI.getUser();
-    const effectiveStage = currentStageFilter || user?.studentProfile?.academicStage || user?.academicStage || '';
-
     try {
-      const teacher = await window.KhatwaAPI.public.getTeacher(teacherId, effectiveStage);
+      // Fetch teacher with all courses across stages
+      const teacher = await window.KhatwaAPI.public.getTeacher(teacherId, '');
       if (!teacher) return;
+      activeModalTeacher = teacher;
 
       document.getElementById('modalTeacherName').textContent = teacher.displayName || 'معلم المادة';
       document.getElementById('modalTeacherSubject').textContent = teacher.subject || 'المحاضرات والمناهج';
-      document.getElementById('modalTeacherBio').textContent = teacher.bio || 'مدرس معتمد على منصة خطوة.';
+      document.getElementById('modalTeacherBio').textContent = teacher.bio || 'مدرس معتمد على منصة خطوة التعليمية.';
       
       const photoBox = document.getElementById('modalTeacherPhoto');
       if (teacher.avatarUrl) {
@@ -379,27 +410,105 @@
         photoBox.innerHTML = `<span class="teacher-ref-photo-placeholder">👨‍🏫</span>`;
       }
 
-      let courses = teacher.courses || [];
-      if (effectiveStage) {
-        courses = courses.filter(c => c.academicStage === effectiveStage);
-      }
-      if (courses.length === 0) {
-        document.getElementById('modalTeacherCoursesList').innerHTML = '<p style="color:var(--ink-dim);">لا توجد كورسات منشورة لهذا المعلم في هذه المرحلة الدراسية.</p>';
-        return;
+      // Collect all stages taught by the teacher
+      const stages = getTeacherStages(teacher);
+      if (stages.length === 0) {
+        document.getElementById('modalTeacherStagesBar').innerHTML = '<span style="font-size:0.85rem;color:var(--ink-dim);">لا توجد مراحل مسجلة لهذا المعلم</span>';
+        activeModalStage = '';
+      } else {
+        // Default to current stage filter if teacher teaches it, otherwise first available stage
+        activeModalStage = (currentStageFilter && stages.includes(currentStageFilter))
+          ? currentStageFilter
+          : stages[0];
+
+        // Render stages side-by-side
+        document.getElementById('modalTeacherStagesBar').innerHTML = stages.map(s => `
+          <button type="button" class="modal-stage-tab ${s === activeModalStage ? 'active' : ''}" data-stage="${s}" onclick="selectModalStage('${s}')">
+            📁 ${escapeHtml(STAGE_NAMES[s] || s)}
+          </button>
+        `).join('');
       }
 
-      document.getElementById('modalTeacherCoursesList').innerHTML = courses.map(c => `
-        <div style="display:flex;justify-content:space-between;align-items:center;background:var(--bg-raised);padding:14px;border-radius:14px;border:1px solid var(--line-soft);">
-          <div>
-            <h4 style="margin:0 0 3px;">${escapeHtml(c.title)}</h4>
-            <span style="font-size:0.8rem;color:var(--ink-dim);">${escapeHtml(c.subject || '')} · ${c.pointCost > 0 ? c.pointCost + ' نقطة' : 'مجاني'} · <span class="tag tag-stage">${escapeHtml(STAGE_NAMES[c.academicStage] || c.academicStage)}</span></span>
-          </div>
-          <button class="btn btn-primary btn-sm" onclick="enrollInCourse('${c.id}', '${escapeHtml(c.title)}', ${c.pointCost || 0})">اشتراك ومتابعة ＋</button>
-        </div>
-      `).join('');
+      renderModalStageCourses(activeModalStage);
     } catch (e) {
       document.getElementById('modalTeacherCoursesList').innerHTML = 'حدث خطأ أثناء تحميل بيانات المعلم.';
     }
+  }
+
+  function selectModalStage(stage) {
+    activeModalStage = stage;
+    document.querySelectorAll('.modal-stage-tab').forEach(btn => {
+      if (btn.getAttribute('data-stage') === stage) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+    renderModalStageCourses(stage);
+  }
+
+  function renderModalStageCourses(stage) {
+    const listEl = document.getElementById('modalTeacherCoursesList');
+    const headingEl = document.getElementById('modalCoursesHeading');
+    const stageTitle = STAGE_NAMES[stage] || stage || 'جميع المراحل';
+    if (headingEl) {
+      headingEl.textContent = `📚 الكورسات والمحاضرات المتاحة لـ (${stageTitle}):`;
+    }
+
+    if (!activeModalTeacher || !activeModalTeacher.courses) {
+      listEl.innerHTML = '<p style="color:var(--ink-dim);">لا توجد كورسات مسجلة لهذا المعلم.</p>';
+      return;
+    }
+
+    let courses = activeModalTeacher.courses;
+    if (stage) {
+      courses = courses.filter(c => c.academicStage === stage);
+    }
+
+    if (courses.length === 0) {
+      listEl.innerHTML = `
+        <div style="text-align:center;padding:24px;background:var(--bg);border-radius:14px;border:1px solid var(--line-soft);">
+          <p style="color:var(--ink-dim);margin:0;">لا توجد كورسات منشورة لهذا المعلم في (${stageTitle}).</p>
+        </div>
+      `;
+      return;
+    }
+
+    listEl.innerHTML = courses.map(c => {
+      const isEnrolled = enrolledCoursesList.some(e => (e.courseId === c.id || e.id === c.id || e.course?.id === c.id));
+      const priceBadge = (c.price > 0)
+        ? `<b style="color:#22c55e;">💵 ${c.price} ج.م</b>`
+        : (c.pointCost > 0 ? `<b style="color:var(--accent);">${c.pointCost} نقطة</b>` : '<b style="color:var(--primary);">مجاني / بالدرس</b>');
+      const thumb = c.imageUrl
+        ? `<img src="${c.imageUrl}" class="sub-course-thumb" alt="${escapeHtml(c.title)}">`
+        : `<div class="sub-course-thumb" style="display:flex;align-items:center;justify-content:center;font-size:1.4rem;">📖</div>`;
+
+      return `
+        <div style="display:flex;justify-content:space-between;align-items:center;background:var(--bg-raised);padding:14px 18px;border-radius:16px;border:1px solid var(--line-soft);box-shadow:var(--shadow-sm);flex-wrap:wrap;gap:12px;">
+          <div style="display:flex;align-items:center;gap:14px;">
+            ${thumb}
+            <div>
+              <h4 style="margin:0 0 4px;font-size:1.02rem;">${escapeHtml(c.title)}</h4>
+              <div style="font-size:0.83rem;color:var(--ink-dim);display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <span>${escapeHtml(c.subject || '')}</span>
+                <span>·</span>
+                ${priceBadge}
+                <span>·</span>
+                <span class="tag tag-stage">${escapeHtml(STAGE_NAMES[c.academicStage] || c.academicStage)}</span>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <a href="subject.html?courseId=${c.id}" class="btn btn-line btn-sm">المحاضرات ↗</a>
+            ${isEnrolled ? `
+              <span class="tag tag-ok">✓ مشترك بالفعل</span>
+            ` : `
+              <button class="btn btn-primary btn-sm" onclick="enrollInCourse('${c.id}', '${escapeHtml(c.title)}', ${c.pointCost || 0})">اشتراك ＋</button>
+            `}
+          </div>
+        </div>
+      `;
+    }).join('');
   }
 
   function closeTeacherModal() {

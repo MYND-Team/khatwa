@@ -56,7 +56,19 @@
         <h1 id="profileHeadName">بياناتي الشخصية</h1>
         <p class="page-sub" style="margin:4px 0 0;">إدارة وتعديل بيانات حسابك المسجلة على المنصة.</p>
       </div>
-      <button class="btn btn-primary btn-sm" id="openEditModalBtn">✏️ تعديل البيانات</button>
+      <button class="btn btn-primary btn-sm" id="openEditModalBtn">✏️ طلب تعديل البيانات</button>
+    </div>
+
+    <!-- Profile Request Status Banner -->
+    <div id="profileRequestBanner" style="display:none;margin-bottom:20px;padding:16px 20px;border-radius:14px;border:1px solid rgba(245,158,11,0.3);background:rgba(245,158,11,0.08);align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span style="font-size:1.6rem;" id="reqBannerIcon">⏳</span>
+        <div>
+          <b style="font-size:1rem;color:#f59e0b;" id="reqBannerTitle">طلب تعديل بياناتك قيد مراجعة الإدارة</b>
+          <p style="margin:2px 0 0;font-size:0.86rem;color:var(--ink-dim);" id="reqBannerSub">تم إرسال بياناتك المحدثة، وسيقوم مسؤول المنصة بمراجعتها واعتمادها قريباً.</p>
+        </div>
+      </div>
+      <span class="tag tag-warn" id="reqBannerBadge" style="font-weight:700;">قيد المراجعة</span>
     </div>
 
     <!-- Live Stat Row -->
@@ -120,8 +132,11 @@
 <div class="modal-backdrop" id="editProfileModal">
   <div class="modal-card">
     <div class="modal-head">
-      <h3>تعديل بيانات الحساب</h3>
+      <h3>طلب تعديل بيانات الحساب</h3>
       <button class="modal-close" id="closeEditModalBtn">×</button>
+    </div>
+    <div style="background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.25);padding:12px 14px;border-radius:10px;margin-bottom:14px;font-size:0.86rem;color:var(--ink);">
+      ℹ️ <b>تنبيه أمان:</b> حفاظاً على دقة السجلات، يتم إرسال طلب التعديل إلى إدارة المنصة لمراجعته والموافقة عليه قبل اعتماده رسمياً.
     </div>
     <div class="alert" id="editModalAlert"></div>
     <form id="editProfileForm">
@@ -137,10 +152,10 @@
         <div class="field">
           <label for="editGrade">الصف الدراسي</label>
           <select id="editGrade">
-            <option value="الصف الأول الثانوي">الصف الأول الثانوي</option>
-            <option value="الصف الثاني الثانوي">الصف الثاني الثانوي</option>
-            <option value="الصف الثالث الثانوي">الصف الثالث الثانوي</option>
-            <option value="أخرى">أخرى</option>
+            <option value="PREPARATORY">المرحلة الإعدادية</option>
+            <option value="SECONDARY_1">الصف الأول الثانوي</option>
+            <option value="SECONDARY_2">الصف الثاني الثانوي</option>
+            <option value="SECONDARY_3">الصف الثالث الثانوي</option>
           </select>
         </div>
       </div>
@@ -156,7 +171,7 @@
       </div>
       <div class="modal-actions">
         <button type="button" class="btn btn-line" id="cancelEditModalBtn">إلغاء</button>
-        <button type="submit" class="btn btn-primary" id="saveProfileBtn">حفظ التعديلات</button>
+        <button type="submit" class="btn btn-primary" id="saveProfileBtn">إرسال طلب التعديل للإدارة 📨</button>
       </div>
     </form>
   </div>
@@ -196,10 +211,18 @@
       : (user.role === 'TEACHER' ? `بيانات المدرس: ${displayName}` : `بيانات الطالب: ${displayName}`);
     document.getElementById('valUsername').textContent = user.username || '—';
     document.getElementById('valDisplayName').textContent = displayName;
-    document.getElementById('valGrade').textContent = user.grade || 'المرحلة الثانوية';
-    document.getElementById('valPhone').textContent = user.studentPhoneNumber || user.phone || 'غير مسجل';
-    document.getElementById('valParentPhone').textContent = user.parentPhoneNumber || user.parentPhone || 'غير مسجل';
-    document.getElementById('valFatherJob').textContent = user.fatherJob || 'غير مسجل';
+    const stageNames = {
+      PREPARATORY: 'المرحلة الإعدادية',
+      SECONDARY_1: 'الصف الأول الثانوي',
+      SECONDARY_2: 'الصف الثاني الثانوي',
+      SECONDARY_3: 'الصف الثالث الثانوي',
+    };
+
+    const currentStageKey = user.studentProfile?.academicStage || user.grade || 'SECONDARY_1';
+    document.getElementById('valGrade').textContent = stageNames[currentStageKey] || currentStageKey;
+    document.getElementById('valPhone').textContent = user.studentProfile?.studentPhoneNumber || user.studentPhoneNumber || user.phone || 'غير مسجل';
+    document.getElementById('valParentPhone').textContent = user.studentProfile?.parentInfo?.parentPhoneNumber || user.parentPhoneNumber || user.parentPhone || 'غير مسجل';
+    document.getElementById('valFatherJob').textContent = user.studentProfile?.parentInfo?.fatherJob || user.fatherJob || 'غير مسجل';
 
     if (user.createdAt) {
       const d = new Date(user.createdAt);
@@ -207,6 +230,37 @@
     } else {
       document.getElementById('valCreatedAt').textContent = 'عضو مسجل';
     }
+
+    // Check if there is an active profile update request
+    try {
+      const activeReq = await window.KhatwaAPI.student.getProfileRequest();
+      const banner = document.getElementById('profileRequestBanner');
+      if (banner && activeReq) {
+        if (activeReq.status === 'PENDING') {
+          banner.style.display = 'flex';
+          banner.style.borderColor = 'rgba(245, 158, 11, 0.4)';
+          banner.style.background = 'rgba(245, 158, 11, 0.08)';
+          document.getElementById('reqBannerIcon').textContent = '⏳';
+          document.getElementById('reqBannerTitle').textContent = 'طلب تعديل بياناتك قيد مراجعة الإدارة';
+          document.getElementById('reqBannerTitle').style.color = '#f59e0b';
+          document.getElementById('reqBannerSub').textContent = 'تم إرسال بياناتك المحدثة، وسيقوم مسؤول المنصة بمراجعتها واعتمادها قريباً.';
+          document.getElementById('reqBannerBadge').textContent = 'قيد المراجعة';
+          document.getElementById('reqBannerBadge').className = 'tag tag-warn';
+        } else if (activeReq.status === 'REJECTED') {
+          banner.style.display = 'flex';
+          banner.style.borderColor = 'rgba(239, 68, 68, 0.4)';
+          banner.style.background = 'rgba(239, 68, 68, 0.08)';
+          document.getElementById('reqBannerIcon').textContent = '⚠️';
+          document.getElementById('reqBannerTitle').textContent = 'تم رفض آخر طلب لتعديل البيانات';
+          document.getElementById('reqBannerTitle').style.color = '#ef4444';
+          document.getElementById('reqBannerSub').textContent = activeReq.adminNote ? `ملاحظة الإدارة: ${activeReq.adminNote}` : 'تم رفض الطلب بواسطة إدارة المنصة. يمكنك إرسال طلب جديد.';
+          document.getElementById('reqBannerBadge').textContent = 'مرفوض';
+          document.getElementById('reqBannerBadge').className = 'tag tag-err';
+        } else {
+          banner.style.display = 'none';
+        }
+      }
+    } catch (_) {}
 
     // Load dynamic student stats
     const stats = window.KhatwaAPI.student.getStats();
@@ -254,10 +308,11 @@
   function openEditModal() {
     const user = window.KhatwaAPI.getUser() || {};
     document.getElementById('editName').value = user.name || user.displayName || user.username || '';
-    document.getElementById('editPhone').value = user.studentPhoneNumber || user.phone || '';
-    document.getElementById('editParentPhone').value = user.parentPhoneNumber || user.parentPhone || '';
-    document.getElementById('editFatherJob').value = user.fatherJob || '';
-    if (user.grade) document.getElementById('editGrade').value = user.grade;
+    document.getElementById('editPhone').value = user.studentProfile?.studentPhoneNumber || user.studentPhoneNumber || user.phone || '';
+    document.getElementById('editParentPhone').value = user.studentProfile?.parentInfo?.parentPhoneNumber || user.parentPhoneNumber || user.parentPhone || '';
+    document.getElementById('editFatherJob').value = user.studentProfile?.parentInfo?.fatherJob || user.fatherJob || '';
+    const stg = user.studentProfile?.academicStage || user.grade;
+    if (stg) document.getElementById('editGrade').value = stg;
     document.getElementById('editModalAlert').classList.remove('show');
     modal.classList.add('show');
   }
@@ -277,23 +332,23 @@
     
     saveBtn.disabled = true;
     const oldText = saveBtn.textContent;
-    saveBtn.textContent = 'جارٍ الحفظ...';
+    saveBtn.textContent = 'جارٍ إرسال الطلب...';
 
     const updateData = {
       name: document.getElementById('editName').value.trim(),
       studentPhoneNumber: document.getElementById('editPhone').value.trim(),
       parentPhoneNumber: document.getElementById('editParentPhone').value.trim(),
       fatherJob: document.getElementById('editFatherJob').value.trim(),
-      grade: document.getElementById('editGrade').value,
+      academicStage: document.getElementById('editGrade').value,
     };
 
     try {
-      await window.KhatwaAPI.student.updateProfile(updateData);
+      const res = await window.KhatwaAPI.student.updateProfile(updateData);
       closeEditModal();
-      showToast('تم تحديث البيانات بنجاح ✅');
+      showToast(res.message || 'تم إرسال طلب تعديل البيانات للإدارة بنجاح 📨');
       await loadProfile();
     } catch (err) {
-      alertBox.textContent = err.message || 'حدث خطأ أثناء حفظ التعديلات';
+      alertBox.textContent = err.message || 'حدث خطأ أثناء إرسال طلب التعديل';
       alertBox.classList.add('show');
     } finally {
       saveBtn.disabled = false;

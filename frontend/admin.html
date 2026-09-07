@@ -451,6 +451,10 @@
     <button class="admin-nav-tab" data-target="tabPointRequests" onclick="switchAdminTab('tabPointRequests', this)">
       <span>💳 مراجعة طلبات الشحن</span>
     </button>
+    <button class="admin-nav-tab" data-target="tabProfileRequests" onclick="switchAdminTab('tabProfileRequests', this)">
+      <span>📋 طلبات تعديل بيانات الطلاب</span>
+      <span class="tab-count-badge" id="tabBadgeProfileRequests" style="background:#ef4444;color:#fff;">0</span>
+    </button>
     <button class="admin-nav-tab" data-target="tabSecurity" onclick="switchAdminTab('tabSecurity', this)">
       <span>🛡️ سجلات الأمان والنظام</span>
     </button>
@@ -811,7 +815,7 @@
     </div>
   </div>
 
-  <!-- Tab 3: Point Requests Review -->
+  <!-- Tab: Point Requests Review -->
   <div id="tabPointRequests" class="admin-tab-content" style="display:none;">
     <div class="block">
       <div class="block-head">
@@ -833,6 +837,44 @@
           </thead>
           <tbody id="pointRequestsTableBody">
             <tr><td colspan="8" style="text-align:center;color:var(--ink-dim);padding:30px;">جارٍ تحميل طلبات الشحن...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: Student Profile Edit Requests (Admin Approval Workflow) -->
+  <div id="tabProfileRequests" class="admin-tab-content" style="display:none;">
+    <div class="block">
+      <div class="block-head" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+        <div>
+          <h3 style="margin:0;">📋 طلبات تعديل بيانات الطلاب</h3>
+          <p style="margin:4px 0 0;font-size:0.86rem;color:var(--ink-dim);">مراجعة وتدقيق طلبات تغيير البيانات والأسماء وأرقام الهواتف والمراحل مع إمكانية القبول والتطبيق الفوري أو الرفض.</p>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <select id="profileRequestStatusFilter" class="form-control" style="font-size:0.86rem;padding:6px 12px;border-radius:10px;" onchange="loadAdminProfileRequests()">
+            <option value="">جميع الحالات</option>
+            <option value="PENDING" selected>قيد المراجعة فقط ⏳</option>
+            <option value="APPROVED">تمت الموافقة ✓</option>
+            <option value="REJECTED">مرفوضة ✕</option>
+          </select>
+          <button class="btn btn-line btn-sm" onclick="loadAdminProfileRequests()">تحديث 🔄</button>
+        </div>
+      </div>
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>الطالب والحساب</th>
+              <th>البيانات المسجلة الحالية</th>
+              <th>البيانات المطلوب تعديلها</th>
+              <th>الحالة</th>
+              <th>تاريخ الطلب</th>
+              <th>الإجراءات والقرار</th>
+            </tr>
+          </thead>
+          <tbody id="profileRequestsTableBody">
+            <tr><td colspan="6" style="text-align:center;color:var(--ink-dim);padding:30px;">جارٍ تحميل طلبات تعديل البيانات...</td></tr>
           </tbody>
         </table>
       </div>
@@ -1097,6 +1139,7 @@
     if (tabId === 'tabPayments') loadAdminPayments();
     if (tabId === 'tabStages') loadAdminStages();
     if (tabId === 'tabAppearance') loadAppearanceSettings();
+    if (tabId === 'tabProfileRequests') loadAdminProfileRequests();
   }
 
   async function refreshAdminData() {
@@ -1110,6 +1153,7 @@
       loadAppearanceSettings(),
       loadAccessCodes(),
       loadPointRequests(),
+      loadAdminProfileRequests(),
       loadVideoLogs(),
     ]);
   }
@@ -1825,6 +1869,128 @@
     if (!reason) return;
     await window.KhatwaAPI.admin.rejectPointRequest(id, reason);
     await refreshAdminData();
+  }
+
+  // ─── Student Profile Requests (Approval Workflow) ─────────────────────────
+  async function loadAdminProfileRequests() {
+    const filter = document.getElementById('profileRequestStatusFilter')?.value || '';
+    const tbody = document.getElementById('profileRequestsTableBody');
+    const badge = document.getElementById('tabBadgeProfileRequests');
+
+    try {
+      const requests = await window.KhatwaAPI.admin.getProfileRequests(filter);
+      
+      // Update pending badge count
+      const allPending = filter === 'PENDING' ? requests : await window.KhatwaAPI.admin.getProfileRequests('PENDING');
+      if (badge) {
+        badge.textContent = (allPending && allPending.length) || 0;
+        badge.style.display = (allPending && allPending.length > 0) ? 'inline-flex' : 'none';
+      }
+
+      if (!requests || requests.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--ink-dim);padding:30px;">لا توجد طلبات تعديل بيانات مطابقة لهذا الفلتر حالياً</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = requests.map(r => {
+        const student = r.student || {};
+        const profile = student.studentProfile || {};
+        const parent = profile.parentInfo || {};
+        const reqData = r.requestedData || {};
+
+        const isPending = r.status === 'PENDING';
+        const isApproved = r.status === 'APPROVED';
+        const isRejected = r.status === 'REJECTED';
+
+        const stageMap = {
+          PREPARATORY: 'المرحلة الإعدادية',
+          SECONDARY_1: 'الصف الأول الثانوي',
+          SECONDARY_2: 'الصف الثاني الثانوي',
+          SECONDARY_3: 'الصف الثالث الثانوي',
+        };
+
+        const currentItems = [];
+        if (profile.studentPhoneNumber) currentItems.push(`هاتف الطالب: <b>${profile.studentPhoneNumber}</b>`);
+        if (profile.academicStage) currentItems.push(`المرحلة: <b>${stageMap[profile.academicStage] || profile.academicStage}</b>`);
+        if (parent.parentPhoneNumber) currentItems.push(`هاتف الولي: <b>${parent.parentPhoneNumber}</b>`);
+        if (parent.fatherJob) currentItems.push(`وظيفة الأب: <b>${parent.fatherJob}</b>`);
+
+        const requestedItems = [];
+        if (reqData.name) requestedItems.push(`الاسم: <b style="color:var(--primary);">${reqData.name}</b>`);
+        if (reqData.studentPhoneNumber) requestedItems.push(`هاتف الطالب: <b style="color:var(--primary);">${reqData.studentPhoneNumber}</b>`);
+        if (reqData.academicStage) requestedItems.push(`المرحلة: <b style="color:var(--primary);">${stageMap[reqData.academicStage] || reqData.academicStage}</b>`);
+        if (reqData.parentPhoneNumber) requestedItems.push(`هاتف الولي: <b style="color:var(--primary);">${reqData.parentPhoneNumber}</b>`);
+        if (reqData.fatherJob) requestedItems.push(`وظيفة الأب: <b style="color:var(--primary);">${reqData.fatherJob}</b>`);
+
+        const statusTag = isPending 
+          ? '<span class="tag tag-warn" style="font-weight:700;">قيد المراجعة ⏳</span>'
+          : (isApproved ? '<span class="tag tag-ok" style="font-weight:700;">تم القبول ✓</span>' : '<span class="tag tag-err" style="font-weight:700;">مرفوض ✕</span>');
+
+        const dateStr = r.createdAt ? (window.KhatwaI18n ? window.KhatwaI18n.formatDate(r.createdAt) : new Date(r.createdAt).toLocaleDateString('ar-EG')) : '—';
+
+        return `
+          <tr>
+            <td>
+              <b>${student.username || 'طالب'}</b><br>
+              <span style="font-size:0.75rem;color:var(--ink-dim);">ID: ${student.id?.slice(0, 10)}...</span>
+            </td>
+            <td style="font-size:0.84rem;line-height:1.5;">
+              ${currentItems.length > 0 ? currentItems.join('<br>') : '<span style="color:var(--ink-dim);">لا توجد بيانات سابقة</span>'}
+            </td>
+            <td style="font-size:0.84rem;line-height:1.5;background:rgba(245,158,11,0.04);border-radius:8px;">
+              ${requestedItems.length > 0 ? requestedItems.join('<br>') : '<span style="color:var(--ink-dim);">لا توجد تعديلات</span>'}
+            </td>
+            <td>${statusTag}</td>
+            <td>${dateStr}</td>
+            <td>
+              ${isPending ? `
+                <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                  <button class="btn btn-primary btn-sm" style="padding:4px 10px;font-size:0.8rem;background:#16a34a;border-color:#16a34a;" onclick="approveStudentProfileRequest('${r.id}')">
+                    قبول وتطبيق التعديل ✓
+                  </button>
+                  <button class="btn btn-line btn-sm" style="padding:4px 10px;font-size:0.8rem;color:var(--err);border-color:rgba(239,68,68,0.4);" onclick="rejectStudentProfileRequest('${r.id}')">
+                    رفض ✕
+                  </button>
+                </div>
+              ` : `
+                <span style="font-size:0.82rem;color:var(--ink-dim);">
+                  ${r.adminNote ? `ملاحظة: ${r.adminNote}` : 'تمت المعالجة'}
+                </span>
+              `}
+            </td>
+          </tr>
+        `;
+      }).join('');
+    } catch (e) {
+      console.error('Failed to load profile requests:', e);
+      if (tbody) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--err);padding:24px;">تعذر تحميل طلبات التعديل: ${e.message || ''}</td></tr>`;
+      }
+    }
+  }
+
+  async function approveStudentProfileRequest(id) {
+    if (!confirm('هل أنت متأكد من رغبتك في الموافقة على تعديل بيانات هذا الطالب وتطبيقها مباشرة في قاعدة البيانات؟')) return;
+    try {
+      await window.KhatwaAPI.admin.approveProfileRequest(id);
+      alert('✓ تمت الموافقة على الطلب وتحديث بيانات الطالب بنجاح!');
+      await loadAdminProfileRequests();
+      await loadStudents();
+    } catch (err) {
+      alert(err.message || 'حدث خطأ أثناء اعتماد التعديل');
+    }
+  }
+
+  async function rejectStudentProfileRequest(id) {
+    const reason = prompt('أدخل سبب رفض طلب تعديل البيانات (ليظهر للطالب في حسابه):', 'البيانات غير مطابقة للأوراق الرسمية');
+    if (reason === null) return;
+    try {
+      await window.KhatwaAPI.admin.rejectProfileRequest(id, reason);
+      alert('✓ تم تسجيل رفض الطلب وإشعار الطالب بنجاح');
+      await loadAdminProfileRequests();
+    } catch (err) {
+      alert(err.message || 'حدث خطأ أثناء رفض الطلب');
+    }
   }
 
   async function loadVideoLogs() {

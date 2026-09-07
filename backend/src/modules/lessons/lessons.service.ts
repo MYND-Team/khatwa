@@ -112,8 +112,74 @@ export async function getLessonContent(lessonId: string, studentId: string) {
     }
   }
 
-  // Gate 2: Assignment / Opening quiz must be completed if required
-  if (lesson.assignmentQuizId) {
+  // Gate 2: Academic Gate — Previous Lesson Homework must be submitted
+  let previousLesson: any = null;
+  if (lesson.chapterId) {
+    previousLesson = await prisma.lesson.findFirst({
+      where: {
+        chapterId: lesson.chapterId,
+        orderIndex: { lt: lesson.orderIndex },
+        isPublished: true,
+      },
+      orderBy: { orderIndex: 'desc' },
+      select: {
+        id: true,
+        title: true,
+        assignmentQuizId: true,
+        homeworkId: true,
+      },
+    });
+  } else if (lesson.courseId) {
+    previousLesson = await prisma.lesson.findFirst({
+      where: {
+        courseId: lesson.courseId,
+        orderIndex: { lt: lesson.orderIndex },
+        isPublished: true,
+      },
+      orderBy: { orderIndex: 'desc' },
+      select: {
+        id: true,
+        title: true,
+        assignmentQuizId: true,
+        homeworkId: true,
+      },
+    });
+  }
+
+  if (previousLesson) {
+    const prevHwQuizId = previousLesson.assignmentQuizId || previousLesson.homeworkId;
+    if (prevHwQuizId) {
+      const prevAttempt = await prisma.quizAttempt.findUnique({
+        where: { studentId_quizId: { studentId, quizId: prevHwQuizId } },
+      });
+      const prevHwSubmission = await prisma.homeworkSubmission.findUnique({
+        where: { studentId_lessonId: { studentId, lessonId: previousLesson.id } },
+      });
+      if (!prevAttempt && !prevHwSubmission) {
+        throw Object.assign(
+          new Error(`يجب إكمال وتسليم واجب الحصة السابقة (${previousLesson.title}) أولاً`),
+          { statusCode: 403, code: 'PREVIOUS_HOMEWORK_REQUIRED' }
+        );
+      }
+    }
+  }
+
+  // Gate 3: Exam of the current lesson must be taken and PASSED
+  const examQuizId = lesson.examQuizId || lesson.openingQuizId;
+  if (examQuizId) {
+    const examAttempt = await prisma.quizAttempt.findUnique({
+      where: { studentId_quizId: { studentId, quizId: examQuizId } },
+    });
+    if (!examAttempt || !examAttempt.passed) {
+      throw Object.assign(
+        new Error(`يجب اجتياز امتحان الحصة أولاً قبل فتح المحتوى`),
+        { statusCode: 403, code: 'EXAM_REQUIRED' }
+      );
+    }
+  }
+
+  // Gate 4: Assignment / Opening quiz must be completed if required
+  if (lesson.assignmentQuizId && lesson.assignmentQuizId !== examQuizId) {
     const attempt = await prisma.quizAttempt.findUnique({
       where: { studentId_quizId: { studentId, quizId: lesson.assignmentQuizId } },
     });
@@ -121,18 +187,6 @@ export async function getLessonContent(lessonId: string, studentId: string) {
       throw Object.assign(
         new Error(`يجب تسليم الواجب أولاً قبل فتح المحاضرة`),
         { statusCode: 403, code: 'ASSIGNMENT_REQUIRED' }
-      );
-    }
-  }
-
-  if (lesson.examQuizId) {
-    const examAttempt = await prisma.quizAttempt.findUnique({
-      where: { studentId_quizId: { studentId, quizId: lesson.examQuizId } },
-    });
-    if (!examAttempt || !examAttempt.passed) {
-      throw Object.assign(
-        new Error(`يجب اجتياز الامتحان أولاً قبل فتح المحاضرة`),
-        { statusCode: 403, code: 'EXAM_REQUIRED' }
       );
     }
   }

@@ -62,89 +62,66 @@ router.get(
   })
 );
 
+router.get(
+  '/profile-request',
+  asyncHandler(async (req, res) => {
+    const studentId = req.user!.sub;
+    const latestRequest = await prisma.studentProfileRequest.findFirst({
+      where: { studentId },
+      orderBy: { createdAt: 'desc' },
+    });
+    res.status(200).json({ success: true, data: latestRequest });
+  })
+);
+
 router.put(
   '/profile',
   asyncHandler(async (req, res) => {
-    const { studentPhoneNumber, academicStage, parentPhoneNumber, parentEmail, fatherJob } = req.body;
-    const validStages = ['PREPARATORY', 'SECONDARY_1', 'SECONDARY_2', 'SECONDARY_3'];
+    const { name, displayName, studentPhoneNumber, academicStage, parentPhoneNumber, parentEmail, fatherJob } = req.body;
+    const studentId = req.user!.sub;
 
-    let studentProfile = await prisma.studentProfile.findUnique({
-      where: { userId: req.user!.sub },
-      include: { parentInfo: true },
+    // Check if there is already a pending request
+    const existingPending = await prisma.studentProfileRequest.findFirst({
+      where: { studentId, status: 'PENDING' },
     });
 
-    if (!studentProfile) {
-      studentProfile = await prisma.studentProfile.create({
+    const requestedData = {
+      name: name || displayName || undefined,
+      studentPhoneNumber: studentPhoneNumber ? String(studentPhoneNumber).trim() : undefined,
+      academicStage: academicStage || undefined,
+      parentPhoneNumber: parentPhoneNumber ? String(parentPhoneNumber).trim() : undefined,
+      parentEmail: parentEmail ? String(parentEmail).trim() : undefined,
+      fatherJob: fatherJob ? String(fatherJob).trim() : undefined,
+    };
+
+    let profileRequest;
+    if (existingPending) {
+      // Update existing pending request
+      profileRequest = await prisma.studentProfileRequest.update({
+        where: { id: existingPending.id },
         data: {
-          userId: req.user!.sub,
-          studentPhoneNumber: studentPhoneNumber || '',
-          academicStage: (academicStage && validStages.includes(academicStage)) ? academicStage : 'SECONDARY_1',
-          parentInfo: {
-            create: {
-              parentPhoneNumber: parentPhoneNumber || '',
-              parentEmail: parentEmail || null,
-              fatherJob: fatherJob || '',
-              parentStatus: 'BOTH_ALIVE',
-            },
-          },
+          requestedData,
+          createdAt: new Date(),
         },
-        include: { parentInfo: true },
       });
     } else {
-      const profileUpdates: any = {};
-      if (studentPhoneNumber !== undefined) profileUpdates.studentPhoneNumber = studentPhoneNumber;
-      if (academicStage && validStages.includes(academicStage)) profileUpdates.academicStage = academicStage;
-      if (Object.keys(profileUpdates).length > 0) {
-        await prisma.studentProfile.update({
-          where: { id: studentProfile.id },
-          data: profileUpdates,
-        });
-      }
-
-      if (studentProfile.parentInfo) {
-        await prisma.parentInfo.update({
-          where: { id: studentProfile.parentInfo.id },
-          data: {
-            ...(parentPhoneNumber !== undefined ? { parentPhoneNumber } : {}),
-            ...(parentEmail !== undefined ? { parentEmail } : {}),
-            ...(fatherJob !== undefined ? { fatherJob } : {}),
-          },
-        });
-      } else if (parentPhoneNumber || fatherJob || parentEmail) {
-        await prisma.parentInfo.create({
-          data: {
-            studentProfileId: studentProfile.id,
-            parentPhoneNumber: parentPhoneNumber || '',
-            parentEmail: parentEmail || null,
-            fatherJob: fatherJob || '',
-            parentStatus: 'BOTH_ALIVE',
-          },
-        });
-      }
+      // Create new request
+      profileRequest = await prisma.studentProfileRequest.create({
+        data: {
+          studentId,
+          requestedData,
+          status: 'PENDING',
+        },
+      });
     }
 
-    const updatedUser = await prisma.user.findUnique({
-      where: { id: req.user!.sub },
-      select: {
-        id: true,
-        username: true,
-        role: true,
-        pointsBalance: true,
-        walletBalance: true,
-        createdAt: true,
-        studentProfile: {
-          select: {
-            studentPhoneNumber: true,
-            academicStage: true,
-            parentInfo: {
-              select: { parentPhoneNumber: true, parentEmail: true, fatherJob: true },
-            },
-          },
-        },
+    res.status(200).json({
+      success: true,
+      message: 'تم إرسال طلب تعديل البيانات إلى إدارة المنصة بنجاح وسيتم تطبيق التعديلات فور موافقة الإدارة',
+      data: {
+        request: profileRequest,
       },
     });
-
-    res.status(200).json({ success: true, data: updatedUser });
   })
 );
 
@@ -692,8 +669,12 @@ router.get(
         id: true,
         title: true,
         courseId: true,
+        chapterId: true,
+        orderIndex: true,
         assignmentQuizId: true,
+        homeworkId: true,
         examQuizId: true,
+        openingQuizId: true,
         pointCost: true,
         price: true,
       },
@@ -730,29 +711,72 @@ router.get(
       }
     }
 
-    // 2. Check assignment submission
-    if (lesson.assignmentQuizId) {
-      const assignmentAttempt = await prisma.quizAttempt.findUnique({
-        where: { studentId_quizId: { studentId, quizId: lesson.assignmentQuizId } },
+    // 2. Academic Gate: Homework of the PREVIOUS lesson in chapter/course must be completed
+    let previousLesson: any = null;
+    if (lesson.chapterId) {
+      previousLesson = await prisma.lesson.findFirst({
+        where: {
+          chapterId: lesson.chapterId,
+          orderIndex: { lt: lesson.orderIndex },
+          isPublished: true,
+        },
+        orderBy: { orderIndex: 'desc' },
+        select: {
+          id: true,
+          title: true,
+          assignmentQuizId: true,
+          homeworkId: true,
+        },
       });
-      if (!assignmentAttempt) {
-        res.status(200).json({
-          success: true,
-          data: {
-            canAccess: false,
-            reason: 'ASSIGNMENT_REQUIRED',
-            step: 'assignment',
-            quizId: lesson.assignmentQuizId,
-          },
+    } else if (lesson.courseId) {
+      previousLesson = await prisma.lesson.findFirst({
+        where: {
+          courseId: lesson.courseId,
+          orderIndex: { lt: lesson.orderIndex },
+          isPublished: true,
+        },
+        orderBy: { orderIndex: 'desc' },
+        select: {
+          id: true,
+          title: true,
+          assignmentQuizId: true,
+          homeworkId: true,
+        },
+      });
+    }
+
+    if (previousLesson) {
+      const prevHwQuizId = previousLesson.assignmentQuizId || previousLesson.homeworkId;
+      if (prevHwQuizId) {
+        const prevAttempt = await prisma.quizAttempt.findUnique({
+          where: { studentId_quizId: { studentId, quizId: prevHwQuizId } },
         });
-        return;
+        const prevHwSubmission = await prisma.homeworkSubmission.findUnique({
+          where: { studentId_lessonId: { studentId, lessonId: previousLesson.id } },
+        });
+
+        if (!prevAttempt && !prevHwSubmission) {
+          res.status(200).json({
+            success: true,
+            data: {
+              canAccess: false,
+              reason: 'PREVIOUS_HOMEWORK_REQUIRED',
+              step: 'previous_homework',
+              previousLessonId: previousLesson.id,
+              previousLessonTitle: previousLesson.title,
+              quizId: prevHwQuizId,
+            },
+          });
+          return;
+        }
       }
     }
 
-    // 3. Check exam completion
-    if (lesson.examQuizId) {
+    // 3. Academic Gate: Current Lesson Exam must be taken and PASSED
+    const examQuizId = lesson.examQuizId || lesson.openingQuizId;
+    if (examQuizId) {
       const examAttempt = await prisma.quizAttempt.findUnique({
-        where: { studentId_quizId: { studentId, quizId: lesson.examQuizId } },
+        where: { studentId_quizId: { studentId, quizId: examQuizId } },
       });
       if (!examAttempt || !examAttempt.passed) {
         res.status(200).json({
@@ -761,7 +785,30 @@ router.get(
             canAccess: false,
             reason: 'EXAM_REQUIRED',
             step: 'exam',
-            quizId: lesson.examQuizId,
+            quizId: examQuizId,
+          },
+        });
+        return;
+      }
+    }
+
+    // 4. Current Lesson Assignment / Homework if defined
+    const currentHwQuizId = lesson.assignmentQuizId || lesson.homeworkId;
+    if (currentHwQuizId && currentHwQuizId !== examQuizId) {
+      const hwAttempt = await prisma.quizAttempt.findUnique({
+        where: { studentId_quizId: { studentId, quizId: currentHwQuizId } },
+      });
+      const currentHwSubmission = await prisma.homeworkSubmission.findUnique({
+        where: { studentId_lessonId: { studentId, lessonId: lesson.id } },
+      });
+      if (!hwAttempt && !currentHwSubmission) {
+        res.status(200).json({
+          success: true,
+          data: {
+            canAccess: false,
+            reason: 'ASSIGNMENT_REQUIRED',
+            step: 'assignment',
+            quizId: currentHwQuizId,
           },
         });
         return;

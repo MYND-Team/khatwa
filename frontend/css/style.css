@@ -4,9 +4,22 @@
    Academic, premium, elegant, high-contrast & clean typography.
    =========================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700;800;900&family=Aref+Ruqaa:wght@400;700&family=Amiri:wght@400;700&display=swap');
 
 :root {
+  /* ===========================================================
+     Top Header / Banner Theme Customization
+     Change these variables anytime to customize the top navbar banner!
+     =========================================================== */
+  --header-bg: #FFFFFF;
+  --header-text: #241E17;
+  --header-border: #EFE7DA;
+  --header-link-hover: #B88E4F;
+  --header-btn-bg: rgba(184, 142, 79, 0.08);
+  --header-btn-border: #EFE7DA;
+  --header-btn-text: #241E17;
+  --header-btn-hover-bg: rgba(184, 142, 79, 0.16);
+
   /* Brand Warm Golden Beige Palette (Matched directly to the official Khatwa logo) */
   --primary-deep: #8C6527;
   --primary: #B88E4F;
@@ -64,7 +77,9 @@
   --radius: 10px;
   --radius-lg: 14px;
   --maxw: 1160px;
-  --serif: 'Cairo', 'Source Serif 4', system-ui, sans-serif;
+  --font-main: 'Alexandria', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-logo: 'Aref Ruqaa', 'Amiri', serif;
+  --serif: var(--font-main);
   --shadow-sm: 0 1px 3px rgba(74, 63, 49, 0.05);
   --shadow-md: 0 4px 14px rgba(74, 63, 49, 0.08);
   --shadow-lg: 0 10px 30px rgba(74, 63, 49, 0.12);
@@ -74,7 +89,7 @@
 html{scroll-behavior:smooth;}
 body{
   margin:0;
-  font-family:'Cairo',system-ui,sans-serif;
+  font-family:var(--font-main);
   background:var(--bg);
   background-image:var(--bg-gradient);
   background-attachment:fixed;
@@ -159,59 +174,69 @@ p{margin:0;}
 
 /* ---------- Top Nav ---------- */
 .nav{
-  border-bottom:1px solid var(--line-soft);
-  background:rgba(255, 255, 255, 0.96);
-  backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--header-border);
+  background:var(--header-bg);
+  color:var(--header-text);
   position:sticky;
   top:0;
   z-index:40;
   box-shadow:var(--shadow-sm);
+  transition:background .2s ease, border-color .2s ease, color .2s ease;
 }
-.nav-inner{display:flex;align-items:center;justify-content:space-between;padding-block:14px;gap:24px;}
+.nav-inner{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding-block:12px;
+  gap:24px;
+}
 .brand{
   display:inline-flex;
   align-items:center;
-  gap:10px;
-  font-weight:800;
-  font-size:1.25rem;
-  font-family:var(--serif);
-  color:var(--ink);
-  transition: opacity .15s ease;
+  gap:12px;
+  text-decoration:none;
+  transition:opacity .15s ease, transform .15s ease;
+  margin-inline-end:auto;
 }
-.brand:hover{opacity:.9;}
+.brand:hover{opacity:.95; transform:scale(1.02);}
 .brand-logo{
-  height:40px;
+  height:54px;
   width:auto;
-  aspect-ratio:1/1;
+  max-height:56px;
+  aspect-ratio:auto;
   object-fit:contain;
-  border-radius:6px;
-  border:1px solid var(--line-soft);
+  border-radius:12px;
+  border:1px solid var(--header-border);
   background:#FFFFFF;
-  box-shadow:0 1px 3px rgba(11, 37, 69, 0.08);
+  padding:3px;
+  box-shadow:0 2px 8px rgba(184, 142, 79, 0.14);
 }
 .brand-mark{
-  width:32px;
-  height:32px;
+  width:36px;
+  height:36px;
   border:1.5px solid var(--primary-border);
-  border-radius:6px;
+  border-radius:8px;
   display:flex;
   align-items:center;
   justify-content:center;
   color:var(--primary);
   font-weight:800;
-  font-size:.85rem;
+  font-size:.9rem;
   background:var(--primary-faint);
 }
 .brand-text{
-  font-weight:800;
+  font-family:var(--font-logo);
+  font-weight:700;
+  font-size:1.65rem;
   color:var(--primary-deep);
-  letter-spacing:-.02em;
+  line-height:1.2;
+  letter-spacing:0;
 }
 .nav-links{display:flex;align-items:center;gap:28px;}
-.nav-links a{color:var(--ink-dim);font-weight:600;font-size:.92rem;transition:color .15s;}
-.nav-links a:hover, .nav-links a.active{color:var(--primary);font-weight:700;}
+.nav-links a{color:var(--header-text);opacity:0.85;font-weight:600;font-size:.95rem;transition:all .15s;}
+.nav-links a:hover, .nav-links a.active{color:var(--header-link-hover);opacity:1;font-weight:700;}
 .nav-cta{display:flex;gap:10px;align-items:center;}
-.nav-toggle{display:none;border:1px solid var(--line-soft);color:var(--ink);border-radius:6px;padding:7px 10px;background:#FFFFFF;}
+.nav-toggle{display:none;border:1px solid var(--header-border);color:var(--header-text);border-radius:6px;padding:7px 10px;background:var(--header-btn-bg);}
 
 /* ---------- Hero ---------- */
 .hero{
@@ -338,6 +363,8 @@ footer{
 .avatar{width:34px;height:34px;border-radius:50%;background:var(--primary-faint);border:1.5px solid var(--primary-border);display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--primary);font-size:.82rem;flex-shrink:0;}
 .user-line .name{font-size:.88rem;font-weight:700;display:block;color:var(--ink);}
 .user-line .role{font-size:.74rem;color:var(--ink-faint);}
+.nav-cta .user-line .name{color:var(--header-text);}
+.nav-cta .user-line .role{color:var(--header-text);opacity:0.75;}
 
 .points-tag{
   background:var(--secondary-faint);
@@ -863,10 +890,10 @@ table.plain tr:hover td{background:var(--primary-faint);}
 }
 
 .teacher-ref-name {
-  font-size: 1.2rem;
-  font-weight: 700;
+  font-size: 1.25rem;
+  font-weight: 800;
   color: #1A202C;
-  margin: 0 0 6px;
+  margin: 0 0 4px;
   line-height: 1.3;
 }
 
@@ -875,6 +902,142 @@ table.plain tr:hover td{background:var(--primary-faint);}
   color: #718096;
   font-weight: 500;
   margin-bottom: 6px;
+}
+
+.teacher-ref-subject {
+  font-size: 0.98rem;
+  color: var(--primary);
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.teacher-single-stage-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, rgba(184, 142, 79, 0.12) 0%, rgba(140, 101, 39, 0.05) 100%);
+  border: 1.5px solid var(--primary-border);
+  border-radius: 12px;
+  color: var(--primary-deep);
+  font-size: 0.88rem;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(184, 142, 79, 0.08);
+  width: 90%;
+  margin: 6px auto;
+  transition: all 0.2s ease;
+}
+.teacher-ref-card:hover .teacher-single-stage-badge {
+  background: var(--primary);
+  color: #FFFFFF;
+  border-color: var(--primary);
+  box-shadow: 0 4px 12px rgba(184, 142, 79, 0.25);
+}
+
+.teacher-stages-row {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 8px 0;
+  width: 100%;
+}
+
+.teacher-stage-badge {
+  flex: 1 1 calc(50% - 8px);
+  min-width: 90px;
+  max-width: 125px;
+  padding: 6px 8px;
+  background: #FAF8F5;
+  border: 1.5px solid var(--line-soft);
+  border-radius: 10px;
+  color: var(--ink-dim);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: all 0.2s ease;
+}
+
+.teacher-ref-card:hover .teacher-stage-badge {
+  background: #FFFFFF;
+  border-color: var(--primary);
+  color: var(--primary-deep);
+}
+
+/* Modal Side-by-Side Stages Bar */
+.modal-stages-bar {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 8px 0 14px;
+  margin-bottom: 16px;
+  border-bottom: 1.5px solid var(--line-soft);
+}
+
+.modal-stage-tab {
+  padding: 9px 18px;
+  border-radius: 12px;
+  border: 1.5px solid var(--line-soft);
+  background: var(--bg);
+  color: var(--ink-dim);
+  font-weight: 700;
+  font-size: 0.88rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.modal-stage-tab:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.modal-stage-tab.active {
+  background: var(--primary);
+  color: #FFFFFF;
+  border-color: var(--primary);
+  box-shadow: 0 4px 12px rgba(184, 142, 79, 0.28);
+}
+
+/* Subscriptions & Enrolled Cards Thumbnail & Avatar */
+.sub-avatar-img {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--primary-border);
+  background: var(--primary-faint);
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(184, 142, 79, 0.15);
+}
+
+.sub-avatar-placeholder {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: var(--primary-faint);
+  border: 2px solid var(--primary-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  color: var(--primary-deep);
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.sub-course-thumb {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  object-fit: cover;
+  border: 1px solid var(--line-soft);
+  background: var(--bg);
+  flex-shrink: 0;
 }
 
 .teacher-ref-badge {
@@ -1061,13 +1224,13 @@ table.plain tr:hover td{background:var(--primary-faint);}
 
 /* Language Switcher */
 .lang-switcher-btn {
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  color: #FFFFFF;
-  padding: 6px 14px;
+  background: var(--header-btn-bg);
+  border: 1.5px solid var(--header-btn-border);
+  color: var(--header-btn-text);
+  padding: 7px 16px;
   border-radius: 20px;
-  font-size: 0.82rem;
-  font-weight: 600;
+  font-size: 0.85rem;
+  font-weight: 700;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -1076,7 +1239,10 @@ table.plain tr:hover td{background:var(--primary-faint);}
 }
 
 .lang-switcher-btn:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: var(--header-btn-hover-bg);
+  border-color: var(--primary);
+  color: var(--primary);
+  transform: translateY(-1px);
 }
 
 /* ─── Universal Modal System ─────────────────────────────────── */

@@ -4,8 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>المحاضرة والدرس | خطوة</title>
-<link rel="icon" type="image/png" href="logo/logo-khatwa.png">
 <link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 <style>
   .security-video-wrapper {
     position: relative;
@@ -125,6 +127,32 @@
     try {
       const access = await window.KhatwaAPI.student.checkLessonAccess(lessonId);
 
+      // ─── Step 0: Previous Homework Required (Academic Progression Gate) ────
+      if (access.reason === 'PREVIOUS_HOMEWORK_REQUIRED') {
+        step1.className = 'progression-step active';
+        step2.className = 'progression-step';
+        step3.className = 'progression-step';
+
+        container.innerHTML = `
+          <div class="card" style="padding:36px 24px;border-radius:20px;text-align:center;max-width:560px;margin:0 auto;border:1px solid rgba(245,158,11,0.3);">
+            <div style="font-size:3.5rem;margin-bottom:12px;">📝</div>
+            <span class="tag tag-warn" style="font-size:0.88rem;font-weight:700;padding:6px 14px;border-radius:999px;">تنبيه نظام خطوة الأكاديمي</span>
+            <h2 style="margin:14px 0 8px;font-size:1.4rem;">يجب تسليم واجب الحصة السابقة أولاً</h2>
+            <p style="color:var(--ink-dim);line-height:1.7;margin-bottom:20px;">
+              لا يمكنك فتح هذه المحاضرة أو دخول امتحانها قبل إكمال وتسليم واجب:
+              <br><b style="color:var(--primary);font-size:1.05rem;">${escapeHtml(access.previousLessonTitle || 'المحاضرة السابقة')}</b>
+            </p>
+            <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+              <a href="lesson.html?lessonId=${access.previousLessonId}" class="btn btn-primary" style="padding:12px 24px;font-weight:700;">
+                الذهاب لواجب الحصة السابقة وحله الآن ←
+              </a>
+              <a href="courses.html" class="btn btn-line btn-sm">العودة لقائمة المواد</a>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
       // ─── Step 1: Assignment Required ───────────────────────────────────────
       if (access.reason === 'ASSIGNMENT_REQUIRED') {
         step1.className = 'progression-step active';
@@ -149,8 +177,8 @@
 
       // ─── Lesson Locked (requires individual purchase) ───────────────
       if (access.reason === 'LESSON_LOCKED') {
-        step1.className = 'progression-step completed';
-        step2.className = 'progression-step completed';
+        step1.className = 'progression-step';
+        step2.className = 'progression-step';
         step3.className = 'progression-step active';
 
         let pointsBalance = 0;
@@ -167,10 +195,10 @@
         const canAffordWallet = priceEGP > 0 && walletBalance >= priceEGP;
 
         container.innerHTML = `
-          <div class="card" style="padding:32px;border-radius:20px;text-align:center;max-width:520px;margin:0 auto;">
-            <div style="font-size:3rem;margin-bottom:10px;">🔒</div>
-            <h2 style="margin:0 0 8px;">هذه المحاضرة تتطلب الشراء</h2>
-            <p style="color:var(--ink-dim);margin-bottom:20px;">يجب شراء وتفعيل هذه المحاضرة لمتابعة الشرح والفيديو والمرفقات.</p>
+          <div class="card" style="padding:32px;border-radius:20px;text-align:center;max-width:540px;margin:0 auto;box-shadow:0 10px 30px rgba(0,0,0,0.15);">
+            <div style="font-size:3rem;margin-bottom:10px;">💳</div>
+            <h2 style="margin:0 0 8px;font-size:1.45rem;">تفعيل واشتراك المحاضرة</h2>
+            <p style="color:var(--ink-dim);margin-bottom:20px;font-size:0.92rem;">اختر وسيلة الدفع المناسبة لفتح المحاضرة ومتابعة الشرح والفيديو والمرفقات فوراً:</p>
             
             <div style="background:var(--bg-raised);padding:18px;border-radius:14px;margin-bottom:20px;border:1px solid var(--line-soft);text-align:right;">
               <div style="display:flex;justify-content:space-between;margin-bottom:10px;padding-bottom:8px;border-bottom:1px dashed var(--line-soft);">
@@ -179,30 +207,31 @@
               </div>
               <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
                 <span>سعر المحاضرة بالجنيه:</span>
-                <strong style="color:#22c55e;">${priceEGP} ج.م</strong>
+                <strong style="color:#22c55e;font-size:1.1rem;">${priceEGP} ج.م</strong>
               </div>
               <div style="display:flex;justify-content:space-between;">
                 <span>سعر المحاضرة بالنقاط:</span>
-                <strong style="color:#f59e0b;">${pointCost} نقطة</strong>
+                <strong style="color:#f59e0b;font-size:1.1rem;">${pointCost} نقطة</strong>
               </div>
             </div>
 
-            <div style="display:flex;flex-direction:column;gap:10px;">
+            <div style="display:flex;flex-direction:column;gap:12px;">
               ${priceEGP > 0 ? `
-                <button id="unlockLessonBtnWALLET_EGP" class="btn btn-primary" style="padding:12px;font-size:0.95rem;justify-content:center;background:#16a34a;border-color:#16a34a;" ${!canAffordWallet ? 'disabled' : ''} onclick="doPurchaseLesson('WALLET_EGP')">
+                <button id="unlockLessonBtnWALLET_EGP" class="btn btn-primary" style="padding:14px;font-size:1rem;justify-content:center;background:#16a34a;border-color:#16a34a;font-weight:700;" ${!canAffordWallet ? 'disabled' : ''} onclick="doPurchaseLesson('WALLET_EGP')">
                   💳 دفع بالجنيه من المحفظة (${priceEGP} ج.م) ${!canAffordWallet ? '— رصيدك لا يكفي' : ''}
                 </button>
               ` : ''}
 
               ${pointCost > 0 ? `
-                <button id="unlockLessonBtnPOINTS" class="btn btn-primary" style="padding:12px;font-size:0.95rem;justify-content:center;" ${!canAffordPoints ? 'disabled' : ''} onclick="doPurchaseLesson('POINTS')">
+                <button id="unlockLessonBtnPOINTS" class="btn btn-primary" style="padding:14px;font-size:1rem;justify-content:center;font-weight:700;" ${!canAffordPoints ? 'disabled' : ''} onclick="doPurchaseLesson('POINTS')">
                   💎 دفع برصيد النقاط (${pointCost} نقطة) ${!canAffordPoints ? '— رصيدك لا يكفي' : ''}
                 </button>
               ` : ''}
 
               ${(!canAffordWallet && !canAffordPoints) ? `
-                <div style="margin-top:10px;display:flex;gap:10px;justify-content:center;">
-                  <a href="request-points.html" class="btn btn-line btn-sm">شحن نقاط / رصيد المحفظة ←</a>
+                <div style="margin-top:10px;display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap;">
+                  <span style="font-size:0.86rem;color:var(--err);">رصيدك الحالي غير كافٍ.</span>
+                  <a href="request-points.html" class="btn btn-line btn-sm">شحن رصيد المحفظة أو النقاط ←</a>
                 </div>
               ` : ''}
             </div>
@@ -327,6 +356,29 @@
         </form>
       </div>
     `;
+
+    renderLatexMath(container);
+  }
+
+  function renderLatexMath(element) {
+    if (!element) return;
+    if (window.renderMathInElement) {
+      try {
+        window.renderMathInElement(element, {
+          delimiters: [
+            { left: '$$', right: '$$', display: true },
+            { left: '$', right: '$', display: false },
+            { left: '\\[', right: '\\]', display: true },
+            { left: '\\(', right: '\\)', display: false },
+          ],
+          throwOnError: false,
+        });
+      } catch (err) {
+        console.warn('KaTeX render error:', err);
+      }
+    } else {
+      setTimeout(() => renderLatexMath(element), 200);
+    }
   }
 
   async function submitQuizForm(e, quizId) {

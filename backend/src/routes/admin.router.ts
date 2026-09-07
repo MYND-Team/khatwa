@@ -994,4 +994,190 @@ router.delete(
   })
 );
 
+// ─── Student Profile Requests (Approval Workflow) ─────────────────────────────
+
+router.get(
+  '/profile-requests',
+  asyncHandler(async (req, res) => {
+    const status = (req.query.status as string) || undefined;
+    const requests = await prisma.studentProfileRequest.findMany({
+      where: status ? { status } : undefined,
+      include: {
+        student: {
+          select: {
+            id: true,
+            username: true,
+            role: true,
+            studentProfile: {
+              include: { parentInfo: true },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    res.status(200).json({ success: true, data: requests });
+  })
+);
+
+router.patch(
+  '/profile-requests/:id/approve',
+  asyncHandler(async (req, res) => {
+    const { id } = req.params;
+
+    const requestItem = await prisma.studentProfileRequest.findUnique({
+      where: { id: id as string },
+      include: {
+        student: {
+          include: {
+            studentProfile: {
+              include: { parentInfo: true },
+            },
+          },
+        },
+      },
+    });
+
+    if (!requestItem) {
+      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'طلب التعديل غير موجود' } });
+      return;
+    }
+
+    if (requestItem.status !== 'PENDING') {
+      res.status(400).json({ success: false, error: { code: 'ALREADY_PROCESSED', message: 'تمت معالجة هذا الطلب مسبقاً' } });
+      return;
+    }
+
+    const reqData = (requestItem.requestedData as any) || {};
+    const validStages = ['PREPARATORY', 'SECONDARY_1', 'SECONDARY_2', 'SECONDARY_3'];
+
+    await prisma.$transaction(async (tx: any) => {
+      // 1. Update Student Profile & Stage
+      let studentProfile = requestItem.student.studentProfile;
+      if (!studentProfile) {
+        studentProfile = await tx.studentProfile.create({
+          data: {
+            userId: requestItem.studentId,
+            studentPhoneNumber: reqData.studentPhoneNumber || '',
+            academicStage: reqData.academicStage && validStages.includes(reqData.academicStage) ? reqData.academicStage : 'SECONDARY_1',
+            parentInfo: {
+              create: {
+                parentPhoneNumber: reqData.parentPhoneNumber || '',
+                parentEmail: reqData.parentEmail || null,
+                fatherJob: reqData.fatherJob || '',
+                parentStatus: 'BOTH_ALIVE',
+              },
+            },
+          },
+          include: { parentInfo: true },
+        });
+      } else {
+        const profUpdates: any = {};
+        if (reqData.studentPhoneNumber !== undefined) profUpdates.studentPhoneNumber = reqData.studentPhoneNumber;
+        if (reqData.academicStage && validStages.includes(reqData.academicStage)) profUpdates.academicStage = reqData.academicStage;
+        if (Object.keys(profUpdates).length > 0) {
+          await tx.studentProfile.update({
+            where: { id: studentProfile.id },
+            data: profUpdates,
+          });
+        }
+
+        if (studentProfile.parentInfo) {
+          await tx.parentInfo.update({
+            where: { id: studentProfile.parentInfo.id },
+            data: {
+              ...(reqData.parentPhoneNumber !== undefined ? { parentPhoneNumber: reqData.parentPhoneNumber } : {}),
+              ...(reqData.parentEmail !== undefined ? { parentEmail: reqData.parentEmail } : {}),
+              ...(reqData.fatherJob !== undefined ? { fatherJob: reqData.fatherJob } : {}),
+            },
+          });
+        } else if (reqData.parentPhoneNumber || reqData.fatherJob || reqData.parentEmail) {
+          await tx.parentInfo.create({
+            data: {
+              studentProfileId: studentProfile.id,
+              parentPhoneNumber: reqData.parentPhoneNumber || '',
+              parentEmail: reqData.parentEmail || null,
+              fatherJob: reqData.fatherJob || '',
+              parentStatus: 'BOTH_ALIVE',
+            },
+          });
+        }
+      }
+
+      // 2. Mark request as APPROVED
+      await tx.studentProfileRequest.update({
+        where: { id: requestItem.id },
+        data: {
+          status: 'APPROVED',
+          processedAt: new Date(),
+        },
+      });
+
+      // 3. Send notification to student
+      await tx.notification.create({
+        data: {
+          userId: requestItem.studentId,
+          type: 'SYSTEM',
+          title: 'تم قبول طلب تعديل بياناتك',
+          message: 'وافقت إدارة المنصة على طلب تعديل بيانات حسابك وتم تطبيق التغييرات بنجاح.',
+        },
+      });
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'تمت الموافقة على طلب تعديل البيانات وتطبيق التغييرات بنجاح',
+    });
+  })
+);
+
+router.patch(
+  '/profile-requests/:id/reject',
+  asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const { reason } = req.body;
+
+    const requestItem = await prisma.studentProfileRequest.findUnique({
+      where: { id: id as string },
+    });
+
+    if (!requestItem) {
+      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'طلب التعديل غير موجود' } });
+      return;
+    }
+
+    if (requestItem.status !== 'PENDING') {
+      res.status(400).json({ success: false, error: { code: 'ALREADY_PROCESSED', message: 'تمت معالجة هذا الطلب مسبقاً' } });
+      return;
+    }
+
+    await prisma.$transaction(async (tx: any) => {
+      await tx.studentProfileRequest.update({
+        where: { id: requestItem.id },
+        data: {
+          status: 'REJECTED',
+          adminNote: reason || 'تم رفض الطلب بواسطة إدارة المنصة',
+          processedAt: new Date(),
+        },
+      });
+
+      await tx.notification.create({
+        data: {
+          userId: requestItem.studentId,
+          type: 'SYSTEM',
+          title: 'تم رفض طلب تعديل البيانات',
+          message: reason ? `تم رفض طلبك بالسبب: ${reason}` : 'نعتذر، تم رفض طلب تعديل بيانات حسابك من قبل إدارة المنصة.',
+        },
+      });
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'تم رفض طلب التعديل بنجاح',
+    });
+  })
+);
+
 export default router;
+
