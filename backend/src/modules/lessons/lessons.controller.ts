@@ -44,6 +44,8 @@ const updateLessonSchema = z.object({
     price: z.coerce.number().min(0).optional(),
     orderIndex: z.coerce.number().int().optional(),
     videoUrl: z.string().optional().nullable(),
+    pdfUrl: z.string().optional().nullable(),
+    pdfFileName: z.string().optional().nullable(),
     openingQuizId: z.string().optional(),
     homeworkId: z.string().optional(),
     isPublished: z.boolean().optional(),

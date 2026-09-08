@@ -87,6 +87,27 @@ export const getQuizWithAnswers = asyncHandler(async (req: Request, res: Respons
   res.status(200).json({ success: true, data });
 });
 
+export const listQuizAttempts = asyncHandler(async (req: Request, res: Response) => {
+  const data = await QuizService.listQuizAttempts(req.params.quizId as string);
+  res.status(200).json({ success: true, data });
+});
+
+export const getAttemptForReview = asyncHandler(async (req: Request, res: Response) => {
+  const data = await QuizService.getAttemptForReview(req.params.attemptId as string);
+  res.status(200).json({ success: true, data });
+});
+
+export const regradeAttempt = asyncHandler(async (req: Request, res: Response) => {
+  const { score, passed, teacherFeedback, answerOverrides } = req.body;
+  const data = await QuizService.regradeAttempt(req.params.attemptId as string, req.user!.sub, {
+    score: score !== undefined ? Number(score) : undefined,
+    passed: passed !== undefined ? Boolean(passed) : undefined,
+    teacherFeedback: teacherFeedback !== undefined ? String(teacherFeedback) : undefined,
+    answerOverrides,
+  });
+  res.status(200).json({ success: true, data });
+});
+
 // ─── Student ──────────────────────────────────────────────────────────────────
 
 export const getQuiz = asyncHandler(async (req: Request, res: Response) => {

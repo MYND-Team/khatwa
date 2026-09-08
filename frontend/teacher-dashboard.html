@@ -156,7 +156,23 @@
   <!-- View 3: Stage-Scoped Revenue -->
   <div class="tab-panel" id="view-revenue" style="display:none;">
     <div class="card" style="padding:20px;border-radius:18px;">
-      <h3 style="margin-top:0;">💵 سجل المعاملات المالية في هذه المرحلة</h3>
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+        <div>
+          <h3 style="margin:0 0 4px;">💵 سجل المعاملات المالية وأرباح الحصص</h3>
+          <p style="margin:0;color:var(--ink-dim);font-size:0.85rem;">تفاصيل المبيعات وأرباح كل كورس ومحاضرة في هذه المرحلة الأكاديمية.</p>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <button class="btn btn-primary btn-sm" onclick="exportTeacherRevenueToExcel()" style="display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg, #10b981 0%, #059669 100%);border-color:#059669;">
+            <span>📊 تصدير شيت إكسيل (Excel / CSV)</span>
+          </button>
+          <button class="btn btn-line btn-sm" onclick="loadStageRevenue()">تحديث 🔄</button>
+        </div>
+      </div>
+
+      <!-- Course Summary Cards / Breakdown -->
+      <div id="courseRevenueSummary" style="margin-bottom:20px;"></div>
+
+      <h4 style="margin:16px 0 10px;">📋 تفاصيل جميع المعاملات في المرحلة:</h4>
       <div id="stageRevenueList">
         <div style="text-align:center;padding:30px;color:var(--ink-dim);">جارٍ جلب سجل الإيرادات...</div>
       </div>
@@ -293,9 +309,16 @@
           </div>
         </div>
       </div>
-      <div class="form-group" style="margin-bottom:14px;">
-        <label class="form-label">📄 رفع مذكرة الدرس (PDF Document)</label>
-        <input type="file" id="lessonPdfFile" accept="application/pdf" class="form-control">
+      <div class="form-group" style="margin-bottom:14px;background:var(--bg-raised);padding:12px 14px;border-radius:12px;border:1px solid var(--line-soft);">
+        <label class="form-label" style="font-weight:700;margin-bottom:6px;">📄 مذكرة الدرس (PDF Document):</label>
+        <div style="margin-bottom:8px;">
+          <label style="font-size:0.82rem;color:var(--ink-dim);display:block;margin-bottom:4px;">1. رابط Google Drive أو رابط مباشر للمذكرة (موصى به لأي حجم ملف بدون قيود 5MB):</label>
+          <input type="text" id="lessonPdfUrlInput" class="form-control" placeholder="مثال: https://drive.google.com/file/d/1.../view">
+        </div>
+        <div>
+          <label style="font-size:0.82rem;color:var(--ink-dim);display:block;margin-bottom:4px;">2. أو رفع ملف PDF من جهازك (الملفات الصغيرة أقل من 4.5MB):</label>
+          <input type="file" id="lessonPdfFile" accept="application/pdf" class="form-control">
+        </div>
       </div>
       <div class="form-group" style="margin-bottom:18px;">
         <label class="form-label">وصف وملاحظات المحاضرة</label>
@@ -339,6 +362,18 @@
       <div class="form-group" style="margin-bottom:12px;">
         <label class="form-label">رابط الفيديو (Drive / YouTube / استضافة):</label>
         <input type="text" class="form-control" id="editLessonVideoUrlInput" placeholder="رابط فيديو المحاضرة">
+      </div>
+
+      <div class="form-group" style="margin-bottom:14px;background:var(--bg-raised);padding:12px 14px;border-radius:12px;border:1px solid var(--line-soft);">
+        <label class="form-label" style="font-weight:700;margin-bottom:6px;">📄 مذكرة الـ PDF (رابط Drive أو ملف):</label>
+        <div style="margin-bottom:8px;">
+          <label style="font-size:0.82rem;color:var(--ink-dim);display:block;margin-bottom:4px;">رابط المذكرة من Google Drive (بدون أي حد أقصى للحجم):</label>
+          <input type="text" class="form-control" id="editLessonPdfUrlInput" placeholder="رابط مذكرة Google Drive أو استضافة مباشرة">
+        </div>
+        <div>
+          <label style="font-size:0.82rem;color:var(--ink-dim);display:block;margin-bottom:4px;">أو رفع ملف PDF جديد من جهازك:</label>
+          <input type="file" id="editLessonPdfFile" accept="application/pdf" class="form-control">
+        </div>
       </div>
 
       <div class="form-group" style="margin-bottom:16px;">
@@ -446,6 +481,71 @@
 
     <h4>الأسئلة المضافة حالياً (<span id="addedQuestionsCount">0</span>):</h4>
     <div id="addedQuestionsList" style="display:flex;flex-direction:column;gap:8px;"></div>
+  </div>
+</div>
+
+<!-- Modal: Quiz Manual Grading & Review (Students Submissions & Regrade) -->
+<div class="modal-overlay" id="quizGradingModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:var(--bg-card);border:1px solid var(--line);border-radius:20px;max-width:850px;width:95%;padding:26px;max-height:90vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <div>
+        <span class="tag tag-ok" style="margin-bottom:4px;display:inline-block;">المراجعة والتصحيح اليدوي</span>
+        <h3 style="margin:0;" id="quizGradingModalTitle">📊 تصحيح ومراجعة إجابات الطلاب</h3>
+      </div>
+      <button class="btn btn-line btn-sm" onclick="closeQuizGradingModal()">✕ إغلاق</button>
+    </div>
+
+    <!-- Attempts List View -->
+    <div id="gradingAttemptsListView">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <span style="font-size:0.9rem;color:var(--ink-dim);">قائمة إجابات ومحاولات الطلاب لهذا الاختبار:</span>
+        <button class="btn btn-line btn-sm" onclick="reloadQuizAttempts()">تحديث القائمة 🔄</button>
+      </div>
+      <div id="quizAttemptsTableContainer">
+        <div style="text-align:center;padding:24px;color:var(--ink-dim);">جارٍ جلب إجابات الطلاب...</div>
+      </div>
+    </div>
+
+    <!-- Single Attempt Regrade View -->
+    <div id="gradingAttemptDetailView" style="display:none;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;background:var(--bg-raised);padding:12px 16px;border-radius:14px;">
+        <div>
+          <b style="font-size:1.05rem;" id="regradeStudentName">اسم الطالب</b>
+          <div style="font-size:0.82rem;color:var(--ink-dim);" id="regradeSubmittedAt">تاريخ التسليم</div>
+        </div>
+        <button class="btn btn-line btn-sm" onclick="backToAttemptsList()">← العودة لقائمة الطلاب</button>
+      </div>
+
+      <div id="regradeAnswersList" style="display:flex;flex-direction:column;gap:14px;margin-bottom:20px;"></div>
+
+      <!-- Override Form Box -->
+      <div style="background:var(--bg-raised);border:1px solid var(--line-soft);border-radius:14px;padding:18px;">
+        <h4 style="margin:0 0 12px;color:var(--primary);">✍️ اعتماد الدرجة والتقييم النهائي:</h4>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+          <div class="form-group">
+            <label class="form-label">الدرجة الكلية المعتمدة</label>
+            <input type="number" id="regradeTotalScoreInput" class="form-control" min="0">
+          </div>
+          <div class="form-group">
+            <label class="form-label">حالة الاجتياز</label>
+            <select id="regradePassedSelect" class="form-control">
+              <option value="true">ناجح / تم الاجتياز ✓</option>
+              <option value="false">راسب / لم يجتز ✕</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom:14px;">
+          <label class="form-label">ملاحظات وتعليق المدرس / الأسيستانت للطالب:</label>
+          <textarea id="regradeTeacherFeedbackInput" class="form-control" rows="2" placeholder="اكتب ملاحظاتك للطالب على إجابته أو التوجيهات المطلوبة..."></textarea>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;gap:10px;">
+          <button type="button" class="btn btn-line btn-sm" onclick="backToAttemptsList()">إلغاء</button>
+          <button type="button" class="btn btn-primary btn-sm" id="saveRegradeBtn" onclick="saveRegradeSubmission()">حفظ وتحديث التقييم والدرجة ✓</button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -616,7 +716,9 @@
                             <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
                               <button type="button" class="btn btn-line btn-sm" style="padding:3px 10px;font-size:.8rem;color:var(--primary);" onclick="openEditLessonModal('${l.id}')">✏️ تعديل السعر والبيانات</button>
                               <button type="button" class="btn btn-text btn-sm" onclick="openQuizBuilderForLesson('${l.id}', 'assignment')">📝 الواجب</button>
+                              ${l.assignmentQuizId ? `<button type="button" class="btn btn-line btn-sm" style="padding:3px 8px;font-size:.78rem;color:#f59e0b;border-color:rgba(245,158,11,0.4);" onclick="openQuizGradingModal('${l.assignmentQuizId}', 'تصحيح الواجب - ${escapeHtml(l.title)}')">📊 تصحيح الواجب</button>` : ''}
                               <button type="button" class="btn btn-text btn-sm" onclick="openQuizBuilderForLesson('${l.id}', 'exam')">🏆 الامتحان</button>
+                              ${l.examQuizId ? `<button type="button" class="btn btn-line btn-sm" style="padding:3px 8px;font-size:.78rem;color:#10b981;border-color:rgba(16,185,129,0.4);" onclick="openQuizGradingModal('${l.examQuizId}', 'تصحيح الامتحان - ${escapeHtml(l.title)}')">📊 تصحيح الامتحان</button>` : ''}
                               <button type="button" class="btn btn-line btn-sm" style="padding:3px 10px;font-size:.8rem;" onclick="openTeacherPreview('${l.id}')">👁 معاينة المحاضرة</button>
                             </div>
                           </div>
@@ -754,44 +856,177 @@
     URL.revokeObjectURL(url);
   }
 
+  let cachedStageRevenueTxns = [];
+
   async function loadStageRevenue() {
     const container = document.getElementById('stageRevenueList');
+    const summaryContainer = document.getElementById('courseRevenueSummary');
     try {
       const txns = await window.KhatwaAPI.teacher.getWorkspaceRevenue(currentStage);
+      cachedStageRevenueTxns = txns || [];
+
       if (!txns || txns.length === 0) {
+        if (summaryContainer) summaryContainer.innerHTML = '';
         container.innerHTML = '<div style="text-align:center;padding:24px;color:var(--ink-dim);">لا توجد معاملات شراء مسجلة في هذه المرحلة بعد.</div>';
         return;
       }
 
+      // Group revenue by course
+      const courseMap = new Map();
+      let totalStageEarning = 0;
+      let totalStageSales = 0;
+
+      txns.forEach(t => {
+        const cTitle = t.course?.title || 'كورسات عامة أو بدون تصنيف';
+        const earning = Number(t.teacherEarning || 0);
+        const amount = Number(t.amount || 0);
+        totalStageEarning += earning;
+        totalStageSales += amount;
+
+        if (!courseMap.has(cTitle)) {
+          courseMap.set(cTitle, { title: cTitle, count: 0, totalAmount: 0, totalEarning: 0, lessons: new Set() });
+        }
+        const item = courseMap.get(cTitle);
+        item.count += 1;
+        item.totalAmount += amount;
+        item.totalEarning += earning;
+        if (t.lesson?.title) item.lessons.add(t.lesson.title);
+      });
+
+      // Render Course Financial Summary Cards
+      if (summaryContainer) {
+        summaryContainer.innerHTML = `
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:14px;margin-bottom:16px;">
+            <div style="background:var(--bg-raised);border:1px solid var(--line-soft);border-radius:14px;padding:16px;">
+              <div style="font-size:0.82rem;color:var(--ink-dim);margin-bottom:4px;">إجمالي أرباحك في هذه المرحلة</div>
+              <div style="font-size:1.6rem;font-weight:900;color:#22c55e;">${totalStageEarning.toLocaleString('ar-EG')} ج.م</div>
+              <div style="font-size:0.75rem;color:var(--ink-dim);margin-top:4px;">من إجمالي مبيعات: ${totalStageSales.toLocaleString('ar-EG')} ج.م</div>
+            </div>
+            <div style="background:var(--bg-raised);border:1px solid var(--line-soft);border-radius:14px;padding:16px;">
+              <div style="font-size:0.82rem;color:var(--ink-dim);margin-bottom:4px;">إجمالي عمليات الشراء</div>
+              <div style="font-size:1.6rem;font-weight:900;color:var(--primary);">${txns.length}</div>
+              <div style="font-size:0.75rem;color:var(--ink-dim);margin-top:4px;">اشتراك مدفوع من الطلاب</div>
+            </div>
+            <div style="background:var(--bg-raised);border:1px solid var(--line-soft);border-radius:14px;padding:16px;">
+              <div style="font-size:0.82rem;color:var(--ink-dim);margin-bottom:4px;">عدد الكورسات النشطة</div>
+              <div style="font-size:1.6rem;font-weight:900;color:#f59e0b;">${courseMap.size}</div>
+              <div style="font-size:0.75rem;color:var(--ink-dim);margin-top:4px;">تحقق مبيعات حالياً</div>
+            </div>
+          </div>
+
+          <div style="background:var(--bg-card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px;">
+            <h5 style="margin:0 0 10px;font-size:0.95rem;">📊 جدول ملخص الإيرادات حسب كل كورس:</h5>
+            <div style="overflow-x:auto;">
+              <table class="data-table" style="font-size:0.88rem;">
+                <thead>
+                  <tr>
+                    <th>اسم الكورس</th>
+                    <th>عدد المشتركين</th>
+                    <th>إجمالي المبيعات</th>
+                    <th>صافي أرباحك</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${Array.from(courseMap.values()).map(c => `
+                    <tr>
+                      <td><b>${escapeHtml(c.title)}</b></td>
+                      <td><span class="tag">${c.count} طالب</span></td>
+                      <td>${c.totalAmount.toLocaleString('ar-EG')} ج.م</td>
+                      <td><b style="color:#22c55e;">${c.totalEarning.toLocaleString('ar-EG')} ج.م</b></td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `;
+      }
+
       container.innerHTML = `
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>رقم المعاملة</th>
-              <th>الطالب</th>
-              <th>المحاضرة</th>
-              <th>المبلغ الإجمالي</th>
-              <th>أرباحك المحتسبة</th>
-              <th>التاريخ</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${txns.map(t => `
+        <div style="overflow-x:auto;">
+          <table class="data-table">
+            <thead>
               <tr>
-                <td><code>${escapeHtml(t.transactionNumber)}</code></td>
-                <td>${escapeHtml(t.student?.username || 'طالب')}</td>
-                <td>${escapeHtml(t.lesson?.title || 'محاضرة')}</td>
-                <td>${t.amount} ج.م</td>
-                <td><b style="color:#22c55e;">${t.teacherEarning} ج.م</b></td>
-                <td>${new Date(t.createdAt).toLocaleDateString('ar-EG')}</td>
+                <th>رقم المعاملة</th>
+                <th>الطالب</th>
+                <th>الكورس</th>
+                <th>المحاضرة</th>
+                <th>المبلغ الإجمالي</th>
+                <th>أرباحك المحتسبة</th>
+                <th>طريقة الدفع</th>
+                <th>التاريخ</th>
               </tr>
-            `).join('')}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              ${txns.map(t => `
+                <tr>
+                  <td><code>${escapeHtml(t.transactionNumber || t.id)}</code></td>
+                  <td><b>${escapeHtml(t.student?.username || 'طالب')}</b></td>
+                  <td>${escapeHtml(t.course?.title || '—')}</td>
+                  <td><span class="tag tag-ok">${escapeHtml(t.lesson?.title || 'محاضرة')}</span></td>
+                  <td>${t.amount || 0} ج.م</td>
+                  <td><b style="color:#22c55e;">+ ${t.teacherEarning || 0} ج.م</b></td>
+                  <td><span class="tag">${escapeHtml(t.paymentMethod || 'WALLET_EGP')}</span></td>
+                  <td>${new Date(t.createdAt).toLocaleDateString('ar-EG')}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
       `;
     } catch (e) {
       container.innerHTML = '<div style="color:var(--err);">فشل تحميل سجل الإيرادات.</div>';
     }
+  }
+
+  function exportTeacherRevenueToExcel() {
+    if (!cachedStageRevenueTxns || cachedStageRevenueTxns.length === 0) {
+      alert('لا توجد معاملات مالية مسجلة لتصديرها.');
+      return;
+    }
+
+    const escapeCsv = (val) => {
+      if (val === null || val === undefined) return '""';
+      const str = String(val).replace(/"/g, '""');
+      return `"${str}"`;
+    };
+
+    const headers = [
+      'رقم المعاملة',
+      'اسم الطالب',
+      'اسم الكورس',
+      'المحاضرة',
+      'المبلغ الإجمالي (ج.م)',
+      'أرباح المدرس (ج.م)',
+      'طريقة الدفع',
+      'التاريخ والوقت'
+    ];
+
+    const rows = cachedStageRevenueTxns.map(t => [
+      t.transactionNumber || t.id,
+      t.student?.username || 'طالب',
+      t.course?.title || '—',
+      t.lesson?.title || 'محاضرة',
+      t.amount || 0,
+      t.teacherEarning || 0,
+      t.paymentMethod || 'WALLET_EGP',
+      t.createdAt ? new Date(t.createdAt).toLocaleString('ar-EG') : ''
+    ]);
+
+    const csvContent = '\uFEFF' + [
+      headers.map(escapeCsv).join(','),
+      ...rows.map(row => row.map(escapeCsv).join(','))
+    ].join('\r\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `أرباح_ومعاملات_${stageTitles[currentStage] || currentStage}_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   }
 
   function switchMainView(viewId, btn) {
@@ -1058,7 +1293,17 @@
     const progressStatus = document.getElementById('uploadProgressStatus');
 
     try {
-      const lesson = await window.KhatwaAPI.teacher.createLesson(chapterId, { title, price, pointCost, description, videoUrl });
+      const pdfUrlInput = (document.getElementById('lessonPdfUrlInput')?.value || '').trim();
+      let pdfUrl = null;
+      if (pdfUrlInput) {
+        let cleanPdf = pdfUrlInput.replace(/^\/+/, '');
+        if (!cleanPdf.startsWith('http://') && !cleanPdf.startsWith('https://')) {
+          cleanPdf = 'https://' + cleanPdf;
+        }
+        pdfUrl = cleanPdf;
+      }
+
+      const lesson = await window.KhatwaAPI.teacher.createLesson(chapterId, { title, price, pointCost, description, videoUrl, pdfUrl });
 
       if (videoFile && lesson?.id) {
         if (progressWrapper) progressWrapper.style.display = 'block';
@@ -1082,7 +1327,11 @@
 
       if (pdfFile && lesson?.id) {
         btn.textContent = 'جارٍ رفع مذكرة الـ PDF... 📄';
-        await window.KhatwaAPI.teacher.uploadPdf(lesson.id, pdfFile);
+        try {
+          await window.KhatwaAPI.teacher.uploadPdf(lesson.id, pdfFile);
+        } catch (pdfErr) {
+          alert('⚠️ تعذر رفع ملف الـ PDF: ' + (pdfErr.message || 'تجاوز الحد الأقصى 5MB') + '\n\n💡 يمكنك وضع رابط ملف Google Drive مباشرة في خانة رابط المذكرة!');
+        }
       }
 
       alert('تم حفظ ونشر المحاضرة بنجاح! ✅');
@@ -1117,6 +1366,7 @@
     document.getElementById('editLessonPriceInput').value = (lesson.price !== undefined && lesson.price !== null) ? lesson.price : 10;
     document.getElementById('editLessonPointCostInput').value = (lesson.pointCost !== undefined && lesson.pointCost !== null) ? lesson.pointCost : 10;
     document.getElementById('editLessonVideoUrlInput').value = lesson.videoUrl || '';
+    document.getElementById('editLessonPdfUrlInput').value = lesson.pdfUrl || '';
     document.getElementById('editLessonDescInput').value = lesson.description || '';
     document.getElementById('editLessonIsPublished').checked = lesson.isPublished !== false;
     document.getElementById('editLessonModal').style.display = 'flex';
@@ -1134,8 +1384,10 @@
     const price = parseFloat(document.getElementById('editLessonPriceInput').value) || 0;
     const pointCost = parseInt(document.getElementById('editLessonPointCostInput').value) || 0;
     const videoUrl = document.getElementById('editLessonVideoUrlInput').value.trim() || null;
+    const pdfUrl = document.getElementById('editLessonPdfUrlInput').value.trim() || null;
     const description = document.getElementById('editLessonDescInput').value.trim() || null;
     const isPublished = document.getElementById('editLessonIsPublished').checked;
+    const newPdfFile = document.getElementById('editLessonPdfFile')?.files[0];
 
     const btn = document.getElementById('saveEditLessonBtn');
     btn.disabled = true;
@@ -1147,9 +1399,20 @@
         price,
         pointCost,
         videoUrl,
+        pdfUrl,
         description,
         isPublished,
       });
+
+      if (newPdfFile) {
+        btn.textContent = 'جارٍ رفع ملف الـ PDF الجديد...';
+        try {
+          await window.KhatwaAPI.teacher.uploadPdf(id, newPdfFile);
+        } catch (pdfErr) {
+          alert('⚠️ تعذر رفع ملف الـ PDF: ' + (pdfErr.message || 'تجاوز الحد الأقصى 5MB') + '\n\n💡 يمكنك وضع رابط ملف Google Drive مباشرة في خانة رابط المذكرة!');
+        }
+      }
+
       alert('تم تحديث سعر وبيانات المحاضرة بنجاح! ✅');
       closeEditLessonModal();
       await refreshWorkspace();
@@ -1347,6 +1610,213 @@
   function escapeHtml(str) {
     if (!str) return '';
     return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  // ─── Manual Quiz Grading & Review Handlers ────────────────────────────────
+  let activeGradingQuizId = null;
+  let activeGradingAttemptId = null;
+  let currentLoadedAttempts = [];
+  let currentLoadedAttemptDetail = null;
+
+  async function openQuizGradingModal(quizId, modalTitle) {
+    activeGradingQuizId = quizId;
+    document.getElementById('quizGradingModalTitle').textContent = `📊 ${modalTitle || 'تصحيح ومراجعة إجابات الطلاب'}`;
+    document.getElementById('quizGradingModal').style.display = 'flex';
+    backToAttemptsList();
+    await reloadQuizAttempts();
+  }
+
+  function closeQuizGradingModal() {
+    document.getElementById('quizGradingModal').style.display = 'none';
+    activeGradingQuizId = null;
+    activeGradingAttemptId = null;
+    currentLoadedAttemptDetail = null;
+  }
+
+  function backToAttemptsList() {
+    document.getElementById('gradingAttemptsListView').style.display = 'block';
+    document.getElementById('gradingAttemptDetailView').style.display = 'none';
+  }
+
+  async function reloadQuizAttempts() {
+    if (!activeGradingQuizId) return;
+    const container = document.getElementById('quizAttemptsTableContainer');
+    container.innerHTML = '<div style="text-align:center;padding:24px;color:var(--ink-dim);">جارٍ جلب إجابات الطلاب...</div>';
+
+    try {
+      const attempts = await window.KhatwaAPI.teacher.getQuizAttempts(activeGradingQuizId);
+      currentLoadedAttempts = attempts || [];
+
+      if (currentLoadedAttempts.length === 0) {
+        container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--ink-dim);">لا توجد أي إجابات أو تسليمات من الطلاب لهذا الاختبار بعد.</div>';
+        return;
+      }
+
+      container.innerHTML = `
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>اسم الطالب</th>
+              <th>رقم الهاتف</th>
+              <th>الدرجة</th>
+              <th>النسبة المئوية</th>
+              <th>الحالة</th>
+              <th>المراجعة اليدوية</th>
+              <th>تاريخ التسليم</th>
+              <th>إجراء</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${currentLoadedAttempts.map(att => {
+              const score = att.score || 0;
+              const total = att.totalQuestions || 1;
+              const pct = Math.round((score / total) * 100);
+              const isPassed = att.passed;
+              const isReviewed = att.isManuallyReviewed;
+              const phone = att.student?.studentProfile?.studentPhoneNumber || '—';
+
+              return `
+                <tr>
+                  <td><b>${escapeHtml(att.student?.username || 'طالب')}</b></td>
+                  <td dir="ltr" style="text-align:right;">${phone}</td>
+                  <td><b>${score} / ${total}</b></td>
+                  <td><b style="color:${pct >= 50 ? '#16a34a' : '#ef4444'};">${pct}%</b></td>
+                  <td>
+                    ${isPassed ? '<span class="tag tag-ok">ناجح ✓</span>' : '<span class="tag tag-err">راسب ✕</span>'}
+                  </td>
+                  <td>
+                    ${isReviewed ? '<span class="tag tag-ok">تمت المراجعة ✓</span>' : '<span class="tag tag-warn">بانتظار المراجعة</span>'}
+                  </td>
+                  <td>${new Date(att.submittedAt).toLocaleDateString('ar-EG')}</td>
+                  <td>
+                    <button class="btn btn-primary btn-sm" style="padding:4px 10px;font-size:0.8rem;" onclick="openRegradeAttempt('${att.id}')">
+                      🔍 فحص وتصحيح
+                    </button>
+                  </td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      `;
+    } catch (e) {
+      container.innerHTML = `<div style="color:var(--err);padding:16px;">فشل تحميل قائمة المحاولات: ${e.message || 'خطأ غير متوقع'}</div>`;
+    }
+  }
+
+  async function openRegradeAttempt(attemptId) {
+    activeGradingAttemptId = attemptId;
+    document.getElementById('gradingAttemptsListView').style.display = 'none';
+    document.getElementById('gradingAttemptDetailView').style.display = 'block';
+
+    const list = document.getElementById('regradeAnswersList');
+    list.innerHTML = '<div style="text-align:center;padding:24px;color:var(--ink-dim);">جارٍ جلب تفاصيل الإجابات...</div>';
+
+    try {
+      const detail = await window.KhatwaAPI.teacher.getAttemptForReview(attemptId);
+      currentLoadedAttemptDetail = detail;
+
+      document.getElementById('regradeStudentName').textContent = `الطالب: @${detail.student?.username || 'طالب'}`;
+      document.getElementById('regradeSubmittedAt').textContent = `تاريخ التسليم: ${new Date(detail.submittedAt).toLocaleString('ar-EG')}`;
+      document.getElementById('regradeTotalScoreInput').value = detail.score || 0;
+      document.getElementById('regradePassedSelect').value = String(detail.passed);
+      document.getElementById('regradeTeacherFeedbackInput').value = detail.teacherFeedback || '';
+
+      const answers = detail.answers || [];
+      if (answers.length === 0) {
+        list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--ink-dim);">لا توجد تفاصيل إجابات مسجلة.</div>';
+        return;
+      }
+
+      list.innerHTML = answers.map((ans, idx) => {
+        const q = ans.question || {};
+        const isCorrect = ans.isCorrect;
+        const qType = q.questionType;
+
+        let ansBody = '';
+        if (qType === 'MULTIPLE_CHOICE') {
+          ansBody = `
+            <div style="margin:8px 0;font-size:0.9rem;">
+              <span>اختيار الطالب: <b>الخيار (${ans.selectedOption || 'لم يجب'})</b></span>
+              <span style="margin-inline-start:12px;color:var(--primary);">الإجابة الصحيحة: (${q.correctOption || 'A'})</span>
+            </div>
+          `;
+        } else {
+          ansBody = `
+            <div style="background:var(--bg-card);border:1px solid var(--line);border-radius:10px;padding:12px;margin:8px 0;">
+              <div style="font-size:0.8rem;color:var(--ink-dim);margin-bottom:4px;">إجابة الطالب المكتوبة:</div>
+              <div style="font-size:0.95rem;white-space:pre-wrap;font-weight:600;">${escapeHtml(ans.textAnswer || 'لا توجد إجابة')}</div>
+            </div>
+            ${q.rubric || q.sampleAnswer ? `
+              <div style="font-size:0.82rem;color:var(--ink-dim);margin-top:4px;">
+                💡 <b>نموذج الإجابة المطلوب:</b> ${escapeHtml(q.sampleAnswer || q.rubric)}
+              </div>
+            ` : ''}
+          `;
+        }
+
+        return `
+          <div style="background:var(--bg-raised);border:1px solid var(--line-soft);border-radius:14px;padding:16px;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
+              <b>س ${idx + 1}: ${escapeHtml(q.questionText)}</b>
+              <span class="tag" style="font-size:0.75rem;">${qType}</span>
+            </div>
+            ${q.equationLatex ? `<div style="margin:4px 0;">$$${escapeHtml(q.equationLatex)}$$</div>` : ''}
+            ${ansBody}
+            <div style="display:flex;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap;border-top:1px dashed var(--line-soft);padding-top:10px;">
+              <label style="font-size:0.85rem;display:flex;align-items:center;gap:6px;cursor:pointer;">
+                <input type="checkbox" class="regrade-q-correct" data-answer-id="${ans.id}" ${isCorrect ? 'checked' : ''} style="width:18px;height:18px;">
+                <span>احتساب إجابة صحيحة ✓</span>
+              </label>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      triggerKaTeX(list);
+    } catch (e) {
+      list.innerHTML = `<div style="color:var(--err);">تعذر جلب تفاصيل الإجابات: ${e.message || ''}</div>`;
+    }
+  }
+
+  async function saveRegradeSubmission() {
+    if (!activeGradingAttemptId) return;
+
+    const totalScore = parseInt(document.getElementById('regradeTotalScoreInput').value) || 0;
+    const passed = document.getElementById('regradePassedSelect').value === 'true';
+    const teacherFeedback = document.getElementById('regradeTeacherFeedbackInput').value.trim();
+
+    // Collect checkbox overrides for individual answers
+    const checkBoxes = document.querySelectorAll('.regrade-q-correct');
+    const answerOverrides = [];
+    checkBoxes.forEach(cb => {
+      answerOverrides.push({
+        answerId: cb.getAttribute('data-answer-id'),
+        isCorrect: cb.checked,
+      });
+    });
+
+    const btn = document.getElementById('saveRegradeBtn');
+    btn.disabled = true;
+    btn.textContent = 'جارٍ حفظ التقييم...';
+
+    try {
+      await window.KhatwaAPI.teacher.regradeAttempt(activeGradingAttemptId, {
+        score: totalScore,
+        passed,
+        teacherFeedback,
+        answerOverrides,
+      });
+
+      alert('✓ تم حفظ واعتماد تقييم المحاولة وتحديث الدرجة بنجاح!');
+      backToAttemptsList();
+      await reloadQuizAttempts();
+    } catch (err) {
+      alert(err.message || 'حدث خطأ أثناء حفظ التقييم');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'حفظ وتحديث التقييم والدرجة ✓';
+    }
   }
 </script>
 </body>

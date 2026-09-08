@@ -207,3 +207,134 @@ export async function getQuizWithAnswers(quizId: string, _actorUserId?: string) 
   if (!quiz) throw NotFoundError('Quiz');
   return quiz;
 }
+
+// ─── Teacher/Assistant: List attempts for a quiz ──────────────────────────────
+
+export async function listQuizAttempts(quizId: string) {
+  return prisma.quizAttempt.findMany({
+    where: { quizId },
+    include: {
+      student: {
+        select: {
+          id: true,
+          username: true,
+          studentProfile: {
+            select: {
+              studentPhoneNumber: true,
+              academicStage: true,
+            },
+          },
+        },
+      },
+      _count: {
+        select: { answers: true },
+      },
+    },
+    orderBy: { submittedAt: 'desc' },
+  });
+}
+
+// ─── Teacher/Assistant: Get specific attempt with full answers for review ────
+
+export async function getAttemptForReview(attemptId: string) {
+  const attempt = await prisma.quizAttempt.findUnique({
+    where: { id: attemptId },
+    include: {
+      student: {
+        select: {
+          id: true,
+          username: true,
+          studentProfile: {
+            select: {
+              studentPhoneNumber: true,
+              academicStage: true,
+            },
+          },
+        },
+      },
+      quiz: {
+        select: {
+          id: true,
+          title: true,
+          type: true,
+        },
+      },
+      answers: {
+        include: {
+          question: true,
+        },
+        orderBy: {
+          question: {
+            orderIndex: 'asc',
+          },
+        },
+      },
+    },
+  });
+  if (!attempt) throw NotFoundError('QuizAttempt');
+  return attempt;
+}
+
+// ─── Teacher/Assistant: Manual regrade / update score and feedback ───────────
+
+export async function regradeAttempt(
+  attemptId: string,
+  reviewerUserId: string,
+  input: {
+    score?: number;
+    passed?: boolean;
+    teacherFeedback?: string;
+    answerOverrides?: Array<{
+      answerId: string;
+      isCorrect?: boolean;
+      pointsAwarded?: number;
+      manualFeedback?: string;
+    }>;
+  }
+) {
+  const existing = await prisma.quizAttempt.findUnique({
+    where: { id: attemptId },
+  });
+  if (!existing) throw NotFoundError('QuizAttempt');
+
+  return prisma.$transaction(async (tx: any) => {
+    // 1. Update individual answer lines if provided
+    if (input.answerOverrides && input.answerOverrides.length > 0) {
+      for (const ov of input.answerOverrides) {
+        await tx.attemptAnswer.update({
+          where: { id: ov.answerId },
+          data: {
+            ...(ov.isCorrect !== undefined && { isCorrect: ov.isCorrect }),
+            ...(ov.pointsAwarded !== undefined && { pointsAwarded: ov.pointsAwarded }),
+            ...(ov.manualFeedback !== undefined && { manualFeedback: ov.manualFeedback }),
+          },
+        });
+      }
+    }
+
+    // 2. Update QuizAttempt
+    const updatedAttempt = await tx.quizAttempt.update({
+      where: { id: attemptId },
+      data: {
+        ...(input.score !== undefined && { score: input.score }),
+        ...(input.passed !== undefined && { passed: input.passed }),
+        ...(input.teacherFeedback !== undefined && { teacherFeedback: input.teacherFeedback }),
+        isManuallyReviewed: true,
+        reviewedById: reviewerUserId,
+      },
+      include: {
+        student: {
+          select: {
+            id: true,
+            username: true,
+          },
+        },
+        answers: {
+          include: { question: true },
+        },
+      },
+    });
+
+    return updatedAttempt;
+  });
+}

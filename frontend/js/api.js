@@ -460,6 +460,9 @@
       async createQuiz(data) { const res = await request('/teacher/quizzes', { method: 'POST', body: data }); return res.data; },
       async addQuizQuestion(quizId, data) { const res = await request('/teacher/quizzes/' + quizId + '/questions', { method: 'POST', body: data }); return res.data; },
       async getQuizWithAnswers(quizId) { const res = await request('/teacher/quizzes/' + quizId); return res.data; },
+      async getQuizAttempts(quizId) { const res = await request('/teacher/quizzes/' + quizId + '/attempts'); return res.data || []; },
+      async getAttemptForReview(attemptId) { const res = await request('/teacher/attempts/' + attemptId); return res.data; },
+      async regradeAttempt(attemptId, data) { const res = await request('/teacher/attempts/' + attemptId + '/regrade', { method: 'PATCH', body: data }); return res.data; },
       async deleteQuiz(quizId) { return request('/teacher/quizzes/' + quizId, { method: 'DELETE' }); },
       async deleteQuizQuestion(quizId, questionId) { return request('/teacher/quizzes/' + quizId + '/questions/' + questionId, { method: 'DELETE' }); },
       async assignQuizToLesson(lessonId, quizId, quizRole) {

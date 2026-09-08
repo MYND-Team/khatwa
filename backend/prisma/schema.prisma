@@ -608,16 +608,19 @@ model QuizQuestion {
 }
 
 model QuizAttempt {
-  id             String          @id @default(cuid())
-  studentId      String
-  student        User            @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  quizId         String
-  quiz           Quiz            @relation(fields: [quizId], references: [id], onDelete: Cascade)
-  score          Int             @default(0)
-  totalQuestions Int             @default(0)
-  passed         Boolean         @default(false)
-  submittedAt    DateTime        @default(now())
-  answers        AttemptAnswer[]
+  id                 String          @id @default(cuid())
+  studentId          String
+  student            User            @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  quizId             String
+  quiz               Quiz            @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  score              Int             @default(0)
+  totalQuestions     Int             @default(0)
+  passed             Boolean         @default(false)
+  isManuallyReviewed Boolean         @default(false)
+  reviewedById       String?
+  teacherFeedback    String?
+  submittedAt        DateTime        @default(now())
+  answers            AttemptAnswer[]
 
   @@unique([studentId, quizId])
   @@index([studentId])
@@ -633,6 +636,8 @@ model AttemptAnswer {
   selectedOption String? // 'A' | 'B' | 'C' | 'D'
   textAnswer     String? // Essay / Equation input
   isCorrect      Boolean      @default(false)
+  pointsAwarded  Int?
+  manualFeedback String?
 
   @@index([attemptId])
 }

@@ -412,9 +412,22 @@
 
       // Collect all stages taught by the teacher
       const stages = getTeacherStages(teacher);
+
+      // Check if current user is a student with a registered academic stage
+      const currentUser = window.KhatwaAPI.getUser();
+      const studentStage = currentUser?.studentProfile?.academicStage || currentUser?.grade || null;
+
       if (stages.length === 0) {
         document.getElementById('modalTeacherStagesBar').innerHTML = '<span style="font-size:0.85rem;color:var(--ink-dim);">لا توجد مراحل مسجلة لهذا المعلم</span>';
         activeModalStage = '';
+      } else if (studentStage && stages.includes(studentStage)) {
+        // Requirement 3: Student only sees the stage they belong to, not all teacher stages!
+        activeModalStage = studentStage;
+        document.getElementById('modalTeacherStagesBar').innerHTML = `
+          <button type="button" class="modal-stage-tab active" data-stage="${studentStage}">
+            📁 ${escapeHtml(STAGE_NAMES[studentStage] || studentStage)} (صفك الدراسي الحالي ✓)
+          </button>
+        `;
       } else {
         // Default to current stage filter if teacher teaches it, otherwise first available stage
         activeModalStage = (currentStageFilter && stages.includes(currentStageFilter))

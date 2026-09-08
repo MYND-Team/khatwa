@@ -786,7 +786,7 @@ router.get(
 router.post(
   '/chapters/:chapterId/lessons',
   asyncHandler(async (req, res) => {
-    const { title, description, price, pointCost, orderIndex, videoUrl, isPublished } = req.body;
+    const { title, description, price, pointCost, orderIndex, videoUrl, pdfUrl, pdfFileName, isPublished } = req.body;
 
     if (!title) {
       res.status(400).json({ success: false, error: { code: 'MISSING_FIELDS', message: 'title is required' } });
@@ -826,6 +826,8 @@ router.post(
         pointCost: pointCost !== undefined ? parseInt(pointCost) : 0,
         orderIndex: orderIndex !== undefined ? parseInt(orderIndex) : nextOrder,
         videoUrl: videoUrl || null,
+        pdfUrl: pdfUrl || null,
+        pdfFileName: pdfFileName || null,
         isPublished: isPublished !== undefined ? Boolean(isPublished) : true,
       },
     });
@@ -1064,6 +1066,10 @@ router.delete(
     res.status(200).json({ success: true, message: 'Quiz deleted' });
   })
 );
+
+router.get('/quizzes/:quizId/attempts', QuizController.listQuizAttempts);
+router.get('/attempts/:attemptId', QuizController.getAttemptForReview);
+router.patch('/attempts/:attemptId/regrade', QuizController.regradeAttempt);
 
 router.delete('/quizzes/:id/questions/:questionId', QuizController.deleteQuestion);
 

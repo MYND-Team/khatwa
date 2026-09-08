@@ -597,6 +597,9 @@
           <option value="SECONDARY_3">الصف الثالث الثانوي</option>
         </select>
         <button class="btn btn-line btn-sm" onclick="loadAdminPayments()">تحديث السجل 🔄</button>
+        <button class="btn btn-primary btn-sm" onclick="exportAdminPaymentsToExcel()" style="display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg, #10b981 0%, #059669 100%);border-color:#059669;">
+          <span>📊 تصدير إكسيل (Excel / CSV)</span>
+        </button>
       </div>
       <div id="paymentSummaryBadge" style="font-size:0.9rem;font-weight:700;color:#22c55e;">إجمالي الإيرادات: 0 ج.م</div>
     </div>
@@ -1331,6 +1334,8 @@
   }
 
   // ─── Traceable Payments Ledger ─────────────────────────────────────────────
+  let currentAdminPayments = [];
+
   async function loadAdminPayments() {
     const stage = document.getElementById('paymentStageFilter')?.value || '';
     const tbody = document.getElementById('adminPaymentsTableBody');
@@ -1340,6 +1345,7 @@
       if (stage) query.stage = stage;
 
       const payments = await window.KhatwaAPI.admin.getPayments(query);
+      currentAdminPayments = payments || [];
       if (payments.length === 0) {
         tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--ink-dim);padding:30px;">لا توجد معاملات مسجلة</td></tr>';
         return;
@@ -1365,6 +1371,56 @@
     } catch (e) {
       console.warn('Payments load error', e);
     }
+  }
+
+  function exportAdminPaymentsToExcel() {
+    if (!currentAdminPayments || currentAdminPayments.length === 0) {
+      alert('لا توجد معاملات مالية مسجلة حالياً لتصديرها.');
+      return;
+    }
+
+    const headers = [
+      'رقم المعاملة',
+      'اسم الطالب',
+      'اسم المدرس',
+      'المرحلة الدراسية',
+      'الكورس',
+      'المحاضرة',
+      'المبلغ الإجمالي (ج.م)',
+      'حصة المدرس (ج.م)',
+      'عمولة المنصة (ج.م)',
+      'طريقة الدفع',
+      'الحالة',
+      'تاريخ المعاملة'
+    ];
+
+    const rows = currentAdminPayments.map(p => {
+      return [
+        `"${(p.transactionNumber || '').replace(/"/g, '""')}"`,
+        `"${(p.student?.username || '').replace(/"/g, '""')}"`,
+        `"${(p.teacherProfile?.displayName || '').replace(/"/g, '""')}"`,
+        `"${(p.academicStage || '').replace(/"/g, '""')}"`,
+        `"${(p.course?.title || '').replace(/"/g, '""')}"`,
+        `"${(p.lesson?.title || '').replace(/"/g, '""')}"`,
+        p.amount || 0,
+        p.teacherEarning || 0,
+        p.platformFee || 0,
+        `"${(p.paymentMethod || '').replace(/"/g, '""')}"`,
+        `"${(p.status || 'COMPLETED').replace(/"/g, '""')}"`,
+        `"${p.createdAt ? new Date(p.createdAt).toLocaleString('ar-EG') : ''}"`
+      ];
+    });
+
+    const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `سجل_المدفوعات_المنصة_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   }
 
   // ─── Academic Stages Oversight ─────────────────────────────────────────────
