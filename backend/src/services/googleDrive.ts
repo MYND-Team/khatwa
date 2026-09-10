@@ -161,19 +161,19 @@ export async function createResumableUploadSession(input: {
   }
 
   try {
-    const lessonFolderId = await ensureLessonFolder(input.teacherId, input.lessonId);
-    
-    // ── Obtain a valid access token ───────────────────────────────────────────
-    // Strategy 1: OAuth 2.0 (primary — tokens stored in GOOGLE_DRIVE_TOKEN_JSON)
+    // ── 1. Obtain a valid access token and prepare working drive client ───────
     let accessToken: string | null = null;
+
+    // Strategy 1: OAuth 2.0 (primary — tokens stored in GOOGLE_DRIVE_TOKEN_JSON)
     if (GoogleDriveAuth.hasStoredTokens()) {
       try {
         const oauthClient = GoogleDriveAuth.getOAuth2Client();
         const tokenRes = await oauthClient.getAccessToken();
-        accessToken = tokenRes.token || null;
+        if (tokenRes.token) {
+          accessToken = tokenRes.token;
+          _driveClient = GoogleDriveAuth.getDriveClient();
+        }
       } catch (oauthErr: any) {
-        // invalid_grant → refresh token expired/revoked. Reset cached drive client so
-        // the next request rebuilds it, then fall through to service account.
         console.warn('OAuth token refresh failed (will try service account):', oauthErr.message);
         _driveClient = null;
       }
@@ -192,6 +192,9 @@ export async function createResumableUploadSession(input: {
           const client = await auth.getClient();
           const tokenRes = await client.getAccessToken();
           accessToken = tokenRes.token || null;
+          if (accessToken) {
+            _driveClient = google.drive({ version: 'v3', auth });
+          }
         } catch (saErr: any) {
           console.warn('Service account token also failed:', saErr.message);
         }
@@ -200,9 +203,12 @@ export async function createResumableUploadSession(input: {
 
     if (!accessToken) {
       return {
-        error: 'تعذر الاتصال بـ Google Drive: رمز المصادقة منتهي الصلاحية أو غير صالح. يرجى التواصل مع مدير المنصة لإعادة ربط حساب Google Drive، أو استخدم خيار رابط YouTube أو Drive بدلاً من رفع الملف مباشرة.',
+        error: 'تعذر الاتصال بـ Google Drive: رمز المصادقة منتهي الصلاحية أو غير صالح (invalid_grant). يرجى إعادة ربط حساب Google Drive أو التأكد من إعدادات الـ Service Account.',
       };
     }
+
+    // ── 2. Ensure lesson folder using the verified working drive client ───────
+    const lessonFolderId = await ensureLessonFolder(input.teacherId, input.lessonId);
 
     const metadata = {
       name: input.filename,
@@ -287,7 +293,7 @@ export async function queryResumableSessionFileId(
  * Used for PDF notes and attachments so enrolled students can read and download them.
  */
 export async function makeDriveFilePublic(fileId: string): Promise<boolean> {
-  const drive = getDriveClient();
+  let drive = getDriveClient();
   if (!drive) return false;
 
   try {
@@ -301,6 +307,23 @@ export async function makeDriveFilePublic(fileId: string): Promise<boolean> {
     });
     return true;
   } catch (err: any) {
+    if (err.message && err.message.includes('invalid_grant')) {
+      _driveClient = null;
+      const saJson = env.GOOGLE_SERVICE_ACCOUNT_KEY_JSON || process.env.GOOGLE_SERVICE_ACCOUNT_KEY_JSON;
+      if (saJson) {
+        try {
+          const credentials = loadServiceAccountCredentials();
+          const auth = new google.auth.GoogleAuth({ credentials, scopes: ['https://www.googleapis.com/auth/drive'] });
+          _driveClient = google.drive({ version: 'v3', auth });
+          await _driveClient.permissions.create({
+            fileId,
+            requestBody: { role: 'reader', type: 'anyone' },
+            supportsAllDrives: true,
+          });
+          return true;
+        } catch (_) {}
+      }
+    }
     console.warn(`makeDriveFilePublic warning for file ${fileId}:`, err.message);
     return false;
   }
