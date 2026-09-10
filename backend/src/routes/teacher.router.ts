@@ -995,7 +995,7 @@ router.post(
       return;
     }
 
-    let { driveFileId, fileName, uploadUrl, fileSize } = req.body;
+    let { driveFileId, fileName, uploadUrl, fileSize, fileType } = req.body;
 
     // ── Strategy 1 (Primary): driveFileId sent directly by the browser from the upload response body.
     //    Google Drive returns {id, name, kind} in the 200/201 response to the PUT.
@@ -1030,6 +1030,36 @@ router.post(
         error: {
           code: 'MISSING_FILE_ID',
           message: 'لم يتم العثور على معرف الملف في Google Drive. يرجى المحاولة مرة أخرى.',
+        },
+      });
+      return;
+    }
+
+    const isPdf = fileType === 'pdf' || (typeof fileName === 'string' && fileName.toLowerCase().endsWith('.pdf'));
+
+    if (isPdf) {
+      try {
+        const { makeDriveFilePublic } = await import('../services/googleDrive');
+        await makeDriveFilePublic(driveFileId);
+      } catch (err: any) {
+        console.warn('Could not set public permission on PDF file:', err.message);
+      }
+
+      const updated = await prisma.lesson.update({
+        where: { id: lesson.id },
+        data: {
+          pdfUrl: `https://drive.google.com/file/d/${driveFileId}/view`,
+          pdfFileName: fileName || 'lesson-notes.pdf',
+        },
+      });
+
+      res.status(200).json({
+        success: true,
+        data: {
+          lessonId: updated.id,
+          pdfUrl: updated.pdfUrl,
+          pdfFileName: updated.pdfFileName,
+          message: 'تم ربط مذكرة الـ PDF بالدرس بنجاح في Google Drive',
         },
       });
       return;

@@ -312,11 +312,11 @@
       <div class="form-group" style="margin-bottom:14px;background:var(--bg-raised);padding:12px 14px;border-radius:12px;border:1px solid var(--line-soft);">
         <label class="form-label" style="font-weight:700;margin-bottom:6px;">📄 مذكرة الدرس (PDF Document):</label>
         <div style="margin-bottom:8px;">
-          <label style="font-size:0.82rem;color:var(--ink-dim);display:block;margin-bottom:4px;">1. رابط Google Drive أو رابط مباشر للمذكرة (موصى به لأي حجم ملف بدون قيود 5MB):</label>
+          <label style="font-size:0.82rem;color:var(--ink-dim);display:block;margin-bottom:4px;">1. رابط Google Drive أو رابط مباشر للمذكرة:</label>
           <input type="text" id="lessonPdfUrlInput" class="form-control" placeholder="مثال: https://drive.google.com/file/d/1.../view">
         </div>
         <div>
-          <label style="font-size:0.82rem;color:var(--ink-dim);display:block;margin-bottom:4px;">2. أو رفع ملف PDF من جهازك (الملفات الصغيرة أقل من 4.5MB):</label>
+          <label style="font-size:0.82rem;color:var(--ink-dim);display:block;margin-bottom:4px;">2. أو رفع ملف PDF من جهازك مباشرة إلى Google Drive (بأي حجم):</label>
           <input type="file" id="lessonPdfFile" accept="application/pdf" class="form-control">
         </div>
       </div>
@@ -367,12 +367,18 @@
       <div class="form-group" style="margin-bottom:14px;background:var(--bg-raised);padding:12px 14px;border-radius:12px;border:1px solid var(--line-soft);">
         <label class="form-label" style="font-weight:700;margin-bottom:6px;">📄 مذكرة الـ PDF (رابط Drive أو ملف):</label>
         <div style="margin-bottom:8px;">
-          <label style="font-size:0.82rem;color:var(--ink-dim);display:block;margin-bottom:4px;">رابط المذكرة من Google Drive (بدون أي حد أقصى للحجم):</label>
+          <label style="font-size:0.82rem;color:var(--ink-dim);display:block;margin-bottom:4px;">رابط المذكرة من Google Drive أو رابط مباشر:</label>
           <input type="text" class="form-control" id="editLessonPdfUrlInput" placeholder="رابط مذكرة Google Drive أو استضافة مباشرة">
         </div>
         <div>
-          <label style="font-size:0.82rem;color:var(--ink-dim);display:block;margin-bottom:4px;">أو رفع ملف PDF جديد من جهازك:</label>
+          <label style="font-size:0.82rem;color:var(--ink-dim);display:block;margin-bottom:4px;">أو رفع ملف PDF جديد من جهازك مباشرة إلى Google Drive:</label>
           <input type="file" id="editLessonPdfFile" accept="application/pdf" class="form-control">
+        </div>
+        <div id="editPdfProgressWrapper" style="display:none;margin-top:10px;">
+          <div style="height:6px;background:var(--line);border-radius:4px;overflow:hidden;">
+            <div id="editPdfProgressBar" style="height:100%;width:0%;background:linear-gradient(90deg, var(--primary) 0%, #22c55e 100%);transition:width 0.2s;"></div>
+          </div>
+          <span id="editPdfProgressStatus" style="font-size:0.8rem;color:var(--primary);margin-top:4px;display:block;"></span>
         </div>
       </div>
 
@@ -1307,7 +1313,7 @@
 
       if (videoFile && lesson?.id) {
         if (progressWrapper) progressWrapper.style.display = 'block';
-        btn.textContent = 'جارٍ رفع ملف الفيديو... ⏳';
+        btn.textContent = 'جارٍ رفع ملف الفيديو إلى Google Drive... ⏳';
         try {
           await window.KhatwaAPI.teacher.uploadVideo(lesson.id, videoFile, (p) => {
             if (progressBar && progressPct) {
@@ -1316,21 +1322,34 @@
               const mbUploaded = (p.loaded / (1024 * 1024)).toFixed(1);
               const mbTotal = (p.total / (1024 * 1024)).toFixed(1);
               if (progressStatus) {
-                progressStatus.textContent = `🚀 تم رفع ${mbUploaded} MB من ${mbTotal} MB (${p.percentage}%)...`;
+                progressStatus.textContent = `🚀 تم رفع الفيديو: ${mbUploaded} MB من ${mbTotal} MB (${p.percentage}%)...`;
               }
             }
           });
         } catch (uploadErr) {
-          alert('⚠️ تم حفظ المحاضرة ولكن تعذر رفع ملف الفيديو من الجهاز: ' + (uploadErr.message || 'حجم الملف كبير') + '\n\n💡 يُرجى استخدام خيار (رابط Drive أو YouTube) لتشغيل الفيديو بأي حجم وجودة.');
+          alert('⚠️ تم حفظ المحاضرة ولكن تعذر رفع ملف الفيديو من الجهاز: ' + (uploadErr.message || 'خطأ في الاتصال') + '\n\n💡 يُرجى التأكد من اتصال الإنترنت أو استخدام رابط Drive أو YouTube.');
         }
       }
 
       if (pdfFile && lesson?.id) {
-        btn.textContent = 'جارٍ رفع مذكرة الـ PDF... 📄';
+        if (progressWrapper) progressWrapper.style.display = 'block';
+        if (progressBar) progressBar.style.width = '0%';
+        if (progressPct) progressPct.textContent = '0%';
+        btn.textContent = 'جارٍ رفع مذكرة الـ PDF إلى Google Drive... 📄';
         try {
-          await window.KhatwaAPI.teacher.uploadPdf(lesson.id, pdfFile);
+          await window.KhatwaAPI.teacher.uploadPdf(lesson.id, pdfFile, (p) => {
+            if (progressBar && progressPct) {
+              progressBar.style.width = p.percentage + '%';
+              progressPct.textContent = p.percentage + '%';
+              const mbUploaded = (p.loaded / (1024 * 1024)).toFixed(1);
+              const mbTotal = (p.total / (1024 * 1024)).toFixed(1);
+              if (progressStatus) {
+                progressStatus.textContent = `📄 تم رفع المذكرة: ${mbUploaded} MB من ${mbTotal} MB (${p.percentage}%)...`;
+              }
+            }
+          });
         } catch (pdfErr) {
-          alert('⚠️ تعذر رفع ملف الـ PDF: ' + (pdfErr.message || 'تجاوز الحد الأقصى 5MB') + '\n\n💡 يمكنك وضع رابط ملف Google Drive مباشرة في خانة رابط المذكرة!');
+          alert('⚠️ تعذر رفع ملف الـ PDF إلى Google Drive: ' + (pdfErr.message || 'خطأ أثناء الرفع'));
         }
       }
 
@@ -1405,11 +1424,27 @@
       });
 
       if (newPdfFile) {
-        btn.textContent = 'جارٍ رفع ملف الـ PDF الجديد...';
+        const editProgressWrapper = document.getElementById('editPdfProgressWrapper');
+        const editProgressBar = document.getElementById('editPdfProgressBar');
+        const editProgressStatus = document.getElementById('editPdfProgressStatus');
+        if (editProgressWrapper) editProgressWrapper.style.display = 'block';
+
+        btn.textContent = 'جارٍ رفع ملف الـ PDF إلى Google Drive... 📄';
         try {
-          await window.KhatwaAPI.teacher.uploadPdf(id, newPdfFile);
+          await window.KhatwaAPI.teacher.uploadPdf(id, newPdfFile, (p) => {
+            if (editProgressBar) {
+              editProgressBar.style.width = p.percentage + '%';
+            }
+            if (editProgressStatus) {
+              const mbUploaded = (p.loaded / (1024 * 1024)).toFixed(1);
+              const mbTotal = (p.total / (1024 * 1024)).toFixed(1);
+              editProgressStatus.textContent = `🚀 تم رفع المذكرة: ${mbUploaded} MB من ${mbTotal} MB (${p.percentage}%)...`;
+            }
+          });
         } catch (pdfErr) {
-          alert('⚠️ تعذر رفع ملف الـ PDF: ' + (pdfErr.message || 'تجاوز الحد الأقصى 5MB') + '\n\n💡 يمكنك وضع رابط ملف Google Drive مباشرة في خانة رابط المذكرة!');
+          alert('⚠️ تعذر رفع ملف الـ PDF إلى Google Drive: ' + (pdfErr.message || 'خطأ أثناء الرفع'));
+        } finally {
+          if (editProgressWrapper) editProgressWrapper.style.display = 'none';
         }
       }
 

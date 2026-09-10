@@ -283,6 +283,30 @@ export async function queryResumableSessionFileId(
 }
 
 /**
+ * Grants public read access ('anyone' with the link can view) to a file in Google Drive.
+ * Used for PDF notes and attachments so enrolled students can read and download them.
+ */
+export async function makeDriveFilePublic(fileId: string): Promise<boolean> {
+  const drive = getDriveClient();
+  if (!drive) return false;
+
+  try {
+    await drive.permissions.create({
+      fileId,
+      requestBody: {
+        role: 'reader',
+        type: 'anyone',
+      },
+      supportsAllDrives: true,
+    });
+    return true;
+  } catch (err: any) {
+    console.warn(`makeDriveFilePublic warning for file ${fileId}:`, err.message);
+    return false;
+  }
+}
+
+/**
  * Last-resort fallback: searches for a file within a specific lesson's Google Drive folder.
  *
  * Scoped to the lesson folder (not the entire Drive), filtered by:

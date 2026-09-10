@@ -482,36 +482,31 @@
       async deleteChapter(id) { return request('/teacher/chapters/' + id, { method: 'DELETE' }); },
       async createLesson(chapterId, data) { const res = await request('/teacher/chapters/' + chapterId + '/lessons', { method: 'POST', body: data }); return res.data; },
       async updateLesson(id, data) { const res = await request('/teacher/lessons/' + id, { method: 'PATCH', body: data }); return res.data; },
-      async uploadPdf(lessonId, file) {
-        const formData = new FormData();
-        formData.append('pdf', file);
-        const res = await request('/teacher/lessons/' + lessonId + '/pdf', { method: 'POST', body: formData });
-        return res.data;
-      },
-      async uploadVideo(lessonId, file, onProgress = null) {
+      async _directDriveUpload(lessonId, file, fileType = 'video', onProgress = null) {
         // ─── Step 1: Obtain a resumable upload session URL from the backend.
-        //     Only tiny JSON metadata passes through Vercel — the video bytes never do.
+        //     Only tiny JSON metadata passes through Vercel — the file bytes never do.
+        const typeLabel = fileType === 'pdf' ? 'ملف الـ PDF' : 'ملف الفيديو';
         let sessionRes;
         try {
           sessionRes = await request('/teacher/lessons/' + lessonId + '/resumable-upload-url', {
             method: 'POST',
             body: {
               filename: file.name,
-              mimeType: file.type || 'video/mp4',
+              mimeType: file.type || (fileType === 'pdf' ? 'application/pdf' : 'video/mp4'),
               fileSize: file.size,
             },
           });
         } catch (err) {
           if (err.status === 401) throw new Error('انتهت صلاحية جلسة تسجيل الدخول. يرجى تسجيل الدخول مجدداً.');
-          throw new Error(err.message || 'فشل الاتصال بخدمة رفع الفيديوهات المباشرة');
+          throw new Error(err.message || ('فشل الاتصال بخدمة رفع ' + typeLabel + ' المباشرة'));
         }
 
         if (!sessionRes?.success || !sessionRes.data?.uploadUrl) {
-          throw new Error(sessionRes?.message || 'تعذر بدء جلسة الرفع المباشر إلى Google Drive على السيرفر');
+          throw new Error(sessionRes?.message || ('تعذر بدء جلسة الرفع المباشر إلى Google Drive على السيرفر'));
         }
 
         const uploadUrl = sessionRes.data.uploadUrl;
-        const mimeType  = file.type || 'video/mp4';
+        const mimeType  = file.type || (fileType === 'pdf' ? 'application/pdf' : 'video/mp4');
         const totalSize = file.size;
         const MAX_RETRIES = 3;
 
@@ -519,7 +514,6 @@
         //     Sends a zero-byte PUT with Content-Range: bytes */{totalSize}.
         //     HTTP 200/201 → upload complete, parse file ID from response body.
         //     HTTP 308    → incomplete, parse last received byte from Range header.
-        //     The session URL is self-authenticating; no Authorization header is sent.
         async function querySessionProgress() {
           try {
             const res = await fetch(uploadUrl, {
@@ -536,17 +530,13 @@
                 const m = range.match(/bytes=0-(\d+)/);
                 if (m) return { complete: false, nextByte: parseInt(m[1], 10) + 1 };
               }
-              // No Range header on 308 = Google received nothing yet
               return { complete: false, nextByte: 0 };
             }
           } catch (_) { /* fall through */ }
           return { complete: false, nextByte: 0 };
         }
 
-        // ─── Helper: upload a slice of the file via XHR (XHR is used for upload progress events).
-        //     startByte = 0 → first upload attempt (full file).
-        //     startByte > 0 → resume after a failure (file.slice skips already-uploaded bytes).
-        //     Content-Range is always set so Google can correctly assemble partial uploads.
+        // ─── Helper: upload a slice of the file via XHR with progress tracking.
         function uploadSlice(startByte) {
           return new Promise((resolve, reject) => {
             const endByte = totalSize - 1;
@@ -569,15 +559,13 @@
 
             xhr.onload = () => {
               if (xhr.status === 200 || xhr.status === 201) {
-                // Google Drive returns {id, name, kind} in the response body on success.
                 let fileId = null;
                 try {
                   const json = JSON.parse(xhr.responseText);
                   if (json && json.id) fileId = json.id;
-                } catch (_) { /* body may be empty in some edge cases */ }
+                } catch (_) {}
                 resolve({ complete: true, fileId: fileId });
               } else if (xhr.status === 308) {
-                // Partial: Google received some bytes but not all.
                 const range = xhr.getResponseHeader('Range');
                 const m = range ? range.match(/bytes=0-(\d+)/) : null;
                 resolve({ complete: false, nextByte: m ? parseInt(m[1], 10) + 1 : startByte });
@@ -586,22 +574,20 @@
               }
             };
 
-            xhr.onerror = () => reject(new Error('انقطع الاتصال أثناء رفع الفيديو. سيتم إعادة المحاولة تلقائياً...'));
+            xhr.onerror = () => reject(new Error('انقطع الاتصال أثناء رفع ' + typeLabel + '. سيتم إعادة المحاولة تلقائياً...'));
             xhr.send(slice);
           });
         }
 
         // ─── Step 2: Upload with resume-on-failure (up to MAX_RETRIES retries).
-        //     On each retry: query session to find exact resume byte → upload only the missing data.
         let startByte = 0;
         let result    = null;
 
         for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
           if (attempt > 0) {
-            // Exponential backoff: 1 s, 2 s, 4 s
+            // Exponential backoff: 1s, 2s, 4s
             await new Promise(r => setTimeout(r, Math.pow(2, attempt - 1) * 1000));
 
-            // Ask Google where it left off before resuming
             const progress = await querySessionProgress();
             if (progress.complete) { result = { complete: true, fileId: progress.fileId }; break; }
             startByte = progress.nextByte;
@@ -610,28 +596,23 @@
           try {
             result = await uploadSlice(startByte);
             if (result.complete) break;
-            startByte = result.nextByte; // 308 partial — loop to send next chunk
+            startByte = result.nextByte;
           } catch (err) {
             if (attempt === MAX_RETRIES) {
-              throw new Error('فشل رفع الفيديو بعد ' + MAX_RETRIES + ' محاولات: ' + err.message);
+              throw new Error('فشل رفع ' + typeLabel + ' بعد ' + MAX_RETRIES + ' محاولات: ' + err.message);
             }
-            // else: loop to retry
           }
         }
 
         if (!result || !result.complete) {
-          throw new Error('فشل اكتمال رفع الفيديو. يرجى المحاولة مرة أخرى.');
+          throw new Error('فشل اكتمال رفع ' + typeLabel + '. يرجى المحاولة مرة أخرى.');
         }
 
-        // ─── Step 3: Notify the backend with the Drive file ID to save in the database.
-        //     Primary path: file ID came from the upload response body (most reliable).
-        //     Fallback path: backend queries the session URL or searches the lesson folder.
-        const completeBody = { fileName: file.name, fileSize: totalSize };
+        // ─── Step 3: Notify the backend to persist metadata into Supabase DB.
+        const completeBody = { fileName: file.name, fileSize: totalSize, fileType };
         if (result.fileId) {
           completeBody.driveFileId = result.fileId;
         } else {
-          // Upload succeeded (200/201) but response body had no parseable id.
-          // Pass the session URL so the backend can query it with the correct fileSize.
           completeBody.uploadUrl = uploadUrl;
         }
 
@@ -639,6 +620,14 @@
           method: 'POST',
           body: completeBody,
         });
+      },
+
+      async uploadPdf(lessonId, file, onProgress = null) {
+        return this._directDriveUpload(lessonId, file, 'pdf', onProgress);
+      },
+
+      async uploadVideo(lessonId, file, onProgress = null) {
+        return this._directDriveUpload(lessonId, file, 'video', onProgress);
       },
 
       async createQuiz(data) { const res = await request('/teacher/quizzes', { method: 'POST', body: data }); return res.data; },
