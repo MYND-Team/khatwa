@@ -1126,6 +1126,16 @@
   let currentAccessCodeFilter = 'ALL';
   let currentActiveStudentId = null;
 
+  function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   document.addEventListener('DOMContentLoaded', async () => {
     let user = window.KhatwaAPI.getUser();
     let token = window.KhatwaAPI.getToken();
