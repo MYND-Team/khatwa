@@ -38,10 +38,12 @@ router.get(
   '/stages',
   asyncHandler(async (_req, res) => {
     const stages = [
-      { code: 'PREPARATORY', nameAr: 'المرحلة الإعدادية', nameEn: 'Preparatory Stage', order: 1 },
+      { code: 'PREPARATORY', nameAr: 'الصف الثالث الإعدادي', nameEn: '3rd Preparatory', order: 1 },
       { code: 'SECONDARY_1', nameAr: 'الصف الأول الثانوي', nameEn: 'First Secondary', order: 2 },
       { code: 'SECONDARY_2', nameAr: 'الصف الثاني الثانوي', nameEn: 'Second Secondary', order: 3 },
-      { code: 'SECONDARY_3', nameAr: 'الصف الثالث الثانوي', nameEn: 'Third Secondary', order: 4 },
+      { code: 'BACCALAUREATE_2', nameAr: 'الصف الثاني باكلوريا', nameEn: 'Second Baccalaureate', order: 4 },
+      { code: 'SECONDARY_3', nameAr: 'الصف الثالث الثانوي', nameEn: 'Third Secondary', order: 5 },
+      { code: 'BACCALAUREATE_3', nameAr: 'الصف الثالث باكلوريا', nameEn: 'Third Baccalaureate', order: 6 },
     ];
 
     const [coursesCounts, studentsCounts, subscriptionsCounts] = await Promise.all([
@@ -246,7 +248,7 @@ router.get(
     const { search = '', page = '1', limit = '50', stage = '' } = req.query as Record<string, string>;
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
-    const validStages = ['PREPARATORY', 'SECONDARY_1', 'SECONDARY_2', 'SECONDARY_3'];
+    const validStages = ['PREPARATORY', 'SECONDARY_1', 'SECONDARY_2', 'BACCALAUREATE_2', 'SECONDARY_3', 'BACCALAUREATE_3'];
     const stageFilter = stage && validStages.includes(stage) ? stage : null;
 
     const where: any = { role: 'STUDENT' };
@@ -847,7 +849,7 @@ router.post(
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
-    const stagesString = academicStages || 'SECONDARY_1,SECONDARY_2,SECONDARY_3';
+    const stagesString = academicStages || 'SECONDARY_1,SECONDARY_2,BACCALAUREATE_2,SECONDARY_3,BACCALAUREATE_3';
     const stageList = stagesString.split(',').map((s: string) => s.trim()).filter(Boolean);
     const parsedCommission = commissionPct !== undefined && commissionPct !== '' && !isNaN(Number(commissionPct)) ? Number(commissionPct) : null;
 
@@ -1050,7 +1052,7 @@ router.patch(
     }
 
     const reqData = (requestItem.requestedData as any) || {};
-    const validStages = ['PREPARATORY', 'SECONDARY_1', 'SECONDARY_2', 'SECONDARY_3'];
+    const validStages = ['PREPARATORY', 'SECONDARY_1', 'SECONDARY_2', 'BACCALAUREATE_2', 'SECONDARY_3', 'BACCALAUREATE_3'];
 
     await prisma.$transaction(async (tx: any) => {
       // 1. Update Student Profile & Stage

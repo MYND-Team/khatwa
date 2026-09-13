@@ -79,7 +79,7 @@ router.patch(
 
 // ─── Stage Workspaces (Requirement 2) ────────────────────────────────────────
 
-const VALID_STAGES = ['PREPARATORY', 'SECONDARY_1', 'SECONDARY_2', 'SECONDARY_3'];
+const VALID_STAGES = ['PREPARATORY', 'SECONDARY_1', 'SECONDARY_2', 'BACCALAUREATE_2', 'SECONDARY_3', 'BACCALAUREATE_3'];
 
 router.get(
   '/workspaces',

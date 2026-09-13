@@ -47,6 +47,7 @@ router.get(
           select: {
             studentPhoneNumber: true,
             academicStage: true,
+            academicStages: true,
             parentInfo: {
               select: {
                 parentPhoneNumber: true,
@@ -125,10 +126,96 @@ router.put(
   })
 );
 
+const VALID_STAGES = ['PREPARATORY', 'SECONDARY_1', 'SECONDARY_2', 'BACCALAUREATE_2', 'SECONDARY_3', 'BACCALAUREATE_3'];
+
+/**
+ * PUT /student/stage
+ * Direct update of student's active academic stage and/or selected stages.
+ */
+router.put(
+  '/stage',
+  asyncHandler(async (req, res) => {
+    const { academicStage, academicStages } = req.body;
+
+    const targetStage = academicStage && VALID_STAGES.includes(academicStage) ? academicStage : undefined;
+
+    let targetStagesStr: string | undefined = undefined;
+    if (Array.isArray(academicStages)) {
+      targetStagesStr = academicStages.filter((s: string) => VALID_STAGES.includes(s)).join(',');
+    } else if (typeof academicStages === 'string') {
+      targetStagesStr = academicStages
+        .split(',')
+        .map((s: string) => s.trim())
+        .filter((s: string) => VALID_STAGES.includes(s))
+        .join(',');
+    }
+
+    const data: any = {};
+    if (targetStage) data.academicStage = targetStage;
+    if (targetStagesStr !== undefined) {
+      data.academicStages = targetStagesStr;
+      if (!data.academicStage && targetStagesStr) {
+        data.academicStage = targetStagesStr.split(',')[0];
+      }
+    }
+
+    if (Object.keys(data).length === 0) {
+      res.status(400).json({ success: false, error: { code: 'INVALID_STAGE', message: 'يرجى اختيار صف دراسي صحيح' } });
+      return;
+    }
+
+    const updated = await prisma.studentProfile.upsert({
+      where: { userId: req.user!.sub },
+      update: data,
+      create: {
+        userId: req.user!.sub,
+        studentPhoneNumber: '',
+        ...data,
+      },
+      select: {
+        id: true,
+        academicStage: true,
+        academicStages: true,
+      },
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'تم تحديث الصف الدراسي بنجاح',
+      data: updated,
+    });
+  })
+);
+
+function resolveStudentStages(student: any, queryStage?: string) {
+  const profile = student?.studentProfile;
+  const stagesStr = profile?.academicStages || profile?.academicStage || 'SECONDARY_1';
+  const studentStages = stagesStr
+    .split(',')
+    .map((s: string) => s.trim())
+    .filter((s: string) => VALID_STAGES.includes(s));
+
+  if (studentStages.length === 0) studentStages.push('SECONDARY_1');
+
+  if (queryStage && VALID_STAGES.includes(queryStage)) {
+    return {
+      activeStage: queryStage,
+      stageFilter: queryStage,
+      availableStages: studentStages,
+    };
+  }
+
+  return {
+    activeStage: studentStages[0],
+    stageFilter: studentStages.length === 1 ? studentStages[0] : { in: studentStages },
+    availableStages: studentStages,
+  };
+}
+
 // ─── Stage-Filtered Course & Lesson Catalog (Requirement 4) ──────────────────
 
 /**
- * Returns subjects, courses, and lessons filtered strictly by student's academic stage.
+ * Returns subjects, courses, and lessons filtered strictly by student's selected academic stage(s).
  */
 router.get(
   '/catalog',
@@ -138,12 +225,13 @@ router.get(
       include: { studentProfile: true },
     });
 
-    const studentStage = student?.studentProfile?.academicStage || 'SECONDARY_1';
+    const queryStage = (req.query.stage as string)?.trim();
+    const { activeStage, stageFilter, availableStages } = resolveStudentStages(student, queryStage);
 
     const courses = await prisma.course.findMany({
       where: {
         isPublished: true,
-        academicStage: studentStage as any,
+        academicStage: stageFilter as any,
       },
       include: {
         teacherProfile: {
@@ -218,7 +306,8 @@ router.get(
     res.status(200).json({
       success: true,
       data: {
-        academicStage: studentStage,
+        academicStage: activeStage,
+        availableStages,
         courses: formatted,
       },
     });
@@ -232,12 +321,14 @@ router.get(
       where: { id: req.user!.sub },
       include: { studentProfile: true },
     });
-    const studentStage = student?.studentProfile?.academicStage || 'SECONDARY_1';
+
+    const queryStage = (req.query.stage as string)?.trim();
+    const { activeStage, stageFilter, availableStages } = resolveStudentStages(student, queryStage);
 
     const teachers = await prisma.teacherProfile.findMany({
       where: {
         user: { isActive: true },
-        courses: { some: { academicStage: studentStage as any, isPublished: true } },
+        courses: { some: { academicStage: stageFilter as any, isPublished: true } },
       },
       select: {
         id: true,
@@ -249,7 +340,7 @@ router.get(
         ratingCount: true,
         academicStages: true,
         courses: {
-          where: { isPublished: true, academicStage: studentStage as any },
+          where: { isPublished: true, academicStage: stageFilter as any },
           select: {
             id: true,
             title: true,
@@ -263,7 +354,7 @@ router.get(
         },
       },
     });
-    res.status(200).json({ success: true, data: teachers });
+    res.status(200).json({ success: true, data: teachers, meta: { activeStage, availableStages } });
   })
 );
 
@@ -274,10 +365,12 @@ router.get(
       where: { id: req.user!.sub },
       include: { studentProfile: true },
     });
-    const studentStage = student?.studentProfile?.academicStage || 'SECONDARY_1';
+
+    const queryStage = (req.query.stage as string)?.trim();
+    const { activeStage, stageFilter, availableStages } = resolveStudentStages(student, queryStage);
 
     const { search } = req.query as Record<string, string>;
-    const where: any = { isPublished: true, academicStage: studentStage as any };
+    const where: any = { isPublished: true, academicStage: stageFilter as any };
     if (search) {
       where.OR = [
         { title: { contains: search, mode: 'insensitive' } },

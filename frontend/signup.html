@@ -81,6 +81,18 @@
         </div>
 
         <div class="field">
+          <label for="studentGrade">الصف الدراسي (حدد مرحلتك الدراسية) <span style="color:var(--err);">*</span></label>
+          <select id="studentGrade" required style="font-weight:600;">
+            <option value="PREPARATORY">الصف الثالث الإعدادي (3 إعدادي)</option>
+            <option value="SECONDARY_1">الصف الأول الثانوي (1 ثانوي)</option>
+            <option value="SECONDARY_2">الصف الثاني الثانوي (2 ثانوي)</option>
+            <option value="BACCALAUREATE_2">الصف الثاني باكلوريا (2 باكلوريا)</option>
+            <option value="SECONDARY_3" selected>الصف الثالث الثانوي (3 ثانوي)</option>
+            <option value="BACCALAUREATE_3">الصف الثالث باكلوريا (3 باكلوريا)</option>
+          </select>
+        </div>
+
+        <div class="field">
           <label for="deceased">حالة وفاة أحد الوالدين (إن وُجدت)</label>
           <select id="deceased">
             <option value="">لا يوجد (كلاهما على قيد الحياة)</option>
@@ -142,11 +154,14 @@
       else if (deceasedVal === 'mother') parentStatus = 'MOTHER_DECEASED';
       else if (deceasedVal === 'both') parentStatus = 'BOTH_DECEASED';
 
+      const gradeVal = document.getElementById('studentGrade').value || 'SECONDARY_3';
+
       await window.KhatwaAPI.auth.registerStudent({
         username: uname,
         password: pass,
         confirmPassword: pass2,
         studentPhoneNumber: studentPhone,
+        academicStage: gradeVal,
         parentInfo: {
           parentPhoneNumber: parentPhone,
           fatherJob: fatherJob,

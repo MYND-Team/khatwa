@@ -152,10 +152,12 @@
         <div class="field">
           <label for="editGrade">الصف الدراسي</label>
           <select id="editGrade">
-            <option value="PREPARATORY">المرحلة الإعدادية</option>
-            <option value="SECONDARY_1">الصف الأول الثانوي</option>
-            <option value="SECONDARY_2">الصف الثاني الثانوي</option>
-            <option value="SECONDARY_3">الصف الثالث الثانوي</option>
+            <option value="PREPARATORY">الصف الثالث الإعدادي (3 إعدادي)</option>
+            <option value="SECONDARY_1">الصف الأول الثانوي (1 ثانوي)</option>
+            <option value="SECONDARY_2">الصف الثاني الثانوي (2 ثانوي)</option>
+            <option value="BACCALAUREATE_2">الصف الثاني باكلوريا (2 باكلوريا)</option>
+            <option value="SECONDARY_3">الصف الثالث الثانوي (3 ثانوي)</option>
+            <option value="BACCALAUREATE_3">الصف الثالث باكلوريا (3 باكلوريا)</option>
           </select>
         </div>
       </div>
@@ -212,10 +214,12 @@
     document.getElementById('valUsername').textContent = user.username || '—';
     document.getElementById('valDisplayName').textContent = displayName;
     const stageNames = {
-      PREPARATORY: 'المرحلة الإعدادية',
-      SECONDARY_1: 'الصف الأول الثانوي',
-      SECONDARY_2: 'الصف الثاني الثانوي',
-      SECONDARY_3: 'الصف الثالث الثانوي',
+      PREPARATORY: 'الصف الثالث الإعدادي (3 إعدادي)',
+      SECONDARY_1: 'الصف الأول الثانوي (1 ثانوي)',
+      SECONDARY_2: 'الصف الثاني الثانوي (2 ثانوي)',
+      BACCALAUREATE_2: 'الصف الثاني باكلوريا (2 باكلوريا)',
+      SECONDARY_3: 'الصف الثالث الثانوي (3 ثانوي)',
+      BACCALAUREATE_3: 'الصف الثالث باكلوريا (3 باكلوريا)',
     };
 
     const currentStageKey = user.studentProfile?.academicStage || user.grade || 'SECONDARY_1';
@@ -343,9 +347,10 @@
     };
 
     try {
+      await window.KhatwaAPI.student.updateStage(updateData.academicStage).catch(() => {});
       const res = await window.KhatwaAPI.student.updateProfile(updateData);
       closeEditModal();
-      showToast(res.message || 'تم إرسال طلب تعديل البيانات للإدارة بنجاح 📨');
+      showToast(res.message || 'تم تحديث البيانات بنجاح 📨');
       await loadProfile();
     } catch (err) {
       alertBox.textContent = err.message || 'حدث خطأ أثناء إرسال طلب التعديل';

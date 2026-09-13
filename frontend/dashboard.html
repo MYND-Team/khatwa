@@ -163,16 +163,22 @@
           <span>🏫 جميع المراحل</span>
         </button>
         <button type="button" class="stage-filter-tab" data-stage="PREPARATORY" onclick="selectStageTab('PREPARATORY', this)">
-          <span>🎒 المرحلة الإعدادية</span>
+          <span>🎒 3 إعدادي</span>
         </button>
         <button type="button" class="stage-filter-tab" data-stage="SECONDARY_1" onclick="selectStageTab('SECONDARY_1', this)">
-          <span>📘 الصف الأول الثانوي</span>
+          <span>📘 1 ثانوي</span>
         </button>
         <button type="button" class="stage-filter-tab" data-stage="SECONDARY_2" onclick="selectStageTab('SECONDARY_2', this)">
-          <span>📙 الصف الثاني الثانوي</span>
+          <span>📙 2 ثانوي</span>
+        </button>
+        <button type="button" class="stage-filter-tab" data-stage="BACCALAUREATE_2" onclick="selectStageTab('BACCALAUREATE_2', this)">
+          <span>🎓 2 باكلوريا</span>
         </button>
         <button type="button" class="stage-filter-tab" data-stage="SECONDARY_3" onclick="selectStageTab('SECONDARY_3', this)">
-          <span>📕 الصف الثالث الثانوي</span>
+          <span>📕 3 ثانوي</span>
+        </button>
+        <button type="button" class="stage-filter-tab" data-stage="BACCALAUREATE_3" onclick="selectStageTab('BACCALAUREATE_3', this)">
+          <span>🎓 3 باكلوريا</span>
         </button>
       </div>
 
@@ -201,10 +207,12 @@
   let currentStageFilter = '';
 
   const STAGE_NAMES = {
-    PREPARATORY: 'المرحلة الإعدادية',
-    SECONDARY_1: 'الصف الأول الثانوي',
-    SECONDARY_2: 'الصف الثاني الثانوي',
-    SECONDARY_3: 'الصف الثالث الثانوي',
+    PREPARATORY: 'الصف الثالث الإعدادي (3 إعدادي)',
+    SECONDARY_1: 'الصف الأول الثانوي (1 ثانوي)',
+    SECONDARY_2: 'الصف الثاني الثانوي (2 ثانوي)',
+    BACCALAUREATE_2: 'الصف الثاني باكلوريا (2 باكلوريا)',
+    SECONDARY_3: 'الصف الثالث الثانوي (3 ثانوي)',
+    BACCALAUREATE_3: 'الصف الثالث باكلوريا (3 باكلوريا)',
   };
 
   async function selectStageTab(stage, tabBtn) {

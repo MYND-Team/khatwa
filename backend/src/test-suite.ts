@@ -401,22 +401,31 @@ async function runFullTestSuite() {
   console.log('\n--- Test Group 10: Teacher Stage Workspace Isolation (Requirement 2) ---');
 
   const teacherAllCourses = [
+    { id: 'c0', title: 'علوم ثالثة إعدادي', academicStage: 'PREPARATORY', teacherId: 'tch_ahmed' },
     { id: 'c1', title: 'فيزياء أولى ثانوي', academicStage: 'SECONDARY_1', teacherId: 'tch_ahmed' },
     { id: 'c2', title: 'فيزياء ثانية ثانوي', academicStage: 'SECONDARY_2', teacherId: 'tch_ahmed' },
+    { id: 'c2_bac', title: 'فيزياء ثانية باكلوريا', academicStage: 'BACCALAUREATE_2', teacherId: 'tch_ahmed' },
     { id: 'c3', title: 'فيزياء ثالثة ثانوي', academicStage: 'SECONDARY_3', teacherId: 'tch_ahmed' },
+    { id: 'c3_bac', title: 'فيزياء ثالثة باكلوريا', academicStage: 'BACCALAUREATE_3', teacherId: 'tch_ahmed' },
   ];
 
   function getWorkspaceCourses(teacherId: string, stage: string) {
     return teacherAllCourses.filter(c => c.teacherId === teacherId && c.academicStage === stage);
   }
 
+  const prepCourses = getWorkspaceCourses('tch_ahmed', 'PREPARATORY');
   const sec1Courses = getWorkspaceCourses('tch_ahmed', 'SECONDARY_1');
   const sec2Courses = getWorkspaceCourses('tch_ahmed', 'SECONDARY_2');
+  const bac2Courses = getWorkspaceCourses('tch_ahmed', 'BACCALAUREATE_2');
   const sec3Courses = getWorkspaceCourses('tch_ahmed', 'SECONDARY_3');
+  const bac3Courses = getWorkspaceCourses('tch_ahmed', 'BACCALAUREATE_3');
 
+  assert(prepCourses.length === 1 && prepCourses[0].id === 'c0', 'Req 2: Preparatory workspace isolates 3 Prep courses');
   assert(sec1Courses.length === 1 && sec1Courses[0].id === 'c1', 'Req 2: Stage 1 workspace isolates Secondary 1 courses');
   assert(sec2Courses.length === 1 && sec2Courses[0].id === 'c2', 'Req 2: Stage 2 workspace isolates Secondary 2 courses');
+  assert(bac2Courses.length === 1 && bac2Courses[0].id === 'c2_bac', 'Req 2: Baccalaureate 2 workspace isolates Bac 2 courses');
   assert(sec3Courses.length === 1 && sec3Courses[0].id === 'c3', 'Req 2: Stage 3 workspace isolates Secondary 3 courses');
+  assert(bac3Courses.length === 1 && bac3Courses[0].id === 'c3_bac', 'Req 2: Baccalaureate 3 workspace isolates Bac 3 courses');
 
   // ─── 11. Student Stage-Restricted Course Visibility (Requirement 4) ──────────
   console.log('\n--- Test Group 11: Student Stage-Restricted Course Visibility (Requirement 4) ---');
@@ -428,8 +437,14 @@ async function runFullTestSuite() {
   const studentSec1Catalog = getStudentVisibleCourses('SECONDARY_1', teacherAllCourses);
   assert(studentSec1Catalog.length === 1 && studentSec1Catalog[0].academicStage === 'SECONDARY_1', 'Req 4: Secondary 1 student only sees Secondary 1 courses');
 
-  const studentSec2Catalog = getStudentVisibleCourses('SECONDARY_2', teacherAllCourses);
-  assert(studentSec2Catalog.length === 1 && studentSec2Catalog[0].academicStage === 'SECONDARY_2', 'Req 4: Secondary 2 student only sees Secondary 2 courses');
+  const studentBac2Catalog = getStudentVisibleCourses('BACCALAUREATE_2', teacherAllCourses);
+  assert(studentBac2Catalog.length === 1 && studentBac2Catalog[0].academicStage === 'BACCALAUREATE_2', 'Req 4: Baccalaureate 2 student only sees Baccalaureate 2 courses');
+
+  const studentSec3Catalog = getStudentVisibleCourses('SECONDARY_3', teacherAllCourses);
+  assert(studentSec3Catalog.length === 1 && studentSec3Catalog[0].academicStage === 'SECONDARY_3', 'Req 4: Secondary 3 student only sees Secondary 3 courses');
+
+  const studentBac3Catalog = getStudentVisibleCourses('BACCALAUREATE_3', teacherAllCourses);
+  assert(studentBac3Catalog.length === 1 && studentBac3Catalog[0].academicStage === 'BACCALAUREATE_3', 'Req 4: Baccalaureate 3 student only sees Baccalaureate 3 courses');
 
   // ─── Summary ────────────────────────────────────────────────────────────────
   console.log('\n==================================================');

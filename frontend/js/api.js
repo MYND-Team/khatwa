@@ -194,7 +194,12 @@
 
     if (!res.ok) {
       let errorMsg = data.error?.message || data.message;
-      if (!errorMsg && res.status === 413) {
+      if (res.status === 401) {
+        setStoredToken(null);
+        if (!errorMsg || errorMsg === 'No token provided' || errorMsg.includes('Invalid or expired') || errorMsg.includes('jwt')) {
+          errorMsg = 'انتهت صلاحية جلسة الدخول أو غير مسجل. يرجى تسجيل الدخول مجدداً للمتابعة.';
+        }
+      } else if (!errorMsg && res.status === 413) {
         errorMsg = 'حجم الملف كبير جداً وتجاوز الحد الأقصى للرفع المباشر عبر السيرفر. يُرجى نسخ رابط الفيديو من Google Drive أو YouTube ولصقه في خانة الرابط لتشغيله بسلاسة وأعلى جودة بدون قيود!';
       } else if (!errorMsg) {
         errorMsg = 'خطأ ' + res.status + ': حدث خطأ غير متوقع';
@@ -653,8 +658,39 @@
     student: {
       async getProfile() { const res = await request('/student/profile'); return res.data || {}; },
       async updateProfile(data) { const res = await request('/student/profile', { method: 'PUT', body: data }); return res; },
+      async updateStage(academicStage, academicStages) {
+        const body = {};
+        if (academicStage) body.academicStage = academicStage;
+        if (academicStages) body.academicStages = academicStages;
+        const res = await request('/student/stage', { method: 'PUT', body });
+        const user = window.KhatwaAPI.getUser();
+        if (user) {
+          if (!user.studentProfile) user.studentProfile = {};
+          if (academicStage) user.studentProfile.academicStage = academicStage;
+          if (academicStages) user.studentProfile.academicStages = Array.isArray(academicStages) ? academicStages.join(',') : academicStages;
+          localStorage.setItem('khatwa_user', JSON.stringify(user));
+        }
+        return res.data;
+      },
       async getProfileRequest() { const res = await request('/student/profile-request'); return res.data || null; },
-      async getCatalog() { const res = await request('/student/catalog'); return res.data || { courses: [] }; },
+      async getCatalog(stage = '') {
+        const query = stage ? ('?stage=' + encodeURIComponent(stage)) : '';
+        const res = await request('/student/catalog' + query);
+        return res.data || { courses: [] };
+      },
+      async getDiscoverTeachers(stage = '') {
+        const query = stage ? ('?stage=' + encodeURIComponent(stage)) : '';
+        const res = await request('/student/discover/teachers' + query);
+        return res.data || [];
+      },
+      async getDiscoverCourses(stage = '', search = '') {
+        const params = new URLSearchParams();
+        if (stage) params.append('stage', stage);
+        if (search) params.append('search', search);
+        const q = params.toString() ? ('?' + params.toString()) : '';
+        const res = await request('/student/discover/courses' + q);
+        return res.data || [];
+      },
       async getSubscriptions(stage = '') {
         const query = stage ? ('?stage=' + encodeURIComponent(stage)) : '';
         const res = await request('/student/subscriptions' + query);

@@ -63,6 +63,7 @@ model StudentProfile {
   user               User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   studentPhoneNumber String
   academicStage      String?     @default("SECONDARY_1")
+  academicStages     String?
   parentInfo         ParentInfo?
 }
 

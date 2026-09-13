@@ -93,10 +93,12 @@
       </div>
     </div>
     <div class="stage-folder-tabs" style="margin:0;">
-      <button class="stage-folder-tab" onclick="switchStage('PREPARATORY', this)">الإعدادية</button>
-      <button class="stage-folder-tab active" onclick="switchStage('SECONDARY_1', this)">أولى ثانوي</button>
-      <button class="stage-folder-tab" onclick="switchStage('SECONDARY_2', this)">ثانية ثانوي</button>
-      <button class="stage-folder-tab" onclick="switchStage('SECONDARY_3', this)">ثالثة ثانوي</button>
+      <button class="stage-folder-tab" onclick="switchStage('PREPARATORY', this)">3 إعدادي</button>
+      <button class="stage-folder-tab active" onclick="switchStage('SECONDARY_1', this)">1 ثانوي</button>
+      <button class="stage-folder-tab" onclick="switchStage('SECONDARY_2', this)">2 ثانوي</button>
+      <button class="stage-folder-tab" onclick="switchStage('BACCALAUREATE_2', this)">2 باكلوريا</button>
+      <button class="stage-folder-tab" onclick="switchStage('SECONDARY_3', this)">3 ثانوي</button>
+      <button class="stage-folder-tab" onclick="switchStage('BACCALAUREATE_3', this)">3 باكلوريا</button>
       <button class="stage-folder-tab" onclick="switchStage('ALL', this)" style="background:rgba(217,119,6,0.12);color:#d97706;border-color:rgba(217,119,6,0.3);">🌐 جميع المراحل (إجمالي)</button>
     </div>
   </div>
@@ -197,10 +199,12 @@
       <div class="form-group" style="margin-bottom:12px;">
         <label class="form-label">المرحلة الدراسية</label>
         <select class="form-control" id="courseStageSelect" style="pointer-events:none;background:var(--bg-raised,#f8fafc);color:var(--ink);cursor:default;opacity:1;">
-          <option value="PREPARATORY">المرحلة الإعدادية</option>
-          <option value="SECONDARY_1">الصف الأول الثانوي</option>
-          <option value="SECONDARY_2">الصف الثاني الثانوي</option>
-          <option value="SECONDARY_3">الصف الثالث الثانوي</option>
+          <option value="PREPARATORY">الصف الثالث الإعدادي (3 إعدادي)</option>
+          <option value="SECONDARY_1">الصف الأول الثانوي (1 ثانوي)</option>
+          <option value="SECONDARY_2">الصف الثاني الثانوي (2 ثانوي)</option>
+          <option value="BACCALAUREATE_2">الصف الثاني باكلوريا (2 باكلوريا)</option>
+          <option value="SECONDARY_3">الصف الثالث الثانوي (3 ثانوي)</option>
+          <option value="BACCALAUREATE_3">الصف الثالث باكلوريا (3 باكلوريا)</option>
         </select>
       </div>
       <div class="form-group" style="margin-bottom:14px;">
@@ -564,10 +568,12 @@
   const cachedLessonsMap = new Map();
 
   const stageTitles = {
-    PREPARATORY: 'المرحلة الإعدادية',
-    SECONDARY_1: 'الصف الأول الثانوي',
-    SECONDARY_2: 'الصف الثاني الثانوي',
-    SECONDARY_3: 'الصف الثالث الثانوي',
+    PREPARATORY: 'الصف الثالث الإعدادي (3 إعدادي)',
+    SECONDARY_1: 'الصف الأول الثانوي (1 ثانوي)',
+    SECONDARY_2: 'الصف الثاني الثانوي (2 ثانوي)',
+    BACCALAUREATE_2: 'الصف الثاني باكلوريا (2 باكلوريا)',
+    SECONDARY_3: 'الصف الثالث الثانوي (3 ثانوي)',
+    BACCALAUREATE_3: 'الصف الثالث باكلوريا (3 باكلوريا)',
     ALL: 'جميع المراحل (المجموع الشامل)'
   };
 
@@ -877,70 +883,86 @@
         return;
       }
 
-      // Group revenue by course
+      // Group revenue by course and calculate financial split
       const courseMap = new Map();
       let totalStageEarning = 0;
       let totalStageSales = 0;
+      let totalPlatformCommission = 0;
 
       txns.forEach(t => {
         const cTitle = t.course?.title || 'كورسات عامة أو بدون تصنيف';
         const earning = Number(t.teacherEarning || 0);
         const amount = Number(t.amount || 0);
+        const commission = Number(t.platformFee !== undefined ? t.platformFee : (amount > earning ? amount - earning : 0));
+
         totalStageEarning += earning;
         totalStageSales += amount;
+        totalPlatformCommission += commission;
 
         if (!courseMap.has(cTitle)) {
-          courseMap.set(cTitle, { title: cTitle, count: 0, totalAmount: 0, totalEarning: 0, lessons: new Set() });
+          courseMap.set(cTitle, { title: cTitle, count: 0, totalAmount: 0, totalEarning: 0, totalCommission: 0, lessons: new Set() });
         }
         const item = courseMap.get(cTitle);
         item.count += 1;
         item.totalAmount += amount;
         item.totalEarning += earning;
+        item.totalCommission += commission;
         if (t.lesson?.title) item.lessons.add(t.lesson.title);
       });
 
-      // Render Course Financial Summary Cards
+      // Render Financial Settlement Summary Cards
       if (summaryContainer) {
         summaryContainer.innerHTML = `
-          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:14px;margin-bottom:16px;">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:14px;margin-bottom:16px;">
             <div style="background:var(--bg-raised);border:1px solid var(--line-soft);border-radius:14px;padding:16px;">
-              <div style="font-size:0.82rem;color:var(--ink-dim);margin-bottom:4px;">إجمالي أرباحك في هذه المرحلة</div>
-              <div style="font-size:1.6rem;font-weight:900;color:#22c55e;">${totalStageEarning.toLocaleString('ar-EG')} ج.م</div>
-              <div style="font-size:0.75rem;color:var(--ink-dim);margin-top:4px;">من إجمالي مبيعات: ${totalStageSales.toLocaleString('ar-EG')} ج.م</div>
+              <div style="font-size:0.82rem;color:var(--ink-dim);margin-bottom:4px;">💰 إجمالي مبيعات الحصص</div>
+              <div style="font-size:1.5rem;font-weight:900;color:var(--ink);">${totalStageSales.toLocaleString('ar-EG')} ج.م</div>
+              <div style="font-size:0.75rem;color:var(--ink-dim);margin-top:4px;">إجمالي المبالغ المدفوعة من الطلاب</div>
+            </div>
+            <div style="background:linear-gradient(135deg, rgba(34,197,94,0.08) 0%, rgba(34,197,94,0.02) 100%);border:1px solid rgba(34,197,94,0.3);border-radius:14px;padding:16px;">
+              <div style="font-size:0.82rem;color:#16a34a;margin-bottom:4px;font-weight:700;">🟢 صافي مستحقاتك (أرباح المدرس)</div>
+              <div style="font-size:1.6rem;font-weight:900;color:#16a34a;">${totalStageEarning.toLocaleString('ar-EG')} ج.م</div>
+              <div style="font-size:0.75rem;color:#16a34a;margin-top:4px;">أرباحك المعتمدة القابلة للصرف</div>
+            </div>
+            <div style="background:linear-gradient(135deg, rgba(59,130,246,0.08) 0%, rgba(59,130,246,0.02) 100%);border:1px solid rgba(59,130,246,0.3);border-radius:14px;padding:16px;">
+              <div style="font-size:0.82rem;color:#2563eb;margin-bottom:4px;font-weight:700;">🏛️ عمولة المنصة (الإدارة)</div>
+              <div style="font-size:1.6rem;font-weight:900;color:#2563eb;">${totalPlatformCommission.toLocaleString('ar-EG')} ج.م</div>
+              <div style="font-size:0.75rem;color:#2563eb;margin-top:4px;">حصة إدارة المنصة التشغيلية</div>
             </div>
             <div style="background:var(--bg-raised);border:1px solid var(--line-soft);border-radius:14px;padding:16px;">
-              <div style="font-size:0.82rem;color:var(--ink-dim);margin-bottom:4px;">إجمالي عمليات الشراء</div>
-              <div style="font-size:1.6rem;font-weight:900;color:var(--primary);">${txns.length}</div>
-              <div style="font-size:0.75rem;color:var(--ink-dim);margin-top:4px;">اشتراك مدفوع من الطلاب</div>
-            </div>
-            <div style="background:var(--bg-raised);border:1px solid var(--line-soft);border-radius:14px;padding:16px;">
-              <div style="font-size:0.82rem;color:var(--ink-dim);margin-bottom:4px;">عدد الكورسات النشطة</div>
-              <div style="font-size:1.6rem;font-weight:900;color:#f59e0b;">${courseMap.size}</div>
-              <div style="font-size:0.75rem;color:var(--ink-dim);margin-top:4px;">تحقق مبيعات حالياً</div>
+              <div style="font-size:0.82rem;color:var(--ink-dim);margin-bottom:4px;">👥 إجمالي عمليات الشراء</div>
+              <div style="font-size:1.5rem;font-weight:900;color:var(--primary);">${txns.length}</div>
+              <div style="font-size:0.75rem;color:var(--ink-dim);margin-top:4px;">عبر ${courseMap.size} كورس نشط</div>
             </div>
           </div>
 
           <div style="background:var(--bg-card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px;">
-            <h5 style="margin:0 0 10px;font-size:0.95rem;">📊 جدول ملخص الإيرادات حسب كل كورس:</h5>
+            <h5 style="margin:0 0 10px;font-size:0.95rem;">📊 جدول توزيع الإيرادات بين المدرس والمنصة حسب كل كورس:</h5>
             <div style="overflow-x:auto;">
               <table class="data-table" style="font-size:0.88rem;">
                 <thead>
                   <tr>
                     <th>اسم الكورس</th>
                     <th>عدد المشتركين</th>
-                    <th>إجمالي المبيعات</th>
-                    <th>صافي أرباحك</th>
+                    <th>المبلغ الإجمالي</th>
+                    <th style="color:#16a34a;">صافي أرباح المدرس</th>
+                    <th style="color:#2563eb;">عمولة المنصة</th>
+                    <th>نسبة المدرس</th>
                   </tr>
                 </thead>
                 <tbody>
-                  ${Array.from(courseMap.values()).map(c => `
+                  ${Array.from(courseMap.values()).map(c => {
+                    const pct = c.totalAmount > 0 ? Math.round((c.totalEarning / c.totalAmount) * 100) : 100;
+                    return `
                     <tr>
                       <td><b>${escapeHtml(c.title)}</b></td>
                       <td><span class="tag">${c.count} طالب</span></td>
-                      <td>${c.totalAmount.toLocaleString('ar-EG')} ج.م</td>
-                      <td><b style="color:#22c55e;">${c.totalEarning.toLocaleString('ar-EG')} ج.م</b></td>
+                      <td><b>${c.totalAmount.toLocaleString('ar-EG')} ج.م</b></td>
+                      <td><b style="color:#16a34a;">${c.totalEarning.toLocaleString('ar-EG')} ج.م</b></td>
+                      <td><b style="color:#2563eb;">${c.totalCommission.toLocaleString('ar-EG')} ج.م</b></td>
+                      <td><span class="tag tag-ok">${pct}%</span></td>
                     </tr>
-                  `).join('')}
+                  `;}).join('')}
                 </tbody>
               </table>
             </div>
@@ -958,24 +980,34 @@
                 <th>الكورس</th>
                 <th>المحاضرة</th>
                 <th>المبلغ الإجمالي</th>
-                <th>أرباحك المحتسبة</th>
+                <th style="color:#16a34a;">أرباحك (حصة المدرس)</th>
+                <th style="color:#2563eb;">عمولة المنصة</th>
+                <th>نسبة أرباحك</th>
                 <th>طريقة الدفع</th>
                 <th>التاريخ</th>
               </tr>
             </thead>
             <tbody>
-              ${txns.map(t => `
+              ${txns.map(t => {
+                const total = Number(t.amount || 0);
+                const teacherShare = Number(t.teacherEarning || 0);
+                const adminShare = Number(t.platformFee !== undefined ? t.platformFee : (total > teacherShare ? total - teacherShare : 0));
+                const teacherPct = total > 0 ? Math.round((teacherShare / total) * 100) : 100;
+
+                return `
                 <tr>
                   <td><code>${escapeHtml(t.transactionNumber || t.id)}</code></td>
                   <td><b>${escapeHtml(t.student?.username || 'طالب')}</b></td>
                   <td>${escapeHtml(t.course?.title || '—')}</td>
                   <td><span class="tag tag-ok">${escapeHtml(t.lesson?.title || 'محاضرة')}</span></td>
-                  <td>${t.amount || 0} ج.م</td>
-                  <td><b style="color:#22c55e;">+ ${t.teacherEarning || 0} ج.م</b></td>
+                  <td><b>${total} ج.م</b></td>
+                  <td><b style="color:#16a34a;">+ ${teacherShare} ج.م</b></td>
+                  <td><b style="color:#2563eb;">${adminShare} ج.م</b></td>
+                  <td><span class="tag tag-ok">${teacherPct}%</span></td>
                   <td><span class="tag">${escapeHtml(t.paymentMethod || 'WALLET_EGP')}</span></td>
                   <td>${new Date(t.createdAt).toLocaleDateString('ar-EG')}</td>
                 </tr>
-              `).join('')}
+              `;}).join('')}
             </tbody>
           </table>
         </div>
@@ -1003,21 +1035,32 @@
       'اسم الكورس',
       'المحاضرة',
       'المبلغ الإجمالي (ج.م)',
-      'أرباح المدرس (ج.م)',
+      'حصة المدرس (ج.م)',
+      'عمولة المنصة (ج.م)',
+      'نسبة المدرس',
       'طريقة الدفع',
       'التاريخ والوقت'
     ];
 
-    const rows = cachedStageRevenueTxns.map(t => [
-      t.transactionNumber || t.id,
-      t.student?.username || 'طالب',
-      t.course?.title || '—',
-      t.lesson?.title || 'محاضرة',
-      t.amount || 0,
-      t.teacherEarning || 0,
-      t.paymentMethod || 'WALLET_EGP',
-      t.createdAt ? new Date(t.createdAt).toLocaleString('ar-EG') : ''
-    ]);
+    const rows = cachedStageRevenueTxns.map(t => {
+      const total = Number(t.amount || 0);
+      const teacherShare = Number(t.teacherEarning || 0);
+      const adminShare = Number(t.platformFee !== undefined ? t.platformFee : (total > teacherShare ? total - teacherShare : 0));
+      const teacherPct = total > 0 ? `${Math.round((teacherShare / total) * 100)}%` : '100%';
+
+      return [
+        t.transactionNumber || t.id,
+        t.student?.username || 'طالب',
+        t.course?.title || '—',
+        t.lesson?.title || 'محاضرة',
+        total,
+        teacherShare,
+        adminShare,
+        teacherPct,
+        t.paymentMethod || 'WALLET_EGP',
+        t.createdAt ? new Date(t.createdAt).toLocaleString('ar-EG') : ''
+      ];
+    });
 
     const csvContent = '\uFEFF' + [
       headers.map(escapeCsv).join(','),

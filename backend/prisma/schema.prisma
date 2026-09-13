@@ -61,7 +61,9 @@ enum AcademicStage {
   PREPARATORY
   SECONDARY_1
   SECONDARY_2
+  BACCALAUREATE_2
   SECONDARY_3
+  BACCALAUREATE_3
 }
 
 enum CourseAccessType {
@@ -179,6 +181,7 @@ model StudentProfile {
   user               User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   studentPhoneNumber String
   academicStage      AcademicStage? @default(SECONDARY_1)
+  academicStages     String?        // Comma-separated list of selected stages e.g. "SECONDARY_3"
   parentInfo         ParentInfo?
 }
 

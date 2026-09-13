@@ -73,12 +73,13 @@
     </div>
 
     <!-- Academic Stage Filter Folders -->
-    <div class="stage-folder-tabs" style="margin-top:20px;">
-      <button class="stage-folder-tab active" onclick="filterByStage('', this)">📁 جميع المراحل</button>
-      <button class="stage-folder-tab" onclick="filterByStage('PREPARATORY', this)">📁 المرحلة الإعدادية</button>
-      <button class="stage-folder-tab" onclick="filterByStage('SECONDARY_1', this)">📁 أولى ثانوي</button>
-      <button class="stage-folder-tab" onclick="filterByStage('SECONDARY_2', this)">📁 ثانية ثانوي</button>
-      <button class="stage-folder-tab" onclick="filterByStage('SECONDARY_3', this)">📁 ثالثة ثانوي</button>
+    <div style="margin-top:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+      <div class="stage-folder-tabs" id="stageFolderTabs" style="margin:0;">
+        <!-- Rendered dynamically based on student's selected stages -->
+      </div>
+      <button id="btnCustomizeStages" class="btn btn-line btn-sm" onclick="openCustomizeStagesModal()" style="display:none;align-items:center;gap:6px;font-size:0.85rem;border-radius:12px;">
+        <span>⚙️ تخصيص الصفوف التي تظهر لي</span>
+      </button>
     </div>
 
     <!-- Panel 1: Featured Teachers Cards (Visual Reference Style) -->
@@ -134,6 +135,26 @@
   </div>
 </div>
 
+<!-- Modal: Customize Displayed Stages for Student -->
+<div class="modal-overlay" id="customizeStagesModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:var(--bg-card);border:1px solid var(--line);border-radius:24px;max-width:520px;width:92%;padding:26px;box-shadow:var(--shadow-lg);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <h3 style="margin:0;font-size:1.15rem;">🎯 تحديد الصفوف التي تظهر لك</h3>
+      <button class="btn btn-line btn-sm" onclick="closeCustomizeStagesModal()">✕</button>
+    </div>
+    <p style="font-size:0.88rem;color:var(--ink-dim);margin:0 0 16px;line-height:1.6;">
+      اختر الصفوف الدراسية التي تريد أن تظهر لك في المنصة. سيتم إخفاء أي صفوف أخرى لتسهيل تركيزك.
+    </p>
+    <div id="stagesCheckboxesContainer" style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">
+      <!-- Populated via JavaScript -->
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:10px;">
+      <button type="button" class="btn btn-line" onclick="closeCustomizeStagesModal()">إلغاء</button>
+      <button type="button" class="btn btn-primary" id="saveCustomStagesBtn" onclick="saveCustomizedStages()">حفظ التفضيلات ✓</button>
+    </div>
+  </div>
+</div>
+
 <script src="js/i18n.js"></script>
 <script src="js/api.js"></script>
 <script src="js/main.js"></script>
@@ -142,12 +163,25 @@
   let allTeachersList = [];
   let allCoursesList = [];
   let enrolledCoursesList = [];
+  let currentUser = null;
+  let studentSelectedStages = [];
+
+  const ALL_STAGES = [
+    { key: 'PREPARATORY', shortName: '3 إعدادي', fullName: 'الصف الثالث الإعدادي (3 إعدادي)' },
+    { key: 'SECONDARY_1', shortName: '1 ثانوي', fullName: 'الصف الأول الثانوي (1 ثانوي)' },
+    { key: 'SECONDARY_2', shortName: '2 ثانوي', fullName: 'الصف الثاني الثانوي (2 ثانوي)' },
+    { key: 'BACCALAUREATE_2', shortName: '2 باكلوريا', fullName: 'الصف الثاني باكلوريا (2 باكلوريا)' },
+    { key: 'SECONDARY_3', shortName: '3 ثانوي', fullName: 'الصف الثالث الثانوي (3 ثانوي)' },
+    { key: 'BACCALAUREATE_3', shortName: '3 باكلوريا', fullName: 'الصف الثالث باكلوريا (3 باكلوريا)' },
+  ];
 
   const STAGE_NAMES = {
-    PREPARATORY: 'المرحلة الإعدادية',
-    SECONDARY_1: 'الصف الأول الثانوي',
-    SECONDARY_2: 'الصف الثاني الثانوي',
-    SECONDARY_3: 'الصف الثالث الثانوي',
+    PREPARATORY: 'الصف الثالث الإعدادي (3 إعدادي)',
+    SECONDARY_1: 'الصف الأول الثانوي (1 ثانوي)',
+    SECONDARY_2: 'الصف الثاني الثانوي (2 ثانوي)',
+    BACCALAUREATE_2: 'الصف الثاني باكلوريا (2 باكلوريا)',
+    SECONDARY_3: 'الصف الثالث الثانوي (3 ثانوي)',
+    BACCALAUREATE_3: 'الصف الثالث باكلوريا (3 باكلوريا)',
   };
 
   function escapeHtml(str) {
@@ -169,6 +203,94 @@
     return Array.from(stages);
   }
 
+  function initStages() {
+    currentUser = window.KhatwaAPI.getUser();
+    const tabsContainer = document.getElementById('stageFolderTabs');
+    const customizeBtn = document.getElementById('btnCustomizeStages');
+
+    if (currentUser && currentUser.role === 'STUDENT') {
+      const rawStages = currentUser.studentProfile?.academicStages || currentUser.studentProfile?.academicStage || currentUser.academicStage || 'SECONDARY_3';
+      studentSelectedStages = rawStages.split(',').map(s => s.trim()).filter(s => STAGE_NAMES[s]);
+      if (studentSelectedStages.length === 0) studentSelectedStages = ['SECONDARY_3'];
+
+      if (customizeBtn) customizeBtn.style.display = 'inline-flex';
+
+      // Ensure currentStageFilter is valid for student
+      if (!currentStageFilter || (currentStageFilter !== 'ALL_SELECTED' && !studentSelectedStages.includes(currentStageFilter))) {
+        currentStageFilter = studentSelectedStages.length > 1 ? 'ALL_SELECTED' : studentSelectedStages[0];
+      }
+
+      let tabsHtml = '';
+      if (studentSelectedStages.length > 1) {
+        tabsHtml += `<button class="stage-folder-tab ${currentStageFilter === 'ALL_SELECTED' ? 'active' : ''}" onclick="filterByStage('ALL_SELECTED', this)">📁 كل صفوفي المختارة (${studentSelectedStages.length})</button>`;
+      }
+
+      studentSelectedStages.forEach(stKey => {
+        const stageObj = ALL_STAGES.find(s => s.key === stKey) || { shortName: stKey };
+        const isActive = (currentStageFilter === stKey) || (studentSelectedStages.length === 1 && currentStageFilter !== 'ALL_SELECTED');
+        tabsHtml += `<button class="stage-folder-tab ${isActive ? 'active' : ''}" onclick="filterByStage('${stKey}', this)">📁 ${escapeHtml(stageObj.shortName)}</button>`;
+      });
+
+      tabsContainer.innerHTML = tabsHtml;
+    } else {
+      // Guest or Teacher/Admin viewing catalog
+      if (customizeBtn) customizeBtn.style.display = 'none';
+      let tabsHtml = `<button class="stage-folder-tab ${currentStageFilter === '' ? 'active' : ''}" onclick="filterByStage('', this)">📁 جميع المراحل</button>`;
+      ALL_STAGES.forEach(st => {
+        tabsHtml += `<button class="stage-folder-tab ${currentStageFilter === st.key ? 'active' : ''}" onclick="filterByStage('${st.key}', this)">📁 ${escapeHtml(st.shortName)}</button>`;
+      });
+      tabsContainer.innerHTML = tabsHtml;
+    }
+  }
+
+  function openCustomizeStagesModal() {
+    const modal = document.getElementById('customizeStagesModal');
+    const container = document.getElementById('stagesCheckboxesContainer');
+    
+    container.innerHTML = ALL_STAGES.map(st => {
+      const isChecked = studentSelectedStages.includes(st.key);
+      return `
+        <label style="display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid ${isChecked ? 'var(--primary)' : 'var(--line-soft)'};border-radius:12px;background:${isChecked ? 'rgba(59,130,246,0.06)' : 'var(--bg-raised)'};cursor:pointer;font-weight:600;">
+          <input type="checkbox" name="customStage" value="${st.key}" ${isChecked ? 'checked' : ''} style="width:18px;height:18px;accent-color:var(--primary);">
+          <span>${escapeHtml(st.fullName)}</span>
+        </label>
+      `;
+    }).join('');
+
+    modal.style.display = 'flex';
+  }
+
+  function closeCustomizeStagesModal() {
+    document.getElementById('customizeStagesModal').style.display = 'none';
+  }
+
+  async function saveCustomizedStages() {
+    const checked = Array.from(document.querySelectorAll('input[name="customStage"]:checked')).map(cb => cb.value);
+    if (checked.length === 0) {
+      alert('يرجى اختيار صف دراسي واحد على الأقل');
+      return;
+    }
+
+    const saveBtn = document.getElementById('saveCustomStagesBtn');
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'جارٍ الحفظ...';
+
+    try {
+      await window.KhatwaAPI.student.updateStage(checked[0], checked);
+      studentSelectedStages = checked;
+      currentStageFilter = checked.length > 1 ? 'ALL_SELECTED' : checked[0];
+      initStages();
+      renderTeachers();
+      renderAllCourses();
+      closeCustomizeStagesModal();
+    } catch (err) {
+      alert(err.message || 'تعذر حفظ التفضيلات');
+    } finally {
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'حفظ التفضيلات ✓';
+    }
+  }
+
   document.addEventListener('DOMContentLoaded', async () => {
     const user = window.KhatwaAPI.getUser();
     if (user) {
@@ -177,6 +299,7 @@
       document.getElementById('studentPointsTag').textContent = `رصيدك: ${user.pointsBalance || 0} نقطة`;
     }
     window.KhatwaAPI.syncNav();
+    initStages();
     await loadData();
   });
 
@@ -197,7 +320,7 @@
 
   function filterByStage(stage, tabBtn) {
     currentStageFilter = stage;
-    document.querySelectorAll('.stage-folder-tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('#stageFolderTabs .stage-folder-tab').forEach(b => b.classList.remove('active'));
     if (tabBtn) tabBtn.classList.add('active');
     renderTeachers();
     renderAllCourses();
@@ -215,11 +338,21 @@
   function renderTeachers() {
     const grid = document.getElementById('teachersGrid');
     let list = allTeachersList;
-    if (currentStageFilter) {
-      list = list.filter(t => {
-        const stages = getTeacherStages(t);
-        return stages.includes(currentStageFilter);
-      });
+
+    if (currentUser && currentUser.role === 'STUDENT') {
+      if (currentStageFilter && currentStageFilter !== 'ALL_SELECTED') {
+        list = list.filter(t => getTeacherStages(t).includes(currentStageFilter));
+      } else {
+        // Strict isolation: only teachers who teach student's selected stages
+        list = list.filter(t => {
+          const stages = getTeacherStages(t);
+          return stages.some(s => studentSelectedStages.includes(s));
+        });
+      }
+    } else {
+      if (currentStageFilter) {
+        list = list.filter(t => getTeacherStages(t).includes(currentStageFilter));
+      }
     }
 
     if (list.length === 0) {
@@ -270,6 +403,14 @@
   }
 
   async function loadEnrolledCourses() {
+    const user = window.KhatwaAPI.getUser();
+    const token = window.KhatwaAPI.getToken();
+    if (!user || !token || user.role !== 'STUDENT') {
+      enrolledCoursesList = [];
+      document.getElementById('enrolledCountBadge').textContent = '0';
+      renderEnrolledCourses();
+      return;
+    }
     try {
       enrolledCoursesList = await window.KhatwaAPI.student.getEnrolledCourses();
     } catch (e) {
@@ -341,8 +482,18 @@
   function renderAllCourses() {
     const grid = document.getElementById('allCoursesGrid');
     let list = allCoursesList;
-    if (currentStageFilter) {
-      list = list.filter(c => c.academicStage === currentStageFilter);
+
+    if (currentUser && currentUser.role === 'STUDENT') {
+      if (currentStageFilter && currentStageFilter !== 'ALL_SELECTED') {
+        list = list.filter(c => c.academicStage === currentStageFilter);
+      } else {
+        // Strict isolation: only courses that belong to the student's selected stages
+        list = list.filter(c => studentSelectedStages.includes(c.academicStage));
+      }
+    } else {
+      if (currentStageFilter) {
+        list = list.filter(c => c.academicStage === currentStageFilter);
+      }
     }
 
     if (list.length === 0) {
@@ -530,8 +681,9 @@
 
   async function enrollInCourse(courseId, title, pointCost) {
     const user = window.KhatwaAPI.getUser();
-    if (!user) {
-      alert('يرجى تسجيل الدخول كطالب أولاً للاشتراك في الكورس');
+    const token = window.KhatwaAPI.getToken();
+    if (!user || !token) {
+      alert('يرجى تسجيل الدخول بحساب طالب أولاً للاشتراك في الكورس.');
       window.location.href = 'login.html';
       return;
     }
@@ -558,6 +710,11 @@
       await Promise.all([loadEnrolledCourses(), loadAllCourses()]);
       switchTab('panel-enrolled', document.getElementById('tabEnrolledBtn'));
     } catch (err) {
+      if (err.status === 401 || err.message?.includes('جلسة الدخول')) {
+        alert('انتهت صلاحية جلسة تسجيل الدخول. يرجى تسجيل الدخول مرة أخرى.');
+        window.location.href = 'login.html';
+        return;
+      }
       alert(err.message || 'حدث خطأ أثناء الاشتراك');
     }
   }

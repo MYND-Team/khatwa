@@ -470,10 +470,12 @@
         </div>
         <select id="studentStageFilter" class="form-control" style="height:38px;font-size:0.88rem;min-width:160px;border-radius:10px;" onchange="filterStudents()">
           <option value="">كل المراحل</option>
-          <option value="PREPARATORY">المرحلة الإعدادية</option>
-          <option value="SECONDARY_1">الصف الأول الثانوي</option>
-          <option value="SECONDARY_2">الصف الثاني الثانوي</option>
-          <option value="SECONDARY_3">الصف الثالث الثانوي</option>
+          <option value="PREPARATORY">الصف الثالث الإعدادي (3 إعدادي)</option>
+          <option value="SECONDARY_1">الصف الأول الثانوي (1 ثانوي)</option>
+          <option value="SECONDARY_2">الصف الثاني الثانوي (2 ثانوي)</option>
+          <option value="BACCALAUREATE_2">الصف الثاني باكلوريا (2 باكلوريا)</option>
+          <option value="SECONDARY_3">الصف الثالث الثانوي (3 ثانوي)</option>
+          <option value="BACCALAUREATE_3">الصف الثالث باكلوريا (3 باكلوريا)</option>
         </select>
         <button class="btn btn-line btn-sm" onclick="document.getElementById('studentStageFilter').value=''; document.getElementById('studentSearchInput').value=''; filterStudents()">↺ إعادة ضبط</button>
       </div>
@@ -546,10 +548,12 @@
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
         <select id="subStageFilter" class="form-control" style="height:38px;font-size:0.88rem;min-width:160px;border-radius:10px;" onchange="loadAdminSubscriptions()">
           <option value="">جميع المراحل</option>
-          <option value="PREPARATORY">المرحلة الإعدادية</option>
-          <option value="SECONDARY_1">الصف الأول الثانوي</option>
-          <option value="SECONDARY_2">الصف الثاني الثانوي</option>
-          <option value="SECONDARY_3">الصف الثالث الثانوي</option>
+          <option value="PREPARATORY">الصف الثالث الإعدادي (3 إعدادي)</option>
+          <option value="SECONDARY_1">الصف الأول الثانوي (1 ثانوي)</option>
+          <option value="SECONDARY_2">الصف الثاني الثانوي (2 ثانوي)</option>
+          <option value="BACCALAUREATE_2">الصف الثاني باكلوريا (2 باكلوريا)</option>
+          <option value="SECONDARY_3">الصف الثالث الثانوي (3 ثانوي)</option>
+          <option value="BACCALAUREATE_3">الصف الثالث باكلوريا (3 باكلوريا)</option>
         </select>
         <select id="subStatusFilter" class="form-control" style="height:38px;font-size:0.88rem;min-width:140px;border-radius:10px;" onchange="loadAdminSubscriptions()">
           <option value="">كل الحالات</option>
@@ -585,16 +589,18 @@
     </div>
   </div>
 
-  <!-- Tab: Traceable Payments Ledger (Requirement 6) -->
+  <!-- Tab: Traceable Payments Ledger & Financial Settlements (Requirement 6) -->
   <div id="tabPayments" class="admin-tab-content" style="display:none;">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:14px;">
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
         <select id="paymentStageFilter" class="form-control" style="height:38px;font-size:0.88rem;min-width:160px;border-radius:10px;" onchange="loadAdminPayments()">
           <option value="">جميع المراحل</option>
-          <option value="PREPARATORY">المرحلة الإعدادية</option>
-          <option value="SECONDARY_1">الصف الأول الثانوي</option>
-          <option value="SECONDARY_2">الصف الثاني الثانوي</option>
-          <option value="SECONDARY_3">الصف الثالث الثانوي</option>
+          <option value="PREPARATORY">الصف الثالث الإعدادي (3 إعدادي)</option>
+          <option value="SECONDARY_1">الصف الأول الثانوي (1 ثانوي)</option>
+          <option value="SECONDARY_2">الصف الثاني الثانوي (2 ثانوي)</option>
+          <option value="BACCALAUREATE_2">الصف الثاني باكلوريا (2 باكلوريا)</option>
+          <option value="SECONDARY_3">الصف الثالث الثانوي (3 ثانوي)</option>
+          <option value="BACCALAUREATE_3">الصف الثالث باكلوريا (3 باكلوريا)</option>
         </select>
         <button class="btn btn-line btn-sm" onclick="loadAdminPayments()">تحديث السجل 🔄</button>
         <button class="btn btn-primary btn-sm" onclick="exportAdminPaymentsToExcel()" style="display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg, #10b981 0%, #059669 100%);border-color:#059669;">
@@ -604,6 +610,15 @@
       <div id="paymentSummaryBadge" style="font-size:0.9rem;font-weight:700;color:#22c55e;">إجمالي الإيرادات: 0 ج.م</div>
     </div>
 
+    <!-- Financial Settlement Summary Cards -->
+    <div id="adminFinancialSettlementCards" style="margin-bottom:16px;"></div>
+
+    <!-- Financial Breakdown by Teacher Table -->
+    <div id="adminTeacherSettlementTableWrap" style="margin-bottom:20px;"></div>
+
+    <h4 style="margin:18px 0 10px;font-size:0.95rem;display:flex;align-items:center;gap:8px;">
+      <span>📋 سجل المعاملات التفصيلي بين الطلاب والمدرسين والإدارة:</span>
+    </h4>
     <div class="table-container">
       <table class="data-table">
         <thead>
@@ -614,14 +629,15 @@
             <th>المرحلة</th>
             <th>الكورس / المحاضرة</th>
             <th>المبلغ الإجمالي</th>
-            <th>حصة المدرس</th>
-            <th>عمولة المنصة</th>
+            <th style="color:#16a34a;">حصة المدرس</th>
+            <th style="color:#2563eb;">عمولة المنصة</th>
+            <th>نسبة المدرس</th>
             <th>طريقة الدفع</th>
             <th>التاريخ</th>
           </tr>
         </thead>
         <tbody id="adminPaymentsTableBody">
-          <tr><td colspan="10" style="text-align:center;color:var(--ink-dim);padding:30px;">جارٍ تحميل سجل المدفوعات...</td></tr>
+          <tr><td colspan="11" style="text-align:center;color:var(--ink-dim);padding:30px;">جارٍ تحميل سجل المدفوعات...</td></tr>
         </tbody>
       </table>
     </div>
@@ -975,19 +991,27 @@
         <div class="stage-chips-grid">
           <label class="stage-chip" onclick="toggleStageChip(this)">
             <input type="checkbox" name="teacherStage" value="PREPARATORY">
-            <span>المرحلة الإعدادية</span>
+            <span>3 إعدادي</span>
           </label>
           <label class="stage-chip selected" onclick="toggleStageChip(this)">
             <input type="checkbox" name="teacherStage" value="SECONDARY_1" checked>
-            <span>أولى ثانوي</span>
+            <span>1 ثانوي</span>
           </label>
           <label class="stage-chip selected" onclick="toggleStageChip(this)">
             <input type="checkbox" name="teacherStage" value="SECONDARY_2" checked>
-            <span>تانية ثانوي</span>
+            <span>2 ثانوي</span>
+          </label>
+          <label class="stage-chip selected" onclick="toggleStageChip(this)">
+            <input type="checkbox" name="teacherStage" value="BACCALAUREATE_2" checked>
+            <span>2 باكلوريا</span>
           </label>
           <label class="stage-chip selected" onclick="toggleStageChip(this)">
             <input type="checkbox" name="teacherStage" value="SECONDARY_3" checked>
-            <span>تالتة ثانوي</span>
+            <span>3 ثانوي</span>
+          </label>
+          <label class="stage-chip selected" onclick="toggleStageChip(this)">
+            <input type="checkbox" name="teacherStage" value="BACCALAUREATE_3" checked>
+            <span>3 باكلوريا</span>
           </label>
         </div>
       </div>
@@ -1333,12 +1357,14 @@
     }
   }
 
-  // ─── Traceable Payments Ledger ─────────────────────────────────────────────
+  // ─── Traceable Payments Ledger & Financial Settlements ─────────────────────
   let currentAdminPayments = [];
 
   async function loadAdminPayments() {
     const stage = document.getElementById('paymentStageFilter')?.value || '';
     const tbody = document.getElementById('adminPaymentsTableBody');
+    const cardsContainer = document.getElementById('adminFinancialSettlementCards');
+    const teacherTableWrap = document.getElementById('adminTeacherSettlementTableWrap');
 
     try {
       const query = {};
@@ -1347,27 +1373,134 @@
       const payments = await window.KhatwaAPI.admin.getPayments(query);
       currentAdminPayments = payments || [];
       if (payments.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--ink-dim);padding:30px;">لا توجد معاملات مسجلة</td></tr>';
+        if (cardsContainer) cardsContainer.innerHTML = '';
+        if (teacherTableWrap) teacherTableWrap.innerHTML = '';
+        tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:var(--ink-dim);padding:30px;">لا توجد معاملات مسجلة في هذا النطاق</td></tr>';
         return;
       }
 
-      const totalRevenue = payments.reduce((acc, p) => acc + (p.amount || 0), 0);
-      document.getElementById('paymentSummaryBadge').textContent = `إجمالي المدفوعات المسجلة: ${totalRevenue.toLocaleString('ar-EG')} ج.م`;
+      // 1. Calculate overall financial split
+      let totalAmount = 0;
+      let totalTeacherShare = 0;
+      let totalPlatformFee = 0;
+      const teacherMap = new Map();
 
-      tbody.innerHTML = payments.map(p => `
+      payments.forEach(p => {
+        const amt = Number(p.amount || 0);
+        const tEarn = Number(p.teacherEarning || 0);
+        const pFee = Number(p.platformFee !== undefined ? p.platformFee : (amt > tEarn ? amt - tEarn : 0));
+
+        totalAmount += amt;
+        totalTeacherShare += tEarn;
+        totalPlatformFee += pFee;
+
+        const teacherName = p.teacherProfile?.displayName || 'مدرس غير محدد';
+        if (!teacherMap.has(teacherName)) {
+          teacherMap.set(teacherName, {
+            name: teacherName,
+            count: 0,
+            totalSales: 0,
+            teacherEarn: 0,
+            platformFee: 0,
+          });
+        }
+        const tData = teacherMap.get(teacherName);
+        tData.count += 1;
+        tData.totalSales += amt;
+        tData.teacherEarn += tEarn;
+        tData.platformFee += pFee;
+      });
+
+      document.getElementById('paymentSummaryBadge').textContent = `إجمالي مبيعات المنصة: ${totalAmount.toLocaleString('ar-EG')} ج.م`;
+
+      // 2. Render Financial Settlement Summary Cards
+      if (cardsContainer) {
+        cardsContainer.innerHTML = `
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:14px;">
+            <div style="background:var(--bg-raised);border:1px solid var(--line-soft);border-radius:14px;padding:16px;">
+              <div style="font-size:0.82rem;color:var(--ink-dim);margin-bottom:4px;">💰 إجمالي مدفوعات الطلاب</div>
+              <div style="font-size:1.6rem;font-weight:900;color:var(--ink);">${totalAmount.toLocaleString('ar-EG')} ج.م</div>
+              <div style="font-size:0.75rem;color:var(--ink-dim);margin-top:4px;">من إجمالي ${payments.length} معاملة مسجلة</div>
+            </div>
+            <div style="background:linear-gradient(135deg, rgba(34,197,94,0.08) 0%, rgba(34,197,94,0.02) 100%);border:1px solid rgba(34,197,94,0.3);border-radius:14px;padding:16px;">
+              <div style="font-size:0.82rem;color:#16a34a;margin-bottom:4px;font-weight:700;">👨‍🏫 إجمالي مستحقات المعلمين</div>
+              <div style="font-size:1.6rem;font-weight:900;color:#16a34a;">${totalTeacherShare.toLocaleString('ar-EG')} ج.م</div>
+              <div style="font-size:0.75rem;color:#16a34a;margin-top:4px;">حصة المعلمين المعتمدة من المبيعات</div>
+            </div>
+            <div style="background:linear-gradient(135deg, rgba(59,130,246,0.08) 0%, rgba(59,130,246,0.02) 100%);border:1px solid rgba(59,130,246,0.3);border-radius:14px;padding:16px;">
+              <div style="font-size:0.82rem;color:#2563eb;margin-bottom:4px;font-weight:700;">🏛️ إجمالي صافي عمولة الإدارة (المنصة)</div>
+              <div style="font-size:1.6rem;font-weight:900;color:#2563eb;">${totalPlatformFee.toLocaleString('ar-EG')} ج.م</div>
+              <div style="font-size:0.75rem;color:#2563eb;margin-top:4px;">أرباح المنصة التشغيلية المحصلة</div>
+            </div>
+          </div>
+        `;
+      }
+
+      // 3. Render Breakdown by Teacher Table
+      if (teacherTableWrap) {
+        teacherTableWrap.innerHTML = `
+          <div style="background:var(--bg-card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:14px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+              <h5 style="margin:0;font-size:1rem;display:flex;align-items:center;gap:6px;">
+                <span>📊 جدول التسوية المالية المجمعة لكل مدرس:</span>
+              </h5>
+              <span class="tag tag-stage">${teacherMap.size} معلمين لديهم مبيعات</span>
+            </div>
+            <div style="overflow-x:auto;">
+              <table class="data-table" style="font-size:0.88rem;">
+                <thead>
+                  <tr>
+                    <th>اسم المدرس</th>
+                    <th>عدد العمليات</th>
+                    <th>إجمالي المبيعات</th>
+                    <th style="color:#16a34a;">مستحقات المدرس (حصة المعلم)</th>
+                    <th style="color:#2563eb;">حصة إدارة المنصة (العمولة)</th>
+                    <th>نسبة المدرس</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${Array.from(teacherMap.values()).map(t => {
+                    const pct = t.totalSales > 0 ? Math.round((t.teacherEarn / t.totalSales) * 100) : 100;
+                    return `
+                      <tr>
+                        <td><b>👨‍🏫 ${escapeHtml(t.name)}</b></td>
+                        <td><span class="tag">${t.count} عملية</span></td>
+                        <td><b>${t.totalSales.toLocaleString('ar-EG')} ج.م</b></td>
+                        <td><b style="color:#16a34a;">${t.teacherEarn.toLocaleString('ar-EG')} ج.م</b></td>
+                        <td><b style="color:#2563eb;">${t.platformFee.toLocaleString('ar-EG')} ج.م</b></td>
+                        <td><span class="tag tag-ok">${pct}%</span></td>
+                      </tr>
+                    `;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `;
+      }
+
+      // 4. Render Transaction Rows
+      tbody.innerHTML = payments.map(p => {
+        const amt = Number(p.amount || 0);
+        const tEarn = Number(p.teacherEarning || 0);
+        const pFee = Number(p.platformFee !== undefined ? p.platformFee : (amt > tEarn ? amt - tEarn : 0));
+        const teacherPct = amt > 0 ? Math.round((tEarn / amt) * 100) : 100;
+
+        return `
         <tr>
-          <td><code>${p.transactionNumber}</code></td>
+          <td><code>${p.transactionNumber || p.id}</code></td>
           <td><b>${escapeHtml(p.student?.username || 'طالب')}</b></td>
           <td>${escapeHtml(p.teacherProfile?.displayName || 'المدرس')}</td>
-          <td><span class="tag">${p.academicStage}</span></td>
+          <td><span class="tag tag-stage">${p.academicStage}</span></td>
           <td>${escapeHtml(p.course?.title || '')} / <b>${escapeHtml(p.lesson?.title || 'محاضرة')}</b></td>
-          <td><b style="color:#22c55e;">${p.amount} ج.م</b></td>
-          <td>${p.teacherEarning} ج.م</td>
-          <td>${p.platformFee} ج.م</td>
-          <td><code>${p.paymentMethod}</code></td>
+          <td><b>${amt} ج.م</b></td>
+          <td><b style="color:#16a34a;">${tEarn} ج.م</b></td>
+          <td><b style="color:#2563eb;">${pFee} ج.م</b></td>
+          <td><span class="tag tag-ok">${teacherPct}%</span></td>
+          <td><code>${p.paymentMethod || 'WALLET_EGP'}</code></td>
           <td>${new Date(p.createdAt).toLocaleDateString('ar-EG')}</td>
         </tr>
-      `).join('');
+      `;}).join('');
     } catch (e) {
       console.warn('Payments load error', e);
     }
@@ -1389,22 +1522,29 @@
       'المبلغ الإجمالي (ج.م)',
       'حصة المدرس (ج.م)',
       'عمولة المنصة (ج.م)',
+      'نسبة المدرس',
       'طريقة الدفع',
       'الحالة',
       'تاريخ المعاملة'
     ];
 
     const rows = currentAdminPayments.map(p => {
+      const amt = Number(p.amount || 0);
+      const tEarn = Number(p.teacherEarning || 0);
+      const pFee = Number(p.platformFee !== undefined ? p.platformFee : (amt > tEarn ? amt - tEarn : 0));
+      const teacherPct = amt > 0 ? `${Math.round((tEarn / amt) * 100)}%` : '100%';
+
       return [
-        `"${(p.transactionNumber || '').replace(/"/g, '""')}"`,
+        `"${(p.transactionNumber || p.id || '').replace(/"/g, '""')}"`,
         `"${(p.student?.username || '').replace(/"/g, '""')}"`,
         `"${(p.teacherProfile?.displayName || '').replace(/"/g, '""')}"`,
         `"${(p.academicStage || '').replace(/"/g, '""')}"`,
         `"${(p.course?.title || '').replace(/"/g, '""')}"`,
         `"${(p.lesson?.title || '').replace(/"/g, '""')}"`,
-        p.amount || 0,
-        p.teacherEarning || 0,
-        p.platformFee || 0,
+        amt,
+        tEarn,
+        pFee,
+        `"${teacherPct}"`,
         `"${(p.paymentMethod || '').replace(/"/g, '""')}"`,
         `"${(p.status || 'COMPLETED').replace(/"/g, '""')}"`,
         `"${p.createdAt ? new Date(p.createdAt).toLocaleString('ar-EG') : ''}"`
@@ -1486,7 +1626,14 @@
     }
   }
 
-  const STAGE_LABELS = { PREPARATORY: 'الإعدادية', SECONDARY_1: 'أول ثانوي', SECONDARY_2: 'ثاني ثانوي', SECONDARY_3: 'ثالث ثانوي' };
+  const STAGE_LABELS = {
+    PREPARATORY: '3 إعدادي',
+    SECONDARY_1: '1 ثانوي',
+    SECONDARY_2: '2 ثانوي',
+    BACCALAUREATE_2: '2 باكلوريا',
+    SECONDARY_3: '3 ثانوي',
+    BACCALAUREATE_3: '3 باكلوريا'
+  };
 
   function renderStudents(list) {
     const tbody = document.getElementById('studentsTableBody');
@@ -1959,10 +2106,12 @@
         const isRejected = r.status === 'REJECTED';
 
         const stageMap = {
-          PREPARATORY: 'المرحلة الإعدادية',
-          SECONDARY_1: 'الصف الأول الثانوي',
-          SECONDARY_2: 'الصف الثاني الثانوي',
-          SECONDARY_3: 'الصف الثالث الثانوي',
+          PREPARATORY: 'الصف الثالث الإعدادي (3 إعدادي)',
+          SECONDARY_1: 'الصف الأول الثانوي (1 ثانوي)',
+          SECONDARY_2: 'الصف الثاني الثانوي (2 ثانوي)',
+          BACCALAUREATE_2: 'الصف الثاني باكلوريا (2 باكلوريا)',
+          SECONDARY_3: 'الصف الثالث الثانوي (3 ثانوي)',
+          BACCALAUREATE_3: 'الصف الثالث باكلوريا (3 باكلوريا)',
         };
 
         const currentItems = [];

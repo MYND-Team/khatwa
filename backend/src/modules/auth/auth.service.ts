@@ -54,6 +54,7 @@ export async function registerStudent(input: RegisterStudentInput) {
         create: {
           studentPhoneNumber,
           academicStage: academicStage || 'SECONDARY_1',
+          academicStages: academicStage || 'SECONDARY_1',
           parentInfo: {
             create: {
               parentPhoneNumber: parentInfo.parentPhoneNumber,
