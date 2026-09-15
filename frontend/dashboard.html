@@ -251,8 +251,18 @@
       document.getElementById('statPoints').textContent = user.pointsBalance;
     }
 
-    // Default to 'All Stages' so all active enrolled courses/lessons appear immediately
-    currentStageFilter = '';
+    // Default to the student's chosen academic stage
+    const preferredStage = user.studentProfile?.academicStage || localStorage.getItem('khatwa_active_stage') || '';
+    currentStageFilter = preferredStage;
+
+    // Activate the matching tab in UI
+    document.querySelectorAll('.stage-filter-tab').forEach(b => {
+      if ((currentStageFilter && b.dataset.stage === currentStageFilter) || (!currentStageFilter && !b.dataset.stage)) {
+        b.classList.add('active');
+      } else {
+        b.classList.remove('active');
+      }
+    });
 
     // Fetch Stats & Subscriptions
     try {
@@ -354,15 +364,29 @@
             totalLessonsCount++;
             const priceLabel = lesson.pricePaid > 0 ? `${lesson.pricePaid} ج.م` : (lesson.pointsPaid > 0 ? `${lesson.pointsPaid} نقطة` : 'مجانية');
 
+            // Build grade badges
+            let gradeHtml = '';
+            if (lesson.examGrade) {
+              const pct = Math.round(lesson.examGrade.scorePercent || 0);
+              const color = pct >= 85 ? '#22c55e' : pct >= 60 ? '#f59e0b' : '#ef4444';
+              gradeHtml += `<span style="background:${color}22;color:${color};font-size:0.78rem;font-weight:700;padding:3px 9px;border-radius:8px;margin-inline-start:6px;">🏆 الامتحان: ${pct}% (${lesson.examGrade.totalCorrect}/${lesson.examGrade.totalQuestions})</span>`;
+            }
+            if (lesson.assignmentGrade) {
+              const pct = Math.round(lesson.assignmentGrade.scorePercent || 0);
+              const color = pct >= 85 ? '#22c55e' : pct >= 60 ? '#f59e0b' : '#ef4444';
+              gradeHtml += `<span style="background:${color}22;color:${color};font-size:0.78rem;font-weight:700;padding:3px 9px;border-radius:8px;margin-inline-start:6px;">📝 الواجب: ${pct}% (${lesson.assignmentGrade.totalCorrect}/${lesson.assignmentGrade.totalQuestions})</span>`;
+            }
+
             html += `
               <div class="sub-lesson-card">
-                <div style="display:flex;align-items:center;gap:12px;">
+                <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
                   <span style="background:rgba(34,197,94,0.15);color:#22c55e;font-size:0.85rem;font-weight:700;padding:4px 8px;border-radius:8px;">✓ مدفوع</span>
                   <div>
                     <b style="font-size:0.92rem;display:block;">${escapeHtml(lesson.title)}</b>
                     <span style="font-size:0.8rem;color:var(--ink-dim);">
                       ${lesson.hasVideo ? '🎬 فيديو محاضرة' : ''} ${lesson.hasPdf ? '· 📄 مذكرة PDF' : ''} · القيمة: ${priceLabel}
                     </span>
+                    ${gradeHtml ? `<div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:4px;">${gradeHtml}</div>` : ''}
                   </div>
                 </div>
                 <div>

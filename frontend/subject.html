@@ -257,12 +257,23 @@
     const isFree = priceEGP === 0 && pointCost === 0;
 
     let priceBadge = '';
-    if (isSubscribed) {
+    if (lesson.scheduledPublishAt && new Date(lesson.scheduledPublishAt) > new Date()) {
+      const schedDate = new Date(lesson.scheduledPublishAt).toLocaleDateString('ar-EG', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+      priceBadge = `<span class="tag" style="background:rgba(245,158,11,0.12);color:#d97706;border:1px solid rgba(245,158,11,0.3);font-size:0.8rem;">⏳ تتاح بتاريخ ${schedDate}</span>`;
+    } else if (isSubscribed) {
       priceBadge = '<span class="tag tag-ok">✓ تم الشراء / مشترك</span>';
     } else if (isFree) {
       priceBadge = '<span class="tag tag-ok">مجانية</span>';
     } else {
       priceBadge = `<span class="tag tag-warn" style="font-weight:700;">💵 ${priceEGP} ج.م · 💎 ${pointCost} نقطة</span>`;
+    }
+
+    let gradesHtml = '';
+    if (lesson.assignmentGrade) {
+      gradesHtml += `<span class="tag" style="background:rgba(16,185,129,0.12);color:#059669;border:1px solid rgba(16,185,129,0.3);font-size:0.76rem;font-weight:700;">📝 الواجب: ${lesson.assignmentGrade.scorePercent}%</span>`;
+    }
+    if (lesson.examGrade) {
+      gradesHtml += `<span class="tag" style="background:rgba(99,102,241,0.12);color:#4f46e5;border:1px solid rgba(99,102,241,0.3);font-size:0.76rem;font-weight:700;">🎯 الامتحان: ${lesson.examGrade.scorePercent}%</span>`;
     }
 
     let actionBtn = '';
@@ -291,7 +302,8 @@
             </span>
           </div>
         </div>
-        <div style="display:flex;align-items:center;gap:10px;">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          ${gradesHtml}
           ${priceBadge}
           ${actionBtn}
         </div>

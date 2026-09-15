@@ -103,7 +103,7 @@
     </div>
   </div>
 
-  <!-- Stage-Scoped Analytics Stat Cards (Requirement 2) -->
+  <!-- Stage-Scoped Analytics Stat Cards -->
   <div id="analyticsCards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:24px;">
     <div class="card" style="padding:16px;text-align:center;border-radius:16px;background:linear-gradient(135deg,rgba(16,185,129,0.08),rgba(16,185,129,0.02));border:1px solid rgba(16,185,129,0.3);">
       <div style="font-size:1.6rem;font-weight:700;color:#10b981;" id="statTeacherWallet">—</div>
@@ -125,6 +125,12 @@
       <div style="font-size:1.6rem;font-weight:700;color:#f59e0b;" id="statPoints">—</div>
       <div style="font-size:0.82rem;color:var(--ink-dim);margin-top:2px;">نقاط مكتسبة</div>
     </div>
+    <!-- Commission % Card -->
+    <div class="card" style="padding:16px;text-align:center;border-radius:16px;background:linear-gradient(135deg,rgba(99,102,241,0.1),rgba(99,102,241,0.03));border:1px solid rgba(99,102,241,0.25);">
+      <div style="font-size:1.6rem;font-weight:700;color:#6366f1;" id="statCommission">—</div>
+      <div style="font-size:0.82rem;color:var(--ink-dim);margin-top:2px;font-weight:600;">📊 نسبة أرباحك المعتمدة</div>
+      <div style="font-size:0.72rem;color:var(--ink-dim);margin-top:2px;" id="commissionNote">من مبيعات الحصص</div>
+    </div>
   </div>
 
   <!-- Navigation View Tabs -->
@@ -132,6 +138,23 @@
     <button class="tab active" onclick="switchMainView('view-courses', this)">📚 كورسات وفصول المرحلة</button>
     <button class="tab" onclick="switchMainView('view-students', this)">👨‍🎓 طلاب المرحلة واشتراكاتهم</button>
     <button class="tab" onclick="switchMainView('view-revenue', this)">💵 سجل إيرادات المرحلة</button>
+    <button class="tab" onclick="switchMainView('view-calendar', this); loadCalendarView()">📅 تقويم المحاضرات</button>
+  </div>
+
+  <!-- View 4: Calendar / Scheduled Lessons -->
+  <div class="tab-panel" id="view-calendar" style="display:none;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <h3 style="margin:0;">📅 تقويم ومواعيد نزول المحاضرات</h3>
+      <span style="font-size:0.84rem;color:var(--ink-dim);">المحاضرات المنشورة والمجدولة في هذه المرحلة</span>
+    </div>
+    <div id="calendarLegend" style="display:flex;gap:14px;margin-bottom:16px;flex-wrap:wrap;">
+      <span style="display:flex;align-items:center;gap:6px;font-size:0.82rem;"><span style="width:12px;height:12px;border-radius:50%;background:#22c55e;display:inline-block;"></span>منشورة حالياً</span>
+      <span style="display:flex;align-items:center;gap:6px;font-size:0.82rem;"><span style="width:12px;height:12px;border-radius:50%;background:#f59e0b;display:inline-block;"></span>مجدولة (في الانتظار)</span>
+      <span style="display:flex;align-items:center;gap:6px;font-size:0.82rem;"><span style="width:12px;height:12px;border-radius:50%;background:#6b7280;display:inline-block;"></span>مسودة (غير منشورة)</span>
+    </div>
+    <div id="calendarContainer" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;">
+      <div style="text-align:center;padding:40px;color:var(--ink-dim);grid-column:1/-1;">جارٍ تحميل التقويم...</div>
+    </div>
   </div>
 
   <!-- View 1: Stage-Scoped Courses -->
@@ -641,9 +664,10 @@
 
   async function loadStageOverview() {
     try {
-      const [overviewData, profileData] = await Promise.all([
+      const [overviewData, profileData, meData] = await Promise.all([
         window.KhatwaAPI.teacher.getWorkspaceOverview(currentStage).catch(() => ({})),
         window.KhatwaAPI.teacher.getProfile().catch(() => ({})),
+        window.KhatwaAPI.auth.me().catch(() => ({})),
       ]);
 
       const walletBal = profileData?.user?.walletBalance || 0;
@@ -658,10 +682,25 @@
       document.getElementById('statSubscriptions').textContent = overviewData.totalSubscriptions || 0;
       document.getElementById('statRevenue').textContent = (overviewData.totalRevenueEGP || 0).toLocaleString('ar-EG') + ' ج.م';
       document.getElementById('statPoints').textContent = (overviewData.totalPointsEarned || 0).toLocaleString('ar-EG') + ' نقطة';
+
+      // Show commission %
+      const localUser = window.KhatwaAPI.getUser();
+      const rawComm = overviewData?.commissionPct ?? profileData?.commissionPct ?? meData?.teacherProfile?.commissionPct ?? meData?.commissionPct ?? localUser?.teacherProfile?.commissionPct;
+      const effectiveComm = overviewData?.effectiveCommissionPct ?? 80;
+      if (document.getElementById('statCommission')) {
+        if (rawComm !== undefined && rawComm !== null && !isNaN(Number(rawComm))) {
+          document.getElementById('statCommission').textContent = rawComm + '%';
+          document.getElementById('commissionNote').textContent = 'نسبة أرباحك المعتمدة من الإدارة';
+        } else {
+          document.getElementById('statCommission').textContent = effectiveComm + '%';
+          document.getElementById('commissionNote').textContent = 'نسبتك الافتراضية المعتمدة من المنصة';
+        }
+      }
     } catch (e) {
       console.warn('Workspace overview error', e);
     }
   }
+
 
   async function loadStageCourses() {
     const container = document.getElementById('stageCoursesList');
@@ -732,6 +771,8 @@
                               <button type="button" class="btn btn-text btn-sm" onclick="openQuizBuilderForLesson('${l.id}', 'exam')">🏆 الامتحان</button>
                               ${l.examQuizId ? `<button type="button" class="btn btn-line btn-sm" style="padding:3px 8px;font-size:.78rem;color:#10b981;border-color:rgba(16,185,129,0.4);" onclick="openQuizGradingModal('${l.examQuizId}', 'تصحيح الامتحان - ${escapeHtml(l.title)}')">📊 تصحيح الامتحان</button>` : ''}
                               <button type="button" class="btn btn-line btn-sm" style="padding:3px 10px;font-size:.8rem;" onclick="openTeacherPreview('${l.id}')">👁 معاينة المحاضرة</button>
+                              <button type="button" class="btn btn-line btn-sm" style="padding:3px 10px;font-size:.8rem;color:#f59e0b;border-color:rgba(245,158,11,0.5);" onclick="openScheduleLessonModal('${l.id}', '${escapeHtml(l.title)}')">📅 ${l.scheduledPublishAt ? formatScheduleLabel(l.scheduledPublishAt) : 'جدولة النشر'}</button>
+                              <button type="button" class="btn btn-sm" style="padding:3px 10px;font-size:.8rem;background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.4);border-radius:8px;" onclick="confirmDeleteLesson('${l.id}', '${escapeHtml(l.title)}')">🗑 حذف</button>
                             </div>
                           </div>
                           `;
@@ -750,7 +791,150 @@
     }
   }
 
+  // ─── Delete Lesson ──────────────────────────────────────────────────────────
+
+  async function confirmDeleteLesson(lessonId, lessonTitle) {
+    if (!confirm(`هل أنت متأكد من حذف المحاضرة:\n"${lessonTitle}"\n\nسيتم حذف المحاضرة وكل اشتراكات الطلاب فيها نهائياً.`)) return;
+    try {
+      await window.KhatwaAPI.teacher.deleteLesson(lessonId);
+      showToast('✅ تم حذف المحاضرة بنجاح');
+      await loadStageCourses();
+    } catch (e) {
+      showToast('❌ فشل حذف المحاضرة: ' + (e.message || 'خطأ غير معروف'), 'error');
+    }
+  }
+
+  // ─── Schedule Lesson Modal ──────────────────────────────────────────────────
+
+  function formatScheduleLabel(dateStr) {
+    if (!dateStr) return 'جدولة النشر';
+    const d = new Date(dateStr);
+    if (isNaN(d)) return 'جدولة النشر';
+    const now = new Date();
+    if (d < now) return '✅ تم النشر';
+    return '⏰ ' + d.toLocaleDateString('ar-EG', { month: 'short', day: 'numeric' }) + ' ' + d.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  function openScheduleLessonModal(lessonId, lessonTitle) {
+    const existingModal = document.getElementById('scheduleLessonModal');
+    if (existingModal) existingModal.remove();
+
+    const now = new Date();
+    now.setMinutes(now.getMinutes() + 30 - (now.getMinutes() % 30));
+    const localIso = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+
+    const modal = document.createElement('div');
+    modal.id = 'scheduleLessonModal';
+    modal.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;padding:20px;';
+    modal.innerHTML = `
+      <div style="background:var(--bg-card);border-radius:20px;padding:28px;max-width:440px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.4);">
+        <h3 style="margin:0 0 8px;">📅 جدولة نشر المحاضرة</h3>
+        <p style="margin:0 0 18px;color:var(--ink-dim);font-size:.88rem;">${lessonTitle}</p>
+        <div class="field">
+          <label class="form-label">تاريخ ووقت النشر التلقائي</label>
+          <input type="datetime-local" id="scheduleInput" class="form-control" value="${localIso}" style="width:100%;">
+          <span style="font-size:.78rem;color:var(--ink-dim);display:block;margin-top:6px;">ستنشر المحاضرة تلقائياً في الوقت المحدد وتظهر للطلاب.</span>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end;">
+          <button class="btn btn-line btn-sm" onclick="clearSchedule('${lessonId}')">🗑 إلغاء الجدولة</button>
+          <button class="btn btn-line btn-sm" onclick="document.getElementById('scheduleLessonModal').remove()">إغلاق</button>
+          <button class="btn btn-primary btn-sm" onclick="saveSchedule('${lessonId}')">💾 حفظ الجدولة</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+  }
+
+  async function saveSchedule(lessonId) {
+    const val = document.getElementById('scheduleInput').value;
+    if (!val) { showToast('اختر وقتاً للجدولة', 'error'); return; }
+    try {
+      await window.KhatwaAPI.teacher.scheduleLesson(lessonId, new Date(val).toISOString());
+      showToast('✅ تم جدولة المحاضرة بنجاح');
+      document.getElementById('scheduleLessonModal')?.remove();
+      await loadStageCourses();
+      if (document.getElementById('view-calendar')?.style?.display !== 'none') loadCalendarView();
+    } catch (e) {
+      showToast('❌ فشل الجدولة: ' + (e.message || 'خطأ'), 'error');
+    }
+  }
+
+  async function clearSchedule(lessonId) {
+    try {
+      await window.KhatwaAPI.teacher.scheduleLesson(lessonId, null);
+      showToast('✅ تم إلغاء جدولة المحاضرة');
+      document.getElementById('scheduleLessonModal')?.remove();
+      await loadStageCourses();
+      if (document.getElementById('view-calendar')?.style?.display !== 'none') loadCalendarView();
+    } catch (e) {
+      showToast('❌ فشل إلغاء الجدولة: ' + (e.message || 'خطأ'), 'error');
+    }
+  }
+
+  // ─── Calendar View ──────────────────────────────────────────────────────────
+
+  async function loadCalendarView() {
+    const container = document.getElementById('calendarContainer');
+    if (!container) return;
+    container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--ink-dim);grid-column:1/-1;">جارٍ تحميل التقويم...</div>';
+    try {
+      const lessons = await window.KhatwaAPI.teacher.getScheduledLessons(currentStage);
+      if (!lessons || lessons.length === 0) {
+        container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--ink-dim);grid-column:1/-1;">لا توجد محاضرات في هذه المرحلة بعد.<br>أضف محاضرات واضبط مواعيد نشرها من قسم الكورسات.</div>';
+        return;
+      }
+
+      const now = new Date();
+      container.innerHTML = lessons.map(l => {
+        const hasSchedule = l.scheduledPublishAt && !isNaN(new Date(l.scheduledPublishAt));
+        const schedDate = hasSchedule ? new Date(l.scheduledPublishAt) : null;
+        const isInFuture = schedDate && schedDate > now;
+        const isPublished = l.isPublished;
+
+        let statusColor = '#6b7280'; // draft
+        let statusLabel = '📝 مسودة';
+        let borderLeft = '4px solid #6b7280';
+
+        if (isPublished && !isInFuture) {
+          statusColor = '#22c55e';
+          statusLabel = '✅ منشورة';
+          borderLeft = '4px solid #22c55e';
+        } else if (hasSchedule && isInFuture) {
+          statusColor = '#f59e0b';
+          statusLabel = '⏰ مجدولة';
+          borderLeft = '4px solid #f59e0b';
+        }
+
+        return `
+          <div class="card" style="padding:18px;border-radius:14px;${borderLeft};position:relative;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px;">
+              <b style="font-size:.95rem;line-height:1.4;">${escapeHtml(l.title)}</b>
+              <span style="font-size:.78rem;padding:3px 10px;border-radius:20px;background:${statusColor}22;color:${statusColor};white-space:nowrap;font-weight:700;">${statusLabel}</span>
+            </div>
+            <div style="font-size:.8rem;color:var(--ink-dim);margin-bottom:10px;">
+              ${l.course ? '📁 ' + escapeHtml(l.course.title) + (l.chapter ? ' › ' + escapeHtml(l.chapter.title) : '') : ''}
+            </div>
+            ${schedDate ? `
+              <div style="font-size:.82rem;font-weight:700;color:${statusColor};margin-bottom:10px;">
+                📅 ${schedDate.toLocaleDateString('ar-EG', { weekday:'short', year:'numeric', month:'short', day:'numeric' })}
+                &nbsp;⏰ ${schedDate.toLocaleTimeString('ar-EG', { hour:'2-digit', minute:'2-digit' })}
+              </div>
+            ` : '<div style="font-size:.8rem;color:var(--ink-dim);margin-bottom:10px;">لم يتم جدولة وقت نشر</div>'}
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <button class="btn btn-line btn-sm" style="font-size:.78rem;padding:3px 10px;color:#f59e0b;border-color:rgba(245,158,11,0.5);" onclick="openScheduleLessonModal('${l.id}', '${escapeHtml(l.title)}')">📅 تعديل الجدولة</button>
+              <button class="btn btn-sm" style="font-size:.78rem;padding:3px 10px;background:rgba(239,68,68,0.08);color:#ef4444;border:1px solid rgba(239,68,68,0.3);border-radius:8px;" onclick="confirmDeleteLesson('${l.id}', '${escapeHtml(l.title)}')">🗑 حذف</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    } catch (e) {
+      container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--err);grid-column:1/-1;">فشل تحميل التقويم.</div>';
+    }
+  }
+
   let cachedStageStudents = [];
+
 
   async function loadStageStudents() {
     const container = document.getElementById('stageStudentsList');

@@ -203,15 +203,20 @@
     return Array.from(stages);
   }
 
-  function initStages() {
-    currentUser = window.KhatwaAPI.getUser();
+  function initStages(userData) {
+    currentUser = userData || window.KhatwaAPI.getUser();
     const tabsContainer = document.getElementById('stageFolderTabs');
     const customizeBtn = document.getElementById('btnCustomizeStages');
 
     if (currentUser && currentUser.role === 'STUDENT') {
-      const rawStages = currentUser.studentProfile?.academicStages || currentUser.studentProfile?.academicStage || currentUser.academicStage || 'SECONDARY_3';
-      studentSelectedStages = rawStages.split(',').map(s => s.trim()).filter(s => STAGE_NAMES[s]);
-      if (studentSelectedStages.length === 0) studentSelectedStages = ['SECONDARY_3'];
+      // Prefer server-fetched data (from /auth/me) which has full studentProfile
+      const rawStages = currentUser.studentProfile?.academicStages || currentUser.studentProfile?.academicStage || currentUser.academicStages || currentUser.academicStage || '';
+      studentSelectedStages = rawStages ? rawStages.split(',').map(s => s.trim()).filter(s => STAGE_NAMES[s]) : [];
+      // If no stage set at all, show stage picker instead of defaulting silently
+      if (studentSelectedStages.length === 0) {
+        // Show all stages but highlight that stage should be set
+        studentSelectedStages = Object.keys(STAGE_NAMES);
+      }
 
       if (customizeBtn) customizeBtn.style.display = 'inline-flex';
 
@@ -299,7 +304,20 @@
       document.getElementById('studentPointsTag').textContent = `رصيدك: ${user.pointsBalance || 0} نقطة`;
     }
     window.KhatwaAPI.syncNav();
-    initStages();
+
+    // Fetch up-to-date user profile from server to get studentProfile/academicStage
+    let richUser = user;
+    if (user && user.role === 'STUDENT') {
+      try {
+        const meData = await window.KhatwaAPI.auth.me();
+        if (meData && meData.studentProfile) {
+          richUser = { ...user, studentProfile: meData.studentProfile };
+          window.KhatwaAPI.setUser(richUser);
+        }
+      } catch (_) { /* use cached user */ }
+    }
+
+    initStages(richUser);
     await loadData();
   });
 
@@ -310,6 +328,7 @@
       loadAllCourses()
     ]);
   }
+
 
   function switchTab(panelId, tabBtn) {
     document.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'none');
@@ -324,6 +343,7 @@
     if (tabBtn) tabBtn.classList.add('active');
     renderTeachers();
     renderAllCourses();
+    renderEnrolledCourses();
   }
 
   async function loadTeachers() {
@@ -422,11 +442,22 @@
 
   function renderEnrolledCourses() {
     const grid = document.getElementById('enrolledCoursesGrid');
-    if (!enrolledCoursesList || enrolledCoursesList.length === 0) {
+    let list = (enrolledCoursesList || []).filter(e => !!(e.course || e));
+
+    if (currentUser && currentUser.role === 'STUDENT') {
+      if (currentStageFilter && currentStageFilter !== 'ALL_SELECTED') {
+        list = list.filter(e => {
+          const c = e.course || e;
+          return !c.academicStage || c.academicStage === currentStageFilter;
+        });
+      }
+    }
+
+    if (list.length === 0) {
       grid.innerHTML = `
         <div style="grid-column:1/-1;text-align:center;padding:50px;background:var(--bg-card);border-radius:18px;border:1px solid var(--line-soft);">
           <div style="font-size:3rem;margin-bottom:10px;">📚</div>
-          <h3>لم تشترك في أي كورس بعد</h3>
+          <h3>${enrolledCoursesList.length === 0 ? 'لم تشترك في أي كورس بعد' : 'لا توجد كورسات مشتركة في هذه المرحلة'}</h3>
           <p style="color:var(--ink-dim);margin:6px 0 16px;">تصفح كروت المعلمين أو الكورسات المتاحة واشترك لمتابعة دروسك.</p>
           <button class="btn btn-primary btn-sm" onclick="switchTab('panel-teachers', document.getElementById('tabTeachersBtn'))">تصفح المعلمين المعتمدين</button>
         </div>
@@ -434,7 +465,7 @@
       return;
     }
 
-    grid.innerHTML = enrolledCoursesList.map(e => {
+    grid.innerHTML = list.map(e => {
       const c = e.course || e;
       const teacher = c.teacherProfile || {};
       const teacherName = teacher.displayName || 'أستاذ المادة';

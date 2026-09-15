@@ -218,10 +218,12 @@
     BASE_URL: DEFAULT_API_BASE,
 
     auth: {
-      async login(username, password) {
+      async login(username, password, academicStage) {
+        const body = { username, password };
+        if (academicStage) body.academicStage = academicStage;
         const res = await request('/auth/login', {
           method: 'POST',
-          body: { username, password },
+          body,
         });
         if (res.success && res.data) {
           const { user, accessToken, refreshToken } = res.data;
@@ -248,6 +250,11 @@
           setStoredUser(user);
         }
         return res.data;
+      },
+
+      async me() {
+        const res = await request('/auth/me');
+        return res.data || null;
       },
 
       async logout() {
@@ -487,6 +494,9 @@
       async deleteChapter(id) { return request('/teacher/chapters/' + id, { method: 'DELETE' }); },
       async createLesson(chapterId, data) { const res = await request('/teacher/chapters/' + chapterId + '/lessons', { method: 'POST', body: data }); return res.data; },
       async updateLesson(id, data) { const res = await request('/teacher/lessons/' + id, { method: 'PATCH', body: data }); return res.data; },
+      async deleteLesson(id) { return request('/teacher/lessons/' + id, { method: 'DELETE' }); },
+      async scheduleLesson(id, scheduledPublishAt) { const res = await request('/teacher/lessons/' + id + '/schedule', { method: 'PATCH', body: { scheduledPublishAt } }); return res.data; },
+      async getScheduledLessons(stage = '') { const q = stage ? '?stage=' + encodeURIComponent(stage) : ''; const res = await request('/teacher/lessons/scheduled' + q); return res.data || []; },
       async _directDriveUpload(lessonId, file, fileType = 'video', onProgress = null) {
         // ─── Step 1: Obtain a resumable upload session URL from the backend.
         //     Only tiny JSON metadata passes through Vercel — the file bytes never do.

@@ -2,7 +2,7 @@ import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { prisma } from '../../config/prisma';
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../../utils/jwt';
-import { AppError, BadRequestError, ConflictError, UnauthorizedError } from '../../utils/errors';
+import { AppError, BadRequestError, ConflictError, UnauthorizedError, ForbiddenError } from '../../utils/errors';
 import { RegisterStudentInput, RegisterWithCodeInput, LoginInput } from './auth.schema';
 import { env } from '../../config/env';
 type Role = 'STUDENT' | 'TEACHER' | 'STAFF' | 'ADMIN';
@@ -78,10 +78,23 @@ export async function registerStudent(input: RegisterStudentInput) {
 export async function registerWithCode(input: RegisterWithCodeInput) {
   const { username, password, displayName, role = 'STAFF' } = input as any;
 
+  const targetRole = (role === 'TEACHER' ? 'TEACHER' : role === 'ADMIN' ? 'ADMIN' : 'STAFF') as Role;
+
+  if (targetRole === 'ADMIN') {
+    const adminSecret = process.env.ADMIN_REGISTRATION_SECRET || process.env.ADMIN_INVITE_CODE;
+    if (!adminSecret || input.accessCode !== adminSecret) {
+      throw ForbiddenError('رمز إنشاء حساب مسؤول غير صحيح أو غير متوفر');
+    }
+  } else if (targetRole === 'TEACHER') {
+    const teacherSecret = process.env.TEACHER_INVITE_CODE;
+    if (teacherSecret && input.accessCode !== teacherSecret) {
+      throw ForbiddenError('رمز دعوة المعلم غير صحيح أو غير متوفر');
+    }
+  }
+
   const existing = await prisma.user.findUnique({ where: { username } });
   if (existing) throw ConflictError('Username already taken');
 
-  const targetRole = (role === 'TEACHER' ? 'TEACHER' : role === 'ADMIN' ? 'ADMIN' : 'STAFF') as Role;
   const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
 
   const user = await prisma.$transaction(async (tx: any) => {
@@ -114,11 +127,11 @@ export async function registerWithCode(input: RegisterWithCodeInput) {
 // ─── Login ────────────────────────────────────────────────────────────────────
 
 export async function login(input: LoginInput) {
-  const { username, password } = input;
+  const { username, password, academicStage } = input as any;
 
   const user = await prisma.user.findUnique({
     where: { username },
-    include: { teacherProfile: true },
+    include: { teacherProfile: true, studentProfile: true },
   });
 
   if (!user || !user.isActive) {
@@ -140,10 +153,55 @@ export async function login(input: LoginInput) {
     console.warn(`⚠️  Auto-corrected role for protected admin account: ${username} → ADMIN`);
   }
 
+  let studentProfile = user.studentProfile;
+  if (effectiveRole === 'STUDENT') {
+    if (academicStage) {
+      studentProfile = await prisma.studentProfile.upsert({
+        where: { userId: user.id },
+        update: {
+          academicStage: academicStage,
+          academicStages: academicStage,
+        },
+        create: {
+          userId: user.id,
+          academicStage: academicStage,
+          academicStages: academicStage,
+          studentPhoneNumber: '',
+        },
+      });
+    } else if (!studentProfile) {
+      studentProfile = await prisma.studentProfile.create({
+        data: {
+          userId: user.id,
+          academicStage: 'SECONDARY_3',
+          academicStages: 'SECONDARY_3',
+          studentPhoneNumber: '',
+        },
+      });
+    }
+  }
+
   const tokens = await issueTokens(user.id, user.username, effectiveRole);
 
   return {
-    user: { id: user.id, username: user.username, role: effectiveRole },
+    user: {
+      id: user.id,
+      username: user.username,
+      role: effectiveRole,
+      walletBalance: user.walletBalance,
+      pointsBalance: user.pointsBalance,
+      studentProfile: studentProfile ? {
+        academicStage: studentProfile.academicStage,
+        academicStages: studentProfile.academicStages,
+        studentPhoneNumber: studentProfile.studentPhoneNumber,
+      } : undefined,
+      teacherProfile: user.teacherProfile ? {
+        id: user.teacherProfile.id,
+        displayName: user.teacherProfile.displayName,
+        subject: user.teacherProfile.subject,
+        commissionPct: user.teacherProfile.commissionPct,
+      } : undefined,
+    },
     ...tokens,
   };
 }
@@ -172,6 +230,9 @@ export async function refreshAccessToken(rawRefreshToken: string) {
   }
 
   const { user } = storedToken;
+  if (!user || !user.isActive) {
+    throw UnauthorizedError('الحساب معطل أو غير نشط');
+  }
 
   // Rotate: revoke old, issue new
   await prisma.refreshToken.update({

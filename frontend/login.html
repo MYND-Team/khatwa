@@ -6,6 +6,51 @@
 <title>تسجيل الدخول | خطوة</title>
 <link rel="icon" type="image/png" href="logo/logo-khatwa.png">
 <link rel="stylesheet" href="css/style.css">
+<style>
+  .grade-selector-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 10px 0 16px;
+    animation: fadeIn 0.3s ease;
+  }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
+
+  .grade-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  .grade-btn {
+    border: 2px solid var(--line-soft, #e5e7eb);
+    border-radius: 12px;
+    background: var(--bg-raised, #f9fafb);
+    padding: 10px 8px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+    color: var(--ink, #111);
+  }
+  .grade-btn:hover { border-color: var(--primary, #3b82f6); background: rgba(59,130,246,0.06); }
+  .grade-btn.selected { border-color: var(--primary, #3b82f6); background: rgba(59,130,246,0.14); color: var(--primary, #3b82f6); box-shadow: 0 0 0 1px var(--primary,#3b82f6); }
+  .grade-label {
+    font-size: 0.88rem;
+    font-weight: 800;
+    color: var(--ink, #1f2937);
+    margin-bottom: 2px;
+  }
+  .grade-info-banner {
+    background: linear-gradient(135deg, rgba(59,130,246,0.08), rgba(99,102,241,0.04));
+    border: 1px solid rgba(59,130,246,0.2);
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: 0.8rem;
+    color: var(--ink-dim, #6b7280);
+    line-height: 1.5;
+  }
+</style>
 </head>
 <body>
 
@@ -26,17 +71,33 @@
 </nav>
 
 <div class="auth-wrap">
-  <div class="auth-box">
+  <div class="auth-box" style="max-width:480px;">
     <div class="auth-head">
       <div class="brand"><img src="logo/logo-khatwa.png" alt="خطوة" class="brand-logo"><span class="brand-text">خطوة</span></div>
       <h1>تسجيل الدخول</h1>
-      <p>ادخل بيانات حسابك لمتابعة حصصك أو إدارة كورساتك</p>
+      <p>اختر صفك الدراسي وسجل دخولك لتظهر لك كورساتك ومحاضراتك فوراً</p>
     </div>
 
     <div class="alert" id="loginAlert"></div>
 
     <form id="loginForm">
-      <div class="field">
+      <!-- 1. Grade Selector at the very top (ف الأول خالص) -->
+      <div class="grade-selector-wrap" id="gradeSelectorWrap">
+        <div class="grade-label">📚 ١. اختر صفك الدراسي (المرحلة الأكاديمية):</div>
+        <div class="grade-info-banner">ستظهر لك فقط المواد والمحاضرات الخاصة بالصف الذي تختاره هنا.</div>
+        <div class="grade-grid" id="gradeGrid">
+          <button type="button" class="grade-btn" data-stage="PREPARATORY" onclick="selectGrade(this)">🎒 3 إعدادي</button>
+          <button type="button" class="grade-btn" data-stage="SECONDARY_1" onclick="selectGrade(this)">📘 1 ثانوي</button>
+          <button type="button" class="grade-btn" data-stage="SECONDARY_2" onclick="selectGrade(this)">📙 2 ثانوي</button>
+          <button type="button" class="grade-btn" data-stage="BACCALAUREATE_2" onclick="selectGrade(this)">🎓 2 باكلوريا</button>
+          <button type="button" class="grade-btn" data-stage="SECONDARY_3" onclick="selectGrade(this)">📕 3 ثانوي</button>
+          <button type="button" class="grade-btn" data-stage="BACCALAUREATE_3" onclick="selectGrade(this)">🏆 3 باكلوريا</button>
+        </div>
+        <input type="hidden" id="selectedStage" value="">
+      </div>
+
+      <!-- 2. Account credentials -->
+      <div class="field" style="margin-top:10px;">
         <label for="username">اسم المستخدم</label>
         <input type="text" id="username" placeholder="اسم المستخدم" required autocomplete="username" autocorrect="off" autocapitalize="none" spellcheck="false" inputmode="email">
       </div>
@@ -47,13 +108,14 @@
           <button type="button" class="pw-toggle">إظهار</button>
         </div>
       </div>
+
       <div class="form-links">
-        <label style="display:flex;align-items:center;gap:8px;font-weight:600;">
-          <input type="checkbox" style="accent-color:var(--gold);" checked> تذكرني
+        <label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;color:var(--ink-dim);cursor:pointer;">
+          <input type="checkbox" id="isStaffLogin" style="accent-color:var(--primary);" onchange="toggleStaffMode(this.checked)"> دخول كمعلم أو مسؤول (بدون صف)
         </label>
         <a href="help.html">نسيت كلمة المرور؟</a>
       </div>
-      <button type="submit" id="loginSubmitBtn" class="btn btn-primary btn-block">دخول</button>
+      <button type="submit" id="loginSubmitBtn" class="btn btn-primary btn-block">دخول للمنصة</button>
     </form>
 
     <div class="auth-switch">ليس لديك حساب؟ <a href="signup.html">أنشئ حسابًا جديدًا</a></div>
@@ -64,6 +126,35 @@
 <script src="js/i18n.js"></script>
 <script src="js/main.js"></script>
 <script>
+  let selectedStageValue = '';
+
+  function toggleStaffMode(isStaff) {
+    const wrap = document.getElementById('gradeSelectorWrap');
+    if (isStaff) {
+      wrap.style.display = 'none';
+      selectedStageValue = '';
+      document.querySelectorAll('.grade-btn').forEach(b => b.classList.remove('selected'));
+    } else {
+      wrap.style.display = 'flex';
+    }
+  }
+
+  function selectGrade(btn) {
+    document.querySelectorAll('.grade-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    selectedStageValue = btn.dataset.stage;
+    document.getElementById('loginAlert').classList.remove('show');
+  }
+
+  // Preselect previous stage if available
+  try {
+    const savedStage = localStorage.getItem('khatwa_active_stage');
+    if (savedStage) {
+      const matchBtn = document.querySelector(`.grade-btn[data-stage="${savedStage}"]`);
+      if (matchBtn) selectGrade(matchBtn);
+    }
+  } catch (_) {}
+
   // Auto-redirect if user has a valid session (HttpOnly Cookie)
   document.addEventListener('DOMContentLoaded', async () => {
     const refreshed = await window.KhatwaAPI.auth.silentRefresh();
@@ -85,8 +176,17 @@
     const alertBox = document.getElementById('loginAlert');
     const u = document.getElementById('username').value.trim().replace(/\s+/g, '').toLowerCase();
     const p = document.getElementById('password').value;
+    const isStaff = document.getElementById('isStaffLogin').checked;
 
     if (!u || !p) return;
+
+    // For students: stage selection is required at the very beginning
+    if (!isStaff && !selectedStageValue) {
+      alertBox.textContent = '⚠️ يرجى اختيار صفك الدراسي من الأعلى للمتابعة';
+      alertBox.classList.add('show');
+      document.getElementById('gradeSelectorWrap').scrollIntoView({ behavior: 'smooth' });
+      return;
+    }
 
     btn.disabled = true;
     const origText = btn.innerHTML;
@@ -94,7 +194,10 @@
     alertBox.classList.remove('show');
 
     try {
-      const data = await window.KhatwaAPI.auth.login(u, p);
+      if (selectedStageValue) {
+        try { localStorage.setItem('khatwa_active_stage', selectedStageValue); } catch (_) {}
+      }
+      const data = await window.KhatwaAPI.auth.login(u, p, selectedStageValue || undefined);
       const user = data?.user;
       const role = user?.role || 'STUDENT';
 

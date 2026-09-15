@@ -186,6 +186,10 @@ router.get(
     const totalRevenueEGP = paymentsAgg._sum.teacherEarning || 0.0;
     const totalPointsEarned = paymentsAgg._sum.pointsUsed || 0;
 
+    const platformSettings = await prisma.platformSettings.findFirst();
+    const defaultComm = platformSettings?.defaultTeacherCommissionPct ?? 80.0;
+    const effectiveCommission = teacherProfile.commissionPct ?? defaultComm;
+
     res.status(200).json({
       success: true,
       data: {
@@ -196,6 +200,8 @@ router.get(
         totalSubscriptions: subscriptions.length,
         totalRevenueEGP: Math.round(totalRevenueEGP * 100) / 100,
         totalPointsEarned,
+        commissionPct: teacherProfile.commissionPct,
+        effectiveCommissionPct: effectiveCommission,
       },
     });
   })
@@ -904,7 +910,109 @@ router.post(
   LessonsController.uploadVideo
 );
 
-// ─── Direct Resumable Upload to Google Drive (Bypasses Vercel payload limits) ─
+// ─── Delete Lesson ────────────────────────────────────────────────────────────
+
+router.delete(
+  '/lessons/:id',
+  asyncHandler(async (req, res) => {
+    const teacherProfile = await prisma.teacherProfile.findUnique({ where: { userId: req.user!.sub } });
+    if (!teacherProfile) {
+      res.status(403).json({ success: false, error: { code: 'FORBIDDEN', message: 'Not authorized' } });
+      return;
+    }
+
+    const lesson = await prisma.lesson.findFirst({
+      where: { id: req.params.id, teacherProfileId: teacherProfile.id },
+    });
+    if (!lesson) {
+      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Lesson not found or not yours' } });
+      return;
+    }
+
+    // Delete dependent records before deleting the lesson
+    await prisma.$transaction([
+      prisma.lessonSubscription.deleteMany({ where: { lessonId: lesson.id } }),
+      prisma.quizAttempt.deleteMany({
+        where: {
+          quizId: {
+            in: [lesson.assignmentQuizId, lesson.examQuizId, lesson.openingQuizId, lesson.homeworkId].filter(Boolean) as string[],
+          },
+        },
+      }),
+      prisma.lesson.delete({ where: { id: lesson.id } }),
+    ]);
+
+    res.status(200).json({ success: true, message: 'تم حذف المحاضرة بنجاح' });
+  })
+);
+
+// ─── Schedule Lesson Publish ──────────────────────────────────────────────────
+
+router.patch(
+  '/lessons/:id/schedule',
+  asyncHandler(async (req, res) => {
+    const teacherProfile = await prisma.teacherProfile.findUnique({ where: { userId: req.user!.sub } });
+    if (!teacherProfile) {
+      res.status(403).json({ success: false, error: { code: 'FORBIDDEN', message: 'Not authorized' } });
+      return;
+    }
+
+    const lesson = await prisma.lesson.findFirst({
+      where: { id: req.params.id, teacherProfileId: teacherProfile.id },
+    });
+    if (!lesson) {
+      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Lesson not found' } });
+      return;
+    }
+
+    const { scheduledPublishAt } = req.body;
+    const updated = await prisma.lesson.update({
+      where: { id: lesson.id },
+      data: {
+        scheduledPublishAt: scheduledPublishAt ? new Date(scheduledPublishAt) : null,
+      },
+    });
+    res.status(200).json({ success: true, data: updated });
+  })
+);
+
+// ─── Get Scheduled Lessons (Calendar View) ────────────────────────────────────
+
+router.get(
+  '/lessons/scheduled',
+  asyncHandler(async (req, res) => {
+    const teacherProfile = await prisma.teacherProfile.findUnique({ where: { userId: req.user!.sub } });
+    if (!teacherProfile) {
+      res.status(403).json({ success: false, error: { code: 'FORBIDDEN', message: 'Not authorized' } });
+      return;
+    }
+
+    const stage = req.query.stage as string | undefined;
+    const where: any = { teacherProfileId: teacherProfile.id };
+    if (stage) where.academicStage = stage;
+
+    const lessons = await prisma.lesson.findMany({
+      where,
+      select: {
+        id: true,
+        title: true,
+        academicStage: true,
+        isPublished: true,
+        scheduledPublishAt: true,
+        price: true,
+        pointCost: true,
+        createdAt: true,
+        course: { select: { id: true, title: true } },
+        chapter: { select: { id: true, title: true } },
+      },
+      orderBy: [{ scheduledPublishAt: 'asc' }, { createdAt: 'desc' }],
+    });
+
+    res.status(200).json({ success: true, data: lessons });
+  })
+);
+
+
 
 router.get(
   '/drive-status',

@@ -290,6 +290,7 @@ export async function getStudentSubscriptions(studentId: string, stage?: string)
           select: {
             id: true,
             title: true,
+            courseId: true,
             description: true,
             price: true,
             pointCost: true,
@@ -417,16 +418,22 @@ export async function getStudentSubscriptions(studentId: string, stage?: string)
 
   // 2. Process Individual Lesson Subscriptions
   for (const sub of subscriptions) {
-    const teacherId = sub.teacherProfileId;
+    if (!sub.lesson) continue;
+    const teacherId = sub.teacherProfileId || sub.teacherProfile?.id || 'unknown-teacher';
     if (!teachersMap.has(teacherId)) {
       teachersMap.set(teacherId, {
-        teacher: sub.teacherProfile,
+        teacher: sub.teacherProfile || {
+          id: teacherId,
+          displayName: 'معلم المادة',
+          subject: 'عام',
+          avatarUrl: null,
+        },
         courses: new Map<string, any>(),
       });
     }
 
     const teacherEntry = teachersMap.get(teacherId);
-    const courseId = sub.courseId || 'general-course';
+    const courseId = sub.courseId || sub.lesson?.courseId || 'general-course';
     const courseInfo = sub.course || {
       id: 'general-course',
       title: 'محاضرات عامة',
@@ -476,6 +483,68 @@ export async function getStudentSubscriptions(studentId: string, stage?: string)
     teacher: t.teacher,
     courses: Array.from(t.courses.values()),
   }));
+
+  // Collect all unique lesson IDs to fetch grades
+  const allLessonIds: string[] = [];
+  for (const group of result) {
+    for (const course of (group.courses as any[])) {
+      for (const lesson of (course.lessons as any[])) {
+        if (lesson.lessonId) allLessonIds.push(lesson.lessonId);
+      }
+    }
+  }
+
+  if (allLessonIds.length > 0) {
+    // Fetch all quiz attempts for this student related to these lessons' quizzes
+    const lessonsWithQuizIds = await prisma.lesson.findMany({
+      where: { id: { in: allLessonIds } },
+      select: { id: true, assignmentQuizId: true, examQuizId: true },
+    });
+
+    const quizIdToLessonMap = new Map<string, { lessonId: string; role: 'assignment' | 'exam' }>();
+    for (const l of lessonsWithQuizIds) {
+      if (l.assignmentQuizId) quizIdToLessonMap.set(l.assignmentQuizId, { lessonId: l.id, role: 'assignment' });
+      if (l.examQuizId) quizIdToLessonMap.set(l.examQuizId, { lessonId: l.id, role: 'exam' });
+    }
+
+    const allQuizIds = Array.from(quizIdToLessonMap.keys());
+    if (allQuizIds.length > 0) {
+      const attempts = await prisma.quizAttempt.findMany({
+        where: { studentId, quizId: { in: allQuizIds }, isCompleted: true },
+        select: { quizId: true, scorePercent: true, totalCorrect: true, totalQuestions: true, submittedAt: true },
+        orderBy: { submittedAt: 'desc' },
+      });
+
+      // Build a map of quizId -> best attempt score
+      const gradeMap = new Map<string, { scorePercent: number; totalCorrect: number; totalQuestions: number }>();
+      for (const att of attempts) {
+        if (!gradeMap.has(att.quizId)) {
+          gradeMap.set(att.quizId, {
+            scorePercent: att.scorePercent ?? 0,
+            totalCorrect: att.totalCorrect,
+            totalQuestions: att.totalQuestions,
+          });
+        }
+      }
+
+      // Annotate lessons with grades
+      for (const group of result) {
+        for (const course of (group.courses as any[])) {
+          for (const lesson of (course.lessons as any[])) {
+            const lessonQuizInfo = lessonsWithQuizIds.find((l) => l.id === lesson.lessonId);
+            if (lessonQuizInfo?.assignmentQuizId) {
+              const grade = gradeMap.get(lessonQuizInfo.assignmentQuizId);
+              if (grade) lesson.assignmentGrade = grade;
+            }
+            if (lessonQuizInfo?.examQuizId) {
+              const grade = gradeMap.get(lessonQuizInfo.examQuizId);
+              if (grade) lesson.examGrade = grade;
+            }
+          }
+        }
+      }
+    }
+  }
 
   return result;
 }

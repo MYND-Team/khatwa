@@ -52,6 +52,7 @@ export const loginSchema = z.object({
   body: z.object({
     username: z.string().min(1),
     password: z.string().min(1),
+    academicStage: z.enum(['PREPARATORY', 'SECONDARY_1', 'SECONDARY_2', 'BACCALAUREATE_2', 'SECONDARY_3', 'BACCALAUREATE_3']).optional(),
   }),
 });
 

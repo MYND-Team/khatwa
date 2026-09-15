@@ -529,14 +529,24 @@ router.get(
       orderBy: { enrolledAt: 'desc' },
     });
 
-    const enrolledCourseIds = new Set(enrollments.map((e) => e.courseId));
+    const validEnrollments = enrollments.filter((e) => !!e.course);
+    const enrolledCourseIds = new Set(validEnrollments.map((e) => e.courseId));
     const lessonSubs = await prisma.lessonSubscription.findMany({
       where: { studentId, status: 'ACTIVE' },
-      select: { courseId: true },
+      select: {
+        courseId: true,
+        lesson: {
+          select: { courseId: true },
+        },
+      },
     });
 
     const otherCourseIds = Array.from(
-      new Set(lessonSubs.map((s) => s.courseId).filter((id): id is string => !!id && !enrolledCourseIds.has(id)))
+      new Set(
+        lessonSubs
+          .map((s) => s.courseId || s.lesson?.courseId)
+          .filter((id): id is string => !!id && !enrolledCourseIds.has(id))
+      )
     );
 
     let extraCourses: any[] = [];
@@ -550,16 +560,18 @@ router.get(
           _count: { select: { lessons: true } },
         },
       });
-      extraCourses = foundCourses.map((c) => ({
-        id: `sub-${c.id}`,
-        courseId: c.id,
-        course: c,
-        enrolledAt: new Date(),
-      }));
+      extraCourses = foundCourses
+        .filter((c) => !!c)
+        .map((c) => ({
+          id: `sub-${c.id}`,
+          courseId: c.id,
+          course: c,
+          enrolledAt: new Date(),
+        }));
     }
 
     const allEnrolled = [
-      ...enrollments.map((e) => ({
+      ...validEnrollments.map((e) => ({
         id: e.id,
         courseId: e.courseId,
         course: e.course,
@@ -770,11 +782,26 @@ router.get(
         openingQuizId: true,
         pointCost: true,
         price: true,
+        scheduledPublishAt: true,
       },
     });
 
     if (!lesson) {
       res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Lesson not found' } });
+      return;
+    }
+
+    // 0. Scheduled Gate: Lesson not yet available
+    if (lesson.scheduledPublishAt && lesson.scheduledPublishAt > new Date()) {
+      res.status(200).json({
+        success: true,
+        data: {
+          canAccess: false,
+          reason: 'SCHEDULED',
+          step: 'scheduled',
+          scheduledPublishAt: lesson.scheduledPublishAt,
+        },
+      });
       return;
     }
 

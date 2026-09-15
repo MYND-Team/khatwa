@@ -8,7 +8,7 @@ const isSqlite = process.env.USE_SQLITE === "true";
 
 export default defineConfig({
   schema: isSqlite
-    ? "./prisma/schema.sqlite.prisma"
+    ? "./prisma-sqlite/schema.sqlite.prisma"
     : "./prisma/schema.prisma",
   datasource: {
     url: isSqlite ? "file:./dev.db" : (process.env.DIRECT_URL || dbUrl),

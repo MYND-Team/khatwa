@@ -11,18 +11,18 @@ datasource db {
 }
 
 model AccessCode {
-  id           String   @id @default(cuid())
+  id           String              @id @default(cuid())
   code         String?
-  codeHash     String   @unique
-  points       Int      @default(0)
-  status       String   @default("ACTIVE")
+  codeHash     String              @unique
+  points       Int                 @default(0)
+  status       String              @default("ACTIVE")
   expiresAt    DateTime?
   createdById  String?
   redeemedById String?
   redeemedAt   DateTime?
   revokedAt    DateTime?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
   transactions PointsTransaction[]
 }
 
@@ -38,12 +38,12 @@ model User {
   studentProfile          StudentProfile?
   teacherProfile          TeacherProfile?
   refreshTokens           RefreshToken[]
-  walletBalance           Float               @default(0.0)
-  pointsBalance           Int                 @default(0)
-  pointsTransactions      PointsTransaction[] @relation("StudentTransactions")
-  actedPointsTransactions PointsTransaction[] @relation("ActorTransactions")
-  walletTransactions      WalletTransaction[] @relation("StudentWalletTransactions")
-  actedWalletTransactions WalletTransaction[] @relation("ActorWalletTransactions")
+  walletBalance           Float                @default(0.0)
+  pointsBalance           Int                  @default(0)
+  pointsTransactions      PointsTransaction[]  @relation("StudentTransactions")
+  actedPointsTransactions PointsTransaction[]  @relation("ActorTransactions")
+  walletTransactions      WalletTransaction[]  @relation("StudentWalletTransactions")
+  actedWalletTransactions WalletTransaction[]  @relation("ActorWalletTransactions")
   videoAccessLogs         VideoAccessLog[]
   quizAttempts            QuizAttempt[]
   homeworkSubmissions     HomeworkSubmission[]
@@ -51,8 +51,8 @@ model User {
   courseEnrollments       CourseEnrollment[]
   lessonSubscriptions     LessonSubscription[]
   paymentTransactions     PaymentTransaction[]
-  studentNotes            StudentNote[]       @relation("StudentReceivedNotes")
-  authoredNotes           StudentNote[]       @relation("AuthorWrittenNotes")
+  studentNotes            StudentNote[]        @relation("StudentReceivedNotes")
+  authoredNotes           StudentNote[]        @relation("AuthorWrittenNotes")
   pointRequests           PointRequest[]
   notifications           Notification[]
 }
@@ -78,15 +78,15 @@ model ParentInfo {
 }
 
 model TeacherProfile {
-  id             String   @id @default(cuid())
-  userId         String   @unique
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id             String  @id @default(cuid())
+  userId         String  @unique
+  user           User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   displayName    String
   bio            String?
   subject        String?
   avatarUrl      String?
-  rating         Float    @default(5.0)
-  ratingCount    Int      @default(1)
+  rating         Float   @default(5.0)
+  ratingCount    Int     @default(1)
   academicStages String?
 
   workspaces          TeacherStage[]
@@ -118,43 +118,43 @@ model RefreshToken {
 }
 
 model Course {
-  id                 String    @id @default(cuid())
+  id                 String         @id @default(cuid())
   teacherProfileId   String
   teacherProfile     TeacherProfile @relation(fields: [teacherProfileId], references: [id], onDelete: Cascade)
   title              String
   subject            String
-  academicStage      String    @default("SECONDARY_1")
+  academicStage      String         @default("SECONDARY_1")
   imageUrl           String?
   description        String?
-  pointCost          Int       @default(0)
-  price              Float     @default(0.0)
-  accessType         String    @default("PERMANENT")
+  pointCost          Int            @default(0)
+  price              Float          @default(0.0)
+  accessType         String         @default("PERMANENT")
   accessDurationDays Int?
-  isPublished        Boolean   @default(true)
-  
+  isPublished        Boolean        @default(true)
+
   chapters            Chapter[]
   lessons             Lesson[]
   enrollments         CourseEnrollment[]
   lessonSubscriptions LessonSubscription[]
   paymentTransactions PaymentTransaction[]
 
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Chapter {
-  id          String   @id @default(cuid())
+  id          String  @id @default(cuid())
   courseId    String
-  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  course      Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
   title       String
   description String?
   imageUrl    String?
-  orderIndex  Int      @default(0)
+  orderIndex  Int     @default(0)
 
-  lessons     Lesson[]
+  lessons Lesson[]
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model CourseEnrollment {
@@ -246,33 +246,34 @@ model Lesson {
   chapterId        String?
   chapter          Chapter?       @relation(fields: [chapterId], references: [id], onDelete: SetNull)
   academicStage    String         @default("SECONDARY_1")
-  
-  title            String
-  description      String?
-  pointCost        Int            @default(0)
-  price            Float          @default(0.0)
-  accessType       String         @default("PERMANENT")
-  accessDurationDays Int?
-  orderIndex       Int            @default(0)
-  isPublished      Boolean        @default(true)
 
-  videoUrl         String?
-  driveFileId      String?
-  driveFileName    String?
-  pdfUrl           String?
-  pdfFileName      String?
+  title              String
+  description        String?
+  pointCost          Int       @default(0)
+  price              Float     @default(0.0)
+  accessType         String    @default("PERMANENT")
+  accessDurationDays Int?
+  orderIndex         Int       @default(0)
+  isPublished        Boolean   @default(true)
+  scheduledPublishAt DateTime?
+
+  videoUrl      String?
+  driveFileId   String?
+  driveFileName String?
+  pdfUrl        String?
+  pdfFileName   String?
 
   assignmentQuizId String?
   assignmentQuiz   Quiz?   @relation("LessonAssignment", fields: [assignmentQuizId], references: [id])
 
-  examQuizId       String?
-  examQuiz         Quiz?   @relation("LessonExam", fields: [examQuizId], references: [id])
+  examQuizId String?
+  examQuiz   Quiz?   @relation("LessonExam", fields: [examQuizId], references: [id])
 
-  openingQuizId    String?
-  openingQuiz      Quiz?   @relation("OpeningQuiz", fields: [openingQuizId], references: [id])
+  openingQuizId String?
+  openingQuiz   Quiz?   @relation("OpeningQuiz", fields: [openingQuizId], references: [id])
 
-  homeworkId       String?
-  homework         Quiz?   @relation("Homework", fields: [homeworkId], references: [id])
+  homeworkId String?
+  homework   Quiz?   @relation("Homework", fields: [homeworkId], references: [id])
 
   unlockedBy          UnlockedLesson[]
   subscriptions       LessonSubscription[]
@@ -280,8 +281,8 @@ model Lesson {
   pointsTransactions  PointsTransaction[]
   videoAccessLogs     VideoAccessLog[]
   playbackTokens      PlaybackToken[]
-  createdAt           DateTime            @default(now())
-  updatedAt           DateTime            @updatedAt
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
 }
 
 model LessonSubscription {
@@ -380,10 +381,10 @@ model Quiz {
 }
 
 model QuizQuestion {
-  id            String       @id @default(cuid())
+  id            String          @id @default(cuid())
   quizId        String
-  quiz          Quiz         @relation(fields: [quizId], references: [id], onDelete: Cascade)
-  questionType  String       @default("MULTIPLE_CHOICE")
+  quiz          Quiz            @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  questionType  String          @default("MULTIPLE_CHOICE")
   questionText  String
   optionA       String?
   optionB       String?

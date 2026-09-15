@@ -424,6 +424,7 @@ model Lesson {
   accessDurationDays Int?
   orderIndex       Int              @default(0)
   isPublished      Boolean          @default(true)
+  scheduledPublishAt DateTime?
 
   // Content URLs / Files
   videoUrl         String?

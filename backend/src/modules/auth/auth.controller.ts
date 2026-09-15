@@ -131,11 +131,13 @@ export const me = [
         studentProfile: {
           select: {
             studentPhoneNumber: true,
+            academicStage: true,
+            academicStages: true,
             parentInfo: { select: { parentPhoneNumber: true, fatherJob: true } },
           },
         },
         teacherProfile: {
-          select: { id: true, displayName: true, avatarUrl: true, subject: true },
+          select: { id: true, displayName: true, avatarUrl: true, subject: true, commissionPct: true },
         },
       },
     });
