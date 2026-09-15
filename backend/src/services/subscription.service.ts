@@ -498,13 +498,16 @@ export async function getStudentSubscriptions(studentId: string, stage?: string)
     // Fetch all quiz attempts for this student related to these lessons' quizzes
     const lessonsWithQuizIds = await prisma.lesson.findMany({
       where: { id: { in: allLessonIds } },
-      select: { id: true, assignmentQuizId: true, examQuizId: true },
+      select: { id: true, assignmentQuizId: true, examQuizId: true, homeworkId: true, openingQuizId: true },
     });
 
     const quizIdToLessonMap = new Map<string, { lessonId: string; role: 'assignment' | 'exam' }>();
     for (const l of lessonsWithQuizIds) {
+      // Primary quizzes take precedence; fallbacks fill in if no primary exists
       if (l.assignmentQuizId) quizIdToLessonMap.set(l.assignmentQuizId, { lessonId: l.id, role: 'assignment' });
+      else if (l.homeworkId) quizIdToLessonMap.set(l.homeworkId, { lessonId: l.id, role: 'assignment' });
       if (l.examQuizId) quizIdToLessonMap.set(l.examQuizId, { lessonId: l.id, role: 'exam' });
+      else if (l.openingQuizId) quizIdToLessonMap.set(l.openingQuizId, { lessonId: l.id, role: 'exam' });
     }
 
     const allQuizIds = Array.from(quizIdToLessonMap.keys());
@@ -532,12 +535,16 @@ export async function getStudentSubscriptions(studentId: string, stage?: string)
         for (const course of (group.courses as any[])) {
           for (const lesson of (course.lessons as any[])) {
             const lessonQuizInfo = lessonsWithQuizIds.find((l) => l.id === lesson.lessonId);
-            if (lessonQuizInfo?.assignmentQuizId) {
-              const grade = gradeMap.get(lessonQuizInfo.assignmentQuizId);
+            // Primary: assignmentQuizId; fallback: homeworkId
+            const assignQuizId = lessonQuizInfo?.assignmentQuizId || lessonQuizInfo?.homeworkId;
+            if (assignQuizId) {
+              const grade = gradeMap.get(assignQuizId);
               if (grade) lesson.assignmentGrade = grade;
             }
-            if (lessonQuizInfo?.examQuizId) {
-              const grade = gradeMap.get(lessonQuizInfo.examQuizId);
+            // Primary: examQuizId; fallback: openingQuizId
+            const examQuizId = lessonQuizInfo?.examQuizId || lessonQuizInfo?.openingQuizId;
+            if (examQuizId) {
+              const grade = gradeMap.get(examQuizId);
               if (grade) lesson.examGrade = grade;
             }
           }

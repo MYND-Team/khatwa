@@ -173,8 +173,6 @@ export async function login(input: LoginInput) {
       studentProfile = await prisma.studentProfile.create({
         data: {
           userId: user.id,
-          academicStage: 'SECONDARY_3',
-          academicStages: 'SECONDARY_3',
           studentPhoneNumber: '',
         },
       });

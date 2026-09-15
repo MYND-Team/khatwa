@@ -252,11 +252,6 @@
         return res.data;
       },
 
-      async me() {
-        const res = await request('/auth/me');
-        return res.data || null;
-      },
-
       async logout() {
         try {
           const refreshToken = localStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);

@@ -686,14 +686,20 @@
       // Show commission %
       const localUser = window.KhatwaAPI.getUser();
       const rawComm = overviewData?.commissionPct ?? profileData?.commissionPct ?? meData?.teacherProfile?.commissionPct ?? meData?.commissionPct ?? localUser?.teacherProfile?.commissionPct;
-      const effectiveComm = overviewData?.effectiveCommissionPct ?? 80;
+      const effectiveComm = overviewData?.effectiveCommissionPct;  // only trust server-supplied default
       if (document.getElementById('statCommission')) {
         if (rawComm !== undefined && rawComm !== null && !isNaN(Number(rawComm))) {
+          // Teacher has an admin-assigned specific rate
           document.getElementById('statCommission').textContent = rawComm + '%';
           document.getElementById('commissionNote').textContent = 'نسبة أرباحك المعتمدة من الإدارة';
-        } else {
+        } else if (effectiveComm !== undefined && effectiveComm !== null && !isNaN(Number(effectiveComm))) {
+          // No personal override — show the platform default returned from the server
           document.getElementById('statCommission').textContent = effectiveComm + '%';
           document.getElementById('commissionNote').textContent = 'نسبتك الافتراضية المعتمدة من المنصة';
+        } else {
+          // Overview request failed and no cached value is available
+          document.getElementById('statCommission').textContent = '—';
+          document.getElementById('commissionNote').textContent = 'تعذّر تحميل النسبة';
         }
       }
     } catch (e) {
@@ -771,8 +777,8 @@
                               <button type="button" class="btn btn-text btn-sm" onclick="openQuizBuilderForLesson('${l.id}', 'exam')">🏆 الامتحان</button>
                               ${l.examQuizId ? `<button type="button" class="btn btn-line btn-sm" style="padding:3px 8px;font-size:.78rem;color:#10b981;border-color:rgba(16,185,129,0.4);" onclick="openQuizGradingModal('${l.examQuizId}', 'تصحيح الامتحان - ${escapeHtml(l.title)}')">📊 تصحيح الامتحان</button>` : ''}
                               <button type="button" class="btn btn-line btn-sm" style="padding:3px 10px;font-size:.8rem;" onclick="openTeacherPreview('${l.id}')">👁 معاينة المحاضرة</button>
-                              <button type="button" class="btn btn-line btn-sm" style="padding:3px 10px;font-size:.8rem;color:#f59e0b;border-color:rgba(245,158,11,0.5);" onclick="openScheduleLessonModal('${l.id}', '${escapeHtml(l.title)}')">📅 ${l.scheduledPublishAt ? formatScheduleLabel(l.scheduledPublishAt) : 'جدولة النشر'}</button>
-                              <button type="button" class="btn btn-sm" style="padding:3px 10px;font-size:.8rem;background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.4);border-radius:8px;" onclick="confirmDeleteLesson('${l.id}', '${escapeHtml(l.title)}')">🗑 حذف</button>
+                              <button type="button" class="btn btn-line btn-sm" style="padding:3px 10px;font-size:.8rem;color:#f59e0b;border-color:rgba(245,158,11,0.5);" data-lesson-id="${l.id}" data-lesson-title="${escapeHtml(l.title)}" data-action="schedule-lesson">📅 ${l.scheduledPublishAt ? formatScheduleLabel(l.scheduledPublishAt) : 'جدولة النشر'}</button>
+                              <button type="button" class="btn btn-sm" style="padding:3px 10px;font-size:.8rem;background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.4);border-radius:8px;" data-lesson-id="${l.id}" data-lesson-title="${escapeHtml(l.title)}" data-action="delete-lesson">🗑 حذف</button>
                             </div>
                           </div>
                           `;
@@ -922,8 +928,8 @@
               </div>
             ` : '<div style="font-size:.8rem;color:var(--ink-dim);margin-bottom:10px;">لم يتم جدولة وقت نشر</div>'}
             <div style="display:flex;gap:6px;flex-wrap:wrap;">
-              <button class="btn btn-line btn-sm" style="font-size:.78rem;padding:3px 10px;color:#f59e0b;border-color:rgba(245,158,11,0.5);" onclick="openScheduleLessonModal('${l.id}', '${escapeHtml(l.title)}')">📅 تعديل الجدولة</button>
-              <button class="btn btn-sm" style="font-size:.78rem;padding:3px 10px;background:rgba(239,68,68,0.08);color:#ef4444;border:1px solid rgba(239,68,68,0.3);border-radius:8px;" onclick="confirmDeleteLesson('${l.id}', '${escapeHtml(l.title)}')">🗑 حذف</button>
+              <button class="btn btn-line btn-sm" style="font-size:.78rem;padding:3px 10px;color:#f59e0b;border-color:rgba(245,158,11,0.5);" data-lesson-id="${l.id}" data-lesson-title="${escapeHtml(l.title)}" data-action="schedule-lesson">📅 تعديل الجدولة</button>
+              <button class="btn btn-sm" style="font-size:.78rem;padding:3px 10px;background:rgba(239,68,68,0.08);color:#ef4444;border:1px solid rgba(239,68,68,0.3);border-radius:8px;" data-lesson-id="${l.id}" data-lesson-title="${escapeHtml(l.title)}" data-action="delete-lesson">🗑 حذف</button>
             </div>
           </div>
         `;
@@ -2080,6 +2086,22 @@
       btn.textContent = 'حفظ وتحديث التقييم والدرجة ✓';
     }
   }
+
+  // ─── Delegated handler for lesson action buttons (data-action) ───────────────
+  // Buttons use data-lesson-id / data-lesson-title instead of inline onclick so
+  // lesson titles containing apostrophes do not break the handler string.
+  document.addEventListener('click', function (e) {
+    const btn = e.target.closest('[data-action]');
+    if (!btn) return;
+    const action = btn.dataset.action;
+    const lessonId = btn.dataset.lessonId;
+    const lessonTitle = btn.dataset.lessonTitle || '';
+    if (action === 'schedule-lesson') {
+      openScheduleLessonModal(lessonId, lessonTitle);
+    } else if (action === 'delete-lesson') {
+      confirmDeleteLesson(lessonId, lessonTitle);
+    }
+  });
 </script>
 </body>
 </html>

@@ -842,6 +842,48 @@ router.post(
   })
 );
 
+// ─── Get Scheduled Lessons (Calendar View) ────────────────────────────────────
+// NOTE: Must be registered BEFORE router.get('/lessons/:id') so Express does not
+// match the literal string "scheduled" as a lesson ID.
+
+router.get(
+  '/lessons/scheduled',
+  asyncHandler(async (req, res) => {
+    const teacherProfile = await prisma.teacherProfile.findUnique({ where: { userId: req.user!.sub } });
+    if (!teacherProfile) {
+      res.status(403).json({ success: false, error: { code: 'FORBIDDEN', message: 'Not authorized' } });
+      return;
+    }
+
+    const stage = req.query.stage as string | undefined;
+    if (stage && !VALID_STAGES.includes(stage)) {
+      res.status(400).json({ success: false, error: { code: 'INVALID_STAGE', message: `stage must be one of: ${VALID_STAGES.join(', ')}` } });
+      return;
+    }
+    const where: any = { teacherProfileId: teacherProfile.id };
+    if (stage) where.academicStage = stage;
+
+    const lessons = await prisma.lesson.findMany({
+      where,
+      select: {
+        id: true,
+        title: true,
+        academicStage: true,
+        isPublished: true,
+        scheduledPublishAt: true,
+        price: true,
+        pointCost: true,
+        createdAt: true,
+        course: { select: { id: true, title: true } },
+        chapter: { select: { id: true, title: true } },
+      },
+      orderBy: [{ scheduledPublishAt: 'asc' }, { createdAt: 'desc' }],
+    });
+
+    res.status(200).json({ success: true, data: lessons });
+  })
+);
+
 router.get('/lessons/:id', LessonsController.getLessonDetail);
 router.patch('/lessons/:id', LessonsController.updateLesson);
 
@@ -929,16 +971,11 @@ router.delete(
       return;
     }
 
-    // Delete dependent records before deleting the lesson
+    // Delete dependent records before deleting the lesson.
+    // Note: we do NOT delete quizAttempts here because the linked quizzes may
+    // be shared with other lessons. Attempt records survive the lesson deletion.
     await prisma.$transaction([
       prisma.lessonSubscription.deleteMany({ where: { lessonId: lesson.id } }),
-      prisma.quizAttempt.deleteMany({
-        where: {
-          quizId: {
-            in: [lesson.assignmentQuizId, lesson.examQuizId, lesson.openingQuizId, lesson.homeworkId].filter(Boolean) as string[],
-          },
-        },
-      }),
       prisma.lesson.delete({ where: { id: lesson.id } }),
     ]);
 
@@ -966,52 +1003,21 @@ router.patch(
     }
 
     const { scheduledPublishAt } = req.body;
+    let parsedDate: Date | null = null;
+    if (scheduledPublishAt) {
+      parsedDate = new Date(scheduledPublishAt);
+      if (isNaN(parsedDate.getTime())) {
+        res.status(400).json({ success: false, error: { code: 'INVALID_DATE', message: 'scheduledPublishAt is not a valid date' } });
+        return;
+      }
+    }
     const updated = await prisma.lesson.update({
       where: { id: lesson.id },
-      data: {
-        scheduledPublishAt: scheduledPublishAt ? new Date(scheduledPublishAt) : null,
-      },
+      data: { scheduledPublishAt: parsedDate },
     });
     res.status(200).json({ success: true, data: updated });
   })
 );
-
-// ─── Get Scheduled Lessons (Calendar View) ────────────────────────────────────
-
-router.get(
-  '/lessons/scheduled',
-  asyncHandler(async (req, res) => {
-    const teacherProfile = await prisma.teacherProfile.findUnique({ where: { userId: req.user!.sub } });
-    if (!teacherProfile) {
-      res.status(403).json({ success: false, error: { code: 'FORBIDDEN', message: 'Not authorized' } });
-      return;
-    }
-
-    const stage = req.query.stage as string | undefined;
-    const where: any = { teacherProfileId: teacherProfile.id };
-    if (stage) where.academicStage = stage;
-
-    const lessons = await prisma.lesson.findMany({
-      where,
-      select: {
-        id: true,
-        title: true,
-        academicStage: true,
-        isPublished: true,
-        scheduledPublishAt: true,
-        price: true,
-        pointCost: true,
-        createdAt: true,
-        course: { select: { id: true, title: true } },
-        chapter: { select: { id: true, title: true } },
-      },
-      orderBy: [{ scheduledPublishAt: 'asc' }, { createdAt: 'desc' }],
-    });
-
-    res.status(200).json({ success: true, data: lessons });
-  })
-);
-
 
 
 router.get(
