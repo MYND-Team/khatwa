@@ -792,7 +792,20 @@ router.get(
 router.post(
   '/chapters/:chapterId/lessons',
   asyncHandler(async (req, res) => {
-    const { title, description, price, pointCost, orderIndex, videoUrl, pdfUrl, pdfFileName, isPublished } = req.body;
+    const {
+      title,
+      description,
+      price,
+      pointCost,
+      orderIndex,
+      videoUrl,
+      pdfUrl,
+      pdfFileName,
+      isPublished,
+      scheduledPublishAt,
+      hasAssignment,
+      hasExam,
+    } = req.body;
 
     if (!title) {
       res.status(400).json({ success: false, error: { code: 'MISSING_FIELDS', message: 'title is required' } });
@@ -820,6 +833,43 @@ router.post(
     });
     const nextOrder = (maxOrder._max.orderIndex ?? -1) + 1;
 
+    let parsedScheduledDate: Date | null = null;
+    if (scheduledPublishAt) {
+      const d = new Date(scheduledPublishAt);
+      if (!isNaN(d.getTime())) {
+        parsedScheduledDate = d;
+      }
+    }
+
+    // Auto-create Homework and/or Exam quizzes if selected in creation flow
+    let assignmentQuizId: string | null = null;
+    if (hasAssignment) {
+      const assignmentQuiz = await prisma.quiz.create({
+        data: {
+          teacherProfileId: teacherProfile.id,
+          title: `واجب المحاضرة - ${title}`,
+          type: 'HOMEWORK',
+          academicStage: chapter.course.academicStage,
+        },
+      });
+      assignmentQuizId = assignmentQuiz.id;
+    }
+
+    let examQuizId: string | null = null;
+    if (hasExam) {
+      const examQuiz = await prisma.quiz.create({
+        data: {
+          teacherProfileId: teacherProfile.id,
+          title: `امتحان المحاضرة - ${title}`,
+          type: 'EXAM',
+          academicStage: chapter.course.academicStage,
+        },
+      });
+      examQuizId = examQuiz.id;
+    }
+
+    const finalIsPublished = isPublished !== undefined ? Boolean(isPublished) : true;
+
     const lesson = await prisma.lesson.create({
       data: {
         teacherProfileId: teacherProfile.id,
@@ -834,7 +884,14 @@ router.post(
         videoUrl: videoUrl || null,
         pdfUrl: pdfUrl || null,
         pdfFileName: pdfFileName || null,
-        isPublished: isPublished !== undefined ? Boolean(isPublished) : true,
+        isPublished: finalIsPublished,
+        scheduledPublishAt: parsedScheduledDate,
+        assignmentQuizId,
+        examQuizId,
+      },
+      include: {
+        assignmentQuiz: true,
+        examQuiz: true,
       },
     });
 

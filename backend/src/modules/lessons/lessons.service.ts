@@ -89,6 +89,14 @@ export async function getLessonContent(lessonId: string, studentId: string) {
   });
   if (!lesson || !lesson.isPublished) throw NotFoundError('Lesson');
 
+  // Scheduled Gate: Lesson not yet available
+  if (lesson.scheduledPublishAt && lesson.scheduledPublishAt > new Date()) {
+    throw Object.assign(
+      new Error('المحاضرة مجدولة ولم يحن موعد نشرها بعد'),
+      { statusCode: 403, code: 'SCHEDULED', scheduledPublishAt: lesson.scheduledPublishAt }
+    );
+  }
+
   const isFree = lesson.price === 0 && lesson.pointCost === 0;
 
   // Gate 1: Must have active subscription or unlocked lesson
@@ -191,8 +199,34 @@ export async function getLessonContent(lessonId: string, studentId: string) {
     }
   }
 
+  // Attach student grades for assignment & exam if present
+  let assignmentGrade: any = null;
+  let examGrade: any = null;
+  const hwQuizId = lesson.assignmentQuizId || lesson.homeworkId;
+  const exQuizId = lesson.examQuizId || lesson.openingQuizId;
+
+  if (hwQuizId || exQuizId) {
+    const qIds = [hwQuizId, exQuizId].filter(Boolean) as string[];
+    const attempts = await prisma.quizAttempt.findMany({
+      where: { studentId, quizId: { in: qIds } },
+      select: { quizId: true, score: true, totalQuestions: true, passed: true },
+    });
+    for (const att of attempts) {
+      const total = att.totalQuestions || 1;
+      const gradeObj = {
+        score: att.score,
+        totalQuestions: att.totalQuestions,
+        scorePercent: Math.round((att.score / total) * 100),
+        passed: att.passed,
+      };
+      if (att.quizId === hwQuizId) assignmentGrade = gradeObj;
+      if (att.quizId === exQuizId) examGrade = gradeObj;
+    }
+  }
+
   // All gates passed — return content metadata
   return {
+    id: lesson.id,
     lessonId: lesson.id,
     title: lesson.title,
     description: lesson.description,
@@ -202,6 +236,8 @@ export async function getLessonContent(lessonId: string, studentId: string) {
     pdfUrl: lesson.pdfUrl,
     pdfFileName: lesson.pdfFileName,
     hasVideo: !!(lesson.driveFileId || lesson.videoUrl),
+    assignmentGrade,
+    examGrade,
   };
 }
 

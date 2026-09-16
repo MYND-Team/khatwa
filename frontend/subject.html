@@ -256,9 +256,13 @@
     const pointCost = Number(lesson.pointCost) || 0;
     const isFree = priceEGP === 0 && pointCost === 0;
 
+    const isScheduled = lesson.scheduledPublishAt && new Date(lesson.scheduledPublishAt) > new Date();
+    const schedDate = isScheduled
+      ? new Date(lesson.scheduledPublishAt).toLocaleString('ar-EG', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+      : null;
+
     let priceBadge = '';
-    if (lesson.scheduledPublishAt && new Date(lesson.scheduledPublishAt) > new Date()) {
-      const schedDate = new Date(lesson.scheduledPublishAt).toLocaleDateString('ar-EG', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    if (isScheduled) {
       priceBadge = `<span class="tag" style="background:rgba(245,158,11,0.12);color:#d97706;border:1px solid rgba(245,158,11,0.3);font-size:0.8rem;">⏳ تتاح بتاريخ ${schedDate}</span>`;
     } else if (isSubscribed) {
       priceBadge = '<span class="tag tag-ok">✓ تم الشراء / مشترك</span>';
@@ -277,7 +281,13 @@
     }
 
     let actionBtn = '';
-    if (isSubscribed || isFree) {
+    if (isScheduled) {
+      actionBtn = `
+        <button type="button" class="btn btn-line btn-sm" disabled style="opacity:0.7;cursor:not-allowed;color:#d97706;border-color:rgba(245,158,11,0.4);background:rgba(245,158,11,0.06);font-size:0.8rem;font-weight:700;">
+          🔒 مجدولة (تتاح ${schedDate})
+        </button>
+      `;
+    } else if (isSubscribed || isFree) {
       actionBtn = `
         <a href="lesson.html?lessonId=${lesson.id}" class="btn btn-primary btn-sm">
           ▶ مشاهدة المحاضرة

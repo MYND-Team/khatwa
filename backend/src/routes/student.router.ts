@@ -711,6 +711,7 @@ router.get(
                 pointCost: true,
                 price: true,
                 isPublished: true,
+                scheduledPublishAt: true,
                 assignmentQuizId: true,
                 examQuizId: true,
                 subscriptions: {
@@ -736,6 +737,7 @@ router.get(
             pointCost: true,
             price: true,
             isPublished: true,
+            scheduledPublishAt: true,
             assignmentQuizId: true,
             examQuizId: true,
             subscriptions: {
@@ -754,6 +756,61 @@ router.get(
     if (!course) {
       res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Course not found' } });
       return;
+    }
+
+    // Collect all quiz IDs across course lessons and populate grades
+    const allCourseLessons: any[] = [];
+    const quizIdSet = new Set<string>();
+
+    if (course.chapters) {
+      for (const ch of course.chapters) {
+        if (ch.lessons) {
+          for (const l of ch.lessons) {
+            allCourseLessons.push(l);
+            if (l.assignmentQuizId) quizIdSet.add(l.assignmentQuizId);
+            if (l.examQuizId) quizIdSet.add(l.examQuizId);
+          }
+        }
+      }
+    }
+    if (course.lessons) {
+      for (const l of course.lessons) {
+        allCourseLessons.push(l);
+        if (l.assignmentQuizId) quizIdSet.add(l.assignmentQuizId);
+        if (l.examQuizId) quizIdSet.add(l.examQuizId);
+      }
+    }
+
+    if (quizIdSet.size > 0) {
+      const attempts = await prisma.quizAttempt.findMany({
+        where: { studentId, quizId: { in: Array.from(quizIdSet) } },
+        select: {
+          quizId: true,
+          score: true,
+          totalQuestions: true,
+          passed: true,
+        },
+      });
+
+      const attemptMap = new Map<string, any>();
+      for (const att of attempts) {
+        const total = att.totalQuestions || 1;
+        attemptMap.set(att.quizId, {
+          score: att.score,
+          totalQuestions: att.totalQuestions,
+          scorePercent: Math.round((att.score / total) * 100),
+          passed: att.passed,
+        });
+      }
+
+      for (const l of allCourseLessons) {
+        if (l.assignmentQuizId && attemptMap.has(l.assignmentQuizId)) {
+          l.assignmentGrade = attemptMap.get(l.assignmentQuizId);
+        }
+        if (l.examQuizId && attemptMap.has(l.examQuizId)) {
+          l.examGrade = attemptMap.get(l.examQuizId);
+        }
+      }
     }
 
     res.status(200).json({ success: true, data: course });

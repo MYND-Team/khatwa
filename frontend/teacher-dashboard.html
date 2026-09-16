@@ -272,58 +272,117 @@
   </div>
 </div>
 
-<!-- Modal: Add Lesson & Upload PDF / Video (With EGP & Points Price) -->
+<!-- Modal: Add Lesson & Configuration Flow -->
 <div class="modal-overlay" id="addLessonModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999;align-items:center;justify-content:center;">
-  <div style="background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius);max-width:620px;width:95%;padding:26px;max-height:90vh;overflow-y:auto;">
-    <h3 style="margin-top:0;">🎬 إضافة درس ومحاضرة وتسعيرها</h3>
+  <div style="background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius);max-width:680px;width:95%;padding:26px;max-height:92vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <h3 style="margin:0;">🎬 إضافة درس ومحاضرة جديدة</h3>
+      <button type="button" class="btn btn-line btn-sm" onclick="closeAddLessonModal()">✕</button>
+    </div>
+    
     <form id="addLessonForm" onsubmit="submitAddLesson(event)">
       <input type="hidden" id="lessonChapterId">
-      <div class="form-group" style="margin-bottom:12px;">
-        <label class="form-label">عنوان الدرس / الحصة</label>
-        <input type="text" class="form-control" id="lessonTitleInput" placeholder="مثال: المحاضرة الأولى: شرح القوانين الأساسية" required>
-      </div>
-      
-      <!-- Pricing Fields (Requirement 3) -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
-        <div class="form-group">
-          <label class="form-label">💵 سعر الحصة بالجنيه (EGP)</label>
-          <input type="number" step="0.5" class="form-control" id="lessonPriceInput" value="10" min="0" placeholder="10">
-        </div>
-        <div class="form-group">
-          <label class="form-label">💎 سعر الحصة بالنقاط</label>
-          <input type="number" class="form-control" id="lessonPointCostInput" value="10" min="0" placeholder="10">
-        </div>
-      </div>
-      <span style="font-size:0.8rem;color:var(--ink-dim);display:block;margin-bottom:12px;">ضع 0 لتكون المحاضرة مجانية لجميع طلاب هذه المرحلة.</span>
 
-      <!-- Video Selection: Mode Switcher -->
-      <div style="background:var(--bg-raised);border:1px solid var(--line-soft);padding:16px;border-radius:14px;margin-bottom:14px;">
-        <label class="form-label" style="margin-bottom:10px;font-weight:700;">🎬 حدد طريقة إضافة فيديو المحاضرة:</label>
+      <!-- القسم 1: البيانات الأساسية والتسعير -->
+      <div style="background:var(--bg-raised);padding:14px 16px;border-radius:14px;border:1px solid var(--line-soft);margin-bottom:14px;">
+        <label class="form-label" style="font-weight:700;margin-bottom:8px;">📌 1. بيانات المحاضرة الأساسية والتسعير:</label>
+        <div class="form-group" style="margin-bottom:10px;">
+          <label class="form-label" style="font-size:0.84rem;">عنوان الدرس / المحاضرة *</label>
+          <input type="text" class="form-control" id="lessonTitleInput" placeholder="مثال: المحاضرة الأولى: شرح القوانين الأساسية" required>
+        </div>
         
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:8px;">
+          <div class="form-group">
+            <label class="form-label" style="font-size:0.84rem;">💵 سعر الحصة بالجنيه (EGP)</label>
+            <input type="number" step="0.5" class="form-control" id="lessonPriceInput" value="10" min="0" placeholder="10">
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size:0.84rem;">💎 سعر الحصة بالنقاط</label>
+            <input type="number" class="form-control" id="lessonPointCostInput" value="10" min="0" placeholder="10">
+          </div>
+        </div>
+        <span style="font-size:0.78rem;color:var(--ink-dim);display:block;">ضع 0 لتكون المحاضرة مجانية لجميع طلاب هذه المرحلة.</span>
+      </div>
+
+      <!-- القسم 2: موعد وحالة النشر والتقويم (Calendar) -->
+      <div style="background:var(--bg-raised);padding:14px 16px;border-radius:14px;border:1px solid var(--line-soft);margin-bottom:14px;">
+        <label class="form-label" style="font-weight:700;margin-bottom:8px;">📅 2. حالة النشر وجدولة الموعد (Calendar):</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;">
+          <label style="border:1px solid var(--line-soft);background:var(--bg-card);padding:10px;border-radius:10px;cursor:pointer;display:flex;align-items:center;gap:6px;font-size:0.85rem;font-weight:700;">
+            <input type="radio" name="publishMode" value="now" checked onchange="handlePublishModeChange(this.value)">
+            <span>🚀 نشر فوري</span>
+          </label>
+          <label style="border:1px solid var(--line-soft);background:var(--bg-card);padding:10px;border-radius:10px;cursor:pointer;display:flex;align-items:center;gap:6px;font-size:0.85rem;font-weight:700;">
+            <input type="radio" name="publishMode" value="schedule" onchange="handlePublishModeChange(this.value)">
+            <span>⏰ جدولة موعد</span>
+          </label>
+          <label style="border:1px solid var(--line-soft);background:var(--bg-card);padding:10px;border-radius:10px;cursor:pointer;display:flex;align-items:center;gap:6px;font-size:0.85rem;font-weight:700;">
+            <input type="radio" name="publishMode" value="draft" onchange="handlePublishModeChange(this.value)">
+            <span>📁 حفظ كمسودة</span>
+          </label>
+        </div>
+
+        <div id="scheduleDateTimePickerWrap" style="display:none;background:var(--bg-card);border:1px solid rgba(245,158,11,0.5);padding:12px;border-radius:10px;margin-top:8px;">
+          <label style="font-size:0.84rem;font-weight:700;color:#d97706;display:block;margin-bottom:6px;">اختر تاريخ ووقت النشر التلقائي للطلاب:</label>
+          <input type="datetime-local" id="lessonScheduleDateTimeInput" class="form-control" style="width:100%;">
+          <span style="font-size:0.78rem;color:var(--ink-dim);display:block;margin-top:6px;">ستظل المحاضرة مقفلة للطلاب حتى يحين هذا الموعد بدقة.</span>
+        </div>
+
+        <div id="draftNoticeWrap" style="display:none;background:rgba(107,114,128,0.1);border:1px solid rgba(107,114,128,0.3);padding:10px 12px;border-radius:10px;margin-top:8px;font-size:0.82rem;color:var(--ink-dim);">
+          ℹ️ سيتم حفظ المحاضرة كمسودة مخفية تماماً عن الطلاب، حتى تكتمل إضافة الواجب والامتحان ورفع الفيديو، ثم يمكنك نشرها بضغطة واحدة.
+        </div>
+      </div>
+
+      <!-- القسم 3: التجهيز الأكاديمي (الواجب والامتحان قبل النشر) -->
+      <div style="background:var(--bg-raised);padding:14px 16px;border-radius:14px;border:1px solid var(--line-soft);margin-bottom:14px;">
+        <label class="form-label" style="font-weight:700;margin-bottom:8px;">📝 3. التجهيز الأكاديمي للمحاضرة (الواجب والامتحان):</label>
+        <p style="font-size:0.82rem;color:var(--ink-dim);margin:0 0 10px;">حدد ما إذا كانت هذه المحاضرة تتطلب واجباً أو امتحاناً قبل أو بعد مشاهدتها:</p>
+        
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <label style="display:flex;align-items:center;gap:10px;background:var(--bg-card);border:1px solid var(--line-soft);padding:10px 14px;border-radius:10px;cursor:pointer;">
+            <input type="checkbox" id="lessonAddHasAssignment" style="width:18px;height:18px;accent-color:var(--primary);">
+            <div>
+              <b style="font-size:0.88rem;color:var(--ink);">📝 تفعيل واجب منزلي لهذه المحاضرة (Homework)</b>
+              <span style="font-size:0.78rem;color:var(--ink-dim);display:block;">يلزم الطالب بحل الواجب، وسيتم فتح منشئ الأسئلة مباشرة لإضافة أسئلة الواجب فور الحفظ.</span>
+            </div>
+          </label>
+
+          <label style="display:flex;align-items:center;gap:10px;background:var(--bg-card);border:1px solid var(--line-soft);padding:10px 14px;border-radius:10px;cursor:pointer;">
+            <input type="checkbox" id="lessonAddHasExam" style="width:18px;height:18px;accent-color:var(--primary);">
+            <div>
+              <b style="font-size:0.88rem;color:var(--ink);">🏆 تفعيل امتحان على المحاضرة (Exam)</b>
+              <span style="font-size:0.78rem;color:var(--ink-dim);display:block;">يلزم الطالب باجتياز الامتحان لفتح المحاضرة أو إثبات الحضور.</span>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- القسم 4: فيديو المحاضرة والمذكرة (اختياري الآن أو لاحقاً) -->
+      <div style="background:var(--bg-raised);padding:14px 16px;border-radius:14px;border:1px solid var(--line-soft);margin-bottom:14px;">
+        <label class="form-label" style="font-weight:700;margin-bottom:8px;">🎬 4. فيديو المحاضرة والمذكرة (يمكنك إضافتهما الآن أو لاحقاً):</label>
+        
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
           <button type="button" id="btnVideoModeUrl" class="btn btn-primary btn-sm" onclick="setVideoSourceMode('url')" style="justify-content:center;font-weight:700;">
-            🔗 رابط Drive أو YouTube (فوري)
+            🔗 رابط Drive أو YouTube
           </button>
           <button type="button" id="btnVideoModeFile" class="btn btn-line btn-sm" onclick="setVideoSourceMode('file')" style="justify-content:center;font-weight:700;">
             📁 رفع ملف من جهازي (Disk)
           </button>
         </div>
 
-        <!-- Panel 1: URL Input (Default & Recommended) -->
+        <!-- Panel 1: URL Input -->
         <div id="videoSourceUrlPanel">
-          <label style="font-size:0.88rem;color:var(--ink);font-weight:600;display:block;margin-bottom:4px;">رابط Google Drive أو YouTube أو استضافة مباشرة:</label>
           <input type="text" id="lessonVideoUrlInput" placeholder="مثال: https://drive.google.com/file/d/1.../view أو https://youtu.be/..." class="form-control">
-          <span style="font-size:0.8rem;color:var(--ink-dim);display:block;margin-top:6px;line-height:1.5;">
-            💡 <b>تنبيه لروابط Google Drive:</b> تأكد من ضبط إذن المشاركة في Drive على <b>(أي شخص لديه الرابط يمكنه العرض - Anyone with the link)</b> حتى يفتح الفيديو للطلاب بدون طلب إذن.
+          <span style="font-size:0.78rem;color:var(--ink-dim);display:block;margin-top:6px;">
+            💡 اختياري: يمكنك تركه فارغاً والرفع لاحقاً بعد تجهيز الأسئلة والواجبات.
           </span>
         </div>
 
         <!-- Panel 2: File Upload Input -->
         <div id="videoSourceFilePanel" style="display:none;">
-          <label style="font-size:0.88rem;color:var(--ink);font-weight:600;display:block;margin-bottom:4px;">اختر ملف الفيديو من جهازك:</label>
           <input type="file" id="lessonVideoFile" accept="video/mp4,video/mkv,video/webm,video/*" class="form-control" onchange="handleVideoFileSelection(this)">
-          <div id="videoSizeNotice" style="display:none;background:#f0fdf4;border:1px solid #bbf7d0;padding:10px 12px;border-radius:10px;margin-top:8px;font-size:0.82rem;color:#166534;line-height:1.5;">
-            📁 <b>حجم الملف المختار:</b> <span id="videoFileSizeText" style="font-weight:700;"></span> — سيتم الرفع المباشر إلى Google Drive فور الضغط على حفظ.
+          <div id="videoSizeNotice" style="display:none;background:#f0fdf4;border:1px solid #bbf7d0;padding:8px 12px;border-radius:10px;margin-top:8px;font-size:0.82rem;color:#166534;">
+            📁 <b>حجم الملف المختار:</b> <span id="videoFileSizeText" style="font-weight:700;"></span>
           </div>
           <div id="videoUploadProgressWrapper" style="display:none;margin-top:10px;background:#f8fafc;border:1px solid #e2e8f0;padding:12px;border-radius:12px;">
             <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:0.82rem;font-weight:700;">
@@ -335,25 +394,24 @@
             </div>
           </div>
         </div>
-      </div>
-      <div class="form-group" style="margin-bottom:14px;background:var(--bg-raised);padding:12px 14px;border-radius:12px;border:1px solid var(--line-soft);">
-        <label class="form-label" style="font-weight:700;margin-bottom:6px;">📄 مذكرة الدرس (PDF Document):</label>
-        <div style="margin-bottom:8px;">
-          <label style="font-size:0.82rem;color:var(--ink-dim);display:block;margin-bottom:4px;">1. رابط Google Drive أو رابط مباشر للمذكرة:</label>
-          <input type="text" id="lessonPdfUrlInput" class="form-control" placeholder="مثال: https://drive.google.com/file/d/1.../view">
-        </div>
-        <div>
-          <label style="font-size:0.82rem;color:var(--ink-dim);display:block;margin-bottom:4px;">2. أو رفع ملف PDF من جهازك مباشرة إلى Google Drive (بأي حجم):</label>
+
+        <!-- PDF Document -->
+        <div style="margin-top:14px;padding-top:12px;border-top:1px dashed var(--line-soft);">
+          <label style="font-size:0.84rem;font-weight:700;display:block;margin-bottom:6px;">📄 مذكرة الدرس (PDF):</label>
+          <input type="text" id="lessonPdfUrlInput" class="form-control" placeholder="رابط Google Drive للمذكرة (اختياري)" style="margin-bottom:6px;">
           <input type="file" id="lessonPdfFile" accept="application/pdf" class="form-control">
         </div>
       </div>
+
+      <!-- Description -->
       <div class="form-group" style="margin-bottom:18px;">
-        <label class="form-label">وصف وملاحظات المحاضرة</label>
-        <textarea class="form-control" id="lessonDescInput" rows="2" placeholder="أهم النقاط والتوجيهات..."></textarea>
+        <label class="form-label" style="font-size:0.84rem;">وصف وتوجيهات المحاضرة</label>
+        <textarea class="form-control" id="lessonDescInput" rows="2" placeholder="أهم النقاط والتوجيهات للطلاب..."></textarea>
       </div>
+
       <div style="display:flex;gap:10px;justify-content:flex-end;">
         <button type="button" class="btn btn-line btn-sm" onclick="closeAddLessonModal()">إلغاء</button>
-        <button type="submit" class="btn btn-primary btn-sm" id="saveLessonBtn">حفظ ونشر الدرس ✓</button>
+        <button type="submit" class="btn btn-primary btn-sm" id="saveLessonBtn" style="padding:8px 20px;font-weight:700;">حفظ ومتابعة ✓</button>
       </div>
     </form>
   </div>
@@ -760,17 +818,21 @@
                       <div style="display:flex;flex-direction:column;gap:8px;">
                         ${ch.lessons.map((l, lIdx) => {
                           cachedLessonsMap.set(l.id, l);
+                          const isDraft = l.isPublished === false;
+                          const isScheduled = Boolean(l.scheduledPublishAt && new Date(l.scheduledPublishAt) > new Date());
                           return `
                           <div class="lesson-item">
                             <div>
                               <b>${lIdx + 1}. ${escapeHtml(l.title)}</b>
                               <span class="tag tag-warn" style="margin-inline-start:6px;font-weight:700;">💵 ${l.price || 0} ج.م · 💎 ${l.pointCost || 0} نقطة</span>
+                              ${isDraft ? '<span class="tag" style="margin-inline-start:4px;background:rgba(107,114,128,0.18);color:#6b7280;font-weight:700;">📁 مسودة</span>' : (isScheduled ? '<span class="tag" style="margin-inline-start:4px;background:rgba(245,158,11,0.18);color:#d97706;font-weight:700;">⏰ مجدولة</span>' : '<span class="tag tag-ok" style="margin-inline-start:4px;font-weight:700;">🚀 منشورة</span>')}
                               ${l.pdfUrl ? '<span class="tag" style="margin-inline-start:6px;">📄 PDF</span>' : ''}
                               ${l.videoUrl || l.driveFileId ? '<span class="tag tag-ok" style="margin-inline-start:4px;">🎬 فيديو</span>' : ''}
                               ${l.assignmentQuizId ? '<span class="tag tag-ok" style="margin-inline-start:4px;">📝 به واجب</span>' : ''}
                               ${l.examQuizId ? '<span class="tag tag-ok" style="margin-inline-start:4px;">🏆 به امتحان</span>' : ''}
                             </div>
                             <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+                              ${isDraft ? `<button type="button" class="btn btn-sm" style="padding:3px 10px;font-size:.8rem;background:#16a34a;color:#fff;border-radius:8px;font-weight:700;" onclick="quickPublishLesson('${l.id}')">🚀 نشر الآن</button>` : ''}
                               <button type="button" class="btn btn-line btn-sm" style="padding:3px 10px;font-size:.8rem;color:var(--primary);" onclick="openEditLessonModal('${l.id}')">✏️ تعديل السعر والبيانات</button>
                               <button type="button" class="btn btn-text btn-sm" onclick="openQuizBuilderForLesson('${l.id}', 'assignment')">📝 الواجب</button>
                               ${l.assignmentQuizId ? `<button type="button" class="btn btn-line btn-sm" style="padding:3px 8px;font-size:.78rem;color:#f59e0b;border-color:rgba(245,158,11,0.4);" onclick="openQuizGradingModal('${l.assignmentQuizId}', 'تصحيح الواجب - ${escapeHtml(l.title)}')">📊 تصحيح الواجب</button>` : ''}
@@ -807,6 +869,16 @@
       await loadStageCourses();
     } catch (e) {
       showToast('❌ فشل حذف المحاضرة: ' + (e.message || 'خطأ غير معروف'), 'error');
+    }
+  async function quickPublishLesson(lessonId) {
+    if (!confirm('هل ترغب في نشر هذه المحاضرة فوراً لتصبح متاحة للطلاب الآن؟')) return;
+    try {
+      await window.KhatwaAPI.teacher.updateLesson(lessonId, { isPublished: true, scheduledPublishAt: null });
+      showToast('🚀 تم نشر المحاضرة بنجاح وأصبحت متاحة للطلاب الآن!');
+      await loadStageCourses();
+      if (document.getElementById('view-calendar')?.style?.display !== 'none') loadCalendarView();
+    } catch (e) {
+      showToast('❌ فشل النشر: ' + (e.message || 'خطأ'), 'error');
     }
   }
 
@@ -1480,8 +1552,58 @@
     }
   }
 
+  function handlePublishModeChange(mode) {
+    const dtWrap = document.getElementById('scheduleDateTimePickerWrap');
+    const draftWrap = document.getElementById('draftNoticeWrap');
+    const saveBtn = document.getElementById('saveLessonBtn');
+
+    if (dtWrap) dtWrap.style.display = (mode === 'schedule') ? 'block' : 'none';
+    if (draftWrap) draftWrap.style.display = (mode === 'draft') ? 'block' : 'none';
+
+    if (saveBtn) {
+      if (mode === 'schedule') {
+        saveBtn.textContent = 'حفظ وجدولة المحاضرة ⏰';
+      } else if (mode === 'draft') {
+        saveBtn.textContent = 'حفظ كمسودة 📁';
+      } else {
+        saveBtn.textContent = 'حفظ ونشر المحاضرة 🚀';
+      }
+    }
+
+    if (mode === 'schedule') {
+      const input = document.getElementById('lessonScheduleDateTimeInput');
+      if (input && !input.value) {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() + 30 - (now.getMinutes() % 30));
+        input.value = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+      }
+    }
+  }
+
   function openAddLessonModal(chapterId) {
     document.getElementById('lessonChapterId').value = chapterId;
+    document.getElementById('lessonTitleInput').value = '';
+    document.getElementById('lessonPriceInput').value = '10';
+    document.getElementById('lessonPointCostInput').value = '10';
+    document.getElementById('lessonDescInput').value = '';
+    document.getElementById('lessonVideoUrlInput').value = '';
+    document.getElementById('lessonPdfUrlInput').value = '';
+
+    const vidFile = document.getElementById('lessonVideoFile');
+    if (vidFile) vidFile.value = '';
+    const pdfFile = document.getElementById('lessonPdfFile');
+    if (pdfFile) pdfFile.value = '';
+
+    const hasAssignCb = document.getElementById('lessonAddHasAssignment');
+    if (hasAssignCb) hasAssignCb.checked = false;
+    const hasExamCb = document.getElementById('lessonAddHasExam');
+    if (hasExamCb) hasExamCb.checked = false;
+
+    // Reset publish mode to 'now'
+    const nowRadio = document.querySelector('input[name="publishMode"][value="now"]');
+    if (nowRadio) nowRadio.checked = true;
+    handlePublishModeChange('now');
+
     setVideoSourceMode('url');
     const notice = document.getElementById('videoSizeNotice');
     if (notice) notice.style.display = 'none';
@@ -1489,6 +1611,7 @@
     if (progressWrapper) progressWrapper.style.display = 'none';
     document.getElementById('addLessonModal').style.display = 'flex';
   }
+
   function closeAddLessonModal() {
     document.getElementById('addLessonModal').style.display = 'none';
     const notice = document.getElementById('videoSizeNotice');
@@ -1505,6 +1628,29 @@
     const pointCost = parseInt(document.getElementById('lessonPointCostInput').value) || 0;
     const description = document.getElementById('lessonDescInput').value.trim();
     const pdfFile = document.getElementById('lessonPdfFile')?.files[0];
+
+    const publishMode = document.querySelector('input[name="publishMode"]:checked')?.value || 'now';
+    let isPublished = true;
+    let scheduledPublishAt = null;
+
+    if (publishMode === 'schedule') {
+      const dtVal = document.getElementById('lessonScheduleDateTimeInput')?.value;
+      if (!dtVal) {
+        alert('يرجى تحديد تاريخ ووقت الجدولة بالتقويم');
+        return;
+      }
+      scheduledPublishAt = new Date(dtVal).toISOString();
+      isPublished = true;
+    } else if (publishMode === 'draft') {
+      isPublished = false;
+      scheduledPublishAt = null;
+    } else {
+      isPublished = true;
+      scheduledPublishAt = null;
+    }
+
+    const hasAssignment = Boolean(document.getElementById('lessonAddHasAssignment')?.checked);
+    const hasExam = Boolean(document.getElementById('lessonAddHasExam')?.checked);
 
     let videoUrl = null;
     let videoFile = null;
@@ -1524,7 +1670,7 @@
 
     const btn = document.getElementById('saveLessonBtn');
     btn.disabled = true;
-    btn.textContent = 'جارٍ إنشاء الدرس...';
+    btn.textContent = 'جارٍ حفظ الدرس...';
 
     const progressWrapper = document.getElementById('videoUploadProgressWrapper');
     const progressBar = document.getElementById('uploadProgressBar');
@@ -1542,7 +1688,18 @@
         pdfUrl = cleanPdf;
       }
 
-      const lesson = await window.KhatwaAPI.teacher.createLesson(chapterId, { title, price, pointCost, description, videoUrl, pdfUrl });
+      const lesson = await window.KhatwaAPI.teacher.createLesson(chapterId, {
+        title,
+        price,
+        pointCost,
+        description,
+        videoUrl,
+        pdfUrl,
+        isPublished,
+        scheduledPublishAt,
+        hasAssignment,
+        hasExam,
+      });
 
       if (videoFile && lesson?.id) {
         if (progressWrapper) progressWrapper.style.display = 'block';
@@ -1586,15 +1743,35 @@
         }
       }
 
-      alert('تم حفظ ونشر المحاضرة بنجاح! ✅');
       closeAddLessonModal();
       document.getElementById('addLessonForm').reset();
       await refreshWorkspace();
+
+      // Smart transition: If assignment or exam was toggled, open Quiz Builder immediately!
+      if (hasAssignment) {
+        showToast('✅ تم حفظ المحاضرة بنجاح! ننتقل الآن لوضع أسئلة الواجب 📝');
+        setTimeout(() => {
+          openQuizBuilderForLesson(lesson.id, 'assignment');
+        }, 500);
+      } else if (hasExam) {
+        showToast('✅ تم حفظ المحاضرة بنجاح! ننتقل الآن لوضع أسئلة الامتحان 🏆');
+        setTimeout(() => {
+          openQuizBuilderForLesson(lesson.id, 'exam');
+        }, 500);
+      } else {
+        if (publishMode === 'schedule') {
+          showToast('⏰ تم حفظ وجدولة نشر المحاضرة بنجاح!');
+        } else if (publishMode === 'draft') {
+          showToast('📁 تم حفظ المحاضرة كمسودة بنجاح!');
+        } else {
+          showToast('🚀 تم حفظ ونشر المحاضرة بنجاح!');
+        }
+      }
     } catch (err) {
       alert(err.message || 'حدث خطأ أثناء حفظ ورفع الدرس');
     } finally {
       btn.disabled = false;
-      btn.textContent = 'حفظ ونشر الدرس ✓';
+      handlePublishModeChange(publishMode);
       if (progressWrapper) progressWrapper.style.display = 'none';
       if (progressBar) progressBar.style.width = '0%';
     }
