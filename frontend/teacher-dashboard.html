@@ -1748,17 +1748,30 @@
       await refreshWorkspace();
 
       // Smart transition: If assignment or exam was toggled, open Quiz Builder immediately!
-      if (hasAssignment) {
+      if (hasAssignment && hasExam) {
+        pendingNextQuizLessonId = lesson.id;
+        pendingNextQuizRole = 'exam';
+        showToast('✅ تم حفظ المحاضرة! ننتقل الآن لوضع أسئلة الواجب أولاً 📝 ثم الامتحان 🏆');
+        setTimeout(() => {
+          openQuizBuilderForLesson(lesson.id, 'assignment');
+        }, 500);
+      } else if (hasAssignment) {
+        pendingNextQuizLessonId = null;
+        pendingNextQuizRole = null;
         showToast('✅ تم حفظ المحاضرة بنجاح! ننتقل الآن لوضع أسئلة الواجب 📝');
         setTimeout(() => {
           openQuizBuilderForLesson(lesson.id, 'assignment');
         }, 500);
       } else if (hasExam) {
+        pendingNextQuizLessonId = null;
+        pendingNextQuizRole = null;
         showToast('✅ تم حفظ المحاضرة بنجاح! ننتقل الآن لوضع أسئلة الامتحان 🏆');
         setTimeout(() => {
           openQuizBuilderForLesson(lesson.id, 'exam');
         }, 500);
       } else {
+        pendingNextQuizLessonId = null;
+        pendingNextQuizRole = null;
         if (publishMode === 'schedule') {
           showToast('⏰ تم حفظ وجدولة نشر المحاضرة بنجاح!');
         } else if (publishMode === 'draft') {
@@ -1903,10 +1916,24 @@
     }
   }
 
+  let pendingNextQuizLessonId = null;
+  let pendingNextQuizRole = null;
+
   function closeQuizBuilderModal() {
     document.getElementById('quizBuilderModal').style.display = 'none';
     currentEditingQuizId = null;
     currentEditingLessonId = null;
+
+    if (pendingNextQuizLessonId && pendingNextQuizRole) {
+      const nextLessonId = pendingNextQuizLessonId;
+      const nextRole = pendingNextQuizRole;
+      pendingNextQuizLessonId = null;
+      pendingNextQuizRole = null;
+      showToast('ننتقل الآن لوضع أسئلة الامتحان 🏆');
+      setTimeout(() => {
+        openQuizBuilderForLesson(nextLessonId, nextRole);
+      }, 350);
+    }
   }
 
   function toggleQuestionTypeFields(type) {

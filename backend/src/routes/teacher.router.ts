@@ -834,65 +834,69 @@ router.post(
     const nextOrder = (maxOrder._max.orderIndex ?? -1) + 1;
 
     let parsedScheduledDate: Date | null = null;
-    if (scheduledPublishAt) {
+    if (scheduledPublishAt !== undefined && scheduledPublishAt !== null && scheduledPublishAt !== '') {
       const d = new Date(scheduledPublishAt);
-      if (!isNaN(d.getTime())) {
-        parsedScheduledDate = d;
+      if (isNaN(d.getTime()) || d <= new Date()) {
+        res.status(400).json({ success: false, error: { code: 'INVALID_DATE', message: 'scheduledPublishAt must be a valid future date' } });
+        return;
       }
+      parsedScheduledDate = d;
     }
 
-    // Auto-create Homework and/or Exam quizzes if selected in creation flow
-    let assignmentQuizId: string | null = null;
-    if (hasAssignment) {
-      const assignmentQuiz = await prisma.quiz.create({
+    // Wrap assignment quiz creation, exam quiz creation, and lesson write in interactive transaction
+    const lesson = await prisma.$transaction(async (tx) => {
+      let assignmentQuizId: string | null = null;
+      if (hasAssignment) {
+        const assignmentQuiz = await tx.quiz.create({
+          data: {
+            teacherProfileId: teacherProfile.id,
+            title: `واجب المحاضرة - ${title}`,
+            type: 'HOMEWORK',
+            academicStage: chapter.course.academicStage,
+          },
+        });
+        assignmentQuizId = assignmentQuiz.id;
+      }
+
+      let examQuizId: string | null = null;
+      if (hasExam) {
+        const examQuiz = await tx.quiz.create({
+          data: {
+            teacherProfileId: teacherProfile.id,
+            title: `امتحان المحاضرة - ${title}`,
+            type: 'EXAM',
+            academicStage: chapter.course.academicStage,
+          },
+        });
+        examQuizId = examQuiz.id;
+      }
+
+      const finalIsPublished = isPublished !== undefined ? Boolean(isPublished) : true;
+
+      return tx.lesson.create({
         data: {
           teacherProfileId: teacherProfile.id,
-          title: `واجب المحاضرة - ${title}`,
-          type: 'HOMEWORK',
+          courseId: chapter.courseId,
+          chapterId: chapter.id,
           academicStage: chapter.course.academicStage,
+          title,
+          description: description || null,
+          price: price !== undefined ? parseFloat(price) : 0.0,
+          pointCost: pointCost !== undefined ? parseInt(pointCost) : 0,
+          orderIndex: orderIndex !== undefined ? parseInt(orderIndex) : nextOrder,
+          videoUrl: videoUrl || null,
+          pdfUrl: pdfUrl || null,
+          pdfFileName: pdfFileName || null,
+          isPublished: finalIsPublished,
+          scheduledPublishAt: parsedScheduledDate,
+          assignmentQuizId,
+          examQuizId,
+        },
+        include: {
+          assignmentQuiz: true,
+          examQuiz: true,
         },
       });
-      assignmentQuizId = assignmentQuiz.id;
-    }
-
-    let examQuizId: string | null = null;
-    if (hasExam) {
-      const examQuiz = await prisma.quiz.create({
-        data: {
-          teacherProfileId: teacherProfile.id,
-          title: `امتحان المحاضرة - ${title}`,
-          type: 'EXAM',
-          academicStage: chapter.course.academicStage,
-        },
-      });
-      examQuizId = examQuiz.id;
-    }
-
-    const finalIsPublished = isPublished !== undefined ? Boolean(isPublished) : true;
-
-    const lesson = await prisma.lesson.create({
-      data: {
-        teacherProfileId: teacherProfile.id,
-        courseId: chapter.courseId,
-        chapterId: chapter.id,
-        academicStage: chapter.course.academicStage,
-        title,
-        description: description || null,
-        price: price !== undefined ? parseFloat(price) : 0.0,
-        pointCost: pointCost !== undefined ? parseInt(pointCost) : 0,
-        orderIndex: orderIndex !== undefined ? parseInt(orderIndex) : nextOrder,
-        videoUrl: videoUrl || null,
-        pdfUrl: pdfUrl || null,
-        pdfFileName: pdfFileName || null,
-        isPublished: finalIsPublished,
-        scheduledPublishAt: parsedScheduledDate,
-        assignmentQuizId,
-        examQuizId,
-      },
-      include: {
-        assignmentQuiz: true,
-        examQuiz: true,
-      },
     });
 
     res.status(201).json({ success: true, data: lesson });
@@ -1061,10 +1065,10 @@ router.patch(
 
     const { scheduledPublishAt } = req.body;
     let parsedDate: Date | null = null;
-    if (scheduledPublishAt) {
+    if (scheduledPublishAt !== undefined && scheduledPublishAt !== null && scheduledPublishAt !== '') {
       parsedDate = new Date(scheduledPublishAt);
-      if (isNaN(parsedDate.getTime())) {
-        res.status(400).json({ success: false, error: { code: 'INVALID_DATE', message: 'scheduledPublishAt is not a valid date' } });
+      if (isNaN(parsedDate.getTime()) || parsedDate <= new Date()) {
+        res.status(400).json({ success: false, error: { code: 'INVALID_DATE', message: 'scheduledPublishAt must be a valid future date' } });
         return;
       }
     }
