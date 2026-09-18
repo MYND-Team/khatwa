@@ -334,7 +334,7 @@ async function runFullTestSuite() {
     student: MockStudentAccount,
     lesson: { id: string; courseId: string; teacherId: string; stage: string; price: number; pointCost: number },
     method: 'WALLET_EGP' | 'POINTS',
-    commissionPct = 15
+    commissionPct = 80  // commissionPct = teacher's share % (e.g. 80 means teacher gets 80%, platform gets 20%)
   ): { success: boolean; error?: string } {
     if (student.subscriptions.includes(lesson.id)) {
       return { success: false, error: 'ALREADY_SUBSCRIBED' };
@@ -345,8 +345,9 @@ async function runFullTestSuite() {
         return { success: false, error: 'INSUFFICIENT_WALLET_BALANCE' };
       }
       student.walletBalance -= lesson.price;
-      const platformFee = Number(((lesson.price * commissionPct) / 100).toFixed(2));
-      const teacherEarning = Number((lesson.price - platformFee).toFixed(2));
+      // Mirror subscription.service.ts: teacherEarning = pricePaid * (commissionPct / 100)
+      const teacherEarning = Number((lesson.price * (commissionPct / 100)).toFixed(2));
+      const platformFee = Number((lesson.price - teacherEarning).toFixed(2));
 
       student.subscriptions.push(lesson.id);
       mockPaymentsDb.push({
@@ -380,8 +381,8 @@ async function runFullTestSuite() {
     pointCost: 20,
   };
 
-  // 1. Successful EGP Purchase
-  const buyRes = purchaseLessonSimulation(studentAcc, testLesson, 'WALLET_EGP', 15);
+  // 1. Successful EGP Purchase (commissionPct=80 means teacher gets 80% of 20 EGP = 16 EGP, platform gets 20% = 4 EGP)
+  const buyRes = purchaseLessonSimulation(studentAcc, testLesson, 'WALLET_EGP', 80);
   assert(buyRes.success === true, 'Req 3: Lesson purchased successfully with Wallet EGP');
   assert(studentAcc.walletBalance === 80.0, 'Req 3: Student wallet balance deducted correctly (100 - 20 = 80)');
   assert(studentAcc.subscriptions.includes(testLesson.id), 'Req 7: Lesson subscription created and active');
@@ -389,8 +390,8 @@ async function runFullTestSuite() {
   // 2. Financial Ledger & Split Verification
   const lastTx = mockPaymentsDb[mockPaymentsDb.length - 1];
   assert(lastTx.amount === 20.0, 'Req 6: Transaction recorded full amount 20 EGP');
-  assert(lastTx.platformFee === 3.0, 'Req 6: Platform commission correctly calculated as 15% (3.0 EGP)');
-  assert(lastTx.teacherEarning === 17.0, 'Req 6: Teacher earning correctly calculated as 85% (17.0 EGP)');
+  assert(lastTx.teacherEarning === 16.0, 'Req 6: Teacher earning correctly calculated as 80% of 20 EGP = 16.0 EGP');
+  assert(lastTx.platformFee === 4.0, 'Req 6: Platform fee correctly calculated as 20% of 20 EGP = 4.0 EGP');
   assert(lastTx.stage === 'SECONDARY_1' && lastTx.teacherId === 'tch_ahmed', 'Req 6: Full traceable ledger chain verified');
 
   // 3. Duplicate purchase blocked (Idempotency)

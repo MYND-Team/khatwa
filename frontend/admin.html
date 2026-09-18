@@ -207,6 +207,226 @@
     }
   }
 
+  /* ─── Commission Modal ───────────────────────────────────────────── */
+  .comm-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(6px);
+    z-index: 9000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    opacity: 0;
+    transition: opacity 0.22s ease;
+    pointer-events: none;
+  }
+  .comm-modal-overlay.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+  .comm-modal {
+    background: linear-gradient(160deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%);
+    border: 1px solid rgba(184, 142, 79, 0.3);
+    border-radius: 20px;
+    padding: 32px;
+    width: 100%;
+    max-width: 480px;
+    box-shadow: 0 32px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255,255,255,0.04);
+    transform: translateY(24px) scale(0.97);
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+  }
+  .comm-modal-overlay.open .comm-modal {
+    transform: translateY(0) scale(1);
+  }
+  .comm-modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+  .comm-modal-title {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1.3;
+  }
+  .comm-modal-subtitle {
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.45);
+    margin-top: 4px;
+  }
+  .comm-modal-close {
+    background: rgba(255,255,255,0.07);
+    border: none;
+    border-radius: 50%;
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: rgba(255,255,255,0.55);
+    font-size: 1.1rem;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .comm-modal-close:hover {
+    background: rgba(255,255,255,0.14);
+    color: #fff;
+  }
+  .comm-split-preview {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .comm-split-card {
+    border-radius: 14px;
+    padding: 16px;
+    text-align: center;
+    transition: all 0.2s;
+  }
+  .comm-split-card.teacher {
+    background: linear-gradient(135deg, rgba(34,197,94,0.15), rgba(16,185,129,0.08));
+    border: 1px solid rgba(34,197,94,0.3);
+  }
+  .comm-split-card.platform {
+    background: linear-gradient(135deg, rgba(184,142,79,0.15), rgba(203,162,100,0.08));
+    border: 1px solid rgba(184,142,79,0.35);
+  }
+  .comm-split-pct {
+    font-size: 2rem;
+    font-weight: 900;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .comm-split-card.teacher .comm-split-pct { color: #4ade80; }
+  .comm-split-card.platform .comm-split-pct { color: #CBA264; }
+  .comm-split-label {
+    font-size: 0.75rem;
+    color: rgba(255,255,255,0.5);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .comm-slider-wrap {
+    margin-bottom: 20px;
+  }
+  .comm-slider-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .comm-slider-top label {
+    font-size: 0.88rem;
+    color: rgba(255,255,255,0.65);
+    font-weight: 600;
+  }
+  .comm-num-input {
+    width: 70px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 8px;
+    color: #fff;
+    font-size: 0.95rem;
+    font-weight: 700;
+    text-align: center;
+    padding: 4px 8px;
+    outline: none;
+    font-family: inherit;
+  }
+  .comm-num-input:focus {
+    border-color: rgba(184,142,79,0.6);
+    box-shadow: 0 0 0 3px rgba(184,142,79,0.15);
+  }
+  input[type=range].comm-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 999px;
+    outline: none;
+    cursor: pointer;
+  }
+  input[type=range].comm-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 22px;
+    height: 22px;
+    background: linear-gradient(135deg, #CBA264, #B88E4F);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 10px rgba(184,142,79,0.5);
+    border: 2px solid rgba(255,255,255,0.3);
+    transition: transform 0.15s;
+  }
+  input[type=range].comm-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+  }
+  .comm-slider-marks {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+  }
+  .comm-slider-marks span {
+    font-size: 0.7rem;
+    color: rgba(255,255,255,0.3);
+  }
+  .comm-reset-btn {
+    width: 100%;
+    background: rgba(255,255,255,0.04);
+    border: 1px dashed rgba(255,255,255,0.15);
+    border-radius: 10px;
+    color: rgba(255,255,255,0.45);
+    font-size: 0.82rem;
+    padding: 9px;
+    cursor: pointer;
+    margin-bottom: 16px;
+    transition: all 0.15s;
+    font-family: inherit;
+  }
+  .comm-reset-btn:hover {
+    background: rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.7);
+    border-color: rgba(255,255,255,0.25);
+  }
+  .comm-modal-actions {
+    display: flex;
+    gap: 10px;
+  }
+  .comm-btn-save {
+    flex: 1;
+    background: linear-gradient(135deg, #8C6527, #B88E4F);
+    border: none;
+    border-radius: 12px;
+    color: #fff;
+    font-size: 0.95rem;
+    font-weight: 700;
+    padding: 13px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+    box-shadow: 0 4px 16px rgba(140,101,39,0.4);
+  }
+  .comm-btn-save:hover { filter: brightness(1.1); transform: translateY(-1px); }
+  .comm-btn-save:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+  .comm-btn-cancel {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 12px;
+    color: rgba(255,255,255,0.6);
+    font-size: 0.9rem;
+    padding: 13px 20px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .comm-btn-cancel:hover { background: rgba(255,255,255,0.1); color: #fff; }
+
   /* Ultra-Modern Executive Metric Cards */
   .modern-stats-grid {
     display: grid;
@@ -715,8 +935,8 @@
 
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">
           <div class="form-group">
-            <label class="form-label">نسبة عمولة المنصة من الحصص (%)</label>
-            <input type="number" step="0.5" id="setDefaultCommission" class="form-control" value="15" min="0" max="100">
+            <label class="form-label">نسبة أرباح المدرس الافتراضية (%) <span style="font-size:0.8rem;color:var(--ink-dim);font-weight:400;">— مثال: 80 = المدرس يأخذ 80% والمنصة 20%</span></label>
+            <input type="number" step="0.5" id="setDefaultCommission" class="form-control" value="80" min="0" max="100">
           </div>
           <div class="form-group">
             <label class="form-label">سعر النقطة بالجنيه (Rate)</label>
@@ -1218,7 +1438,7 @@
       document.getElementById('setPlatformName').value = data.platformName || '';
       document.getElementById('setPlatformSubtitle').value = data.platformSubtitle || '';
       document.getElementById('setLogoUrl').value = data.logoUrl || '';
-      document.getElementById('setDefaultCommission').value = data.defaultTeacherCommissionPct || 15;
+      document.getElementById('setDefaultCommission').value = data.defaultTeacherCommissionPct ?? 80;
       document.getElementById('setPointsRate').value = data.pointsToEgpRate || 1.0;
 
       // sync hex inputs with color pickers
@@ -1784,26 +2004,173 @@
     }
   }
 
-  async function editTeacherCommission(id, currentPct, displayName) {
-    const promptMsg = `تعديل نسبة أرباح المدرس (${displayName}):\n\nأدخل النسبة المئوية لأرباح المدرس من كل حصة (مثال: 80 يعني 80% للمدرس و20% للمنصة).\n\n* اتركه فارغاً إذا أردت الرجوع للنسبة الافتراضية للمنصة.`;
-    const input = prompt(promptMsg, currentPct !== '' ? currentPct : '');
-    if (input === null) return;
+  // ─── Custom Commission Modal ────────────────────────────────────────────────
+  let _commModalTeacherId = null;
+  let _commModalWillReset = false;
+
+  function _buildCommModal() {
+    if (document.getElementById('commModalOverlay')) return;
+    const html = `
+      <div id="commModalOverlay" class="comm-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="commModalTitle">
+        <div class="comm-modal" id="commModalBox">
+          <div class="comm-modal-header">
+            <div>
+              <div class="comm-modal-title" id="commModalTitle">تعديل نسبة أرباح المدرس</div>
+              <div class="comm-modal-subtitle" id="commModalTeacherName"></div>
+            </div>
+            <button class="comm-modal-close" onclick="closeCommModal()" aria-label="إغلاق">✕</button>
+          </div>
+
+          <!-- Live Split Preview -->
+          <div class="comm-split-preview">
+            <div class="comm-split-card teacher">
+              <div class="comm-split-pct" id="commTeacherPct">80%</div>
+              <div class="comm-split-label">👨‍🏫 المدرس</div>
+            </div>
+            <div class="comm-split-card platform">
+              <div class="comm-split-pct" id="commPlatformPct">20%</div>
+              <div class="comm-split-label">🏛️ المنصة</div>
+            </div>
+          </div>
+
+          <!-- Slider + Number -->
+          <div class="comm-slider-wrap">
+            <div class="comm-slider-top">
+              <label for="commSlider">نسبة أرباح المدرس</label>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <input type="number" class="comm-num-input" id="commNumInput" min="0" max="100" step="0.5" value="80">
+                <span style="color:rgba(255,255,255,0.5);font-size:0.9rem;">%</span>
+              </div>
+            </div>
+            <input type="range" class="comm-slider" id="commSlider" min="0" max="100" step="0.5" value="80">
+            <div class="comm-slider-marks">
+              <span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
+            </div>
+          </div>
+
+          <!-- Reset to default -->
+          <button class="comm-reset-btn" id="commResetBtn" onclick="_commSetReset()">
+            🔄 إعادة تعيين للنسبة الافتراضية للمنصة
+          </button>
+
+          <!-- Actions -->
+          <div class="comm-modal-actions">
+            <button class="comm-btn-cancel" onclick="closeCommModal()">إلغاء</button>
+            <button class="comm-btn-save" id="commSaveBtn" onclick="_saveCommission()">💾 حفظ النسبة</button>
+          </div>
+        </div>
+      </div>`;
+    document.body.insertAdjacentHTML('beforeend', html);
+
+    // Wire up slider ↔ number input
+    const slider = document.getElementById('commSlider');
+    const numInput = document.getElementById('commNumInput');
+    slider.addEventListener('input', () => {
+      numInput.value = slider.value;
+      _commUpdatePreview(parseFloat(slider.value));
+      _commModalWillReset = false;
+      document.getElementById('commResetBtn').style.borderColor = '';
+      document.getElementById('commResetBtn').style.color = '';
+    });
+    numInput.addEventListener('input', () => {
+      const v = Math.min(100, Math.max(0, parseFloat(numInput.value) || 0));
+      slider.value = v;
+      _commUpdatePreview(v);
+      _commModalWillReset = false;
+      document.getElementById('commResetBtn').style.borderColor = '';
+      document.getElementById('commResetBtn').style.color = '';
+    });
+
+    // Close on backdrop click
+    document.getElementById('commModalOverlay').addEventListener('click', (e) => {
+      if (e.target.id === 'commModalOverlay') closeCommModal();
+    });
+
+    // Close on Escape
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && document.getElementById('commModalOverlay')?.classList.contains('open')) {
+        closeCommModal();
+      }
+    });
+  }
+
+  function _commUpdatePreview(teacherPct) {
+    const platformPct = Math.round((100 - teacherPct) * 10) / 10;
+    document.getElementById('commTeacherPct').textContent = teacherPct + '%';
+    document.getElementById('commPlatformPct').textContent = platformPct + '%';
+  }
+
+  function _commSetReset() {
+    _commModalWillReset = true;
+    const btn = document.getElementById('commResetBtn');
+    btn.style.borderColor = 'rgba(74,222,128,0.5)';
+    btn.style.color = '#4ade80';
+    btn.textContent = '✅ سيتم إعادة التعيين للنسبة الافتراضية عند الحفظ';
+  }
+
+  function editTeacherCommission(id, currentPct, displayName) {
+    _buildCommModal();
+    _commModalTeacherId = id;
+    _commModalWillReset = false;
+
+    // Reset reset-button appearance
+    const resetBtn = document.getElementById('commResetBtn');
+    resetBtn.style.borderColor = '';
+    resetBtn.style.color = '';
+    resetBtn.textContent = '🔄 إعادة تعيين للنسبة الافتراضية للمنصة';
+
+    // Set teacher name in subtitle
+    document.getElementById('commModalTeacherName').textContent = `👨‍🏫 ${displayName}`;
+
+    // Set initial value
+    const initVal = (currentPct !== '' && currentPct !== null && currentPct !== undefined && !isNaN(Number(currentPct)))
+      ? parseFloat(currentPct)
+      : 80;
+    document.getElementById('commSlider').value = initVal;
+    document.getElementById('commNumInput').value = initVal;
+    _commUpdatePreview(initVal);
+
+    // Open modal with animation
+    const overlay = document.getElementById('commModalOverlay');
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    document.getElementById('commNumInput').focus();
+  }
+
+  function closeCommModal() {
+    const overlay = document.getElementById('commModalOverlay');
+    if (!overlay) return;
+    overlay.classList.remove('open');
+    document.body.style.overflow = '';
+    _commModalTeacherId = null;
+    _commModalWillReset = false;
+  }
+
+  async function _saveCommission() {
+    if (!_commModalTeacherId) return;
+    const saveBtn = document.getElementById('commSaveBtn');
+    saveBtn.disabled = true;
+    saveBtn.textContent = '⏳ جارٍ الحفظ...';
 
     let commissionPct = null;
-    if (input.trim() !== '') {
-      const num = parseFloat(input.trim());
-      if (isNaN(num) || num < 0 || num > 100) {
+    if (!_commModalWillReset) {
+      const raw = parseFloat(document.getElementById('commNumInput').value);
+      if (isNaN(raw) || raw < 0 || raw > 100) {
+        saveBtn.disabled = false;
+        saveBtn.textContent = '💾 حفظ النسبة';
         alert('يرجى إدخال نسبة مئوية صحيحة بين 0 و 100');
         return;
       }
-      commissionPct = num;
+      commissionPct = raw;
     }
 
     try {
-      await window.KhatwaAPI.admin.updateTeacher(id, { commissionPct });
-      alert(`تم تحديث نسبة الأرباح للمدرس (${displayName}) بنجاح! ✅`);
+      await window.KhatwaAPI.admin.updateTeacher(_commModalTeacherId, { commissionPct });
+      closeCommModal();
       await loadTeachers();
     } catch (err) {
+      saveBtn.disabled = false;
+      saveBtn.textContent = '💾 حفظ النسبة';
       alert(err.message || 'فشل تحديث نسبة الأرباح');
     }
   }
