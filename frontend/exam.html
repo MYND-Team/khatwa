@@ -99,32 +99,75 @@
   let currentQIndex = 0;
   let currentCourse = null;
   let currentLecture = null;
+  let currentQuizId = null;
 
-  function initExam() {
+  async function initExam() {
     const courseId = getQueryParam('courseId');
     const lessonId = getQueryParam('lessonId');
+    const quizId = getQueryParam('quizId');
 
-    const allCourses = window.KhatwaAPI.courses.getAll();
-    currentCourse = courseId ? window.KhatwaAPI.courses.getById(courseId) : allCourses[0];
-
-    if (currentCourse) {
-      document.getElementById('examBreadCourse').textContent = currentCourse.title;
-      document.getElementById('examBreadCourse').href = `subject.html?id=${currentCourse.id}`;
-      document.getElementById('backToCourseBtn').href = `subject.html?id=${currentCourse.id}`;
-
-      const lectures = currentCourse.lectures || [];
-      currentLecture = lectures.find(l => l.id === lessonId) || lectures[0];
+    if (quizId) {
+      try {
+        const quiz = await window.KhatwaAPI.student.getQuiz(quizId);
+        if (quiz && quiz.questions && quiz.questions.length > 0) {
+          activeQuestions = quiz.questions;
+          currentQuizId = quiz.id;
+          document.getElementById('examHeadTitle').textContent = quiz.title || 'امتحان إلكتروني';
+          document.getElementById('examBreadTitle').textContent = quiz.title || 'الامتحان';
+          document.getElementById('examSubtitle').textContent = 'اختبار إلكتروني للتقييم ومتابعة المستوى';
+          renderExamQuestions();
+          return;
+        }
+      } catch (err) {
+        console.warn('Could not load quiz by quizId:', err);
+      }
     }
 
-    if (currentLecture && currentLecture.quizQuestions && currentLecture.quizQuestions.length > 0) {
-      activeQuestions = currentLecture.quizQuestions;
-      document.getElementById('examHeadTitle').textContent = `امتحان: ${currentLecture.title}`;
-      document.getElementById('examBreadTitle').textContent = `امتحان: ${currentLecture.title}`;
-      document.getElementById('examSubtitle').textContent = `امتحان إلكتروني خاص بـ ${currentCourse.title} — إعداد: ${currentCourse.teacherName || 'مدرس المادة'}`;
-      
-      renderExamQuestions();
-    } else {
-      // No exam found
+    if (lessonId) {
+      try {
+        const lesson = await window.KhatwaAPI.student.getLessonContent(lessonId);
+        if (lesson && lesson.quizzes && lesson.quizzes.length > 0) {
+          const examQ = lesson.quizzes.find(q => q.quizRole === 'EXAM') || lesson.quizzes[0];
+          if (examQ && examQ.quiz && examQ.quiz.questions && examQ.quiz.questions.length > 0) {
+            activeQuestions = examQ.quiz.questions;
+            currentQuizId = examQ.quiz.id;
+            document.getElementById('examHeadTitle').textContent = examQ.quiz.title || `امتحان: ${lesson.title}`;
+            document.getElementById('examBreadTitle').textContent = `امتحان: ${lesson.title}`;
+            renderExamQuestions();
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn('Could not load lesson quizzes:', err);
+      }
+    }
+
+    try {
+      const allCourses = await window.KhatwaAPI.courses.getAll();
+      currentCourse = courseId ? (await window.KhatwaAPI.courses.getById(courseId)) : allCourses[0];
+
+      if (currentCourse) {
+        document.getElementById('examBreadCourse').textContent = currentCourse.title;
+        document.getElementById('examBreadCourse').href = `subject.html?courseId=${currentCourse.id}`;
+        document.getElementById('backToCourseBtn').href = `subject.html?courseId=${currentCourse.id}`;
+
+        const lectures = currentCourse.lectures || [];
+        currentLecture = lectures.find(l => l.id === lessonId) || lectures[0];
+      }
+
+      if (currentLecture && currentLecture.quizQuestions && currentLecture.quizQuestions.length > 0) {
+        activeQuestions = currentLecture.quizQuestions;
+        currentQuizId = currentLecture.examQuizId || currentLecture.quizId || null;
+        document.getElementById('examHeadTitle').textContent = `امتحان: ${currentLecture.title}`;
+        document.getElementById('examBreadTitle').textContent = `امتحان: ${currentLecture.title}`;
+        document.getElementById('examSubtitle').textContent = `امتحان إلكتروني خاص بـ ${currentCourse.title} — إعداد: ${currentCourse.teacherName || 'مدرس المادة'}`;
+        
+        renderExamQuestions();
+      } else {
+        document.getElementById('examActiveView').style.display = 'none';
+        document.getElementById('examEmptyView').style.display = 'block';
+      }
+    } catch (_) {
       document.getElementById('examActiveView').style.display = 'none';
       document.getElementById('examEmptyView').style.display = 'block';
     }
@@ -231,37 +274,66 @@
     }
   });
 
-  document.getElementById('examForm').addEventListener('submit', function(e) {
+  document.getElementById('examForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const user = window.KhatwaAPI.getUser();
     const studentId = user ? user.id : 'student-default';
 
+    const submitBtn = document.getElementById('submitExamBtn');
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'جارٍ تصحيح الامتحان...';
+    }
+
+    const answers = [];
     let score = 0;
     activeQuestions.forEach(q => {
       const selected = document.querySelector(`input[name="q_${q.id}"]:checked`)?.value;
+      if (selected) {
+        answers.push({ questionId: q.id, selectedOption: selected });
+      }
       if (selected && selected === q.correctOption) {
         score += 1;
       }
     });
 
     const total = activeQuestions.length;
-    const passed = score >= Math.ceil(total * 0.5);
+    let passed = score >= Math.ceil(total * 0.5);
 
     const examTitle = currentLecture 
       ? `امتحان: ${currentLecture.title}` 
       : (currentCourse ? `امتحان: ${currentCourse.title}` : 'امتحان الحصة');
 
-    window.KhatwaAPI.store.saveQuizAttempt(studentId, {
-      title: examTitle,
-      score: score,
-      totalQuestions: total,
-      passed: passed
-    });
+    // Submit to live backend API if quizId is available
+    const activeQuizId = currentQuizId || getQueryParam('quizId');
+    if (activeQuizId) {
+      try {
+        const attemptRes = await window.KhatwaAPI.student.submitQuizAttempt(activeQuizId, answers);
+        if (attemptRes && typeof attemptRes.score === 'number') {
+          score = attemptRes.score;
+          if (typeof attemptRes.passed === 'boolean') {
+            passed = attemptRes.passed;
+          }
+        }
+      } catch (err) {
+        console.warn('Backend quiz attempt submission error:', err);
+      }
+    }
+
+    // Save to local store fallback
+    try {
+      window.KhatwaAPI.store.saveQuizAttempt(studentId, {
+        title: examTitle,
+        score: score,
+        totalQuestions: total,
+        passed: passed
+      });
+    } catch (_) {}
 
     document.getElementById('resultScoreText').textContent = `${score} / ${total}`;
     document.getElementById('resultKicker').textContent = passed ? '✓ مبروك، اجتزت الامتحان بنجاح!' : 'تم تسليم الامتحان';
     document.getElementById('resultMsg').textContent = passed 
-      ? `أحسنت! حققت نسبة نجاح ${Math.round((score/total)*100)}% وتم حفظ النتيجة في سجلك.` 
+      ? `أحسنت! حققت نسبة نجاح ${total > 0 ? Math.round((score/total)*100) : 100}% وتم حفظ النتيجة في سجلك.` 
       : `حققت ${score} من ${total}. يمكنك مراجعة المحاضرة وإعادة المحاولة لتحسين درجتك.`;
 
     document.getElementById('examActiveView').style.display = 'none';

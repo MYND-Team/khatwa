@@ -52,53 +52,22 @@ export async function purchaseLesson({
     // Resolve commission: teacher-specific override takes priority over platform default
     const settings = await tx.platformSettings.findFirst();
     const platformDefault = settings?.defaultTeacherCommissionPct ?? 80.0;
-    const commissionPct = lesson.teacherProfile?.commissionPct ?? platformDefault;
+    const commissionPct = (lesson.teacherProfile?.commissionPct !== null && lesson.teacherProfile?.commissionPct !== undefined)
+      ? lesson.teacherProfile.commissionPct
+      : platformDefault;
 
-    let resolvedPaymentMethod: 'WALLET_EGP' | 'POINTS' | 'FREE' = paymentMethod;
+    let resolvedPaymentMethod: 'WALLET_EGP' | 'FREE' = 'WALLET_EGP';
     let pricePaid = 0.0;
-    let pointsPaid = 0;
+    const pointsPaid = 0;
 
-    const isFree = lesson.price === 0 && lesson.pointCost === 0;
+    const isFree = (lesson.price === 0 || lesson.price === null);
 
     if (isFree) {
       resolvedPaymentMethod = 'FREE';
       pricePaid = 0.0;
-      pointsPaid = 0;
-    } else if (paymentMethod === 'POINTS') {
-      const requiredPoints = lesson.pointCost > 0 ? lesson.pointCost : Math.ceil(lesson.price);
-      if (student.pointsBalance < requiredPoints) {
-        throw PaymentRequiredError(
-          `رصيد النقاط غير كافٍ. تحتاج إلى ${requiredPoints} نقطة لشراء هذه المحاضرة.`
-        );
-      }
-
-      // Deduct Points
-      const updatedUser = await tx.user.updateMany({
-        where: { id: studentId, pointsBalance: { gte: requiredPoints } },
-        data: { pointsBalance: { decrement: requiredPoints } },
-      });
-
-      if (updatedUser.count === 0) {
-        throw PaymentRequiredError('فشل خصم النقاط. يرجى إعادة المحاولة.');
-      }
-
-      pointsPaid = requiredPoints;
-      pricePaid = lesson.price > 0 ? lesson.price : requiredPoints;
-
-      // Audit Points Transaction for Student
-      await tx.pointsTransaction.create({
-        data: {
-          studentId,
-          type: 'DEBIT',
-          amount: requiredPoints,
-          reason: `شراء محاضرة: ${lesson.title} (الأستاذ: ${lesson.teacherProfile?.displayName || 'المدرس'})`,
-          relatedLessonId: lesson.id,
-          actorId: studentId,
-        },
-      });
     } else {
       // WALLET_EGP
-      const requiredPrice = lesson.price > 0 ? lesson.price : lesson.pointCost;
+      const requiredPrice = lesson.price > 0 ? lesson.price : 0;
       if (student.walletBalance < requiredPrice) {
         throw PaymentRequiredError(
           `رصيد المحفظة غير كافٍ. تحتاج إلى ${requiredPrice} ج.م لشراء هذه المحاضرة.`
@@ -106,7 +75,7 @@ export async function purchaseLesson({
       }
 
       // Deduct Wallet EGP
-      const newWalletBalance = student.walletBalance - requiredPrice;
+      const newWalletBalance = Math.round((student.walletBalance - requiredPrice) * 100) / 100;
       const updatedUser = await tx.user.updateMany({
         where: { id: studentId, walletBalance: { gte: requiredPrice } },
         data: { walletBalance: { decrement: requiredPrice } },
@@ -229,30 +198,12 @@ export async function purchaseLesson({
         }
       }
 
-      if (pointsPaid > 0) {
-        await tx.user.update({
-          where: { id: teacherUserId },
-          data: { pointsBalance: { increment: pointsPaid } },
-        });
-
-        await tx.pointsTransaction.create({
-          data: {
-            studentId: teacherUserId,
-            type: 'CREDIT',
-            amount: pointsPaid,
-            reason: `أرباح نقاط محاضرة: ${lesson.title} - الطالب: ${student.username || studentId}`,
-            relatedLessonId: lesson.id,
-            actorId: studentId,
-          },
-        });
-      }
-
       // Send real-time notification to teacher
       await tx.notification.create({
         data: {
           userId: teacherUserId,
           title: 'اشتراك ودفع جديد في المحاضرة 💰',
-          message: `قام الطالب (@${student.username || 'طالب'}) بالاشتراك في محاضرة "${lesson.title}". تم تسجيل الدفع وإيداع أرباحك (${teacherEarning > 0 ? teacherEarning + ' ج.م' : pointsPaid + ' نقطة'}) في محفظتك.`,
+          message: `قام الطالب (@${student.username || 'طالب'}) بالاشتراك في محاضرة "${lesson.title}". تم تسجيل الدفع وإيداع أرباحك (${teacherEarning > 0 ? teacherEarning + ' ج.م' : '0 ج.م'}) في محفظتك.`,
           type: 'PAYMENT',
         },
       });

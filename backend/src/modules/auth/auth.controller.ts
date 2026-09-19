@@ -137,7 +137,16 @@ export const me = [
           },
         },
         teacherProfile: {
-          select: { id: true, displayName: true, avatarUrl: true, subject: true, commissionPct: true },
+          select: {
+            id: true,
+            displayName: true,
+            avatarUrl: true,
+            subject: true,
+            bio: true,
+            academicStages: true,
+            commissionPct: true,
+            workspaces: true,
+          },
         },
       },
     });
@@ -147,6 +156,7 @@ export const me = [
       return;
     }
 
-    res.status(200).json({ success: true, data: user });
+    const synthesizedName = user.teacherProfile?.displayName || user.username;
+    res.status(200).json({ success: true, data: { ...user, name: synthesizedName } });
   }),
 ];

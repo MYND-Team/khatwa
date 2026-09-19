@@ -88,7 +88,7 @@
 <script src="js/api.js"></script>
 <script src="js/main.js"></script>
 <script>
-  function renderResults() {
+  async function renderResults() {
     const user = window.KhatwaAPI.getUser();
     if (!user) {
       window.location.href = 'login.html';
@@ -98,12 +98,17 @@
     const studentName = user.name || user.displayName || user.username || 'الطالب';
     document.getElementById('resultsHeadTitle').textContent = `نتائج الطالب: ${studentName}`;
 
-    const stats = window.KhatwaAPI.student.getStats();
+    let stats = {};
+    try {
+      stats = (await window.KhatwaAPI.student.getStats()) || {};
+    } catch (_) {
+      stats = {};
+    }
     const attempts = stats.quizAttempts || [];
     const enrolled = stats.enrolledCourses || [];
 
-    document.getElementById('statAvgScore').textContent = stats.averageScore;
-    document.getElementById('statCompletedLectures').textContent = stats.completedLectures;
+    document.getElementById('statAvgScore').textContent = stats.averageScore || '—';
+    document.getElementById('statCompletedLectures').textContent = stats.completedLectures || 0;
     document.getElementById('statTotalExams').textContent = attempts.length;
 
     // Render Subjects

@@ -208,45 +208,50 @@ router.patch(
       return;
     }
 
-    // Use a transaction: update request + credit points + record transaction atomically
+    // Use a transaction: update request + credit wallet EGP + record transaction atomically
+    let updatedStudent: any = null;
     await prisma.$transaction(async (tx: any) => {
       await tx.pointRequest.update({
         where: { id: pr.id },
         data: {
           status: 'APPROVED',
           requestedPoints: grantedPoints,
+          amount: grantedPoints,
           processedById: req.user!.sub,
           processedAt: new Date(),
         },
       });
 
-      await tx.user.update({
+      const userBefore = await tx.user.findUnique({
         where: { id: pr.userId },
-        data: { pointsBalance: { increment: grantedPoints } },
+        select: { walletBalance: true },
+      });
+      const newBal = Math.round(((userBefore?.walletBalance || 0) + grantedPoints) * 100) / 100;
+
+      updatedStudent = await tx.user.update({
+        where: { id: pr.userId },
+        data: { walletBalance: newBal },
+        select: { id: true, username: true, walletBalance: true },
       });
 
-      await tx.pointsTransaction.create({
+      await tx.walletTransaction.create({
         data: {
           studentId: pr.userId,
           type: 'CREDIT',
           amount: grantedPoints,
-          reason: `شحن نقاط مراجع (طلب #${pr.id.slice(-6)})`,
+          balanceAfter: newBal,
+          reason: `شحن رصيد المحفظة معتمد (طلب #${pr.id.slice(-6)})`,
           actorId: req.user!.sub,
         },
       });
     });
 
-    const updatedStudent = await prisma.user.findUnique({
-      where: { id: pr.userId },
-      select: { id: true, username: true, pointsBalance: true },
-    });
-
     res.status(200).json({
       success: true,
       data: {
-        message: `تم شحن ${grantedPoints} نقطة للطالب بنجاح`,
+        message: `تم شحن ${grantedPoints} ج.م في محفظة الطالب بنجاح`,
         student: updatedStudent,
-        grantedPoints,
+        grantedAmount: grantedPoints,
       },
     });
   })

@@ -85,8 +85,26 @@ router.get(
       prisma.paymentTransaction.findMany({
         where,
         include: {
-          student: { select: { id: true, username: true } },
-          teacherProfile: { select: { id: true, displayName: true } },
+          student: {
+            select: {
+              id: true,
+              username: true,
+              studentProfile: {
+                select: {
+                  studentPhoneNumber: true,
+                  parentInfo: { select: { parentPhoneNumber: true } },
+                },
+              },
+            },
+          },
+          teacherProfile: {
+            select: {
+              id: true,
+              displayName: true,
+              commissionPct: true,
+              user: { select: { username: true } },
+            },
+          },
           course: { select: { id: true, title: true, subject: true } },
           lesson: { select: { id: true, title: true } },
         },
@@ -897,7 +915,13 @@ router.patch(
   '/teachers/:id',
   asyncHandler(async (req, res) => {
     const { displayName, subject, avatarUrl, bio, academicStages, commissionPct, password, isActive } = req.body;
-    const user = await prisma.user.findUnique({ where: { id: req.params.id as string } });
+    let user = await prisma.user.findUnique({ where: { id: req.params.id as string } });
+    if (!user || user.role !== 'TEACHER') {
+      const tp = await prisma.teacherProfile.findUnique({ where: { id: req.params.id as string }, include: { user: true } });
+      if (tp && tp.user) {
+        user = tp.user;
+      }
+    }
     if (!user || user.role !== 'TEACHER') {
       res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Teacher not found' } });
       return;
@@ -1005,16 +1029,24 @@ router.post(
     const teacherId = req.params.id as string;
     const { amount, notes } = req.body;
 
-    const teacher = await prisma.user.findUnique({
+    let teacher = await prisma.user.findUnique({
       where: { id: teacherId },
       include: { teacherProfile: true },
     });
+
+    if (!teacher || teacher.role !== 'TEACHER') {
+      const tp = await prisma.teacherProfile.findUnique({ where: { id: teacherId }, include: { user: true } });
+      if (tp && tp.user) {
+        teacher = { ...tp.user, teacherProfile: tp } as any;
+      }
+    }
 
     if (!teacher || teacher.role !== 'TEACHER') {
       res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'حساب المدرس غير موجود' } });
       return;
     }
 
+    const resolvedUserId = teacher.id;
     const currentBalance = Number(teacher.walletBalance || 0);
     if (currentBalance <= 0) {
       res.status(400).json({ success: false, error: { code: 'NO_BALANCE', message: 'رصيد محفظة المدرس 0 ج.م ولا توجد مستحقات معلقة للتسوية' } });
@@ -1029,13 +1061,13 @@ router.post(
 
     await prisma.$transaction(async (tx) => {
       await tx.user.update({
-        where: { id: teacherId },
+        where: { id: resolvedUserId },
         data: { walletBalance: newBalance },
       });
 
       await tx.walletTransaction.create({
         data: {
-          studentId: teacherId,
+          studentId: resolvedUserId,
           type: 'DEBIT',
           amount: payoutAmount,
           balanceAfter: newBalance,
@@ -1046,7 +1078,7 @@ router.post(
 
       await tx.notification.create({
         data: {
-          userId: teacherId,
+          userId: resolvedUserId,
           title: 'تسوية أرباح ومستحقات مالية 💵',
           message: `تم تسليمك وتسوية مبلغ ${payoutAmount.toLocaleString('ar-EG')} ج.م من أرباحك بواسطة الإدارة. الرصيد المتبقي بمحفظتك: ${newBalance.toLocaleString('ar-EG')} ج.م.`,
           type: 'PAYMENT',

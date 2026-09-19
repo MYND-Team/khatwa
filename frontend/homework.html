@@ -83,29 +83,72 @@
   let currentQIndex = 0;
   let currentCourse = null;
   let currentLecture = null;
+  let currentQuizId = null;
 
-  function initHomework() {
+  async function initHomework() {
     const courseId = getQueryParam('courseId');
     const lessonId = getQueryParam('lessonId');
+    const quizId = getQueryParam('quizId');
 
-    const allCourses = window.KhatwaAPI.courses.getAll();
-    currentCourse = courseId ? window.KhatwaAPI.courses.getById(courseId) : allCourses[0];
-
-    if (currentCourse) {
-      document.getElementById('hwBreadCourse').textContent = currentCourse.title;
-      document.getElementById('hwBreadCourse').href = `subject.html?id=${currentCourse.id}`;
-      document.getElementById('hwBackBtn').href = `subject.html?id=${currentCourse.id}`;
-
-      const lectures = currentCourse.lectures || [];
-      currentLecture = lectures.find(l => l.id === lessonId) || lectures[0];
+    if (quizId) {
+      try {
+        const quiz = await window.KhatwaAPI.student.getQuiz(quizId);
+        if (quiz && quiz.questions && quiz.questions.length > 0) {
+          activeQuestions = quiz.questions;
+          currentQuizId = quiz.id;
+          document.getElementById('hwHeadTitle').textContent = quiz.title || 'واجب دراسي';
+          document.getElementById('hwBreadTitle').textContent = quiz.title || 'الواجب';
+          renderHwQuestions();
+          return;
+        }
+      } catch (err) {
+        console.warn('Could not load quiz by quizId:', err);
+      }
     }
 
-    if (currentLecture && currentLecture.quizQuestions && currentLecture.quizQuestions.length > 0) {
-      activeQuestions = currentLecture.quizQuestions;
-      document.getElementById('hwHeadTitle').textContent = `واجب: ${currentLecture.title}`;
-      document.getElementById('hwBreadTitle').textContent = `واجب: ${currentLecture.title}`;
-      renderHwQuestions();
-    } else {
+    if (lessonId) {
+      try {
+        const lesson = await window.KhatwaAPI.student.getLessonContent(lessonId);
+        if (lesson && lesson.quizzes && lesson.quizzes.length > 0) {
+          const hwQ = lesson.quizzes.find(q => q.quizRole === 'HOMEWORK') || lesson.quizzes[0];
+          if (hwQ && hwQ.quiz && hwQ.quiz.questions && hwQ.quiz.questions.length > 0) {
+            activeQuestions = hwQ.quiz.questions;
+            currentQuizId = hwQ.quiz.id;
+            document.getElementById('hwHeadTitle').textContent = hwQ.quiz.title || `واجب: ${lesson.title}`;
+            document.getElementById('hwBreadTitle').textContent = `واجب: ${lesson.title}`;
+            renderHwQuestions();
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn('Could not load lesson quizzes:', err);
+      }
+    }
+
+    try {
+      const allCourses = await window.KhatwaAPI.courses.getAll();
+      currentCourse = courseId ? (await window.KhatwaAPI.courses.getById(courseId)) : allCourses[0];
+
+      if (currentCourse) {
+        document.getElementById('hwBreadCourse').textContent = currentCourse.title;
+        document.getElementById('hwBreadCourse').href = `subject.html?courseId=${currentCourse.id}`;
+        document.getElementById('hwBackBtn').href = `subject.html?courseId=${currentCourse.id}`;
+
+        const lectures = currentCourse.lectures || [];
+        currentLecture = lectures.find(l => l.id === lessonId) || lectures[0];
+      }
+
+      if (currentLecture && currentLecture.quizQuestions && currentLecture.quizQuestions.length > 0) {
+        activeQuestions = currentLecture.quizQuestions;
+        currentQuizId = currentLecture.homeworkQuizId || currentLecture.quizId || null;
+        document.getElementById('hwHeadTitle').textContent = `واجب: ${currentLecture.title}`;
+        document.getElementById('hwBreadTitle').textContent = `واجب: ${currentLecture.title}`;
+        renderHwQuestions();
+      } else {
+        document.getElementById('hwActiveView').style.display = 'none';
+        document.getElementById('hwEmptyView').style.display = 'block';
+      }
+    } catch (_) {
       document.getElementById('hwActiveView').style.display = 'none';
       document.getElementById('hwEmptyView').style.display = 'block';
     }
@@ -212,30 +255,59 @@
     }
   });
 
-  document.getElementById('hwForm').addEventListener('submit', function(e) {
+  document.getElementById('hwForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const user = window.KhatwaAPI.getUser();
     const studentId = user ? user.id : 'student-default';
 
+    const submitBtn = document.getElementById('hwSubmitBtn');
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'جارٍ تصحيح الواجب...';
+    }
+
+    const answers = [];
     let score = 0;
     activeQuestions.forEach(q => {
       const selected = document.querySelector(`input[name="hq_${q.id}"]:checked`)?.value;
+      if (selected) {
+        answers.push({ questionId: q.id, selectedOption: selected });
+      }
       if (selected && selected === q.correctOption) {
         score += 1;
       }
     });
 
     const total = activeQuestions.length;
-    const passed = score >= Math.ceil(total * 0.5);
+    let passed = score >= Math.ceil(total * 0.5);
 
     const title = currentLecture ? `واجب: ${currentLecture.title}` : 'واجب الحصة';
 
-    window.KhatwaAPI.store.saveQuizAttempt(studentId, {
-      title,
-      score,
-      totalQuestions: total,
-      passed
-    });
+    // Submit to live backend API if quizId is available
+    const activeQuizId = currentQuizId || getQueryParam('quizId');
+    if (activeQuizId) {
+      try {
+        const attemptRes = await window.KhatwaAPI.student.submitQuizAttempt(activeQuizId, answers);
+        if (attemptRes && typeof attemptRes.score === 'number') {
+          score = attemptRes.score;
+          if (typeof attemptRes.passed === 'boolean') {
+            passed = attemptRes.passed;
+          }
+        }
+      } catch (err) {
+        console.warn('Backend quiz attempt submission error:', err);
+      }
+    }
+
+    // Save to local store fallback
+    try {
+      window.KhatwaAPI.store.saveQuizAttempt(studentId, {
+        title,
+        score,
+        totalQuestions: total,
+        passed
+      });
+    } catch (_) {}
 
     document.getElementById('hwScoreText').textContent = `${score} / ${total}`;
     document.getElementById('hwResultKicker').textContent = passed ? '✓ تم اجتياز الواجب بنجاح!' : 'تم تسليم الواجب';

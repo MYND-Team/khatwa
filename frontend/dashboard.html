@@ -91,9 +91,9 @@
     <a href="index.html" class="brand"><img src="logo/logo-khatwa.png" alt="خطوة" class="brand-logo"><span class="brand-text">خطوة</span></a>
     <ul class="nav-links">
       <li><a href="dashboard.html" class="active">الرئيسية</a></li>
-      <li><a href="courses.html">الكورسات والمواد</a></li>
-      <li><a href="points.html">النقاط والمحفظة</a></li>
-      <li><a href="notifications.html">الإشعارات</a></li>
+      <li><a href="courses.html">الكورسات والمدرسين</a></li>
+      <li><a href="points.html">المحفظة والرصيد</a></li>
+      <li><a href="results.html">النتائج والتقارير</a></li>
     </ul>
     <div class="nav-cta">
       <button class="lang-switcher-btn" onclick="window.KhatwaI18n.toggleLanguage()">🌐 English</button>
@@ -145,7 +145,7 @@
     <!-- Dynamic Stats Row -->
     <div class="stat-row">
       <div class="stat-cell"><b id="statWallet">0 ج.م</b><span>رصيد المحفظة</span></div>
-      <div class="stat-cell"><b id="statPoints">0</b><span>رصيد النقاط</span></div>
+      <div class="stat-cell"><b id="statAvgScore">0%</b><span>متوسط الدرجات</span></div>
       <div class="stat-cell"><b id="statSubscriptions">0</b><span>محاضرة مشترك بها</span></div>
       <div class="stat-cell"><b id="statPassedQuizzes">0</b><span>امتحان مجتاز</span></div>
     </div>
@@ -225,9 +225,6 @@
     if (typeof user.walletBalance === 'number') {
       document.getElementById('statWallet').textContent = `${user.walletBalance} ج.م`;
     }
-    if (typeof user.pointsBalance === 'number') {
-      document.getElementById('statPoints').textContent = user.pointsBalance;
-    }
 
     currentStageFilter = '';
 
@@ -241,15 +238,15 @@
 
       if (stats) {
         document.getElementById('statWallet').textContent = `${stats.walletBalance ?? user.walletBalance ?? 0} ج.م`;
-        document.getElementById('statPoints').textContent = stats.pointsBalance ?? user.pointsBalance ?? 0;
-        document.getElementById('statSubscriptions').textContent = stats.enrolledCourses || 0;
-        document.getElementById('statPassedQuizzes').textContent = stats.passedQuizzes || 0;
+        const avgScoreEl = document.getElementById('statAvgScore');
+        if (avgScoreEl) avgScoreEl.textContent = stats.averageScore || '0%';
+        document.getElementById('statSubscriptions').textContent = stats.completedLectures || stats.subsCount || (Array.isArray(stats.enrolledCourses) ? stats.enrolledCourses.length : (stats.enrolledCourses || 0));
+        document.getElementById('statPassedQuizzes').textContent = stats.passedQuizzes || stats.totalExams || 0;
 
-        if (typeof stats.walletBalance === 'number' || typeof stats.pointsBalance === 'number') {
+        if (typeof stats.walletBalance === 'number') {
           window.KhatwaAPI.setUser({
             ...user,
-            walletBalance: stats.walletBalance ?? user.walletBalance,
-            pointsBalance: stats.pointsBalance ?? user.pointsBalance,
+            walletBalance: stats.walletBalance,
           });
         }
       }
@@ -329,7 +326,7 @@
         } else {
           for (const lesson of course.lessons) {
             totalLessonsCount++;
-            const priceLabel = lesson.pricePaid > 0 ? `${lesson.pricePaid} ج.م` : (lesson.pointsPaid > 0 ? `${lesson.pointsPaid} نقطة` : 'مجانية');
+            const priceLabel = lesson.pricePaid > 0 ? `${lesson.pricePaid} ج.م` : 'مجانية';
 
             // Build grade badges
             let gradeHtml = '';
@@ -396,7 +393,7 @@
 
     list.innerHTML = payments.slice(0, 5).map((p) => {
       const dateStr = p.createdAt ? new Date(p.createdAt).toLocaleDateString('ar-EG', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
-      const amountStr = p.amount > 0 ? `${p.amount} ج.م` : `${p.pointsUsed} نقطة`;
+      const amountStr = `${p.amount || p.pricePaid || 0} ج.م`;
 
       return `
         <div class="row-item">

@@ -13,33 +13,30 @@
   <div class="container nav-inner">
     <a href="index.html" class="brand"><img src="logo/logo-khatwa.png" alt="خطوة" class="brand-logo"><span class="brand-text">خطوة</span></a>
     <ul class="nav-links">
-      <li><a href="dashboard.html">الرئيسية</a></li>
-      <li><a href="courses.html">الكورسات والمواد</a></li>
-      <li><a href="points.html">النقاط</a></li>
+      <li><a href="dashboard.html">لوحة التحكم</a></li>
+      <li><a href="courses.html">الكورسات</a></li>
+      <li><a href="points.html">المحفظة والرصيد</a></li>
+      <li><a href="results.html">النتائج</a></li>
     </ul>
     <div class="nav-cta">
       <button class="lang-switcher-btn" onclick="window.KhatwaI18n.toggleLanguage()">🌐 English</button>
-      <a href="profile.html" class="user-line" id="navUserLine">
-        <span class="avatar" id="navAvatar">ط</span>
-        <span><span class="name" id="navName">الطالب</span></span>
-      </a>
+      <div class="user-line" id="navUserLine" style="cursor:default;">
+        <span class="user-avatar" id="navAvatar">ط</span>
+        <span class="user-name" id="navName">طالب خطوة</span>
+      </div>
     </div>
-    <button class="nav-toggle">القائمة</button>
   </div>
 </nav>
 
-<div class="app-shell">
+<div class="container layout-sidebar">
   <aside class="sidebar">
-    <div class="side-group">
-      <h6>الرئيسية</h6>
-      <a href="dashboard.html" class="side-link">نظرة عامة</a>
-      <a href="courses.html" class="side-link">الكورسات والمواد</a>
-      <a href="results.html" class="side-link">النتائج</a>
-    </div>
-    <div class="side-group">
-      <h6>المحفظة</h6>
-      <a href="points.html" class="side-link">رصيد النقاط</a>
-      <a href="request-points.html" class="side-link">طلب شحن نقاط</a>
+    <div class="sidebar-title">حسابي</div>
+    <div class="sidebar-nav">
+      <a href="dashboard.html" class="side-link">لوحة التحكم</a>
+      <a href="courses.html" class="side-link">الكورسات والمدرسين</a>
+      <a href="points.html" class="side-link">المحفظة والرصيد</a>
+      <a href="request-points.html" class="side-link">طلب شحن الرصيد</a>
+      <a href="results.html" class="side-link">النتائج والتقارير</a>
     </div>
     <div class="side-group">
       <h6>الحساب</h6>
@@ -73,7 +70,7 @@
 
     <!-- Live Stat Row -->
     <div class="stat-row">
-      <div class="stat-cell"><b id="statPoints">0</b><span>رصيد النقاط</span></div>
+      <div class="stat-cell"><b id="statWallet">0 ج.م</b><span>رصيد المحفظة</span></div>
       <div class="stat-cell"><b id="statCompleted">0</b><span>حصة مكتملة</span></div>
       <div class="stat-cell"><b id="statAvgScore">—</b><span>متوسط الامتحانات</span></div>
     </div>
@@ -257,13 +254,13 @@
     } catch (_) {}
 
     // Load dynamic student stats
-    const stats = window.KhatwaAPI.student.getStats();
-    document.getElementById('statPoints').textContent = typeof user.pointsBalance === 'number' ? user.pointsBalance : stats.pointsBalance;
-    document.getElementById('statCompleted').textContent = stats.completedLectures;
-    document.getElementById('statAvgScore').textContent = stats.averageScore;
+    const stats = (await window.KhatwaAPI.student.getStats()) || {};
+    document.getElementById('statWallet').textContent = `${stats.walletBalance ?? user.walletBalance ?? 0} ج.م`;
+    document.getElementById('statCompleted').textContent = stats.completedLectures || 0;
+    document.getElementById('statAvgScore').textContent = stats.averageScore || '—';
 
     // Load recent activity
-    const activities = window.KhatwaAPI.student.getActivities();
+    const activities = (await window.KhatwaAPI.student.getActivities()) || [];
     const actList = document.getElementById('activityList');
     if (!activities || activities.length === 0) {
       actList.innerHTML = `

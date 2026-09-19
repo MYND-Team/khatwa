@@ -434,7 +434,7 @@ router.get(
   '/stats',
   asyncHandler(async (req, res) => {
     const studentId = req.user!.sub;
-    const [user, attempts, subsCount] = await Promise.all([
+    const [user, attempts, subsCount, enrollments, lessonSubs] = await Promise.all([
       prisma.user.findUnique({
         where: { id: studentId },
         select: { walletBalance: true, pointsBalance: true },
@@ -447,14 +447,98 @@ router.get(
       prisma.lessonSubscription.count({
         where: { studentId, status: 'ACTIVE' },
       }),
+      prisma.courseEnrollment.findMany({
+        where: { studentId },
+        include: {
+          course: {
+            include: {
+              teacherProfile: { select: { displayName: true } },
+              lessons: { where: { isPublished: true }, select: { id: true, examQuizId: true, assignmentQuizId: true } },
+            },
+          },
+        },
+      }),
+      prisma.lessonSubscription.findMany({
+        where: { studentId, status: 'ACTIVE' },
+        include: {
+          course: {
+            include: {
+              teacherProfile: { select: { displayName: true } },
+              lessons: { where: { isPublished: true }, select: { id: true, examQuizId: true, assignmentQuizId: true } },
+            },
+          },
+        },
+      }),
     ]);
+
+    const mappedAttempts = attempts.map((a: any) => ({
+      id: a.id,
+      quizId: a.quizId,
+      quizTitle: a.quiz?.title || 'اختبار إلكتروني',
+      type: a.quiz?.type || 'EXAM',
+      score: a.score,
+      totalQuestions: a.totalQuestions,
+      passed: a.passed,
+      submittedAt: a.submittedAt,
+    }));
+
+    let averageScore = '—';
+    if (attempts.length > 0) {
+      const avgPct = Math.round(
+        attempts.reduce((sum: number, a: any) => sum + (a.totalQuestions > 0 ? (a.score / a.totalQuestions) * 100 : 0), 0) / attempts.length
+      );
+      averageScore = `${avgPct}%`;
+    }
+
+    const passedQuizIds = new Set(attempts.filter((a: any) => a.passed).map((a: any) => a.quizId));
+
+    // Consolidate unique courses
+    const courseMap = new Map<string, any>();
+    for (const enr of enrollments) {
+      if (enr.course) courseMap.set(enr.course.id, enr.course);
+    }
+    for (const sub of lessonSubs) {
+      if (sub.course) courseMap.set(sub.course.id, sub.course);
+    }
+
+    const enrolledCoursesProgress = Array.from(courseMap.values()).map((c: any) => {
+      const lessons = c.lessons || [];
+      const totalLectures = lessons.length;
+      let completedCount = 0;
+      for (const l of lessons) {
+        if (l.examQuizId && passedQuizIds.has(l.examQuizId)) {
+          completedCount++;
+        } else if (l.assignmentQuizId && passedQuizIds.has(l.assignmentQuizId)) {
+          completedCount++;
+        }
+      }
+      const progressPercent = totalLectures > 0 ? Math.min(100, Math.round((completedCount / totalLectures) * 100)) : 100;
+      return {
+        id: c.id,
+        title: c.title,
+        teacherName: c.teacherProfile?.displayName || 'معلم المادة',
+        completedCount,
+        totalLectures,
+        progressPercent,
+      };
+    });
+
+    const completedLectures = attempts.filter((a: any) => a.passed).length;
+    const totalExams = attempts.filter((a: any) => a.quiz?.type === 'EXAM').length || attempts.length;
+    const totalHomeworks = attempts.filter((a: any) => a.quiz?.type === 'HOMEWORK' || a.quiz?.type === 'ASSIGNMENT').length;
+
     res.status(200).json({
       success: true,
       data: {
         walletBalance: user?.walletBalance ?? 0,
         pointsBalance: user?.pointsBalance ?? 0,
-        enrolledCourses: subsCount,
-        quizAttempts: attempts,
+        averageScore,
+        completedLectures,
+        totalExams,
+        totalHomeworks,
+        enrolledCourses: enrolledCoursesProgress,
+        subsCount,
+        quizAttempts: mappedAttempts,
         totalQuizzes: attempts.length,
         passedQuizzes: attempts.filter((a: any) => a.passed).length,
       },
@@ -605,7 +689,7 @@ router.post(
 
     const student = await prisma.user.findUnique({
       where: { id: studentId },
-      select: { id: true, pointsBalance: true, walletBalance: true },
+      select: { id: true, username: true, pointsBalance: true, walletBalance: true },
     });
 
     if (!student) {
@@ -613,37 +697,75 @@ router.post(
       return;
     }
 
-    const requiredPoints = course.pointCost || 0;
-    if (requiredPoints > 0 && student.pointsBalance < requiredPoints) {
+    const coursePrice = Number(course.price) || 0;
+    if (coursePrice > 0 && student.walletBalance < coursePrice) {
       res.status(402).json({
         success: false,
         error: {
           code: 'PAYMENT_REQUIRED',
-          message: `رصيد النقاط غير كافٍ. تحتاج إلى ${requiredPoints} نقطة للاشتراك في هذا الكورس.`,
+          message: `رصيد المحفظة غير كافٍ. تحتاج إلى ${coursePrice} ج.م للاشتراك في هذا الكورس.`,
         },
       });
       return;
     }
 
     await prisma.$transaction(async (tx: any) => {
-      if (requiredPoints > 0) {
+      let teacherEarning = 0;
+      let platformFee = 0;
+
+      if (coursePrice > 0) {
+        const newBalance = Math.round((student.walletBalance - coursePrice) * 100) / 100;
         const updateRes = await tx.user.updateMany({
-          where: { id: studentId, pointsBalance: { gte: requiredPoints } },
-          data: { pointsBalance: { decrement: requiredPoints } },
+          where: { id: studentId, walletBalance: { gte: coursePrice } },
+          data: { walletBalance: { decrement: coursePrice } },
         });
         if (updateRes.count === 0) {
-          throw new Error('فشل خصم النقاط، يرجى إعادة المحاولة');
+          throw new Error('فشل خصم الرصيد من المحفظة، يرجى إعادة المحاولة');
         }
 
-        await tx.pointsTransaction.create({
+        await tx.walletTransaction.create({
           data: {
             studentId,
             type: 'DEBIT',
-            amount: requiredPoints,
+            amount: coursePrice,
+            balanceAfter: newBalance,
             reason: `اشتراك في كورس: ${course.title} (الأستاذ: ${course.teacherProfile?.displayName || 'المدرس'})`,
             actorId: studentId,
           },
         });
+
+        const settings = await tx.platformSettings.findFirst();
+        const platformDefault = settings?.defaultTeacherCommissionPct ?? 80.0;
+        const commPct = (course.teacherProfile?.commissionPct !== null && course.teacherProfile?.commissionPct !== undefined)
+          ? course.teacherProfile.commissionPct
+          : platformDefault;
+
+        teacherEarning = Math.round(coursePrice * (commPct / 100) * 100) / 100;
+        platformFee = Math.round((coursePrice - teacherEarning) * 100) / 100;
+
+        // Credit teacher if > 0
+        const teacherUserId = course.teacherProfile?.userId;
+        if (teacherUserId && teacherEarning > 0) {
+          const teacherUser = await tx.user.findUnique({
+            where: { id: teacherUserId },
+            select: { walletBalance: true },
+          });
+          const newTeacherBal = Math.round(((teacherUser?.walletBalance || 0) + teacherEarning) * 100) / 100;
+          await tx.user.update({
+            where: { id: teacherUserId },
+            data: { walletBalance: newTeacherBal },
+          });
+          await tx.walletTransaction.create({
+            data: {
+              studentId: teacherUserId,
+              type: 'CREDIT',
+              amount: teacherEarning,
+              balanceAfter: newTeacherBal,
+              reason: `أرباح اشتراك كورس: ${course.title} - الطالب: ${student.username || studentId}`,
+              actorId: studentId,
+            },
+          });
+        }
       }
 
       await tx.courseEnrollment.upsert({
@@ -652,28 +774,44 @@ router.post(
         update: {},
       });
 
+      // Record PaymentTransaction for audit
+      const txnNumber = `TXN-CRS-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
+      await tx.paymentTransaction.create({
+        data: {
+          transactionNumber: txnNumber,
+          studentId,
+          teacherProfileId: course.teacherProfileId,
+          academicStage: course.academicStage || 'SECONDARY_1',
+          courseId: course.id,
+          amount: coursePrice,
+          pointsUsed: 0,
+          currency: 'EGP',
+          paymentMethod: coursePrice > 0 ? 'WALLET_EGP' : 'FREE',
+          teacherEarning,
+          platformFee,
+          status: 'COMPLETED',
+        },
+      });
+
+      // Grant all lessons of the course
       for (const lesson of course.lessons) {
-        // Only genuinely free lessons (price is 0 and pointCost is 0) are granted for free
-        const isFree = (lesson.price === 0 || lesson.price === null) && (lesson.pointCost === 0 || lesson.pointCost === null);
-        if (isFree) {
-          await tx.lessonSubscription.upsert({
-            where: { studentId_lessonId: { studentId, lessonId: lesson.id } },
-            create: {
-              studentId,
-              lessonId: lesson.id,
-              courseId: course.id,
-              teacherProfileId: course.teacherProfileId,
-              academicStage: course.academicStage,
-              status: 'ACTIVE',
-              paymentMethod: 'FREE',
-              pricePaid: 0,
-              pointsPaid: 0,
-            },
-            update: {
-              status: 'ACTIVE',
-            },
-          });
-        }
+        await tx.lessonSubscription.upsert({
+          where: { studentId_lessonId: { studentId, lessonId: lesson.id } },
+          create: {
+            studentId,
+            lessonId: lesson.id,
+            courseId: course.id,
+            teacherProfileId: course.teacherProfileId,
+            academicStage: course.academicStage,
+            status: 'ACTIVE',
+            paymentMethod: coursePrice > 0 ? 'WALLET_EGP' : 'FREE',
+            pricePaid: 0,
+            pointsPaid: 0,
+          },
+          update: {
+            status: 'ACTIVE',
+          },
+        });
       }
     });
 

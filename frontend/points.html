@@ -53,19 +53,19 @@
   </aside>
 
   <main class="main">
-    <div class="breadcrumb">النقاط</div>
+    <div class="breadcrumb">المحفظة</div>
     <div class="page-head">
       <div>
-        <h1>محفظة النقاط</h1>
-        <p class="page-sub" style="margin:4px 0 0;">تُستخدم النقاط للاشتراك في المواد والمحاضرات المدفوعة وفتح الامتحانات.</p>
+        <h1>المحفظة والرصيد</h1>
+        <p class="page-sub" style="margin:4px 0 0;">رصيدك بالجنيه المصري (EGP) للاشتراك في المواد والمحاضرات المدفوعة وفتح الامتحانات.</p>
       </div>
     </div>
 
     <!-- Balance Hero Block -->
     <div class="balance-block" style="margin-bottom:28px;">
       <div>
-        <span style="font-size:.85rem;color:var(--ink-dim);display:block;margin-bottom:4px;">الرصيد المتاح حاليًا</span>
-        <div class="amount"><span id="pointsBalanceVal">0</span> <span>نقطة</span></div>
+        <span style="font-size:.85rem;color:var(--ink-dim);display:block;margin-bottom:4px;">الرصيد المتاح حاليًا بالمحفظة</span>
+        <div class="amount"><span id="pointsBalanceVal">0</span> <span>ج.م</span></div>
       </div>
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
         <a href="request-points.html" class="btn btn-line">🧾 شحن بإيصال تحويل</a>
@@ -150,7 +150,8 @@
       alertBox.style.background = '#ECFDF5';
       alertBox.style.color = '#047857';
       alertBox.style.border = '1px solid #6EE7B7';
-      alertBox.textContent = `✓ تم شحن ${res.pointsAdded || res.data?.pointsAdded || ''} نقطة بنجاح إلى رصيدك! 🎉`;
+      const addedVal = res.walletBalanceAdded || res.amountAdded || res.pointsAdded || res.data?.pointsAdded || res.amount || '';
+      alertBox.textContent = `✓ تم شحن ${addedVal} ج.م بنجاح إلى رصيد محفظتك! 🎉`;
       input.value = '';
       await loadPointsPage();
     } catch (err) {
@@ -167,10 +168,14 @@
 
   async function loadPointsPage() {
     let user = null;
+    let walletData = null;
     try {
-      user = await window.KhatwaAPI.student.getProfile();
+      [user, walletData] = await Promise.all([
+        window.KhatwaAPI.student.getProfile().catch(() => window.KhatwaAPI.getUser()),
+        window.KhatwaAPI.student.getWallet().catch(() => null),
+      ]);
     } catch (e) {
-      user = await window.KhatwaAPI.getUser();
+      user = window.KhatwaAPI.getUser();
     }
 
     if (!user) {
@@ -178,7 +183,9 @@
       return;
     }
 
-    const balance = typeof user.pointsBalance === 'number' ? user.pointsBalance : 0;
+    const balance = typeof walletData?.walletBalance === 'number'
+      ? walletData.walletBalance
+      : (typeof user.walletBalance === 'number' ? user.walletBalance : 0);
     document.getElementById('pointsBalanceVal').textContent = balance;
 
     // Load user's recharge requests
@@ -188,14 +195,14 @@
       if (!requests || requests.length === 0) {
         reqContainer.innerHTML = `
           <div class="empty-state" style="padding:20px 16px;text-align:center;color:var(--ink-dim);">
-            <p style="margin:0;">لم تقم بطلب شحن نقاط بعد.</p>
+            <p style="margin:0;">لم تقم بطلب شحن رصيد بعد.</p>
             <a href="request-points.html" class="btn btn-line btn-sm" style="margin-top:10px;">إرسال أول طلب شحن</a>
           </div>
         `;
       } else {
         reqContainer.innerHTML = `
           <table class="plain">
-            <thead><tr><th>التاريخ</th><th>المبلغ</th><th>كود التحويل</th><th>الحالة</th><th>النقاط</th></tr></thead>
+            <thead><tr><th>التاريخ</th><th>المبلغ المحول</th><th>كود التحويل</th><th>الحالة</th><th>المبلغ المعتمد</th></tr></thead>
             <tbody>
               ${requests.map(r => {
                 const d = r.createdAt ? (window.KhatwaI18n ? window.KhatwaI18n.formatDate(r.createdAt) : new Date(r.createdAt).toLocaleDateString()) : '—';
@@ -209,7 +216,7 @@
                     <td><b>${r.amount || 0} ج.م</b></td>
                     <td><code>${escapeHtml(r.code || '—')}</code></td>
                     <td>${statusBadge}</td>
-                    <td><b>${r.status === 'APPROVED' ? `+${r.requestedPoints || r.amount} نقطة` : '—'}</b></td>
+                    <td><b>${r.status === 'APPROVED' ? `+${r.amount || r.requestedPoints} ج.م` : '—'}</b></td>
                   </tr>
                 `;
               }).join('')}
@@ -222,19 +229,22 @@
     // Load transactions history
     const container = document.getElementById('transactionsTableContainer');
     try {
-      const txs = await window.KhatwaAPI.student.getPointsTransactions();
+      const txs = (walletData && Array.isArray(walletData.walletTransactions))
+        ? walletData.walletTransactions
+        : (await window.KhatwaAPI.student.getPointsTransactions() || []);
+
       if (!txs || txs.length === 0) {
         container.innerHTML = `
           <div class="empty-state" style="padding:24px 16px;text-align:center;color:var(--ink-dim);">
-            <div style="font-size:1.6rem;margin-bottom:8px;">💎</div>
-            <p style="margin:0;font-weight:600;">لا توجد حركات نقاط سابقة حتى الآن</p>
-            <span style="font-size:.82rem;color:var(--ink-faint);">ستظهر هنا عمليات الشحن واستخدام النقاط في الكورسات.</span>
+            <div style="font-size:1.6rem;margin-bottom:8px;">💵</div>
+            <p style="margin:0;font-weight:600;">لا توجد معاملات سابقة بالمحفظة حتى الآن</p>
+            <span style="font-size:.82rem;color:var(--ink-faint);">ستظهر هنا عمليات شحن الرصيد والخصم عند شراء المحاضرات.</span>
           </div>
         `;
       } else {
         container.innerHTML = `
           <table class="plain">
-            <thead><tr><th>التاريخ</th><th>نوع الحركة</th><th>النقاط</th><th>البيان والسبب</th></tr></thead>
+            <thead><tr><th>التاريخ</th><th>نوع الحركة</th><th>المبلغ</th><th>البيان والسبب</th></tr></thead>
             <tbody>
               ${txs.map(t => {
                 const d = t.createdAt ? (window.KhatwaI18n ? window.KhatwaI18n.formatDate(t.createdAt) : new Date(t.createdAt).toLocaleDateString()) : '—';
@@ -242,8 +252,8 @@
                 return `
                   <tr>
                     <td>${d}</td>
-                    <td><span class="tag ${isCredit ? 'tag-ok' : 'tag-warn'}">${isCredit ? 'شحن رصيد ＋' : 'استخدام points －'}</span></td>
-                    <td><b style="color:${isCredit ? '#10b981' : 'var(--err)'};">${isCredit ? '+' : '-'}${t.amount} نقطة</b></td>
+                    <td><span class="tag ${isCredit ? 'tag-ok' : 'tag-warn'}">${isCredit ? 'إيداع رصيد ＋' : 'خصم شراء －'}</span></td>
+                    <td><b style="color:${isCredit ? '#10b981' : 'var(--err)'};">${isCredit ? '+' : '-'}${t.amount} ج.م</b></td>
                     <td>${escapeHtml(t.reason || '—')}</td>
                   </tr>
                 `;

@@ -1727,10 +1727,13 @@
         const pFee = Number(p.platformFee !== undefined && p.platformFee > 0 ? p.platformFee : (amt > tEarn ? amt - tEarn : 0));
         const teacherPct = amt > 0 ? Math.round((tEarn / amt) * 100) : 100;
 
+        const studentDisplay = escapeHtml(p.student?.name || p.student?.displayName || p.student?.username || 'طالب');
+        const phoneDisplay = p.student?.phoneNumber ? `<br><span style="font-size:0.75rem;color:var(--ink-dim);">${escapeHtml(p.student.phoneNumber)}</span>` : '';
+
         return `
         <tr>
           <td><code>${p.transactionNumber || p.id}</code></td>
-          <td><b>${escapeHtml(p.student?.username || 'طالب')}</b></td>
+          <td><b>${studentDisplay}</b>${phoneDisplay}</td>
           <td>${escapeHtml(p.teacherProfile?.displayName || 'المدرس')}</td>
           <td><span class="tag tag-stage">${p.academicStage}</span></td>
           <td>${escapeHtml(p.course?.title || '')} / <b>${escapeHtml(p.lesson?.title || 'محاضرة')}</b></td>

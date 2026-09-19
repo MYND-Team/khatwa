@@ -185,6 +185,7 @@ export async function login(input: LoginInput) {
     user: {
       id: user.id,
       username: user.username,
+      name: user.teacherProfile?.displayName || user.username,
       role: effectiveRole,
       walletBalance: user.walletBalance,
       pointsBalance: user.pointsBalance,
@@ -197,6 +198,9 @@ export async function login(input: LoginInput) {
         id: user.teacherProfile.id,
         displayName: user.teacherProfile.displayName,
         subject: user.teacherProfile.subject,
+        bio: user.teacherProfile.bio,
+        avatarUrl: user.teacherProfile.avatarUrl,
+        academicStages: user.teacherProfile.academicStages,
         commissionPct: user.teacherProfile.commissionPct,
       } : undefined,
     },

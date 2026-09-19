@@ -78,8 +78,9 @@
       <h1 id="teacherGreeting">استوديو إدارة المحتوى وبيئات المراحل المستقلة</h1>
       <p class="page-sub" style="margin:4px 0 0;">كل مرحلة دراسية تمثل بيئة عمل ومساحة مستقلة تمامًا لكورساتك ومحاضراتك وأرباحك وطلابك.</p>
     </div>
-    <div style="display:flex;gap:10px;align-items:center;">
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
       <button class="btn btn-primary btn-sm" onclick="openCreateCourseModal()">＋ إنشاء كورس في المرحلة المحددة</button>
+      <button class="btn btn-line btn-sm" onclick="openTeacherProfileModal()" style="font-weight:700;">⚙️ تعديل بيانات المدرس</button>
     </div>
   </div>
 
@@ -104,7 +105,7 @@
   </div>
 
   <!-- Stage-Scoped Analytics Stat Cards -->
-  <div id="analyticsCards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:24px;">
+  <div id="analyticsCards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:24px;">
     <div class="card" style="padding:16px;text-align:center;border-radius:16px;background:linear-gradient(135deg,rgba(16,185,129,0.08),rgba(16,185,129,0.02));border:1px solid rgba(16,185,129,0.3);">
       <div style="font-size:1.6rem;font-weight:700;color:#10b981;" id="statTeacherWallet">—</div>
       <div style="font-size:0.82rem;color:var(--ink-dim);margin-top:2px;font-weight:600;">💰 رصيد محفظتك المجمّع</div>
@@ -120,10 +121,6 @@
     <div class="card" style="padding:16px;text-align:center;border-radius:16px;">
       <div style="font-size:1.6rem;font-weight:700;color:#22c55e;" id="statRevenue">—</div>
       <div style="font-size:0.82rem;color:var(--ink-dim);margin-top:2px;">إيراد المرحلة (ج.م)</div>
-    </div>
-    <div class="card" style="padding:16px;text-align:center;border-radius:16px;">
-      <div style="font-size:1.6rem;font-weight:700;color:#f59e0b;" id="statPoints">—</div>
-      <div style="font-size:0.82rem;color:var(--ink-dim);margin-top:2px;">نقاط مكتسبة</div>
     </div>
     <!-- Commission % Card -->
     <div class="card" style="padding:16px;text-align:center;border-radius:16px;background:linear-gradient(135deg,rgba(99,102,241,0.1),rgba(99,102,241,0.03));border:1px solid rgba(99,102,241,0.25);">
@@ -230,6 +227,11 @@
           <option value="BACCALAUREATE_3">الصف الثالث باكلوريا (3 باكلوريا)</option>
         </select>
       </div>
+      <div class="form-group" style="margin-bottom:12px;">
+        <label class="form-label">💵 سعر الكورس بالكامل بالجنيه (EGP)</label>
+        <input type="number" step="0.5" class="form-control" id="coursePriceInput" min="0" value="0" placeholder="0">
+        <span style="font-size:0.78rem;color:var(--ink-dim);">ضع 0 ليكون الاشتراك في الكورس مجانياً</span>
+      </div>
       <div class="form-group" style="margin-bottom:14px;">
         <label class="form-label">🖼️ رفع صورة غلاف الكورس (اختياري)</label>
         <input type="file" id="courseCoverFile" accept="image/*" class="form-control">
@@ -241,6 +243,102 @@
       <div style="display:flex;gap:10px;justify-content:flex-end;">
         <button type="button" class="btn btn-line btn-sm" onclick="closeCreateCourseModal()">إلغاء</button>
         <button type="submit" class="btn btn-primary btn-sm" id="saveCourseBtn">حفظ الكورس ✓</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Edit Course -->
+<div class="modal-overlay" id="editCourseModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:999;align-items:center;justify-content:center;">
+  <div style="background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius);max-width:540px;width:90%;padding:24px;max-height:90vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <h3 style="margin:0;">✏️ تعديل بيانات الكورس</h3>
+      <button type="button" class="btn btn-line btn-sm" onclick="closeEditCourseModal()">✕</button>
+    </div>
+    <form id="editCourseForm" onsubmit="submitEditCourse(event)">
+      <input type="hidden" id="editCourseId">
+      <div class="form-group" style="margin-bottom:12px;">
+        <label class="form-label">عنوان الكورس / المنهج</label>
+        <input type="text" class="form-control" id="editCourseTitleInput" required>
+      </div>
+      <div class="form-group" style="margin-bottom:12px;">
+        <label class="form-label">المادة الدراسية</label>
+        <input type="text" class="form-control" id="editCourseSubjectInput" required>
+      </div>
+      <div class="form-group" style="margin-bottom:12px;">
+        <label class="form-label">المرحلة الدراسية</label>
+        <select class="form-control" id="editCourseStageSelect">
+          <option value="PREPARATORY">الصف الثالث الإعدادي (3 إعدادي)</option>
+          <option value="SECONDARY_1">الصف الأول الثانوي (1 ثانوي)</option>
+          <option value="SECONDARY_2">الصف الثاني الثانوي (2 ثانوي)</option>
+          <option value="BACCALAUREATE_2">الصف الثاني باكلوريا (2 باكلوريا)</option>
+          <option value="SECONDARY_3">الصف الثالث الثانوي (3 ثانوي)</option>
+          <option value="BACCALAUREATE_3">الصف الثالث باكلوريا (3 باكلوريا)</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin-bottom:12px;">
+        <label class="form-label">💵 سعر الكورس بالجنيه (EGP)</label>
+        <input type="number" step="0.5" class="form-control" id="editCoursePriceInput" min="0" placeholder="0">
+        <span style="font-size:0.78rem;color:var(--ink-dim);">ضع 0 ليكون الاشتراك مجانياً</span>
+      </div>
+      <div class="form-group" style="margin-bottom:14px;">
+        <label class="form-label">🖼️ رفع صورة غلاف جديدة للكورس (اختياري)</label>
+        <input type="file" id="editCourseCoverFile" accept="image/*" class="form-control">
+      </div>
+      <div class="form-group" style="margin-bottom:14px;">
+        <label class="form-label">وصف الكورس</label>
+        <textarea class="form-control" id="editCourseDescInput" rows="2"></textarea>
+      </div>
+      <div class="form-group" style="margin-bottom:18px;display:flex;align-items:center;gap:8px;">
+        <input type="checkbox" id="editCourseIsPublished" style="width:18px;height:18px;">
+        <label for="editCourseIsPublished" style="font-weight:600;font-size:0.9rem;cursor:pointer;">نشر الكورس للطلاب</label>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button type="button" class="btn btn-line btn-sm" onclick="closeEditCourseModal()">إلغاء</button>
+        <button type="submit" class="btn btn-primary btn-sm" id="saveEditCourseBtn">حفظ التعديلات ✓</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Edit Teacher Profile / Settings -->
+<div class="modal-overlay" id="teacherProfileModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:999;align-items:center;justify-content:center;">
+  <div style="background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius);max-width:540px;width:90%;padding:24px;max-height:90vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <h3 style="margin:0;">⚙️ تعديل بيانات وملف المدرس</h3>
+      <button type="button" class="btn btn-line btn-sm" onclick="closeTeacherProfileModal()">✕</button>
+    </div>
+    <form id="teacherProfileForm" onsubmit="submitTeacherProfile(event)">
+      <div class="form-group" style="margin-bottom:12px;">
+        <label class="form-label">الاسم الكامل / المعروض للطلاب</label>
+        <input type="text" class="form-control" id="profileDisplayNameInput" required placeholder="مثال: أ. محمد أحمد">
+      </div>
+      <div class="form-group" style="margin-bottom:12px;">
+        <label class="form-label">التخصص / المادة الدراسية</label>
+        <input type="text" class="form-control" id="profileSubjectInput" placeholder="مثال: اللغة العربية، الرياضيات...">
+      </div>
+      <div class="form-group" style="margin-bottom:12px;">
+        <label class="form-label">رابط أو مسار الصورة الشخصية (Avatar URL)</label>
+        <input type="text" class="form-control" id="profileAvatarUrlInput" placeholder="https://... أو مسار الصورة">
+      </div>
+      <div class="form-group" style="margin-bottom:14px;">
+        <label class="form-label">نبذة تعريفية عن المدرس (Bio)</label>
+        <textarea class="form-control" id="profileBioInput" rows="3" placeholder="مدرس أول خبير، خبرة 15 عاماً في تدريس..."></textarea>
+      </div>
+      <div class="form-group" style="margin-bottom:18px;">
+        <label class="form-label">المراحل الدراسية المتاحة لبيئة عملك</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;" id="teacherStagesCheckboxGroup">
+          <label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;"><input type="checkbox" value="PREPARATORY" class="profile-stage-chk"> 3 إعدادي</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;"><input type="checkbox" value="SECONDARY_1" class="profile-stage-chk"> 1 ثانوي</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;"><input type="checkbox" value="SECONDARY_2" class="profile-stage-chk"> 2 ثانوي</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;"><input type="checkbox" value="BACCALAUREATE_2" class="profile-stage-chk"> 2 باكلوريا</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;"><input type="checkbox" value="SECONDARY_3" class="profile-stage-chk"> 3 ثانوي</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;"><input type="checkbox" value="BACCALAUREATE_3" class="profile-stage-chk"> 3 باكلوريا</label>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button type="button" class="btn btn-line btn-sm" onclick="closeTeacherProfileModal()">إلغاء</button>
+        <button type="submit" class="btn btn-primary btn-sm" id="saveTeacherProfileBtn">حفظ البيانات والتحديث ✓</button>
       </div>
     </form>
   </div>
@@ -291,15 +389,9 @@
           <input type="text" class="form-control" id="lessonTitleInput" placeholder="مثال: المحاضرة الأولى: شرح القوانين الأساسية" required>
         </div>
         
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:8px;">
-          <div class="form-group">
-            <label class="form-label" style="font-size:0.84rem;">💵 سعر الحصة بالجنيه (EGP)</label>
-            <input type="number" step="0.5" class="form-control" id="lessonPriceInput" value="10" min="0" placeholder="10">
-          </div>
-          <div class="form-group">
-            <label class="form-label" style="font-size:0.84rem;">💎 سعر الحصة بالنقاط</label>
-            <input type="number" class="form-control" id="lessonPointCostInput" value="10" min="0" placeholder="10">
-          </div>
+        <div class="form-group" style="margin-bottom:8px;">
+          <label class="form-label" style="font-size:0.84rem;">💵 سعر الحصة بالجنيه المصري (EGP)</label>
+          <input type="number" step="0.5" class="form-control" id="lessonPriceInput" value="10" min="0" placeholder="10">
         </div>
         <span style="font-size:0.78rem;color:var(--ink-dim);display:block;">ضع 0 لتكون المحاضرة مجانية لجميع طلاب هذه المرحلة.</span>
       </div>
@@ -432,15 +524,9 @@
       </div>
       
       <!-- Pricing Fields -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
-        <div class="form-group">
-          <label class="form-label">💵 سعر المحاضرة بالجنيه (EGP)</label>
-          <input type="number" step="0.5" class="form-control" id="editLessonPriceInput" min="0" required>
-        </div>
-        <div class="form-group">
-          <label class="form-label">💎 سعر المحاضرة بالنقاط</label>
-          <input type="number" class="form-control" id="editLessonPointCostInput" min="0" required>
-        </div>
+      <div class="form-group" style="margin-bottom:12px;">
+        <label class="form-label">💵 سعر المحاضرة بالجنيه (EGP)</label>
+        <input type="number" step="0.5" class="form-control" id="editLessonPriceInput" min="0" required>
       </div>
       <span style="font-size:0.8rem;color:var(--ink-dim);display:block;margin-bottom:12px;">ضع 0 إذا أردت أن تكون المحاضرة مجانية للجميع.</span>
 
@@ -647,6 +733,7 @@
   let currentEditingQuizId = null;
   let currentEditingLessonId = null;
   const cachedLessonsMap = new Map();
+  const cachedCoursesMap = new Map();
 
   const stageTitles = {
     PREPARATORY: 'الصف الثالث الإعدادي (3 إعدادي)',
@@ -799,6 +886,7 @@
       }
 
       container.innerHTML = courses.map(c => {
+        cachedCoursesMap.set(c.id, c);
         const chapters = c.chapters || [];
         return `
           <div class="card" style="padding:22px;border-radius:18px;">
@@ -810,8 +898,9 @@
                 </div>
                 <span class="meta">${stageTitles[c.academicStage]} · ${chapters.length} فصول / وحدات</span>
               </div>
-              <div style="display:flex;gap:8px;">
+              <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
                 <button class="btn btn-primary btn-sm" onclick="openAddChapterModal('${c.id}')">＋ إضافة فصل / وحدة</button>
+                <button class="btn btn-line btn-sm" style="color:var(--primary);" onclick="openEditCourseModal('${c.id}')">✏️ تعديل الكورس</button>
                 <button class="btn btn-line btn-sm" style="color:var(--err);" onclick="deleteCourse('${c.id}')">حذف</button>
               </div>
             </div>
@@ -840,7 +929,7 @@
                           <div class="lesson-item">
                             <div>
                               <b>${lIdx + 1}. ${escapeHtml(l.title)}</b>
-                              <span class="tag tag-warn" style="margin-inline-start:6px;font-weight:700;">💵 ${l.price || 0} ج.م · 💎 ${l.pointCost || 0} نقطة</span>
+                              <span class="tag tag-warn" style="margin-inline-start:6px;font-weight:700;">💵 ${l.price > 0 ? l.price + ' ج.م' : 'مجانية'}</span>
                               ${isDraft ? '<span class="tag" style="margin-inline-start:4px;background:rgba(107,114,128,0.18);color:#6b7280;font-weight:700;">📁 مسودة</span>' : (isScheduled ? '<span class="tag" style="margin-inline-start:4px;background:rgba(245,158,11,0.18);color:#d97706;font-weight:700;">⏰ مجدولة</span>' : '<span class="tag tag-ok" style="margin-inline-start:4px;font-weight:700;">🚀 منشورة</span>')}
                               ${l.pdfUrl ? '<span class="tag" style="margin-inline-start:6px;">📄 PDF</span>' : ''}
                               ${l.videoUrl || l.driveFileId ? '<span class="tag tag-ok" style="margin-inline-start:4px;">🎬 فيديو</span>' : ''}
@@ -1468,6 +1557,7 @@
     const coverFile = document.getElementById('courseCoverFile')?.files[0];
     const stageSelectVal = document.getElementById('courseStageSelect')?.value;
     const academicStage = stageSelectVal || (currentStage !== 'ALL' ? currentStage : 'SECONDARY_1');
+    const price = parseFloat(document.getElementById('coursePriceInput')?.value) || 0;
 
     const btn = document.getElementById('saveCourseBtn');
     btn.disabled = true;
@@ -1489,6 +1579,8 @@
         academicStage,
         description,
         imageUrl,
+        price,
+        pointCost: 0,
       });
       alert('تم إنشاء الكورس بنجاح في هذه المرحلة! ✅');
       closeCreateCourseModal();
@@ -1499,6 +1591,150 @@
     } finally {
       btn.disabled = false;
       btn.textContent = 'حفظ الكورس ✓';
+    }
+  }
+
+  function openEditCourseModal(courseId) {
+    const course = cachedCoursesMap.get(courseId);
+    if (!course) {
+      alert('لم يتم العثور على بيانات الكورس');
+      return;
+    }
+    document.getElementById('editCourseId').value = course.id;
+    document.getElementById('editCourseTitleInput').value = course.title || '';
+    document.getElementById('editCourseSubjectInput').value = course.subject || '';
+    document.getElementById('editCourseStageSelect').value = course.academicStage || 'SECONDARY_1';
+    document.getElementById('editCoursePriceInput').value = (course.price !== undefined && course.price !== null) ? course.price : 0;
+    document.getElementById('editCourseDescInput').value = course.description || '';
+    document.getElementById('editCourseIsPublished').checked = course.isPublished !== false;
+    document.getElementById('editCourseModal').style.display = 'flex';
+  }
+
+  function closeEditCourseModal() {
+    document.getElementById('editCourseModal').style.display = 'none';
+  }
+
+  async function submitEditCourse(e) {
+    e.preventDefault();
+    const courseId = document.getElementById('editCourseId').value;
+    const title = document.getElementById('editCourseTitleInput').value.trim();
+    const subject = document.getElementById('editCourseSubjectInput').value.trim();
+    const academicStage = document.getElementById('editCourseStageSelect').value;
+    const price = parseFloat(document.getElementById('editCoursePriceInput').value) || 0;
+    const description = document.getElementById('editCourseDescInput').value.trim();
+    const isPublished = document.getElementById('editCourseIsPublished').checked;
+    const coverFile = document.getElementById('editCourseCoverFile')?.files[0];
+
+    const btn = document.getElementById('saveEditCourseBtn');
+    btn.disabled = true;
+    btn.textContent = 'جارٍ الحفظ...';
+
+    let imageUrl = undefined;
+    if (coverFile) {
+      imageUrl = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (ev) => resolve(ev.target.result);
+        reader.readAsDataURL(coverFile);
+      });
+    }
+
+    try {
+      await window.KhatwaAPI.teacher.updateCourse(courseId, {
+        title,
+        subject,
+        academicStage,
+        price,
+        pointCost: 0,
+        description,
+        isPublished,
+        ...(imageUrl && { imageUrl }),
+      });
+      alert('تم تحديث بيانات الكورس بنجاح! ✅');
+      closeEditCourseModal();
+      await refreshWorkspace();
+    } catch (err) {
+      alert(err.message || 'حدث خطأ أثناء تحديث بيانات الكورس');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'حفظ التعديلات ✓';
+    }
+  }
+
+  async function openTeacherProfileModal() {
+    try {
+      const profile = await window.KhatwaAPI.teacher.getProfile();
+      const user = window.KhatwaAPI.getUser() || {};
+      document.getElementById('profileDisplayNameInput').value = profile.displayName || user.name || user.username || '';
+      document.getElementById('profileSubjectInput').value = profile.subject || '';
+      document.getElementById('profileAvatarUrlInput').value = profile.avatarUrl || '';
+      document.getElementById('profileBioInput').value = profile.bio || '';
+
+      const stages = (profile.academicStages || '').split(',').map(s => s.trim()).filter(Boolean);
+      document.querySelectorAll('.profile-stage-chk').forEach(chk => {
+        chk.checked = stages.includes(chk.value);
+      });
+      document.getElementById('teacherProfileModal').style.display = 'flex';
+    } catch (err) {
+      alert('تعذر تحميل بيانات ملف المدرس: ' + (err.message || ''));
+    }
+  }
+
+  function closeTeacherProfileModal() {
+    document.getElementById('teacherProfileModal').style.display = 'none';
+  }
+
+  async function submitTeacherProfile(e) {
+    e.preventDefault();
+    const displayName = document.getElementById('profileDisplayNameInput').value.trim();
+    const subject = document.getElementById('profileSubjectInput').value.trim();
+    const avatarUrl = document.getElementById('profileAvatarUrlInput').value.trim();
+    const bio = document.getElementById('profileBioInput').value.trim();
+
+    const selectedStages = [];
+    document.querySelectorAll('.profile-stage-chk:checked').forEach(chk => {
+      selectedStages.push(chk.value);
+    });
+
+    const btn = document.getElementById('saveTeacherProfileBtn');
+    btn.disabled = true;
+    btn.textContent = 'جارٍ الحفظ والتحديث...';
+
+    try {
+      await window.KhatwaAPI.teacher.updateProfile({
+        displayName,
+        subject,
+        avatarUrl,
+        bio,
+        academicStages: selectedStages.join(','),
+      });
+
+      // Update cached user
+      const currentUser = window.KhatwaAPI.getUser() || {};
+      currentUser.name = displayName;
+      if (currentUser.teacherProfile) {
+        currentUser.teacherProfile.displayName = displayName;
+        currentUser.teacherProfile.subject = subject;
+        currentUser.teacherProfile.avatarUrl = avatarUrl;
+        currentUser.teacherProfile.bio = bio;
+        currentUser.teacherProfile.academicStages = selectedStages.join(',');
+      }
+      window.KhatwaAPI.setUser(currentUser);
+
+      const greetEl = document.getElementById('teacherGreeting');
+      if (greetEl) greetEl.textContent = `أهلاً بك، ${displayName}`;
+      const navNameEl = document.getElementById('navName');
+      if (navNameEl) navNameEl.textContent = displayName;
+      const navAvatarEl = document.getElementById('navAvatar');
+      if (navAvatarEl) navAvatarEl.textContent = displayName.charAt(0);
+
+      alert('تم تحديث بيانات ملف المدرس بنجاح! ✅');
+      closeTeacherProfileModal();
+      await refreshWorkspace();
+    } catch (err) {
+      alert(err.message || 'فشل حفظ بيانات المدرس');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'حفظ البيانات والتحديث ✓';
     }
   }
 
@@ -1652,7 +1888,7 @@
     const chapterId = document.getElementById('lessonChapterId').value;
     const title = document.getElementById('lessonTitleInput').value.trim();
     const price = parseFloat(document.getElementById('lessonPriceInput').value) || 0;
-    const pointCost = parseInt(document.getElementById('lessonPointCostInput').value) || 0;
+    const pointCost = 0;
     const description = document.getElementById('lessonDescInput').value.trim();
     const pdfFile = document.getElementById('lessonPdfFile')?.files[0];
 
@@ -1833,7 +2069,8 @@
     document.getElementById('editLessonId').value = lesson.id;
     document.getElementById('editLessonTitleInput').value = lesson.title || '';
     document.getElementById('editLessonPriceInput').value = (lesson.price !== undefined && lesson.price !== null) ? lesson.price : 10;
-    document.getElementById('editLessonPointCostInput').value = (lesson.pointCost !== undefined && lesson.pointCost !== null) ? lesson.pointCost : 10;
+    const pointCostEl = document.getElementById('editLessonPointCostInput');
+    if (pointCostEl) pointCostEl.value = 0;
     document.getElementById('editLessonVideoUrlInput').value = lesson.videoUrl || '';
     document.getElementById('editLessonPdfUrlInput').value = lesson.pdfUrl || '';
     document.getElementById('editLessonDescInput').value = lesson.description || '';
@@ -1851,7 +2088,7 @@
     const id = document.getElementById('editLessonId').value;
     const title = document.getElementById('editLessonTitleInput').value.trim();
     const price = parseFloat(document.getElementById('editLessonPriceInput').value) || 0;
-    const pointCost = parseInt(document.getElementById('editLessonPointCostInput').value) || 0;
+    const pointCost = 0;
     const videoUrl = document.getElementById('editLessonVideoUrlInput').value.trim() || null;
     const pdfUrl = document.getElementById('editLessonPdfUrlInput').value.trim() || null;
     const description = document.getElementById('editLessonDescInput').value.trim() || null;

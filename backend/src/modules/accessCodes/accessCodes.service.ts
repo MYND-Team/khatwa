@@ -145,27 +145,28 @@ export async function redeemAccessCode(rawCode: string, studentId: string) {
       throw BadRequestError('This access code has already been redeemed', 'CODE_ALREADY_REDEEMED');
     }
 
-    // 6. Credit points to student balance
+    // 6. Credit wallet balance (EGP) to student
+    const amountEGP = Number(accessCode.points) || 0;
     const updatedStudent = await tx.user.update({
       where: { id: studentId },
       data: {
-        pointsBalance: { increment: accessCode.points },
+        walletBalance: { increment: amountEGP },
       },
       select: {
         id: true,
         username: true,
-        pointsBalance: true,
+        walletBalance: true,
       },
     });
 
-    // 7. Create audit transaction record
-    await tx.pointsTransaction.create({
+    // 7. Create audit wallet transaction record
+    await tx.walletTransaction.create({
       data: {
         studentId,
         type: 'CREDIT',
-        amount: accessCode.points,
-        reason: `Redeemed access code (ID: ${accessCode.id})`,
-        relatedCodeId: accessCode.id,
+        amount: amountEGP,
+        balanceAfter: updatedStudent.walletBalance,
+        reason: `شحن رصيد بكارت شحن (كود: ${accessCode.code || accessCode.id})`,
         actorId: studentId,
       },
     });
@@ -173,8 +174,9 @@ export async function redeemAccessCode(rawCode: string, studentId: string) {
     const redeemedAt = new Date();
 
     return {
-      pointsAdded: accessCode.points,
-      newBalance: updatedStudent.pointsBalance,
+      amountAdded: amountEGP,
+      pointsAdded: amountEGP,
+      newBalance: updatedStudent.walletBalance,
       redeemedAt,
     };
   });

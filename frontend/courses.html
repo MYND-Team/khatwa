@@ -61,7 +61,7 @@
         <p class="page-sub" style="margin:4px 0 0;">اختر أستاذ المادة وتصفح الفصول والمحاضرات الدراسية المعتمدة.</p>
       </div>
       <div id="studentPointsBadgeWrap">
-        <span class="points-tag" id="studentPointsTag">رصيدك: 0 نقطة</span>
+        <span class="points-tag" id="studentPointsTag">رصيد المحفظة: 0 ج.م</span>
       </div>
     </div>
 
@@ -194,7 +194,7 @@
     if (user) {
       document.getElementById('navName').textContent = user.name || user.username;
       document.getElementById('navAvatar').textContent = (user.name || user.username || 'ط').charAt(0);
-      document.getElementById('studentPointsTag').textContent = `رصيدك: ${user.pointsBalance || 0} نقطة`;
+      document.getElementById('studentPointsTag').textContent = `رصيد المحفظة: ${user.walletBalance || 0} ج.م`;
     }
     window.KhatwaAPI.syncNav();
 
@@ -335,22 +335,13 @@
 
   function renderEnrolledCourses() {
     const grid = document.getElementById('enrolledCoursesGrid');
-    let list = (enrolledCoursesList || []).filter(e => !!(e.course || e));
-
-    if (currentUser && currentUser.role === 'STUDENT') {
-      if (currentStageFilter && currentStageFilter !== 'ALL_SELECTED') {
-        list = list.filter(e => {
-          const c = e.course || e;
-          return !c.academicStage || c.academicStage === currentStageFilter;
-        });
-      }
-    }
+    const list = (enrolledCoursesList || []).filter(e => !!(e.course || e));
 
     if (list.length === 0) {
       grid.innerHTML = `
         <div style="grid-column:1/-1;text-align:center;padding:50px;background:var(--bg-card);border-radius:18px;border:1px solid var(--line-soft);">
           <div style="font-size:3rem;margin-bottom:10px;">📚</div>
-          <h3>${enrolledCoursesList.length === 0 ? 'لم تشترك في أي كورس بعد' : 'لا توجد كورسات مشتركة في هذه المرحلة'}</h3>
+          <h3>${enrolledCoursesList.length === 0 ? 'لم تشترك في أي كورس بعد' : 'لا توجد كورسات مشتركة'}</h3>
           <p style="color:var(--ink-dim);margin:6px 0 16px;">تصفح كروت المعلمين أو الكورسات المتاحة واشترك لمتابعة دروسك.</p>
           <button class="btn btn-primary btn-sm" onclick="switchTab('panel-teachers', document.getElementById('tabTeachersBtn'))">تصفح المعلمين المعتمدين</button>
         </div>
@@ -432,7 +423,7 @@
 
       const priceBadge = (c.price > 0)
         ? `<span style="font-weight:700;color:#22c55e;">💵 ${c.price} ج.م</span>`
-        : (c.pointCost > 0 ? `<span style="font-weight:700;color:var(--accent);">${c.pointCost} نقطة</span>` : '<span style="font-weight:700;color:var(--primary);">محاضرات بالدرس</span>');
+        : '<span style="font-weight:700;color:var(--primary);">اشتراك مجاني</span>';
 
       return `
         <div class="card" style="padding:20px;border-radius:18px;">
@@ -451,7 +442,7 @@
             ${isEnrolled ? `
               <span class="tag tag-ok" style="align-self:center;">✓ مشترك</span>
             ` : `
-              <button class="btn btn-primary btn-sm" onclick="enrollInCourse('${c.id}', '${escapeHtml(c.title)}', ${c.pointCost || 0})">اشتراك ＋</button>
+              <button class="btn btn-primary btn-sm" onclick="enrollInCourse('${c.id}', '${escapeHtml(c.title)}', ${c.price || 0})">اشتراك ＋</button>
             `}
           </div>
         </div>
@@ -541,7 +532,7 @@
       const isEnrolled = enrolledCoursesList.some(e => (e.courseId === c.id || e.id === c.id || e.course?.id === c.id));
       const priceBadge = (c.price > 0)
         ? `<b style="color:#22c55e;">💵 ${c.price} ج.م</b>`
-        : (c.pointCost > 0 ? `<b style="color:var(--accent);">${c.pointCost} نقطة</b>` : '<b style="color:var(--primary);">مجاني / بالدرس</b>');
+        : '<b style="color:var(--primary);">اشتراك مجاني</b>';
       const thumb = c.imageUrl
         ? `<img src="${c.imageUrl}" class="sub-course-thumb" alt="${escapeHtml(c.title)}">`
         : `<div class="sub-course-thumb" style="display:flex;align-items:center;justify-content:center;font-size:1.4rem;">📖</div>`;
@@ -566,7 +557,7 @@
             ${isEnrolled ? `
               <span class="tag tag-ok">✓ مشترك بالفعل</span>
             ` : `
-              <button class="btn btn-primary btn-sm" onclick="enrollInCourse('${c.id}', '${escapeHtml(c.title)}', ${c.pointCost || 0})">اشتراك ＋</button>
+              <button class="btn btn-primary btn-sm" onclick="enrollInCourse('${c.id}', '${escapeHtml(c.title)}', ${c.price || 0})">اشتراك ＋</button>
             `}
           </div>
         </div>
@@ -578,7 +569,7 @@
     document.getElementById('teacherProfileModal').style.display = 'none';
   }
 
-  async function enrollInCourse(courseId, title, pointCost) {
+  async function enrollInCourse(courseId, title, price = 0) {
     const user = window.KhatwaAPI.getUser();
     const token = window.KhatwaAPI.getToken();
     if (!user || !token) {
@@ -587,13 +578,13 @@
       return;
     }
 
-    if (pointCost > 0 && (user.pointsBalance || 0) < pointCost) {
-      alert(`رصيد نقاطك (${user.pointsBalance || 0}) غير كافٍ للاشتراك (${pointCost} نقطة). يرجى شحن النقاط أولاً.`);
+    if (price > 0 && (user.walletBalance || 0) < price) {
+      alert(`رصيد محفظتك (${user.walletBalance || 0} ج.م) غير كافٍ للاشتراك (${price} ج.م). يرجى شحن رصيد المحفظة أولاً.`);
       window.location.href = 'request-points.html';
       return;
     }
 
-    if (!confirm(`هل ترغب في الاشتراك بكورس: "${title}"؟`)) return;
+    if (!confirm(`هل ترغب في الاشتراك بكورس: "${title}" مقابل ${price > 0 ? price + ' ج.م' : 'مجانياً'}؟`)) return;
 
     try {
       await window.KhatwaAPI.student.enrollCourse(courseId);
@@ -603,7 +594,7 @@
         const profile = await window.KhatwaAPI.student.getProfile();
         if (profile) {
           window.KhatwaAPI.setUser({ ...user, ...profile });
-          document.getElementById('studentPointsTag').textContent = `رصيدك: ${profile.pointsBalance || 0} نقطة`;
+          document.getElementById('studentPointsTag').textContent = `رصيد المحفظة: ${profile.walletBalance || 0} ج.م`;
         }
       } catch (_) {}
       await Promise.all([loadEnrolledCourses(), loadAllCourses()]);
