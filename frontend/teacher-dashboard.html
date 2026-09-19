@@ -221,7 +221,7 @@
       </div>
       <div class="form-group" style="margin-bottom:12px;">
         <label class="form-label">المرحلة الدراسية</label>
-        <select class="form-control" id="courseStageSelect" style="pointer-events:none;background:var(--bg-raised,#f8fafc);color:var(--ink);cursor:default;opacity:1;">
+        <select class="form-control" id="courseStageSelect">
           <option value="PREPARATORY">الصف الثالث الإعدادي (3 إعدادي)</option>
           <option value="SECONDARY_1">الصف الأول الثانوي (1 ثانوي)</option>
           <option value="SECONDARY_2">الصف الثاني الثانوي (2 ثانوي)</option>
@@ -688,11 +688,13 @@
     document.getElementById('navAvatar').textContent = (user.name || user.username || 'م').charAt(0);
     window.KhatwaAPI.syncNav();
 
-    // Set active workspace button in UI
-    document.querySelectorAll('.stage-folder-tab').forEach(btn => {
-      if (btn.getAttribute('onclick')?.includes(currentStage)) {
-        document.querySelectorAll('.stage-folder-tab').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
+    // Re-select the saved workspace tab
+    document.querySelectorAll('.stage-folder-tab').forEach(b => {
+      const onclickAttr = b.getAttribute('onclick') || '';
+      if (onclickAttr.includes(`'${currentStage}'`)) {
+        b.classList.add('active');
+      } else {
+        b.classList.remove('active');
       }
     });
 
@@ -703,20 +705,34 @@
     currentStage = stage;
     window.KhatwaAPI.teacher.setStoredWorkspace(stage);
     document.querySelectorAll('.stage-folder-tab').forEach(b => b.classList.remove('active'));
-    tabBtn.classList.add('active');
+    if (tabBtn) tabBtn.classList.add('active');
     await refreshWorkspace();
+
+    const studentsView = document.getElementById('view-students');
+    if (studentsView && studentsView.style.display !== 'none') {
+      loadStageStudents();
+    }
+    const revenueView = document.getElementById('view-revenue');
+    if (revenueView && revenueView.style.display !== 'none') {
+      loadStageRevenue();
+    }
   }
 
   async function refreshWorkspace() {
-    document.getElementById('activeWorkspaceLabel').textContent = stageTitles[currentStage];
-    document.getElementById('currentStageTitle').textContent = `📁 كورسات ${stageTitles[currentStage]}`;
-    document.getElementById('courseStageSelect').value = currentStage;
+    if (document.getElementById('activeWorkspaceLabel')) {
+      document.getElementById('activeWorkspaceLabel').textContent = stageTitles[currentStage] || 'الصف الأول الثانوي';
+    }
+    if (document.getElementById('currentStageTitle')) {
+      document.getElementById('currentStageTitle').textContent = `📁 كورسات ${stageTitles[currentStage] || ''}`;
+    }
+    const stageSel = document.getElementById('courseStageSelect');
+    if (stageSel && currentStage !== 'ALL') {
+      stageSel.value = currentStage;
+    }
 
     await Promise.all([
       loadStageOverview(),
       loadStageCourses(),
-      loadStageStudents(),
-      loadStageRevenue(),
     ]);
   }
 
@@ -870,6 +886,8 @@
     } catch (e) {
       showToast('❌ فشل حذف المحاضرة: ' + (e.message || 'خطأ غير معروف'), 'error');
     }
+  }
+
   async function quickPublishLesson(lessonId) {
     if (!confirm('هل ترغب في نشر هذه المحاضرة فوراً لتصبح متاحة للطلاب الآن؟')) return;
     try {
@@ -1345,6 +1363,10 @@
     document.querySelectorAll('.tab-row .tab').forEach(b => b.classList.remove('active'));
     document.getElementById(viewId).style.display = 'block';
     btn.classList.add('active');
+
+    if (viewId === 'view-students') loadStageStudents();
+    if (viewId === 'view-revenue') loadStageRevenue();
+    if (viewId === 'view-courses') loadStageCourses();
   }
 
   // ─── Teacher Preview Modal (Requirement 5) ────────────────────────────────
@@ -1428,7 +1450,10 @@
 
   // ─── Course Modal ──────────────────────────────────────────────────────────
   function openCreateCourseModal() {
-    document.getElementById('courseStageSelect').value = currentStage;
+    const stageSel = document.getElementById('courseStageSelect');
+    if (stageSel) {
+      stageSel.value = (currentStage && currentStage !== 'ALL') ? currentStage : 'SECONDARY_1';
+    }
     document.getElementById('createCourseModal').style.display = 'flex';
   }
   function closeCreateCourseModal() {
@@ -1441,6 +1466,8 @@
     const subject = document.getElementById('courseSubjectInput').value.trim();
     const description = document.getElementById('courseDescInput').value.trim();
     const coverFile = document.getElementById('courseCoverFile')?.files[0];
+    const stageSelectVal = document.getElementById('courseStageSelect')?.value;
+    const academicStage = stageSelectVal || (currentStage !== 'ALL' ? currentStage : 'SECONDARY_1');
 
     const btn = document.getElementById('saveCourseBtn');
     btn.disabled = true;
@@ -1459,7 +1486,7 @@
       await window.KhatwaAPI.teacher.createCourse({
         title,
         subject,
-        academicStage: currentStage,
+        academicStage,
         description,
         imageUrl,
       });

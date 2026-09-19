@@ -83,6 +83,7 @@ export async function purchaseLesson({
       }
 
       pointsPaid = requiredPoints;
+      pricePaid = lesson.price > 0 ? lesson.price : requiredPoints;
 
       // Audit Points Transaction for Student
       await tx.pointsTransaction.create({

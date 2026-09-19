@@ -157,30 +157,8 @@
         <span style="font-size:0.85rem;color:var(--ink-dim);" id="subTotalCountBadge">0 محاضرة</span>
       </div>
 
-      <!-- Stage Filtering Tabs -->
-      <div class="stage-filter-tabs" id="stageTabsBar">
-        <button type="button" class="stage-filter-tab active" data-stage="" onclick="selectStageTab('', this)">
-          <span>🏫 جميع المراحل</span>
-        </button>
-        <button type="button" class="stage-filter-tab" data-stage="PREPARATORY" onclick="selectStageTab('PREPARATORY', this)">
-          <span>🎒 3 إعدادي</span>
-        </button>
-        <button type="button" class="stage-filter-tab" data-stage="SECONDARY_1" onclick="selectStageTab('SECONDARY_1', this)">
-          <span>📘 1 ثانوي</span>
-        </button>
-        <button type="button" class="stage-filter-tab" data-stage="SECONDARY_2" onclick="selectStageTab('SECONDARY_2', this)">
-          <span>📙 2 ثانوي</span>
-        </button>
-        <button type="button" class="stage-filter-tab" data-stage="BACCALAUREATE_2" onclick="selectStageTab('BACCALAUREATE_2', this)">
-          <span>🎓 2 باكلوريا</span>
-        </button>
-        <button type="button" class="stage-filter-tab" data-stage="SECONDARY_3" onclick="selectStageTab('SECONDARY_3', this)">
-          <span>📕 3 ثانوي</span>
-        </button>
-        <button type="button" class="stage-filter-tab" data-stage="BACCALAUREATE_3" onclick="selectStageTab('BACCALAUREATE_3', this)">
-          <span>🎓 3 باكلوريا</span>
-        </button>
-      </div>
+      <!-- Hidden stage container for compatibility -->
+      <div id="stageTabsBar" style="display:none;"></div>
 
       <div id="subscriptionsContainer">
         <div style="text-align:center;padding:40px;color:var(--ink-dim);">جارٍ جلب اشتراكاتك...</div>
@@ -251,18 +229,7 @@
       document.getElementById('statPoints').textContent = user.pointsBalance;
     }
 
-    // Default to the student's chosen academic stage
-    const preferredStage = user.studentProfile?.academicStage || localStorage.getItem('khatwa_active_stage') || '';
-    currentStageFilter = preferredStage;
-
-    // Activate the matching tab in UI
-    document.querySelectorAll('.stage-filter-tab').forEach(b => {
-      if ((currentStageFilter && b.dataset.stage === currentStageFilter) || (!currentStageFilter && !b.dataset.stage)) {
-        b.classList.add('active');
-      } else {
-        b.classList.remove('active');
-      }
-    });
+    currentStageFilter = '';
 
     // Fetch Stats & Subscriptions
     try {

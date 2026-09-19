@@ -752,13 +752,14 @@
             <th>المراحل الدراسية</th>
             <th>الكورسات المرفوعة</th>
             <th>نسبة أرباح المدرس (%)</th>
+            <th>رصيد الأرباح (المحفظة) 💰</th>
             <th>التقييم</th>
             <th>الحالة</th>
             <th>الإجراءات</th>
           </tr>
         </thead>
         <tbody id="teachersTableBody">
-          <tr><td colspan="8" style="text-align:center;color:var(--ink-dim);padding:30px;">جارٍ تحميل قائمة المدرسين...</td></tr>
+          <tr><td colspan="9" style="text-align:center;color:var(--ink-dim);padding:30px;">جارٍ تحميل قائمة المدرسين...</td></tr>
         </tbody>
       </table>
     </div>
@@ -1618,9 +1619,13 @@
       const teacherMap = new Map();
 
       payments.forEach(p => {
-        const amt = Number(p.amount || 0);
-        const tEarn = Number(p.teacherEarning || 0);
-        const pFee = Number(p.platformFee !== undefined ? p.platformFee : (amt > tEarn ? amt - tEarn : 0));
+        let amt = Number(p.amount || 0);
+        let tEarn = Number(p.teacherEarning || 0);
+        if (amt === 0 && Number(p.pointsUsed || 0) > 0) {
+          amt = Number(p.pointsUsed);
+          if (tEarn === 0) tEarn = Math.round(amt * 0.8);
+        }
+        const pFee = Number(p.platformFee !== undefined && p.platformFee > 0 ? p.platformFee : (amt > tEarn ? amt - tEarn : 0));
 
         totalAmount += amt;
         totalTeacherShare += tEarn;
@@ -1713,9 +1718,13 @@
 
       // 4. Render Transaction Rows
       tbody.innerHTML = payments.map(p => {
-        const amt = Number(p.amount || 0);
-        const tEarn = Number(p.teacherEarning || 0);
-        const pFee = Number(p.platformFee !== undefined ? p.platformFee : (amt > tEarn ? amt - tEarn : 0));
+        let amt = Number(p.amount || 0);
+        let tEarn = Number(p.teacherEarning || 0);
+        if (amt === 0 && Number(p.pointsUsed || 0) > 0) {
+          amt = Number(p.pointsUsed);
+          if (tEarn === 0) tEarn = Math.round(amt * 0.8);
+        }
+        const pFee = Number(p.platformFee !== undefined && p.platformFee > 0 ? p.platformFee : (amt > tEarn ? amt - tEarn : 0));
         const teacherPct = amt > 0 ? Math.round((tEarn / amt) * 100) : 100;
 
         return `
@@ -1966,6 +1975,10 @@
         const commissionLabel = profile.commissionPct != null
           ? `<b style="color:var(--primary);font-size:0.95rem;">${profile.commissionPct}%</b>`
           : `<span style="color:var(--ink-dim);font-size:0.82rem;">الافتراضي للمنصة</span>`;
+        const walletBal = Number(t.walletBalance || 0);
+        const settleBtn = walletBal > 0
+          ? `<button type="button" class="btn btn-sm" style="background:rgba(22,163,74,0.12);color:#16a34a;border:1px solid rgba(22,163,74,0.3);font-size:0.8rem;padding:4px 8px;font-weight:700;" onclick="openSettleTeacherModal('${t.id}', '${(profile.displayName || t.username).replace(/'/g, "\\'")}', ${walletBal})" title="تسوية وتسليم أرباح المدرس">💵 تسوية المستحقات</button>`
+          : `<button type="button" class="btn btn-sm" style="opacity:0.5;cursor:default;font-size:0.8rem;padding:4px 8px;" disabled title="لا توجد مستحقات معلقة">تمت التسوية ✓</button>`;
 
         return `
           <tr>
@@ -1984,10 +1997,12 @@
                 <button type="button" class="btn btn-text btn-sm" onclick="editTeacherCommission('${t.id}', '${profile.commissionPct ?? ''}', '${(profile.displayName || t.username).replace(/'/g, "\\'")}', this)" title="تعديل نسبة أرباح المدرس" style="padding:2px 6px;font-size:0.8rem;">✏️</button>
               </div>
             </td>
+            <td><b style="color:#16a34a;font-size:1.02rem;">${walletBal.toLocaleString('ar-EG')} ج.م</b></td>
             <td>⭐ ${(profile.rating || 5.0).toFixed(1)}</td>
             <td>${statusBadge}</td>
             <td>
-              <div style="display:flex;gap:6px;align-items:center;">
+              <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+                ${settleBtn}
                 <button class="btn btn-line btn-sm" onclick="toggleTeacherActive('${t.id}')">
                   ${t.isActive !== false ? 'تعطيل' : 'تفعيل'}
                 </button>
@@ -2226,6 +2241,99 @@
       saveBtn.disabled = false;
       saveBtn.textContent = '💾 حفظ النسبة';
       alert(err.message || 'فشل تحديث نسبة الأرباح');
+    }
+  }
+
+  // ─── Teacher Payout / Settlement Modal ──────────────────────────────────────
+  let _settleTeacherId = null;
+
+  function _buildSettleModal() {
+    if (document.getElementById('settleTeacherModalOverlay')) return;
+    const html = `
+      <div id="settleTeacherModalOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9999;align-items:center;justify-content:center;backdrop-filter:blur(3px);">
+        <div style="background:var(--bg-card,#1e293b);border:1px solid var(--line,rgba(255,255,255,0.1));border-radius:22px;max-width:480px;width:92%;padding:26px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);color:var(--ink,#f8fafc);">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <h3 style="margin:0;font-size:1.15rem;display:flex;align-items:center;gap:8px;">
+              <span>💵 تسوية وتسليم أرباح المدرس</span>
+            </h3>
+            <button class="btn btn-line btn-sm" onclick="closeSettleTeacherModal()">✕</button>
+          </div>
+          
+          <div style="background:linear-gradient(135deg,rgba(34,197,94,0.12),rgba(34,197,94,0.03));border:1px solid rgba(34,197,94,0.3);border-radius:14px;padding:16px;margin-bottom:18px;">
+            <div style="font-size:0.82rem;color:var(--ink-dim,#94a3b8);">المدرس المستحق:</div>
+            <b style="font-size:1.15rem;display:block;margin:4px 0 8px;" id="settleModalTeacherName">—</b>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-size:0.85rem;color:var(--ink-dim,#94a3b8);">رصيد الأرباح الحالي:</span>
+              <b style="font-size:1.35rem;color:#22c55e;" id="settleModalBalance">0 ج.م</b>
+            </div>
+          </div>
+
+          <form id="settleTeacherForm" onsubmit="_submitTeacherSettlement(event)">
+            <div class="form-group" style="margin-bottom:14px;">
+              <label class="form-label" style="display:block;margin-bottom:6px;font-weight:600;">المبلغ المراد تسليمه وخصمه من المحفظة (ج.م)</label>
+              <input type="number" step="0.5" id="settleAmountInput" class="form-control" required min="1" style="font-size:1.1rem;font-weight:700;width:100%;padding:10px 14px;border-radius:10px;">
+              <span style="font-size:0.78rem;color:var(--ink-dim,#94a3b8);display:block;margin-top:4px;">يمكن تسليم كامل الرصيد أو جزء منه (كدفعة تحت الحساب).</span>
+            </div>
+            
+            <div class="form-group" style="margin-bottom:18px;">
+              <label class="form-label" style="display:block;margin-bottom:6px;font-weight:600;">ملاحظات التسوية / طريقة التحويل (اختياري)</label>
+              <input type="text" id="settleNotesInput" class="form-control" placeholder="مثال: تحويل فودافون كاش، تسليم نقدي، إنستاباي..." style="width:100%;padding:10px 14px;border-radius:10px;">
+            </div>
+
+            <div style="display:flex;gap:10px;justify-content:flex-end;">
+              <button type="button" class="btn btn-line" onclick="closeSettleTeacherModal()">إلغاء</button>
+              <button type="submit" class="btn btn-primary" id="settleSubmitBtn" style="background:#16a34a;border-color:#16a34a;color:#fff;">تأكيد تسليم المبلغ ✓</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', html);
+  }
+
+  function openSettleTeacherModal(id, displayName, balance) {
+    _buildSettleModal();
+    _settleTeacherId = id;
+    document.getElementById('settleModalTeacherName').textContent = displayName || 'المدرس';
+    document.getElementById('settleModalBalance').textContent = Number(balance || 0).toLocaleString('ar-EG') + ' ج.م';
+    document.getElementById('settleAmountInput').value = balance || '';
+    document.getElementById('settleAmountInput').max = balance || 999999;
+    document.getElementById('settleNotesInput').value = '';
+    const modal = document.getElementById('settleTeacherModalOverlay');
+    if (modal) modal.style.display = 'flex';
+  }
+
+  function closeSettleTeacherModal() {
+    const modal = document.getElementById('settleTeacherModalOverlay');
+    if (modal) modal.style.display = 'none';
+    _settleTeacherId = null;
+  }
+
+  async function _submitTeacherSettlement(e) {
+    e.preventDefault();
+    if (!_settleTeacherId) return;
+    const amount = parseFloat(document.getElementById('settleAmountInput').value);
+    const notes = document.getElementById('settleNotesInput').value.trim();
+    if (isNaN(amount) || amount <= 0) {
+      alert('يرجى إدخال مبلغ تسوية صحيح أكبر من صفر');
+      return;
+    }
+
+    const btn = document.getElementById('settleSubmitBtn');
+    btn.disabled = true;
+    btn.textContent = 'جارٍ تسجيل التسوية...';
+
+    try {
+      await window.KhatwaAPI.admin.settleTeacher(_settleTeacherId, amount, notes);
+      alert(`✅ تم تسجيل تسوية وتسليم مبلغ ${amount} ج.م للمدرس بنجاح وتحديث المحفظة.`);
+      closeSettleTeacherModal();
+      await loadTeachers();
+      if (typeof loadAdminPayments === 'function') await loadAdminPayments();
+    } catch (err) {
+      alert(err.message || 'حدث خطأ أثناء تسوية المستحقات');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'تأكيد تسليم المبلغ ✓';
     }
   }
 

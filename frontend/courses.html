@@ -72,15 +72,9 @@
       <button class="tab" id="tabCatalogBtn" onclick="switchTab('panel-catalog', this)">🔍 جميع الكورسات المتاحة</button>
     </div>
 
-    <!-- Academic Stage Filter Folders -->
-    <div style="margin-top:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
-      <div class="stage-folder-tabs" id="stageFolderTabs" style="margin:0;">
-        <!-- Rendered dynamically based on student's selected stages -->
-      </div>
-      <button id="btnCustomizeStages" class="btn btn-line btn-sm" onclick="openCustomizeStagesModal()" style="display:none;align-items:center;gap:6px;font-size:0.85rem;border-radius:12px;">
-        <span>⚙️ تخصيص الصفوف التي تظهر لي</span>
-      </button>
-    </div>
+    <!-- Hidden stage container for compatibility -->
+    <div id="stageFolderTabs" style="display:none;"></div>
+    <button id="btnCustomizeStages" style="display:none;"></button>
 
     <!-- Panel 1: Featured Teachers Cards (Visual Reference Style) -->
     <div class="tab-panel" id="panel-teachers">
@@ -124,34 +118,11 @@
 
     <p style="color:var(--ink-dim);font-size:0.92rem;line-height:1.6;" id="modalTeacherBio">نبذة عن المدرس والخبرات الأكاديمية.</p>
 
-    <!-- Side-by-Side Stages Bar -->
-    <div style="margin-top:20px;border-top:1px solid var(--line-soft);padding-top:16px;">
-      <div style="font-size:0.92rem;font-weight:700;color:var(--ink);margin-bottom:8px;">🏫 المراحل الدراسية للمدرس (اختر المرحلة لعرض كورساتها):</div>
-      <div class="modal-stages-bar" id="modalTeacherStagesBar"></div>
-    </div>
+    <!-- Hidden stage bar for compatibility -->
+    <div id="modalTeacherStagesBar" style="display:none;"></div>
 
     <h3 style="margin:16px 0 14px;" id="modalCoursesHeading">📚 الكورسات والمحاضرات المتاحة:</h3>
     <div id="modalTeacherCoursesList" style="display:flex;flex-direction:column;gap:12px;"></div>
-  </div>
-</div>
-
-<!-- Modal: Customize Displayed Stages for Student -->
-<div class="modal-overlay" id="customizeStagesModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:1000;align-items:center;justify-content:center;">
-  <div style="background:var(--bg-card);border:1px solid var(--line);border-radius:24px;max-width:520px;width:92%;padding:26px;box-shadow:var(--shadow-lg);">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-      <h3 style="margin:0;font-size:1.15rem;">🎯 تحديد الصفوف التي تظهر لك</h3>
-      <button class="btn btn-line btn-sm" onclick="closeCustomizeStagesModal()">✕</button>
-    </div>
-    <p style="font-size:0.88rem;color:var(--ink-dim);margin:0 0 16px;line-height:1.6;">
-      اختر الصفوف الدراسية التي تريد أن تظهر لك في المنصة. سيتم إخفاء أي صفوف أخرى لتسهيل تركيزك.
-    </p>
-    <div id="stagesCheckboxesContainer" style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">
-      <!-- Populated via JavaScript -->
-    </div>
-    <div style="display:flex;justify-content:flex-end;gap:10px;">
-      <button type="button" class="btn btn-line" onclick="closeCustomizeStagesModal()">إلغاء</button>
-      <button type="button" class="btn btn-primary" id="saveCustomStagesBtn" onclick="saveCustomizedStages()">حفظ التفضيلات ✓</button>
-    </div>
   </div>
 </div>
 
@@ -205,96 +176,18 @@
 
   function initStages(userData) {
     currentUser = userData || window.KhatwaAPI.getUser();
-    const tabsContainer = document.getElementById('stageFolderTabs');
-    const customizeBtn = document.getElementById('btnCustomizeStages');
-
     if (currentUser && currentUser.role === 'STUDENT') {
-      // Prefer server-fetched data (from /auth/me) which has full studentProfile
       const rawStages = currentUser.studentProfile?.academicStages || currentUser.studentProfile?.academicStage || currentUser.academicStages || currentUser.academicStage || '';
       studentSelectedStages = rawStages ? rawStages.split(',').map(s => s.trim()).filter(s => STAGE_NAMES[s]) : [];
-      // If no stage set at all, show stage picker instead of defaulting silently
-      if (studentSelectedStages.length === 0) {
-        // Show all stages but highlight that stage should be set
-        studentSelectedStages = Object.keys(STAGE_NAMES);
-      }
-
-      if (customizeBtn) customizeBtn.style.display = 'inline-flex';
-
-      // Ensure currentStageFilter is valid for student
-      if (!currentStageFilter || (currentStageFilter !== 'ALL_SELECTED' && !studentSelectedStages.includes(currentStageFilter))) {
-        currentStageFilter = studentSelectedStages.length > 1 ? 'ALL_SELECTED' : studentSelectedStages[0];
-      }
-
-      let tabsHtml = '';
-      if (studentSelectedStages.length > 1) {
-        tabsHtml += `<button class="stage-folder-tab ${currentStageFilter === 'ALL_SELECTED' ? 'active' : ''}" onclick="filterByStage('ALL_SELECTED', this)">📁 كل صفوفي المختارة (${studentSelectedStages.length})</button>`;
-      }
-
-      studentSelectedStages.forEach(stKey => {
-        const stageObj = ALL_STAGES.find(s => s.key === stKey) || { shortName: stKey };
-        const isActive = (currentStageFilter === stKey) || (studentSelectedStages.length === 1 && currentStageFilter !== 'ALL_SELECTED');
-        tabsHtml += `<button class="stage-folder-tab ${isActive ? 'active' : ''}" onclick="filterByStage('${stKey}', this)">📁 ${escapeHtml(stageObj.shortName)}</button>`;
-      });
-
-      tabsContainer.innerHTML = tabsHtml;
+      currentStageFilter = studentSelectedStages[0] || '';
     } else {
-      // Guest or Teacher/Admin viewing catalog
-      if (customizeBtn) customizeBtn.style.display = 'none';
-      let tabsHtml = `<button class="stage-folder-tab ${currentStageFilter === '' ? 'active' : ''}" onclick="filterByStage('', this)">📁 جميع المراحل</button>`;
-      ALL_STAGES.forEach(st => {
-        tabsHtml += `<button class="stage-folder-tab ${currentStageFilter === st.key ? 'active' : ''}" onclick="filterByStage('${st.key}', this)">📁 ${escapeHtml(st.shortName)}</button>`;
-      });
-      tabsContainer.innerHTML = tabsHtml;
+      currentStageFilter = '';
     }
   }
 
-  function openCustomizeStagesModal() {
-    const modal = document.getElementById('customizeStagesModal');
-    const container = document.getElementById('stagesCheckboxesContainer');
-    
-    container.innerHTML = ALL_STAGES.map(st => {
-      const isChecked = studentSelectedStages.includes(st.key);
-      return `
-        <label style="display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid ${isChecked ? 'var(--primary)' : 'var(--line-soft)'};border-radius:12px;background:${isChecked ? 'rgba(59,130,246,0.06)' : 'var(--bg-raised)'};cursor:pointer;font-weight:600;">
-          <input type="checkbox" name="customStage" value="${st.key}" ${isChecked ? 'checked' : ''} style="width:18px;height:18px;accent-color:var(--primary);">
-          <span>${escapeHtml(st.fullName)}</span>
-        </label>
-      `;
-    }).join('');
-
-    modal.style.display = 'flex';
-  }
-
-  function closeCustomizeStagesModal() {
-    document.getElementById('customizeStagesModal').style.display = 'none';
-  }
-
-  async function saveCustomizedStages() {
-    const checked = Array.from(document.querySelectorAll('input[name="customStage"]:checked')).map(cb => cb.value);
-    if (checked.length === 0) {
-      alert('يرجى اختيار صف دراسي واحد على الأقل');
-      return;
-    }
-
-    const saveBtn = document.getElementById('saveCustomStagesBtn');
-    saveBtn.disabled = true;
-    saveBtn.textContent = 'جارٍ الحفظ...';
-
-    try {
-      await window.KhatwaAPI.student.updateStage(checked[0], checked);
-      studentSelectedStages = checked;
-      currentStageFilter = checked.length > 1 ? 'ALL_SELECTED' : checked[0];
-      initStages();
-      renderTeachers();
-      renderAllCourses();
-      closeCustomizeStagesModal();
-    } catch (err) {
-      alert(err.message || 'تعذر حفظ التفضيلات');
-    } finally {
-      saveBtn.disabled = false;
-      saveBtn.textContent = 'حفظ التفضيلات ✓';
-    }
-  }
+  function openCustomizeStagesModal() {}
+  function closeCustomizeStagesModal() {}
+  function saveCustomizedStages() {}
 
   document.addEventListener('DOMContentLoaded', async () => {
     const user = window.KhatwaAPI.getUser();
@@ -592,39 +485,14 @@
         photoBox.innerHTML = `<span class="teacher-ref-photo-placeholder">👨‍🏫</span>`;
       }
 
-      // Collect all stages taught by the teacher
-      const stages = getTeacherStages(teacher);
-
-      // Check if current user is a student with a registered academic stage
       const currentUser = window.KhatwaAPI.getUser();
       const studentStage = currentUser?.studentProfile?.academicStage || currentUser?.grade || null;
-
-      if (stages.length === 0) {
-        document.getElementById('modalTeacherStagesBar').innerHTML = '<span style="font-size:0.85rem;color:var(--ink-dim);">لا توجد مراحل مسجلة لهذا المعلم</span>';
-        activeModalStage = '';
-      } else if (studentStage && stages.includes(studentStage)) {
-        // Requirement 3: Student only sees the stage they belong to, not all teacher stages!
-        activeModalStage = studentStage;
-        document.getElementById('modalTeacherStagesBar').innerHTML = `
-          <button type="button" class="modal-stage-tab active" data-stage="${studentStage}">
-            📁 ${escapeHtml(STAGE_NAMES[studentStage] || studentStage)} (صفك الدراسي الحالي ✓)
-          </button>
-        `;
-      } else {
-        // Default to current stage filter if teacher teaches it, otherwise first available stage
-        activeModalStage = (currentStageFilter && stages.includes(currentStageFilter))
-          ? currentStageFilter
-          : stages[0];
-
-        // Render stages side-by-side
-        document.getElementById('modalTeacherStagesBar').innerHTML = stages.map(s => `
-          <button type="button" class="modal-stage-tab ${s === activeModalStage ? 'active' : ''}" data-stage="${s}" onclick="selectModalStage('${s}')">
-            📁 ${escapeHtml(STAGE_NAMES[s] || s)}
-          </button>
-        `).join('');
+      let targetStage = '';
+      if (studentStage && teacher.courses?.some(c => c.academicStage === studentStage)) {
+        targetStage = studentStage;
       }
-
-      renderModalStageCourses(activeModalStage);
+      activeModalStage = targetStage;
+      renderModalStageCourses(targetStage);
     } catch (e) {
       document.getElementById('modalTeacherCoursesList').innerHTML = 'حدث خطأ أثناء تحميل بيانات المعلم.';
     }

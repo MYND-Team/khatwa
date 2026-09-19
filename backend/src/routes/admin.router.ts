@@ -800,6 +800,7 @@ router.get(
         id: true,
         username: true,
         isActive: true,
+        walletBalance: true,
         createdAt: true,
         teacherProfile: {
           select: {
@@ -992,6 +993,74 @@ router.delete(
     res.status(200).json({
       success: true,
       message: 'تم حذف حساب المدرس واسم المستخدم وكلمة المرور وكافة بياناته من قاعدة البيانات بنجاح',
+    });
+  })
+);
+
+// ─── Teacher Settlement / Payout ─────────────────────────────────────────────
+
+router.post(
+  '/teachers/:id/settle',
+  asyncHandler(async (req, res) => {
+    const teacherId = req.params.id as string;
+    const { amount, notes } = req.body;
+
+    const teacher = await prisma.user.findUnique({
+      where: { id: teacherId },
+      include: { teacherProfile: true },
+    });
+
+    if (!teacher || teacher.role !== 'TEACHER') {
+      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'حساب المدرس غير موجود' } });
+      return;
+    }
+
+    const currentBalance = Number(teacher.walletBalance || 0);
+    if (currentBalance <= 0) {
+      res.status(400).json({ success: false, error: { code: 'NO_BALANCE', message: 'رصيد محفظة المدرس 0 ج.م ولا توجد مستحقات معلقة للتسوية' } });
+      return;
+    }
+
+    const payoutAmount = amount !== undefined && amount !== null && !isNaN(Number(amount)) && Number(amount) > 0
+      ? Math.min(Number(amount), currentBalance)
+      : currentBalance;
+
+    const newBalance = Math.round((currentBalance - payoutAmount) * 100) / 100;
+
+    await prisma.$transaction(async (tx) => {
+      await tx.user.update({
+        where: { id: teacherId },
+        data: { walletBalance: newBalance },
+      });
+
+      await tx.walletTransaction.create({
+        data: {
+          studentId: teacherId,
+          type: 'DEBIT',
+          amount: payoutAmount,
+          balanceAfter: newBalance,
+          reason: notes || `تسوية وتسليم أرباح ومستحقات نقدية من إدارة المنصة (${payoutAmount} ج.م)`,
+          actorId: req.user!.sub,
+        },
+      });
+
+      await tx.notification.create({
+        data: {
+          userId: teacherId,
+          title: 'تسوية أرباح ومستحقات مالية 💵',
+          message: `تم تسليمك وتسوية مبلغ ${payoutAmount.toLocaleString('ar-EG')} ج.م من أرباحك بواسطة الإدارة. الرصيد المتبقي بمحفظتك: ${newBalance.toLocaleString('ar-EG')} ج.م.`,
+          type: 'PAYMENT',
+        },
+      });
+    });
+
+    res.status(200).json({
+      success: true,
+      message: `تمت تسوية مبلغ ${payoutAmount} ج.م للمدرس بنجاح`,
+      data: {
+        settledAmount: payoutAmount,
+        remainingBalance: newBalance,
+      },
     });
   })
 );

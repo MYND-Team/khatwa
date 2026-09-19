@@ -412,6 +412,9 @@
       async updateTeacher(id, data) { const res = await request('/admin/teachers/' + id, { method: 'PATCH', body: data }); return res.data; },
       async toggleTeacherActive(id) { const res = await request('/admin/teachers/' + id + '/toggle-active', { method: 'PATCH' }); return res.data; },
       async deleteTeacher(id) { return request('/admin/teachers/' + id, { method: 'DELETE' }); },
+      async settleTeacher(id, amount, notes) {
+        return request('/admin/teachers/' + id + '/settle', { method: 'POST', body: { amount, notes } });
+      },
       async getPointRequests() { const res = await request('/admin/point-requests'); return res.data || []; },
       async approvePointRequest(id, points) {
         return request('/admin/point-requests/' + id + '/approve', {
