@@ -465,8 +465,8 @@ export async function getStudentSubscriptions(studentId: string, stage?: string)
     const allQuizIds = Array.from(quizIdToLessonMap.keys());
     if (allQuizIds.length > 0) {
       const attempts = await prisma.quizAttempt.findMany({
-        where: { studentId, quizId: { in: allQuizIds }, isCompleted: true },
-        select: { quizId: true, scorePercent: true, totalCorrect: true, totalQuestions: true, submittedAt: true },
+        where: { studentId, quizId: { in: allQuizIds } },
+        select: { quizId: true, score: true, totalQuestions: true, submittedAt: true },
         orderBy: { submittedAt: 'desc' },
       });
 
@@ -474,9 +474,10 @@ export async function getStudentSubscriptions(studentId: string, stage?: string)
       const gradeMap = new Map<string, { scorePercent: number; totalCorrect: number; totalQuestions: number }>();
       for (const att of attempts) {
         if (!gradeMap.has(att.quizId)) {
+          const scorePercent = att.totalQuestions > 0 ? Math.round((att.score / att.totalQuestions) * 100) : 0;
           gradeMap.set(att.quizId, {
-            scorePercent: att.scorePercent ?? 0,
-            totalCorrect: att.totalCorrect,
+            scorePercent,
+            totalCorrect: att.score,
             totalQuestions: att.totalQuestions,
           });
         }

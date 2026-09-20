@@ -849,10 +849,8 @@ router.post(
       if (hasAssignment) {
         const assignmentQuiz = await tx.quiz.create({
           data: {
-            teacherProfileId: teacherProfile.id,
             title: `واجب المحاضرة - ${title}`,
             type: 'HOMEWORK',
-            academicStage: chapter.course.academicStage,
           },
         });
         assignmentQuizId = assignmentQuiz.id;
@@ -862,10 +860,8 @@ router.post(
       if (hasExam) {
         const examQuiz = await tx.quiz.create({
           data: {
-            teacherProfileId: teacherProfile.id,
             title: `امتحان المحاضرة - ${title}`,
             type: 'EXAM',
-            academicStage: chapter.course.academicStage,
           },
         });
         examQuizId = examQuiz.id;

@@ -87,7 +87,7 @@ export async function registerWithCode(input: RegisterWithCodeInput) {
     }
   } else if (targetRole === 'TEACHER') {
     const teacherSecret = process.env.TEACHER_INVITE_CODE;
-    if (teacherSecret && input.accessCode !== teacherSecret) {
+    if (!teacherSecret || input.accessCode !== teacherSecret) {
       throw ForbiddenError('رمز دعوة المعلم غير صحيح أو غير متوفر');
     }
   }

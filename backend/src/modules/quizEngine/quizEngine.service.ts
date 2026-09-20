@@ -114,15 +114,15 @@ export async function submitAttempt(input: {
     : score >= Math.ceil(totalMCQuestions * 0.5);
 
   // Upsert attempt (allow retake if not yet passed)
-  const existingAttempt = await prisma.quizAttempt.findUnique({
-    where: { studentId_quizId: { studentId, quizId } },
-  });
-
-  if (existingAttempt?.passed) {
-    throw BadRequestError('Quiz already passed', 'ALREADY_PASSED');
-  }
-
   const attempt = await prisma.$transaction(async (tx: any) => {
+    const existingAttempt = await tx.quizAttempt.findUnique({
+      where: { studentId_quizId: { studentId, quizId } },
+    });
+
+    if (existingAttempt?.passed) {
+      throw BadRequestError('Quiz already passed', 'ALREADY_PASSED');
+    }
+
     if (existingAttempt) {
       await tx.attemptAnswer.deleteMany({ where: { attemptId: existingAttempt.id } });
       await tx.quizAttempt.delete({ where: { id: existingAttempt.id } });
