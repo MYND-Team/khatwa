@@ -839,28 +839,37 @@
         document.getElementById('navRole').textContent = `مدرس معتمد · المحفظة: ${walletBal} ج.م`;
       }
 
-      document.getElementById('statStudents').textContent = overviewData.uniqueStudents || 0;
-      document.getElementById('statSubscriptions').textContent = overviewData.totalSubscriptions || 0;
-      document.getElementById('statRevenue').textContent = (overviewData.totalRevenueEGP || 0).toLocaleString('ar-EG') + ' ج.م';
-      document.getElementById('statPoints').textContent = (overviewData.totalPointsEarned || 0).toLocaleString('ar-EG') + ' نقطة';
+      const elStudents = document.getElementById('statStudents');
+      if (elStudents) elStudents.textContent = overviewData.uniqueStudents || 0;
+
+      const elSubs = document.getElementById('statSubscriptions');
+      if (elSubs) elSubs.textContent = overviewData.totalSubscriptions || 0;
+
+      const elRevenue = document.getElementById('statRevenue');
+      if (elRevenue) elRevenue.textContent = (overviewData.totalRevenueEGP || 0).toLocaleString('ar-EG') + ' ج.م';
+
+      const elPoints = document.getElementById('statPoints');
+      if (elPoints) elPoints.textContent = (overviewData.totalPointsEarned || 0).toLocaleString('ar-EG') + ' نقطة';
 
       // Show commission %
       const localUser = window.KhatwaAPI.getUser();
       const rawComm = overviewData?.commissionPct ?? profileData?.commissionPct ?? meData?.teacherProfile?.commissionPct ?? meData?.commissionPct ?? localUser?.teacherProfile?.commissionPct;
       const effectiveComm = overviewData?.effectiveCommissionPct;  // only trust server-supplied default
-      if (document.getElementById('statCommission')) {
+      const elComm = document.getElementById('statCommission');
+      const elNote = document.getElementById('commissionNote');
+      if (elComm) {
         if (rawComm !== undefined && rawComm !== null && !isNaN(Number(rawComm))) {
           // Teacher has an admin-assigned specific rate
-          document.getElementById('statCommission').textContent = rawComm + '%';
-          document.getElementById('commissionNote').textContent = 'نسبة أرباحك المعتمدة من الإدارة';
+          elComm.textContent = rawComm + '%';
+          if (elNote) elNote.textContent = 'نسبة أرباحك المعتمدة من الإدارة';
         } else if (effectiveComm !== undefined && effectiveComm !== null && !isNaN(Number(effectiveComm))) {
           // No personal override — show the platform default returned from the server
-          document.getElementById('statCommission').textContent = effectiveComm + '%';
-          document.getElementById('commissionNote').textContent = 'نسبتك الافتراضية المعتمدة من المنصة';
+          elComm.textContent = effectiveComm + '%';
+          if (elNote) elNote.textContent = 'نسبتك الافتراضية المعتمدة من المنصة';
         } else {
           // Overview request failed and no cached value is available
-          document.getElementById('statCommission').textContent = '—';
-          document.getElementById('commissionNote').textContent = 'تعذّر تحميل النسبة';
+          elComm.textContent = '—';
+          if (elNote) elNote.textContent = 'تعذّر تحميل النسبة';
         }
       }
     } catch (e) {
