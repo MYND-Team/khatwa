@@ -1146,9 +1146,11 @@ router.get(
       const hwAttempt = await prisma.quizAttempt.findUnique({
         where: { studentId_quizId: { studentId, quizId: currentHwQuizId } },
       });
-      const currentHwSubmission = await prisma.homeworkSubmission.findUnique({
-        where: { studentId_lessonId: { studentId, lessonId: lesson.id } },
-      });
+      const currentHwSubmission = !lesson.assignmentQuizId
+        ? await prisma.homeworkSubmission.findUnique({
+            where: { studentId_lessonId: { studentId, lessonId: lesson.id } },
+          })
+        : null;
       if (!hwAttempt && !currentHwSubmission) {
         res.status(200).json({
           success: true,

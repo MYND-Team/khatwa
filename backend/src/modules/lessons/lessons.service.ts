@@ -209,9 +209,11 @@ export async function getLessonContent(lessonId: string, studentId: string) {
       const attempt = await prisma.quizAttempt.findUnique({
         where: { studentId_quizId: { studentId, quizId: effectiveHwQuizId } },
       });
-      const submission = await prisma.homeworkSubmission.findUnique({
-        where: { studentId_lessonId: { studentId, lessonId: lesson.id } },
-      });
+      const submission = !lesson.assignmentQuizId
+        ? await prisma.homeworkSubmission.findUnique({
+            where: { studentId_lessonId: { studentId, lessonId: lesson.id } },
+          })
+        : null;
       if (!attempt && !submission) {
         throw Object.assign(
           new Error(`يجب تسليم الواجب أولاً قبل فتح المحاضرة`),

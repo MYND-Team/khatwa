@@ -337,7 +337,7 @@
         const sel = ans ? ans.selectedOption : null;
         const txt = ans ? ans.textAnswer : null;
         const isEssay = q.questionType === 'ESSAY' || q.questionType === 'WRITTEN' || (!sel && Boolean(txt));
-        const isCorrect = isEssay ? null : (sel && q.correctOption ? (sel === q.correctOption) : false);
+        const isCorrect = isEssay ? null : (q.correctOption ? (sel === q.correctOption) : null);
         return {
           questionId: q.id,
           questionText: q.questionText || q.text || '',
@@ -394,7 +394,7 @@
 
     items.forEach((item, index) => {
       const isEssay = item.questionType === 'ESSAY' || item.questionType === 'WRITTEN' || (!item.selectedOption && Boolean(item.textAnswer));
-      const isPending = isEssay && (item.isCorrect === null || item.isCorrect === undefined);
+      const isPending = item.isCorrect === null || item.isCorrect === undefined;
       const isOk = !isPending && Boolean(item.isCorrect);
 
       let statusBadge = '';
@@ -404,7 +404,7 @@
       if (isPending) {
         borderColor = '#f59e0b';
         bgCard = 'rgba(245,158,11,0.04)';
-        statusBadge = `<span style="background:rgba(245,158,11,0.18);color:#f59e0b;border:1px solid #f59e0b;padding:4px 12px;border-radius:999px;font-size:0.82rem;font-weight:700;display:inline-flex;align-items:center;gap:4px;">⏳ في انتظار التصحيح اليدوي</span>`;
+        statusBadge = `<span style="background:rgba(245,158,11,0.18);color:#f59e0b;border:1px solid #f59e0b;padding:4px 12px;border-radius:999px;font-size:0.82rem;font-weight:700;display:inline-flex;align-items:center;gap:4px;">⏳ في انتظار التصحيح</span>`;
       } else if (isOk) {
         borderColor = '#22c55e';
         bgCard = 'rgba(34,197,94,0.04)';

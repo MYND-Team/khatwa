@@ -150,18 +150,20 @@ export async function submitAttempt(input: {
 
   const review = graded.map((g) => {
     const q = questions.find((item: any) => item.id === g.questionId);
+    const qType = q?.questionType || 'MULTIPLE_CHOICE';
+    const isGraded = qType === 'MULTIPLE_CHOICE';
     return {
       questionId: g.questionId,
       questionText: q?.questionText || '',
-      questionType: q?.questionType || 'MULTIPLE_CHOICE',
+      questionType: qType,
       optionA: q?.optionA,
       optionB: q?.optionB,
       optionC: q?.optionC,
       optionD: q?.optionD,
       selectedOption: g.selectedOption,
       textAnswer: g.textAnswer,
-      isCorrect: g.isCorrect,
-      correctOption: q?.correctOption || null,
+      isCorrect: isGraded ? g.isCorrect : null,
+      correctOption: passed ? (q?.correctOption || null) : null,
       equationLatex: q?.equationLatex || null,
     };
   });
@@ -182,7 +184,7 @@ export async function hasPassed(studentId: string, quizId: string): Promise<bool
 // ─── Get attempt result ───────────────────────────────────────────────────────
 
 export async function getAttempt(studentId: string, quizId: string) {
-  return prisma.quizAttempt.findUnique({
+  const attempt = await prisma.quizAttempt.findUnique({
     where: { studentId_quizId: { studentId, quizId } },
     include: {
       answers: {
@@ -201,13 +203,26 @@ export async function getAttempt(studentId: string, quizId: string) {
               optionC: true,
               optionD: true,
               equationLatex: true,
-              correctOption: true, // provide correctOption for graded attempt review
+              correctOption: true,
             },
           },
         },
       },
     },
   });
+
+  if (!attempt) return null;
+
+  // Restrict correctOption disclosure to attempts where passed is true
+  if (!attempt.passed) {
+    for (const ans of attempt.answers) {
+      if (ans.question && 'correctOption' in ans.question) {
+        delete (ans.question as any).correctOption;
+      }
+    }
+  }
+
+  return attempt;
 }
 
 // ─── Teacher view (includes correct answers + rubrics) ───────────────────────

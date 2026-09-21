@@ -279,7 +279,8 @@
       } else if (textVal && textVal.trim()) {
         answers.push({ questionId: q.id, textAnswer: textVal.trim() });
       }
-      if (selected && selected === q.correctOption) {
+      const correctAns = q.correctOption || q.correctAnswer || q.answer;
+      if (selected && correctAns && selected === correctAns) {
         score += 1;
       }
     });
@@ -316,7 +317,8 @@
         const sel = ans ? ans.selectedOption : null;
         const txt = ans ? ans.textAnswer : null;
         const isEssay = q.questionType === 'ESSAY' || q.questionType === 'WRITTEN' || (!sel && Boolean(txt));
-        const isCorrect = isEssay ? null : (sel && q.correctOption ? (sel === q.correctOption) : false);
+        const correctAns = q.correctOption || q.correctAnswer || q.answer;
+        const isCorrect = isEssay ? null : (correctAns ? (sel === correctAns) : false);
         return {
           questionId: q.id,
           questionText: q.questionText || q.text || '',
