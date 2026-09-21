@@ -148,7 +148,25 @@ export async function submitAttempt(input: {
     });
   });
 
-  return { attempt, score, totalQuestions, passed };
+  const review = graded.map((g) => {
+    const q = questions.find((item: any) => item.id === g.questionId);
+    return {
+      questionId: g.questionId,
+      questionText: q?.questionText || '',
+      questionType: q?.questionType || 'MULTIPLE_CHOICE',
+      optionA: q?.optionA,
+      optionB: q?.optionB,
+      optionC: q?.optionC,
+      optionD: q?.optionD,
+      selectedOption: g.selectedOption,
+      textAnswer: g.textAnswer,
+      isCorrect: g.isCorrect,
+      correctOption: q?.correctOption || null,
+      equationLatex: q?.equationLatex || null,
+    };
+  });
+
+  return { attempt, score, totalQuestions, passed, review };
 }
 
 // ─── Check if student passed ─────────────────────────────────────────────────
@@ -183,7 +201,7 @@ export async function getAttempt(studentId: string, quizId: string) {
               optionC: true,
               optionD: true,
               equationLatex: true,
-              // correctOption and rubric excluded from student view
+              correctOption: true, // provide correctOption for graded attempt review
             },
           },
         },

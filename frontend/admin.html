@@ -1256,6 +1256,68 @@
 </div>
 </div>
 
+<!-- Modal: Edit Teacher Profile (Admin-only) -->
+<div class="modal-overlay" id="editTeacherModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;align-items:center;justify-content:center;" onclick="if(event.target===this) closeAdminEditTeacherModal()">
+  <div class="modal-card" style="max-width:580px;width:95%;padding:0;border-radius:20px;overflow:hidden;">
+    <div style="background:linear-gradient(135deg, var(--primary-deep, #8C6527) 0%, var(--primary, #B88E4F) 60%, var(--primary-light, #CBA264) 100%);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;">
+      <div style="display:flex;align-items:center;gap:14px;">
+        <span style="font-size:2rem;">⚙️</span>
+        <div>
+          <h3 style="margin:0 0 2px;color:#FFFFFF;font-size:1.15rem;font-weight:700;font-family:'Cairo',sans-serif;">تعديل بيانات وحساب المدرس</h3>
+          <p style="margin:0;color:rgba(255,255,255,0.85);font-size:0.82rem;font-family:'Cairo',sans-serif;" id="editTeacherSubtitle">إدارة بيانات المعلم الأكاديمية</p>
+        </div>
+      </div>
+      <button type="button" onclick="closeAdminEditTeacherModal()" title="إغلاق" style="background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.3);color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;">✕</button>
+    </div>
+
+    <div style="padding:24px 24px 0;">
+      <div id="editTeacherAlert" style="display:none;padding:12px 16px;border-radius:10px;margin-bottom:16px;font-size:0.9rem;font-weight:600;"></div>
+
+      <form id="editTeacherForm" onsubmit="submitAdminEditTeacher(event)">
+        <input type="hidden" id="editTeacherId">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(230px, 1fr));gap:14px;margin-bottom:14px;">
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label" style="font-weight:600;margin-bottom:6px;display:block;">الاسم المعروض (اللقب الكامل) *</label>
+            <input type="text" class="form-control" id="editTeacherDisplayName" required style="border-radius:10px;padding:10px 14px;">
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label" style="font-weight:600;margin-bottom:6px;display:block;">المادة التخصصية</label>
+            <input type="text" class="form-control" id="editTeacherSubject" placeholder="مثال: الفيزياء، الرياضيات..." style="border-radius:10px;padding:10px 14px;">
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom:14px;">
+          <label class="form-label" style="font-weight:600;margin-bottom:6px;display:block;">النبذة التعريفية (Bio)</label>
+          <textarea class="form-control" id="editTeacherBio" rows="2" placeholder="نبذة عن خبرات المدرس وإنجازاته..." style="border-radius:10px;padding:10px 14px;"></textarea>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(230px, 1fr));gap:14px;margin-bottom:14px;">
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label" style="font-weight:600;margin-bottom:6px;display:block;">تعيين كلمة مرور جديدة (اختياري)</label>
+            <input type="password" class="form-control" id="editTeacherPassword" placeholder="اتركه فارغاً للإبقاء على الحالية" minlength="6" style="border-radius:10px;padding:10px 14px;">
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label" style="font-weight:600;margin-bottom:6px;display:block;">رابط صورة البروفيل (Avatar URL)</label>
+            <input type="text" class="form-control" id="editTeacherAvatarUrl" placeholder="https://..." style="border-radius:10px;padding:10px 14px;">
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom:14px;">
+          <label class="form-label" style="font-weight:600;margin-bottom:6px;display:block;">المراحل الدراسية المعتمدة (مفصولة بفواصل)</label>
+          <input type="text" class="form-control" id="editTeacherStages" placeholder="PREPARATORY,SECONDARY_1,SECONDARY_2,SECONDARY_3" style="border-radius:10px;padding:10px 14px;">
+          <span style="font-size:0.78rem;color:var(--ink-dim);display:block;margin-top:4px;">المراحل: PREPARATORY (إعدادي)، SECONDARY_1 (1 ثانوي)، SECONDARY_2 (2 ثانوي)، BACCALAUREATE_2 (2 باكلوريا)، SECONDARY_3 (3 ثانوي)، BACCALAUREATE_3 (3 باكلوريا)</span>
+        </div>
+
+        <div style="padding:16px 0 24px;display:flex;justify-content:flex-end;gap:10px;border-top:1px solid var(--line-soft);margin-top:16px;">
+          <button type="button" class="btn btn-line btn-sm" onclick="closeAdminEditTeacherModal()">إلغاء</button>
+          <button type="submit" class="btn btn-primary btn-sm" id="editTeacherSubmitBtn" style="padding:8px 22px;font-weight:700;">حفظ التعديلات ✓</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+
 <!-- Modal: Student Profile Dossier & Notes & Wallet -->
 <div id="studentDossierModal" style="display:none; position:fixed; inset:0; width:100vw; height:100vh; background:rgba(15,23,42,0.75); z-index:999999; align-items:center; justify-content:center; backdrop-filter:blur(4px);" onclick="if(event.target===this) closeStudentDossier()">
   <div style="background:#ffffff; color:#0f172a; border-radius:24px; max-width:620px; width:92%; padding:28px; max-height:90vh; overflow-y:auto; box-shadow:0 25px 50px -12px rgba(0,0,0,0.35); border:1px solid #e2e8f0;">
@@ -1983,6 +2045,7 @@
           ? `<button type="button" class="btn btn-sm" style="background:rgba(22,163,74,0.12);color:#16a34a;border:1px solid rgba(22,163,74,0.3);font-size:0.8rem;padding:4px 8px;font-weight:700;" onclick="openSettleTeacherModal('${t.id}', '${(profile.displayName || t.username).replace(/'/g, "\\'")}', ${walletBal})" title="تسوية وتسليم أرباح المدرس">💵 تسوية المستحقات</button>`
           : `<button type="button" class="btn btn-sm" style="opacity:0.5;cursor:default;font-size:0.8rem;padding:4px 8px;" disabled title="لا توجد مستحقات معلقة">تمت التسوية ✓</button>`;
 
+        cachedTeachersMap.set(t.id, t);
         return `
           <tr>
             <td>
@@ -2005,6 +2068,9 @@
             <td>${statusBadge}</td>
             <td>
               <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+                <button class="btn btn-line btn-sm" style="color:var(--primary);border-color:rgba(184,142,79,0.4);font-size:0.8rem;padding:4px 8px;font-weight:700;" onclick="openAdminEditTeacherModal('${t.id}')">
+                  ⚙️ تعديل البروفيل
+                </button>
                 ${settleBtn}
                 <button class="btn btn-line btn-sm" onclick="toggleTeacherActive('${t.id}')">
                   ${t.isActive !== false ? 'تعطيل' : 'تفعيل'}
@@ -2025,6 +2091,7 @@
   }
 
   // ─── Custom Commission Modal ────────────────────────────────────────────────
+  let cachedTeachersMap = new Map();
   let _commModalTeacherId = null;
   let _commModalWillReset = false;
   let _commModalTriggerBtn = null;
@@ -2244,6 +2311,63 @@
       saveBtn.disabled = false;
       saveBtn.textContent = '💾 حفظ النسبة';
       alert(err.message || 'فشل تحديث نسبة الأرباح');
+    }
+  }
+
+  // ─── Admin Edit Teacher Profile Handlers ────────────────────────────────────
+  function openAdminEditTeacherModal(id) {
+    const t = cachedTeachersMap.get(id);
+    if (!t) return;
+    const profile = t.teacherProfile || {};
+    document.getElementById('editTeacherId').value = t.id;
+    document.getElementById('editTeacherSubtitle').textContent = `@${t.username} · ${profile.displayName || t.username}`;
+    document.getElementById('editTeacherDisplayName').value = profile.displayName || t.username || '';
+    document.getElementById('editTeacherSubject').value = profile.subject || '';
+    document.getElementById('editTeacherBio').value = profile.bio || '';
+    document.getElementById('editTeacherPassword').value = '';
+    document.getElementById('editTeacherAvatarUrl').value = profile.avatarUrl || '';
+    document.getElementById('editTeacherStages').value = profile.academicStages || '';
+    const alertBox = document.getElementById('editTeacherAlert');
+    if (alertBox) alertBox.style.display = 'none';
+    document.getElementById('editTeacherModal').style.display = 'flex';
+  }
+
+  function closeAdminEditTeacherModal() {
+    document.getElementById('editTeacherModal').style.display = 'none';
+  }
+
+  async function submitAdminEditTeacher(e) {
+    e.preventDefault();
+    const id = document.getElementById('editTeacherId').value;
+    const displayName = document.getElementById('editTeacherDisplayName').value.trim();
+    const subject = document.getElementById('editTeacherSubject').value.trim();
+    const bio = document.getElementById('editTeacherBio').value.trim();
+    const password = document.getElementById('editTeacherPassword').value;
+    const avatarUrl = document.getElementById('editTeacherAvatarUrl').value.trim();
+    const academicStages = document.getElementById('editTeacherStages').value.trim();
+
+    const btn = document.getElementById('editTeacherSubmitBtn');
+    btn.disabled = true;
+    btn.textContent = 'جارٍ الحفظ...';
+
+    const payload = { displayName, subject, bio, avatarUrl, academicStages };
+    if (password && password.length >= 6) payload.password = password;
+
+    try {
+      await window.KhatwaAPI.admin.updateTeacher(id, payload);
+      closeAdminEditTeacherModal();
+      await loadTeachers();
+    } catch (err) {
+      const alertBox = document.getElementById('editTeacherAlert');
+      if (alertBox) {
+        alertBox.textContent = err.message || 'حدث خطأ أثناء تعديل بيانات المدرس';
+        alertBox.style.display = 'block';
+        alertBox.style.background = 'rgba(239,68,68,0.1)';
+        alertBox.style.color = 'var(--err)';
+      }
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'حفظ التعديلات ✓';
     }
   }
 

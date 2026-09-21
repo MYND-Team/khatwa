@@ -22,9 +22,16 @@
 
   let _refreshPromise = null;
 
+  // Clear legacy tokens from localStorage to enforce session-only auth
+  try {
+    localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
+    localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
+    localStorage.removeItem(STORAGE_KEYS.USER);
+  } catch (_) {}
+
   function getStoredToken() {
     try {
-      return localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN) || sessionStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN) || null;
+      return sessionStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN) || null;
     } catch (_) {
       return null;
     }
@@ -33,18 +40,36 @@
   function setStoredToken(token) {
     try {
       if (token) {
-        localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, token);
         sessionStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, token);
       } else {
-        localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
         sessionStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
       }
+      localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
+    } catch (_) {}
+  }
+
+  function getStoredRefreshToken() {
+    try {
+      return sessionStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN) || null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function setStoredRefreshToken(token) {
+    try {
+      if (token) {
+        sessionStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, token);
+      } else {
+        sessionStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
+      }
+      localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
     } catch (_) {}
   }
 
   function getStoredUser() {
     try {
-      const raw = localStorage.getItem(STORAGE_KEYS.USER) || sessionStorage.getItem(STORAGE_KEYS.USER);
+      const raw = sessionStorage.getItem(STORAGE_KEYS.USER);
       if (!raw) return null;
       return JSON.parse(raw);
     } catch (_) {
@@ -56,12 +81,11 @@
     try {
       if (user) {
         const serialized = JSON.stringify(user);
-        localStorage.setItem(STORAGE_KEYS.USER, serialized);
         sessionStorage.setItem(STORAGE_KEYS.USER, serialized);
       } else {
-        localStorage.removeItem(STORAGE_KEYS.USER);
         sessionStorage.removeItem(STORAGE_KEYS.USER);
       }
+      localStorage.removeItem(STORAGE_KEYS.USER);
     } catch (_) {}
   }
 
@@ -125,7 +149,7 @@
 
     _refreshPromise = (async () => {
       try {
-        const storedRefreshToken = localStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
+        const storedRefreshToken = getStoredRefreshToken();
         const res = await fetch(DEFAULT_API_BASE + '/auth/refresh', {
           method: 'POST',
           credentials: 'include',
@@ -137,11 +161,12 @@
         if (res.ok && data.success && data.data?.accessToken) {
           setStoredToken(data.data.accessToken);
           if (data.data.refreshToken) {
-            try { localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, data.data.refreshToken); } catch (_) {}
+            setStoredRefreshToken(data.data.refreshToken);
           }
           return data.data.accessToken;
         } else {
           setStoredToken(null);
+          setStoredRefreshToken(null);
           return null;
         }
       } catch (_) {
@@ -229,7 +254,7 @@
           const { user, accessToken, refreshToken } = res.data;
           setStoredToken(accessToken);
           if (refreshToken) {
-            try { localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, refreshToken); } catch (_) {}
+            setStoredRefreshToken(refreshToken);
           }
           setStoredUser(user);
         }
@@ -245,7 +270,7 @@
           const { user, accessToken, refreshToken } = res.data;
           setStoredToken(accessToken);
           if (refreshToken) {
-            try { localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, refreshToken); } catch (_) {}
+            setStoredRefreshToken(refreshToken);
           }
           setStoredUser(user);
         }
@@ -254,15 +279,15 @@
 
       async logout() {
         try {
-          const refreshToken = localStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
+          const refreshToken = getStoredRefreshToken();
           await request('/auth/logout', {
             method: 'POST',
             body: refreshToken ? { refreshToken } : undefined,
           });
         } catch (_) {}
         setStoredToken(null);
+        setStoredRefreshToken(null);
         setStoredUser(null);
-        try { localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN); } catch (_) {}
         window.location.href = 'login.html';
       },
 
@@ -676,7 +701,7 @@
           if (!user.studentProfile) user.studentProfile = {};
           if (academicStage) user.studentProfile.academicStage = academicStage;
           if (academicStages) user.studentProfile.academicStages = Array.isArray(academicStages) ? academicStages.join(',') : academicStages;
-          localStorage.setItem('khatwa_user', JSON.stringify(user));
+          window.KhatwaAPI.setUser(user);
         }
         return res.data;
       },

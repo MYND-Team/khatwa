@@ -59,21 +59,15 @@ router.get(
 
 router.patch(
   '/profile',
-  asyncHandler(async (req, res) => {
-    const { displayName, bio, subject, avatarUrl, academicStages } = req.body;
-    const updated = await prisma.teacherProfile.update({
-      where: { userId: req.user!.sub },
-      data: {
-        ...(displayName && { displayName }),
-        ...(bio !== undefined && { bio }),
-        ...(subject !== undefined && { subject }),
-        ...(avatarUrl !== undefined && { avatarUrl }),
-        ...(academicStages !== undefined && {
-          academicStages: Array.isArray(academicStages) ? academicStages.join(',') : academicStages,
-        }),
+  asyncHandler(async (_req, res) => {
+    // Editing teacher profile is restricted to Admin only (Requirement 3)
+    res.status(403).json({
+      success: false,
+      error: {
+        code: 'FORBIDDEN',
+        message: 'تعديل بيانات بروفيل المدرس متاح فقط من قِبل إدارة المنصة.',
       },
     });
-    res.status(200).json({ success: true, data: updated });
   })
 );
 
@@ -836,8 +830,8 @@ router.post(
     let parsedScheduledDate: Date | null = null;
     if (scheduledPublishAt !== undefined && scheduledPublishAt !== null && scheduledPublishAt !== '') {
       const d = new Date(scheduledPublishAt);
-      if (isNaN(d.getTime()) || d <= new Date()) {
-        res.status(400).json({ success: false, error: { code: 'INVALID_DATE', message: 'scheduledPublishAt must be a valid future date' } });
+      if (isNaN(d.getTime())) {
+        res.status(400).json({ success: false, error: { code: 'INVALID_DATE', message: 'scheduledPublishAt must be a valid date' } });
         return;
       }
       parsedScheduledDate = d;
@@ -1063,8 +1057,8 @@ router.patch(
     let parsedDate: Date | null = null;
     if (scheduledPublishAt !== undefined && scheduledPublishAt !== null && scheduledPublishAt !== '') {
       parsedDate = new Date(scheduledPublishAt);
-      if (isNaN(parsedDate.getTime()) || parsedDate <= new Date()) {
-        res.status(400).json({ success: false, error: { code: 'INVALID_DATE', message: 'scheduledPublishAt must be a valid future date' } });
+      if (isNaN(parsedDate.getTime())) {
+        res.status(400).json({ success: false, error: { code: 'INVALID_DATE', message: 'scheduledPublishAt must be a valid date' } });
         return;
       }
     }

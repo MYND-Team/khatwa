@@ -80,7 +80,7 @@
     </div>
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
       <button class="btn btn-primary btn-sm" onclick="openCreateCourseModal()">＋ إنشاء كورس في المرحلة المحددة</button>
-      <button class="btn btn-line btn-sm" onclick="openTeacherProfileModal()" style="font-weight:700;">⚙️ تعديل بيانات المدرس</button>
+      <span class="tag" style="padding:6px 12px;font-size:0.82rem;background:rgba(255,255,255,0.06);color:var(--ink-dim);border:1px solid var(--line-soft);">🔒 تعديل بيانات الحساب متاح فقط من قِبل إدارة المنصة</span>
     </div>
   </div>
 
@@ -140,15 +140,29 @@
 
   <!-- View 4: Calendar / Scheduled Lessons -->
   <div class="tab-panel" id="view-calendar" style="display:none;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-      <h3 style="margin:0;">📅 تقويم ومواعيد نزول المحاضرات</h3>
-      <span style="font-size:0.84rem;color:var(--ink-dim);">المحاضرات المنشورة والمجدولة في هذه المرحلة</span>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+      <div>
+        <h3 style="margin:0;">📅 تقويم ومواعيد نزول المحاضرات</h3>
+        <span style="font-size:0.84rem;color:var(--ink-dim);">المحاضرات المنشورة والمجدولة في هذه المرحلة</span>
+      </div>
+      <div id="calendarLegend" style="display:flex;gap:14px;flex-wrap:wrap;">
+        <span style="display:flex;align-items:center;gap:6px;font-size:0.82rem;"><span style="width:12px;height:12px;border-radius:50%;background:#22c55e;display:inline-block;"></span>منشورة حالياً</span>
+        <span style="display:flex;align-items:center;gap:6px;font-size:0.82rem;"><span style="width:12px;height:12px;border-radius:50%;background:#f59e0b;display:inline-block;"></span>مجدولة (في الانتظار)</span>
+        <span style="display:flex;align-items:center;gap:6px;font-size:0.82rem;"><span style="width:12px;height:12px;border-radius:50%;background:#6b7280;display:inline-block;"></span>مسودة (مخفية)</span>
+      </div>
     </div>
-    <div id="calendarLegend" style="display:flex;gap:14px;margin-bottom:16px;flex-wrap:wrap;">
-      <span style="display:flex;align-items:center;gap:6px;font-size:0.82rem;"><span style="width:12px;height:12px;border-radius:50%;background:#22c55e;display:inline-block;"></span>منشورة حالياً</span>
-      <span style="display:flex;align-items:center;gap:6px;font-size:0.82rem;"><span style="width:12px;height:12px;border-radius:50%;background:#f59e0b;display:inline-block;"></span>مجدولة (في الانتظار)</span>
-      <span style="display:flex;align-items:center;gap:6px;font-size:0.82rem;"><span style="width:12px;height:12px;border-radius:50%;background:#6b7280;display:inline-block;"></span>مسودة (غير منشورة)</span>
+
+    <!-- Calendar Interactive Day Filter Bar -->
+    <div style="background:var(--bg-card);border:1px solid var(--line-soft);border-radius:14px;padding:12px 18px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <span style="font-size:1.1rem;">🗓️</span>
+        <label for="calendarDayPicker" style="font-size:0.88rem;font-weight:700;color:var(--ink);margin:0;">تحديد يوم من التقويم:</label>
+        <input type="date" id="calendarDayPicker" class="form-control" style="width:auto;padding:6px 12px;font-size:0.88rem;" onchange="filterCalendarByDay(this.value)">
+        <button type="button" class="btn btn-line btn-sm" onclick="clearCalendarDayFilter()">عرض كافة الأيام</button>
+      </div>
+      <div id="calendarFilterStatus" style="font-size:0.84rem;color:var(--ink-dim);">عرض كافة محاضرات المرحلة المحددة</div>
     </div>
+
     <div id="calendarContainer" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;">
       <div style="text-align:center;padding:40px;color:var(--ink-dim);grid-column:1/-1;">جارٍ تحميل التقويم...</div>
     </div>
@@ -946,7 +960,7 @@
                               ${l.examQuizId ? '<span class="tag tag-ok" style="margin-inline-start:4px;">🏆 به امتحان</span>' : ''}
                             </div>
                             <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
-                              ${isDraft ? `<button type="button" class="btn btn-sm" style="padding:3px 10px;font-size:.8rem;background:#16a34a;color:#fff;border-radius:8px;font-weight:700;" onclick="quickPublishLesson('${l.id}')">🚀 نشر الآن</button>` : ''}
+                              ${isDraft ? `<button type="button" class="btn btn-sm" style="padding:3px 10px;font-size:.8rem;background:#16a34a;color:#fff;border-radius:8px;font-weight:700;" onclick="quickPublishLesson('${l.id}')">🚀 نشر للطلاب</button>` : `<button type="button" class="btn btn-line btn-sm" style="padding:3px 10px;font-size:.8rem;color:#6b7280;border-color:rgba(107,114,128,0.4);" onclick="quickHideLesson('${l.id}')">👁️ إخفاء عن الطلاب</button>`}
                               <button type="button" class="btn btn-line btn-sm" style="padding:3px 10px;font-size:.8rem;color:var(--primary);" onclick="openEditLessonModal('${l.id}')">✏️ تعديل السعر والبيانات</button>
                               <button type="button" class="btn btn-text btn-sm" onclick="openQuizBuilderForLesson('${l.id}', 'assignment')">📝 الواجب</button>
                               ${l.assignmentQuizId ? `<button type="button" class="btn btn-line btn-sm" style="padding:3px 8px;font-size:.78rem;color:#f59e0b;border-color:rgba(245,158,11,0.4);" onclick="openQuizGradingModal('${l.assignmentQuizId}', 'تصحيح الواجب - ${escapeHtml(l.title)}')">📊 تصحيح الواجب</button>` : ''}
@@ -995,6 +1009,18 @@
       if (document.getElementById('view-calendar')?.style?.display !== 'none') loadCalendarView();
     } catch (e) {
       showToast('❌ فشل النشر: ' + (e.message || 'خطأ'), 'error');
+    }
+  }
+
+  async function quickHideLesson(lessonId) {
+    if (!confirm('هل ترغب في إخفاء هذه المحاضرة عن الطلاب؟ (ستظل مرفوعة على السيرفر ومحفوظة ولكن لن تظهر لأي طالب)')) return;
+    try {
+      await window.KhatwaAPI.teacher.updateLesson(lessonId, { isPublished: false });
+      showToast('👁️ تم إخفاء المحاضرة عن الطلاب بنجاح!');
+      await loadStageCourses();
+      if (document.getElementById('view-calendar')?.style?.display !== 'none') loadCalendarView();
+    } catch (e) {
+      showToast('❌ فشل الإخفاء: ' + (e.message || 'خطأ'), 'error');
     }
   }
 
@@ -1068,63 +1094,111 @@
 
   // ─── Calendar View ──────────────────────────────────────────────────────────
 
+  let cachedCalendarLessons = [];
+
+  function renderCalendarLessons(lessonsToRender) {
+    const container = document.getElementById('calendarContainer');
+    if (!container) return;
+    if (!lessonsToRender || lessonsToRender.length === 0) {
+      container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--ink-dim);grid-column:1/-1;">لا توجد محاضرات في هذا اليوم المحدد.<br><button type="button" class="btn btn-line btn-sm" style="margin-top:10px;" onclick="clearCalendarDayFilter()">عرض كافة الأيام</button></div>';
+      return;
+    }
+
+    const now = new Date();
+    container.innerHTML = lessonsToRender.map(l => {
+      const hasSchedule = l.scheduledPublishAt && !isNaN(new Date(l.scheduledPublishAt));
+      const schedDate = hasSchedule ? new Date(l.scheduledPublishAt) : null;
+      const isInFuture = schedDate && schedDate > now;
+      const isPublished = l.isPublished;
+
+      let statusColor = '#6b7280'; // draft
+      let statusLabel = '📝 مسودة مخفية';
+      let borderLeft = '4px solid #6b7280';
+
+      if (isPublished && !isInFuture) {
+        statusColor = '#22c55e';
+        statusLabel = '✅ منشورة';
+        borderLeft = '4px solid #22c55e';
+      } else if (hasSchedule && isInFuture) {
+        statusColor = '#f59e0b';
+        statusLabel = '⏰ مجدولة';
+        borderLeft = '4px solid #f59e0b';
+      }
+
+      return `
+        <div class="card" style="padding:18px;border-radius:14px;${borderLeft};position:relative;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px;">
+            <b style="font-size:.95rem;line-height:1.4;">${escapeHtml(l.title)}</b>
+            <span style="font-size:.78rem;padding:3px 10px;border-radius:20px;background:${statusColor}22;color:${statusColor};white-space:nowrap;font-weight:700;">${statusLabel}</span>
+          </div>
+          <div style="font-size:.8rem;color:var(--ink-dim);margin-bottom:10px;">
+            ${l.course ? '📁 ' + escapeHtml(l.course.title) + (l.chapter ? ' › ' + escapeHtml(l.chapter.title) : '') : ''}
+          </div>
+          ${schedDate ? `
+            <div style="font-size:.82rem;font-weight:700;color:${statusColor};margin-bottom:10px;">
+              📅 ${schedDate.toLocaleDateString('ar-EG', { weekday:'short', year:'numeric', month:'short', day:'numeric' })}
+              &nbsp;⏰ ${schedDate.toLocaleTimeString('ar-EG', { hour:'2-digit', minute:'2-digit' })}
+            </div>
+          ` : '<div style="font-size:.8rem;color:var(--ink-dim);margin-bottom:10px;">لم يتم جدولة وقت نشر</div>'}
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button class="btn btn-line btn-sm" style="font-size:.78rem;padding:3px 10px;color:#f59e0b;border-color:rgba(245,158,11,0.5);" data-lesson-id="${l.id}" data-lesson-title="${escapeHtml(l.title)}" data-action="schedule-lesson">📅 تعديل الجدولة</button>
+            <button class="btn btn-sm" style="font-size:.78rem;padding:3px 10px;background:rgba(239,68,68,0.08);color:#ef4444;border:1px solid rgba(239,68,68,0.3);border-radius:8px;" data-lesson-id="${l.id}" data-lesson-title="${escapeHtml(l.title)}" data-action="delete-lesson">🗑 حذف</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
   async function loadCalendarView() {
     const container = document.getElementById('calendarContainer');
     if (!container) return;
     container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--ink-dim);grid-column:1/-1;">جارٍ تحميل التقويم...</div>';
     try {
       const lessons = await window.KhatwaAPI.teacher.getScheduledLessons(currentStage);
+      cachedCalendarLessons = lessons || [];
       if (!lessons || lessons.length === 0) {
         container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--ink-dim);grid-column:1/-1;">لا توجد محاضرات في هذه المرحلة بعد.<br>أضف محاضرات واضبط مواعيد نشرها من قسم الكورسات.</div>';
         return;
       }
 
-      const now = new Date();
-      container.innerHTML = lessons.map(l => {
-        const hasSchedule = l.scheduledPublishAt && !isNaN(new Date(l.scheduledPublishAt));
-        const schedDate = hasSchedule ? new Date(l.scheduledPublishAt) : null;
-        const isInFuture = schedDate && schedDate > now;
-        const isPublished = l.isPublished;
-
-        let statusColor = '#6b7280'; // draft
-        let statusLabel = '📝 مسودة';
-        let borderLeft = '4px solid #6b7280';
-
-        if (isPublished && !isInFuture) {
-          statusColor = '#22c55e';
-          statusLabel = '✅ منشورة';
-          borderLeft = '4px solid #22c55e';
-        } else if (hasSchedule && isInFuture) {
-          statusColor = '#f59e0b';
-          statusLabel = '⏰ مجدولة';
-          borderLeft = '4px solid #f59e0b';
-        }
-
-        return `
-          <div class="card" style="padding:18px;border-radius:14px;${borderLeft};position:relative;">
-            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px;">
-              <b style="font-size:.95rem;line-height:1.4;">${escapeHtml(l.title)}</b>
-              <span style="font-size:.78rem;padding:3px 10px;border-radius:20px;background:${statusColor}22;color:${statusColor};white-space:nowrap;font-weight:700;">${statusLabel}</span>
-            </div>
-            <div style="font-size:.8rem;color:var(--ink-dim);margin-bottom:10px;">
-              ${l.course ? '📁 ' + escapeHtml(l.course.title) + (l.chapter ? ' › ' + escapeHtml(l.chapter.title) : '') : ''}
-            </div>
-            ${schedDate ? `
-              <div style="font-size:.82rem;font-weight:700;color:${statusColor};margin-bottom:10px;">
-                📅 ${schedDate.toLocaleDateString('ar-EG', { weekday:'short', year:'numeric', month:'short', day:'numeric' })}
-                &nbsp;⏰ ${schedDate.toLocaleTimeString('ar-EG', { hour:'2-digit', minute:'2-digit' })}
-              </div>
-            ` : '<div style="font-size:.8rem;color:var(--ink-dim);margin-bottom:10px;">لم يتم جدولة وقت نشر</div>'}
-            <div style="display:flex;gap:6px;flex-wrap:wrap;">
-              <button class="btn btn-line btn-sm" style="font-size:.78rem;padding:3px 10px;color:#f59e0b;border-color:rgba(245,158,11,0.5);" data-lesson-id="${l.id}" data-lesson-title="${escapeHtml(l.title)}" data-action="schedule-lesson">📅 تعديل الجدولة</button>
-              <button class="btn btn-sm" style="font-size:.78rem;padding:3px 10px;background:rgba(239,68,68,0.08);color:#ef4444;border:1px solid rgba(239,68,68,0.3);border-radius:8px;" data-lesson-id="${l.id}" data-lesson-title="${escapeHtml(l.title)}" data-action="delete-lesson">🗑 حذف</button>
-            </div>
-          </div>
-        `;
-      }).join('');
+      const dayVal = document.getElementById('calendarDayPicker')?.value;
+      if (dayVal) {
+        filterCalendarByDay(dayVal);
+      } else {
+        renderCalendarLessons(cachedCalendarLessons);
+      }
     } catch (e) {
       container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--err);grid-column:1/-1;">فشل تحميل التقويم.</div>';
     }
+  }
+
+  function filterCalendarByDay(dayString) {
+    if (!dayString) {
+      clearCalendarDayFilter();
+      return;
+    }
+    const statusEl = document.getElementById('calendarFilterStatus');
+    const filtered = cachedCalendarLessons.filter(l => {
+      if (!l.scheduledPublishAt) return false;
+      const d = new Date(l.scheduledPublishAt);
+      if (isNaN(d.getTime())) return false;
+      const localDay = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+      return localDay === dayString;
+    });
+
+    const [y, m, d] = (dayString || '').split('-').map(Number);
+    const dObj = (y && m && d) ? new Date(y, m - 1, d) : new Date(dayString);
+    const dayLabel = !isNaN(dObj.getTime()) ? dObj.toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : dayString;
+    if (statusEl) statusEl.textContent = `المحاضرات المجدولة ليوم: ${dayLabel} (${filtered.length} محاضرة)`;
+    renderCalendarLessons(filtered);
+  }
+
+  function clearCalendarDayFilter() {
+    const picker = document.getElementById('calendarDayPicker');
+    if (picker) picker.value = '';
+    const statusEl = document.getElementById('calendarFilterStatus');
+    if (statusEl) statusEl.textContent = 'عرض كافة محاضرات المرحلة المحددة';
+    renderCalendarLessons(cachedCalendarLessons);
   }
 
   let cachedStageStudents = [];
@@ -1853,13 +1927,20 @@
   }
 
   function openAddLessonModal(chapterId) {
-    document.getElementById('lessonChapterId').value = chapterId;
-    document.getElementById('lessonTitleInput').value = '';
-    document.getElementById('lessonPriceInput').value = '10';
-    document.getElementById('lessonPointCostInput').value = '10';
-    document.getElementById('lessonDescInput').value = '';
-    document.getElementById('lessonVideoUrlInput').value = '';
-    document.getElementById('lessonPdfUrlInput').value = '';
+    const chIdEl = document.getElementById('lessonChapterId');
+    if (chIdEl) chIdEl.value = chapterId;
+    const titleEl = document.getElementById('lessonTitleInput');
+    if (titleEl) titleEl.value = '';
+    const priceEl = document.getElementById('lessonPriceInput');
+    if (priceEl) priceEl.value = '10';
+    const pointCostEl = document.getElementById('lessonPointCostInput');
+    if (pointCostEl) pointCostEl.value = '0';
+    const descEl = document.getElementById('lessonDescInput');
+    if (descEl) descEl.value = '';
+    const vidUrlEl = document.getElementById('lessonVideoUrlInput');
+    if (vidUrlEl) vidUrlEl.value = '';
+    const pdfUrlEl = document.getElementById('lessonPdfUrlInput');
+    if (pdfUrlEl) pdfUrlEl.value = '';
 
     const vidFile = document.getElementById('lessonVideoFile');
     if (vidFile) vidFile.value = '';

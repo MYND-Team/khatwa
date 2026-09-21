@@ -126,6 +126,44 @@
 
     try {
       const access = await window.KhatwaAPI.student.checkLessonAccess(lessonId);
+      window._latestLessonAccess = access;
+
+      // Derive assignment and exam presence flags (either from backend response contract or derived fallbacks)
+      let hasAssignment = typeof access.hasAssignment === 'boolean' 
+        ? access.hasAssignment 
+        : (access.reason === 'ASSIGNMENT_REQUIRED' || access.step === 'assignment');
+
+      let hasExam = typeof access.hasExam === 'boolean' 
+        ? access.hasExam 
+        : (access.reason === 'EXAM_REQUIRED' || access.step === 'exam');
+
+      // Adjust stepper: hide steps if teacher did not add homework or exam
+      const dividers = document.querySelectorAll('.progression-divider');
+      const div1 = dividers[0];
+      const div2 = dividers[1];
+
+      if (!hasAssignment) {
+        step1.style.display = 'none';
+        if (div1) div1.style.display = 'none';
+      } else {
+        step1.style.display = 'flex';
+        if (div1) div1.style.display = 'block';
+      }
+
+      if (!hasExam) {
+        step2.style.display = 'none';
+        if (div2) div2.style.display = 'none';
+      } else {
+        step2.style.display = 'flex';
+        if (div2) div2.style.display = 'block';
+      }
+
+      const stepper = document.getElementById('progressionStepper');
+      if (!hasAssignment && !hasExam) {
+        if (stepper) stepper.style.display = 'none';
+      } else {
+        if (stepper) stepper.style.display = 'flex';
+      }
 
       // ─── Step -1: Scheduled Gate (Lesson scheduled for future) ────────────
       if (access.reason === 'SCHEDULED') {
@@ -549,6 +587,18 @@
             </div>
           ` : ''}
         </div>
+
+        ${(window._latestLessonAccess?.nextLesson || lesson.nextLesson) ? `
+          <div style="margin-top:24px;padding:20px;background:linear-gradient(135deg, rgba(37,99,235,0.08), rgba(217,119,6,0.08));border-radius:14px;border:1px solid rgba(217,119,6,0.3);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;">
+            <div>
+              <span style="font-size:0.85rem;color:var(--gold-light);font-weight:700;">المحاضرة التالية في الترتيب:</span>
+              <h4 style="margin:4px 0 0;font-size:1.1rem;color:var(--ink);">${escapeHtml((window._latestLessonAccess?.nextLesson || lesson.nextLesson).title)}</h4>
+            </div>
+            <a href="lesson.html?lessonId=${(window._latestLessonAccess?.nextLesson || lesson.nextLesson).id}" class="btn btn-primary" style="padding:12px 24px;font-size:1rem;font-weight:700;">
+              ▶ الانتقال إلى المحاضرة التالية
+            </a>
+          </div>
+        ` : ''}
       </div>
     `;
 

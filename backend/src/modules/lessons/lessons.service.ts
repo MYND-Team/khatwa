@@ -157,45 +157,67 @@ export async function getLessonContent(lessonId: string, studentId: string) {
   if (previousLesson) {
     const prevHwQuizId = previousLesson.assignmentQuizId || previousLesson.homeworkId;
     if (prevHwQuizId) {
-      const prevAttempt = await prisma.quizAttempt.findUnique({
-        where: { studentId_quizId: { studentId, quizId: prevHwQuizId } },
+      const prevQuiz = await prisma.quiz.findUnique({
+        where: { id: prevHwQuizId },
+        select: { id: true, _count: { select: { questions: true } } },
       });
-      const prevHwSubmission = await prisma.homeworkSubmission.findUnique({
-        where: { studentId_lessonId: { studentId, lessonId: previousLesson.id } },
+      if (prevQuiz && prevQuiz._count.questions > 0) {
+        const prevAttempt = await prisma.quizAttempt.findUnique({
+          where: { studentId_quizId: { studentId, quizId: prevHwQuizId } },
+        });
+        const prevHwSubmission = await prisma.homeworkSubmission.findUnique({
+          where: { studentId_lessonId: { studentId, lessonId: previousLesson.id } },
+        });
+        if (!prevAttempt && !prevHwSubmission) {
+          throw Object.assign(
+            new Error(`يجب إكمال وتسليم واجب الحصة السابقة (${previousLesson.title}) أولاً`),
+            { statusCode: 403, code: 'PREVIOUS_HOMEWORK_REQUIRED' }
+          );
+        }
+      }
+    }
+  }
+
+  // Gate 3: Exam of the current lesson must be taken and PASSED (if questions exist)
+  const examQuizId = lesson.examQuizId || lesson.openingQuizId;
+  if (examQuizId) {
+    const examQuiz = await prisma.quiz.findUnique({
+      where: { id: examQuizId },
+      select: { id: true, _count: { select: { questions: true } } },
+    });
+    if (examQuiz && examQuiz._count.questions > 0) {
+      const examAttempt = await prisma.quizAttempt.findUnique({
+        where: { studentId_quizId: { studentId, quizId: examQuizId } },
       });
-      if (!prevAttempt && !prevHwSubmission) {
+      if (!examAttempt || !examAttempt.passed) {
         throw Object.assign(
-          new Error(`يجب إكمال وتسليم واجب الحصة السابقة (${previousLesson.title}) أولاً`),
-          { statusCode: 403, code: 'PREVIOUS_HOMEWORK_REQUIRED' }
+          new Error(`يجب اجتياز امتحان الحصة أولاً قبل فتح المحتوى`),
+          { statusCode: 403, code: 'EXAM_REQUIRED' }
         );
       }
     }
   }
 
-  // Gate 3: Exam of the current lesson must be taken and PASSED
-  const examQuizId = lesson.examQuizId || lesson.openingQuizId;
-  if (examQuizId) {
-    const examAttempt = await prisma.quizAttempt.findUnique({
-      where: { studentId_quizId: { studentId, quizId: examQuizId } },
+  // Gate 4: Assignment / Opening quiz must be completed if questions exist
+  const effectiveHwQuizId = lesson.assignmentQuizId || lesson.homeworkId;
+  if (effectiveHwQuizId && effectiveHwQuizId !== examQuizId) {
+    const assignQuiz = await prisma.quiz.findUnique({
+      where: { id: effectiveHwQuizId },
+      select: { id: true, _count: { select: { questions: true } } },
     });
-    if (!examAttempt || !examAttempt.passed) {
-      throw Object.assign(
-        new Error(`يجب اجتياز امتحان الحصة أولاً قبل فتح المحتوى`),
-        { statusCode: 403, code: 'EXAM_REQUIRED' }
-      );
-    }
-  }
-
-  // Gate 4: Assignment / Opening quiz must be completed if required
-  if (lesson.assignmentQuizId && lesson.assignmentQuizId !== examQuizId) {
-    const attempt = await prisma.quizAttempt.findUnique({
-      where: { studentId_quizId: { studentId, quizId: lesson.assignmentQuizId } },
-    });
-    if (!attempt) {
-      throw Object.assign(
-        new Error(`يجب تسليم الواجب أولاً قبل فتح المحاضرة`),
-        { statusCode: 403, code: 'ASSIGNMENT_REQUIRED' }
-      );
+    if (assignQuiz && assignQuiz._count.questions > 0) {
+      const attempt = await prisma.quizAttempt.findUnique({
+        where: { studentId_quizId: { studentId, quizId: effectiveHwQuizId } },
+      });
+      const submission = await prisma.homeworkSubmission.findUnique({
+        where: { studentId_lessonId: { studentId, lessonId: lesson.id } },
+      });
+      if (!attempt && !submission) {
+        throw Object.assign(
+          new Error(`يجب تسليم الواجب أولاً قبل فتح المحاضرة`),
+          { statusCode: 403, code: 'ASSIGNMENT_REQUIRED' }
+        );
+      }
     }
   }
 

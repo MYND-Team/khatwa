@@ -986,6 +986,27 @@ router.get(
       return;
     }
 
+    // Pre-calculate whether current lesson actually has an exam and assignment with questions
+    const examQuizId = lesson.examQuizId || lesson.openingQuizId;
+    let hasExam = false;
+    if (examQuizId) {
+      const eq = await prisma.quiz.findUnique({
+        where: { id: examQuizId },
+        select: { id: true, _count: { select: { questions: true } } },
+      });
+      hasExam = Boolean(eq && eq._count.questions > 0);
+    }
+
+    const currentHwQuizId = lesson.assignmentQuizId || lesson.homeworkId;
+    let hasAssignment = false;
+    if (currentHwQuizId && currentHwQuizId !== examQuizId) {
+      const hq = await prisma.quiz.findUnique({
+        where: { id: currentHwQuizId },
+        select: { id: true, _count: { select: { questions: true } } },
+      });
+      hasAssignment = Boolean(hq && hq._count.questions > 0);
+    }
+
     // 0. Scheduled Gate: Lesson not yet available
     if (lesson.scheduledPublishAt && lesson.scheduledPublishAt > new Date()) {
       res.status(200).json({
@@ -995,6 +1016,8 @@ router.get(
           reason: 'SCHEDULED',
           step: 'scheduled',
           scheduledPublishAt: lesson.scheduledPublishAt,
+          hasAssignment,
+          hasExam,
         },
       });
       return;
@@ -1020,6 +1043,8 @@ router.get(
             step: 'purchase',
             price: lesson.price,
             pointCost: lesson.pointCost,
+            hasAssignment,
+            hasExam,
           },
         });
         return;
@@ -1063,33 +1088,40 @@ router.get(
     if (previousLesson) {
       const prevHwQuizId = previousLesson.assignmentQuizId || previousLesson.homeworkId;
       if (prevHwQuizId) {
-        const prevAttempt = await prisma.quizAttempt.findUnique({
-          where: { studentId_quizId: { studentId, quizId: prevHwQuizId } },
+        const prevQuiz = await prisma.quiz.findUnique({
+          where: { id: prevHwQuizId },
+          select: { id: true, _count: { select: { questions: true } } },
         });
-        const prevHwSubmission = await prisma.homeworkSubmission.findUnique({
-          where: { studentId_lessonId: { studentId, lessonId: previousLesson.id } },
-        });
-
-        if (!prevAttempt && !prevHwSubmission) {
-          res.status(200).json({
-            success: true,
-            data: {
-              canAccess: false,
-              reason: 'PREVIOUS_HOMEWORK_REQUIRED',
-              step: 'previous_homework',
-              previousLessonId: previousLesson.id,
-              previousLessonTitle: previousLesson.title,
-              quizId: prevHwQuizId,
-            },
+        if (prevQuiz && prevQuiz._count.questions > 0) {
+          const prevAttempt = await prisma.quizAttempt.findUnique({
+            where: { studentId_quizId: { studentId, quizId: prevHwQuizId } },
           });
-          return;
+          const prevHwSubmission = await prisma.homeworkSubmission.findUnique({
+            where: { studentId_lessonId: { studentId, lessonId: previousLesson.id } },
+          });
+
+          if (!prevAttempt && !prevHwSubmission) {
+            res.status(200).json({
+              success: true,
+              data: {
+                canAccess: false,
+                reason: 'PREVIOUS_HOMEWORK_REQUIRED',
+                step: 'previous_homework',
+                previousLessonId: previousLesson.id,
+                previousLessonTitle: previousLesson.title,
+                quizId: prevHwQuizId,
+                hasAssignment,
+                hasExam,
+              },
+            });
+            return;
+          }
         }
       }
     }
 
-    // 3. Academic Gate: Current Lesson Exam must be taken and PASSED
-    const examQuizId = lesson.examQuizId || lesson.openingQuizId;
-    if (examQuizId) {
+    // 3. Academic Gate: Current Lesson Exam must be taken and PASSED (if questions exist)
+    if (hasExam && examQuizId) {
       const examAttempt = await prisma.quizAttempt.findUnique({
         where: { studentId_quizId: { studentId, quizId: examQuizId } },
       });
@@ -1101,15 +1133,16 @@ router.get(
             reason: 'EXAM_REQUIRED',
             step: 'exam',
             quizId: examQuizId,
+            hasAssignment,
+            hasExam,
           },
         });
         return;
       }
     }
 
-    // 4. Current Lesson Assignment / Homework if defined
-    const currentHwQuizId = lesson.assignmentQuizId || lesson.homeworkId;
-    if (currentHwQuizId && currentHwQuizId !== examQuizId) {
+    // 4. Current Lesson Assignment / Homework if defined (if questions exist)
+    if (hasAssignment && currentHwQuizId) {
       const hwAttempt = await prisma.quizAttempt.findUnique({
         where: { studentId_quizId: { studentId, quizId: currentHwQuizId } },
       });
@@ -1124,16 +1157,51 @@ router.get(
             reason: 'ASSIGNMENT_REQUIRED',
             step: 'assignment',
             quizId: currentHwQuizId,
+            hasAssignment,
+            hasExam,
           },
         });
         return;
       }
     }
 
+    // Determine next lesson for easy sequential progression (excluding unreleased/future scheduled lessons)
+    const scheduledFilter = {
+      OR: [
+        { scheduledPublishAt: null },
+        { scheduledPublishAt: { lte: new Date() } },
+      ],
+    };
+
+    let nextLesson: any = null;
+    if (lesson.chapterId) {
+      nextLesson = await prisma.lesson.findFirst({
+        where: {
+          chapterId: lesson.chapterId,
+          orderIndex: { gt: lesson.orderIndex },
+          isPublished: true,
+          ...scheduledFilter,
+        },
+        orderBy: { orderIndex: 'asc' },
+        select: { id: true, title: true },
+      });
+    } else if (lesson.courseId) {
+      nextLesson = await prisma.lesson.findFirst({
+        where: {
+          courseId: lesson.courseId,
+          orderIndex: { gt: lesson.orderIndex },
+          isPublished: true,
+          ...scheduledFilter,
+        },
+        orderBy: { orderIndex: 'asc' },
+        select: { id: true, title: true },
+      });
+    }
+
     // All gates passed
     res.status(200).json({
       success: true,
-      data: { canAccess: true, reason: 'ALL_CLEAR', step: 'lesson' },
+      data: { canAccess: true, reason: 'ALL_CLEAR', step: 'lesson', nextLesson, hasAssignment, hasExam },
     });
   })
 );
