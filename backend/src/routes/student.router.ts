@@ -1373,6 +1373,57 @@ router.patch(
 // ─── Offline Session Requests (Center to Online) ───────────────────────────
 
 router.get(
+  '/offline-catalog',
+  asyncHandler(async (_req, res) => {
+    const teachers = await prisma.teacherProfile.findMany({
+      where: {
+        user: { isActive: true },
+      },
+      select: {
+        id: true,
+        displayName: true,
+        subject: true,
+        academicStages: true,
+        workspaces: {
+          where: { isActive: true },
+          select: { stage: true },
+        },
+        courses: {
+          where: { isPublished: true },
+          select: {
+            id: true,
+            title: true,
+            subject: true,
+            academicStage: true,
+            lessons: {
+              where: {
+                isPublished: true,
+                OR: [
+                  { scheduledPublishAt: null },
+                  { scheduledPublishAt: { lte: new Date() } },
+                ],
+              },
+              select: {
+                id: true,
+                title: true,
+                orderIndex: true,
+                price: true,
+                academicStage: true,
+              },
+              orderBy: { orderIndex: 'asc' },
+            },
+          },
+          orderBy: { createdAt: 'desc' },
+        },
+      },
+      orderBy: { displayName: 'asc' },
+    });
+
+    res.status(200).json({ success: true, data: teachers });
+  })
+);
+
+router.get(
   '/offline-requests',
   asyncHandler(async (req, res) => {
     const studentId = req.user!.sub;

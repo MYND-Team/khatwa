@@ -788,6 +788,7 @@
         return res.data;
       },
       async getQuizAttempt(quizId) { const res = await request('/student/quizzes/' + quizId + '/attempt'); return res.data; },
+      async getOfflineCatalog() { const res = await request('/student/offline-catalog'); return res.data || []; },
       async getOfflineRequests() { const res = await request('/student/offline-requests'); return res.data || []; },
       async createOfflineRequest(data) { const res = await request('/student/offline-requests', { method: 'POST', body: data }); return res.data; },
       async getWallet() { const res = await request('/student/wallet'); return res.data || { walletBalance: 0, pointsBalance: 0, walletTransactions: [] }; },

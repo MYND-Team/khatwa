@@ -47,6 +47,12 @@
     gap: 14px;
     align-items: flex-start;
   }
+  .field-hint {
+    font-size: 0.8rem;
+    color: var(--ink-dim);
+    margin-top: 4px;
+    display: block;
+  }
 </style>
 </head>
 <body>
@@ -77,7 +83,7 @@
   <div class="page-head" style="margin-bottom:24px;">
     <div>
       <h1>طلب حضور سيشن أوفلاين أونلاين 🏢</h1>
-      <p class="page-sub" style="margin:4px 0 0;">حضرت سيشن في السنتر أو القاعة وعايز تعيدها أو تحضرها أونلاين؟ املأ البيانات وسيتم تفعيل المحاضرة لك فوراً.</p>
+      <p class="page-sub" style="margin:4px 0 0;">حضرت سيشن في السنتر أو القاعة وعايز تعيدها أو تحضرها أونلاين؟ اختر المدرس والمحاضرة وسيتم تفعيلها فوراً بحسابك عند موافقة الإدارة.</p>
     </div>
     <a href="dashboard.html" class="btn btn-line btn-sm">العودة للرئيسية</a>
   </div>
@@ -85,9 +91,9 @@
   <div class="info-box">
     <span style="font-size:1.8rem;">💡</span>
     <div>
-      <b style="color:var(--primary);display:block;margin-bottom:4px;font-size:1rem;">كيف يعمل هذا النظام؟</b>
+      <b style="color:var(--primary);display:block;margin-bottom:4px;font-size:1rem;">تفعيل المحاضرة تلقائياً فور الموافقة</b>
       <p style="margin:0;font-size:0.9rem;color:var(--ink-dim);line-height:1.6;">
-        بعد إرسال طلبك، تقوم الإدارة بمطابقة بيانات حضورك في السنتر، وإما أن يتم <b>فتح المحاضرة مباشرة لحسابك</b> أو <b>إرسال كود تفعيل خاص</b> يظهر لك في الجدول أدناه وفي إشعاراتك.
+        اختر الصف الدراسي ثم المدرس، وستظهر لك محاضراته المسجلة على المنصة. بعد إرسال الطلب واعتماده من الإدارة، <b>تُفتح المحاضرة مباشرة لحسابك تلقائياً وبشكل مجاني</b> دون الحاجة لأي كود أو تحويل رصيد!
       </p>
     </div>
   </div>
@@ -106,7 +112,7 @@
         <!-- Academic Stage -->
         <div class="field">
           <label for="reqAcademicStage" style="font-weight:700;font-size:0.92rem;margin-bottom:6px;display:block;">الصف الدراسي (Grade) *</label>
-          <select id="reqAcademicStage" class="form-control" required>
+          <select id="reqAcademicStage" class="form-control" onchange="onStageChanged()" required>
             <option value="SECONDARY_1">الصف الأول الثانوي</option>
             <option value="SECONDARY_2">الصف الثاني الثانوي</option>
             <option value="SECONDARY_3">الصف الثالث الثانوي</option>
@@ -129,19 +135,38 @@
         </div>
       </div>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px;">
-        <!-- Teacher Name -->
-        <div class="field">
-          <label for="reqTeacherName" style="font-weight:700;font-size:0.92rem;margin-bottom:6px;display:block;">اسم المدرس (Teacher Name) *</label>
-          <input type="text" id="reqTeacherName" class="form-control" placeholder="مثال: مستر أحمد محمد" required>
-        </div>
-
-        <!-- Target Course/Lesson -->
-        <div class="field">
-          <label for="reqCourseTitle" style="font-weight:700;font-size:0.92rem;margin-bottom:6px;display:block;">المحاضرة أو الحصة المطلوبة *</label>
-          <input type="text" id="reqCourseTitle" class="form-control" placeholder="مثال: محاضرة الباب الثاني - الحركة الدائرية" required>
+      <!-- Teacher Selection (Dynamic Dropdown) -->
+      <div class="field" style="margin-bottom:18px;">
+        <label for="reqTeacherSelect" style="font-weight:700;font-size:0.92rem;margin-bottom:6px;display:block;">👨‍🏫 اسم المدرس (Teacher Name) *</label>
+        <select id="reqTeacherSelect" class="form-control" onchange="onTeacherChanged()" required>
+          <option value="">جارٍ تحميل قائمة المدرسين...</option>
+        </select>
+        <span class="field-hint">اختر المدرس من قائمة مدرسي المنصة لعرض محاضراته، أو اختر "مدرس آخر" إن لم يكن بالقائمة.</span>
+        
+        <!-- Manual Teacher Input (shown when __OTHER__ is selected) -->
+        <div id="manualTeacherWrapper" style="display:none;margin-top:10px;">
+          <input type="text" id="reqTeacherNameManual" class="form-control" placeholder="اكتب اسم المدرس يدوياً...">
         </div>
       </div>
+
+      <!-- Lesson Selection (Dynamic Dropdown populated based on Teacher & Stage) -->
+      <div class="field" style="margin-bottom:18px;">
+        <label for="reqLessonSelect" style="font-weight:700;font-size:0.92rem;margin-bottom:6px;display:block;">🎯 المحاضرة أو الحصة المطلوبة *</label>
+        <select id="reqLessonSelect" class="form-control" onchange="onLessonChanged()" required>
+          <option value="">-- يرجى اختيار المدرس أولاً لعرض محاضراته --</option>
+        </select>
+        <span class="field-hint">اختر المحاضرة بالظبط لتفتح لك تلقائياً على المنصة فور موافقة الإدارة.</span>
+
+        <!-- Manual Lesson/Course Title Input (shown when __OTHER__ is selected or custom) -->
+        <div id="manualLessonWrapper" style="display:none;margin-top:10px;">
+          <input type="text" id="reqCourseTitleManual" class="form-control" placeholder="اكتب عنوان المحاضرة أو الكورس المطلوب يدوياً...">
+        </div>
+      </div>
+
+      <!-- Hidden inputs storing final resolved values -->
+      <input type="hidden" id="reqResolvedLessonId" value="">
+      <input type="hidden" id="reqResolvedTeacherName" value="">
+      <input type="hidden" id="reqResolvedCourseTitle" value="">
 
       <!-- Notes -->
       <div class="field" style="margin-bottom:18px;">
@@ -199,6 +224,7 @@
 <script src="js/main.js"></script>
 <script>
   let selectedTicketBase64 = null;
+  let offlineCatalog = [];
 
   document.addEventListener('DOMContentLoaded', async () => {
     const user = window.KhatwaAPI.getUser();
@@ -213,9 +239,180 @@
       document.getElementById('reqPhoneNumber').value = user.studentPhoneNumber;
     }
 
+    // Pre-select student's grade if available
+    const studentStage = user.studentProfile?.academicStage || user.academicStage;
+    if (studentStage && document.getElementById('reqAcademicStage').querySelector(`option[value="${studentStage}"]`)) {
+      document.getElementById('reqAcademicStage').value = studentStage;
+    }
+
     window.KhatwaAPI.syncNav();
+    await loadCatalog();
     await loadMyOfflineRequests();
   });
+
+  async function loadCatalog() {
+    try {
+      offlineCatalog = await window.KhatwaAPI.student.getOfflineCatalog();
+    } catch (_) {
+      offlineCatalog = [];
+    }
+    populateTeachers();
+  }
+
+  function onStageChanged() {
+    populateTeachers();
+  }
+
+  function getTeacherStagesList(teacher) {
+    const stages = new Set();
+    if (teacher.academicStages) {
+      teacher.academicStages.split(',').map(s => s.trim()).filter(Boolean).forEach(s => stages.add(s));
+    }
+    if (Array.isArray(teacher.workspaces)) {
+      teacher.workspaces.forEach(w => { if (w.stage) stages.add(w.stage); });
+    }
+    if (Array.isArray(teacher.courses)) {
+      teacher.courses.forEach(c => { if (c.academicStage) stages.add(c.academicStage); });
+    }
+    return Array.from(stages);
+  }
+
+  function populateTeachers() {
+    const stage = document.getElementById('reqAcademicStage').value;
+    const teacherSelect = document.getElementById('reqTeacherSelect');
+
+    let filteredTeachers = offlineCatalog;
+    if (stage) {
+      filteredTeachers = offlineCatalog.filter(t => {
+        const stages = getTeacherStagesList(t);
+        return stages.length === 0 || stages.includes(stage);
+      });
+    }
+
+    if (filteredTeachers.length === 0) {
+      filteredTeachers = offlineCatalog; // fallback to all
+    }
+
+    let html = '<option value="">-- اختر المدرس من القائمة --</option>';
+    filteredTeachers.forEach(t => {
+      const subject = t.subject ? ` (${t.subject})` : '';
+      html += `<option value="${t.id}">${escapeHtml(t.displayName || 'أستاذ المادة')}${escapeHtml(subject)}</option>`;
+    });
+
+    html += '<option value="__OTHER__">✍️ مدرس آخر غير مسجل بالقائمة...</option>';
+    teacherSelect.innerHTML = html;
+
+    // Reset lesson select
+    document.getElementById('reqLessonSelect').innerHTML = '<option value="">-- اختر المدرس أولاً لعرض محاضراته --</option>';
+    document.getElementById('manualTeacherWrapper').style.display = 'none';
+    document.getElementById('manualLessonWrapper').style.display = 'none';
+    document.getElementById('reqResolvedLessonId').value = '';
+    document.getElementById('reqResolvedTeacherName').value = '';
+    document.getElementById('reqResolvedCourseTitle').value = '';
+  }
+
+  function onTeacherChanged() {
+    const teacherId = document.getElementById('reqTeacherSelect').value;
+    const teacherWrapper = document.getElementById('manualTeacherWrapper');
+    const lessonSelect = document.getElementById('reqLessonSelect');
+    const stage = document.getElementById('reqAcademicStage').value;
+
+    if (!teacherId) {
+      teacherWrapper.style.display = 'none';
+      lessonSelect.innerHTML = '<option value="">-- اختر المدرس أولاً لعرض محاضراته --</option>';
+      document.getElementById('manualLessonWrapper').style.display = 'none';
+      return;
+    }
+
+    if (teacherId === '__OTHER__') {
+      teacherWrapper.style.display = 'block';
+      lessonSelect.innerHTML = '<option value="__OTHER__" selected>✍️ كتابة عنوان المحاضرة يدوياً</option>';
+      document.getElementById('manualLessonWrapper').style.display = 'block';
+      document.getElementById('reqResolvedLessonId').value = '';
+      return;
+    }
+
+    teacherWrapper.style.display = 'none';
+    const teacher = offlineCatalog.find(t => t.id === teacherId);
+    if (!teacher) return;
+
+    document.getElementById('reqResolvedTeacherName').value = teacher.displayName || '';
+
+    // Extract lessons for this teacher in this stage
+    const courses = (teacher.courses || []).filter(c => !stage || c.academicStage === stage || !c.academicStage);
+    const lessonsList = [];
+
+    courses.forEach(c => {
+      (c.lessons || []).forEach(l => {
+        lessonsList.push({
+          id: l.id,
+          title: l.title,
+          courseTitle: c.title,
+          price: l.price || 0,
+        });
+      });
+    });
+
+    // If no lessons found for this specific stage, fallback to all lessons of this teacher
+    if (lessonsList.length === 0 && teacher.courses) {
+      teacher.courses.forEach(c => {
+        (c.lessons || []).forEach(l => {
+          lessonsList.push({
+            id: l.id,
+            title: l.title,
+            courseTitle: c.title,
+            price: l.price || 0,
+          });
+        });
+      });
+    }
+
+    if (lessonsList.length === 0) {
+      lessonSelect.innerHTML = `
+        <option value="">لا توجد محاضرات منشورة مسجلة لهذا المعلم بعد</option>
+        <option value="__OTHER__" selected>✍️ كتابة عنوان المحاضرة يدوياً...</option>
+      `;
+      document.getElementById('manualLessonWrapper').style.display = 'block';
+      document.getElementById('reqResolvedLessonId').value = '';
+      return;
+    }
+
+    let lHtml = '<option value="">-- اختر المحاضرة المطلوبة بالظبط --</option>';
+    lessonsList.forEach(l => {
+      lHtml += `<option value="${l.id}" data-title="${escapeHtml(l.title)}" data-course="${escapeHtml(l.courseTitle)}">
+        ${escapeHtml(l.title)} — [كورس: ${escapeHtml(l.courseTitle)}]
+      </option>`;
+    });
+    lHtml += '<option value="__OTHER__">✍️ محاضرة أخرى / كتابة اسم الحصة يدوياً...</option>';
+
+    lessonSelect.innerHTML = lHtml;
+    document.getElementById('manualLessonWrapper').style.display = 'none';
+  }
+
+  function onLessonChanged() {
+    const lessonSelect = document.getElementById('reqLessonSelect');
+    const selectedVal = lessonSelect.value;
+    const manualWrap = document.getElementById('manualLessonWrapper');
+
+    if (!selectedVal) {
+      manualWrap.style.display = 'none';
+      document.getElementById('reqResolvedLessonId').value = '';
+      document.getElementById('reqResolvedCourseTitle').value = '';
+      return;
+    }
+
+    if (selectedVal === '__OTHER__') {
+      manualWrap.style.display = 'block';
+      document.getElementById('reqResolvedLessonId').value = '';
+      document.getElementById('reqResolvedCourseTitle').value = '';
+    } else {
+      manualWrap.style.display = 'none';
+      const opt = lessonSelect.options[lessonSelect.selectedIndex];
+      const title = opt.getAttribute('data-title') || opt.textContent.trim();
+      document.getElementById('reqResolvedLessonId').value = selectedVal;
+      document.getElementById('reqResolvedCourseTitle').value = title;
+    }
+  }
 
   function handleTicketFile(input) {
     if (!input.files || !input.files[0]) return;
@@ -253,12 +450,32 @@
     const academicStage = document.getElementById('reqAcademicStage').value;
     const phoneNumber = document.getElementById('reqPhoneNumber').value.trim();
     const centerLocation = document.getElementById('reqCenterLocation').value.trim();
-    const teacherName = document.getElementById('reqTeacherName').value.trim();
-    const courseTitle = document.getElementById('reqCourseTitle').value.trim();
     const notes = document.getElementById('reqNotes').value.trim();
 
-    if (!studentName || !phoneNumber || !centerLocation || !teacherName) {
-      alert('يرجى ملء جميع الحقول الإلزامية');
+    // Resolve Teacher Name
+    const teacherSelect = document.getElementById('reqTeacherSelect');
+    let teacherName = '';
+    if (teacherSelect.value === '__OTHER__') {
+      teacherName = document.getElementById('reqTeacherNameManual').value.trim();
+    } else if (teacherSelect.value) {
+      const t = offlineCatalog.find(item => item.id === teacherSelect.value);
+      teacherName = t ? t.displayName : teacherSelect.options[teacherSelect.selectedIndex].text;
+    }
+
+    // Resolve Lesson ID & Course Title
+    const lessonSelect = document.getElementById('reqLessonSelect');
+    let lessonId = document.getElementById('reqResolvedLessonId').value || null;
+    let courseTitle = '';
+
+    if (lessonSelect.value === '__OTHER__' || !lessonSelect.value) {
+      courseTitle = document.getElementById('reqCourseTitleManual').value.trim();
+      lessonId = null;
+    } else {
+      courseTitle = document.getElementById('reqResolvedCourseTitle').value || lessonSelect.options[lessonSelect.selectedIndex].text;
+    }
+
+    if (!studentName || !phoneNumber || !centerLocation || !teacherName || !courseTitle) {
+      alert('يرجى التأكد من ملء جميع الحقول المطلوبة (الاسم، الهاتف، السنتر، المدرس، والمحاضرة)');
       return;
     }
 
@@ -273,6 +490,7 @@
         phoneNumber,
         centerLocation,
         teacherName,
+        lessonId: lessonId || undefined,
         courseTitle,
         notes,
         receiptUrl: selectedTicketBase64
@@ -280,15 +498,15 @@
 
       fb.innerHTML = `
         <div style="background:rgba(34,197,94,0.1);border:1px solid #22c55e;color:#16a34a;padding:14px;border-radius:12px;font-weight:700;text-align:center;">
-          ✓ تم إرسال طلبك بنجاح! سيتم مراجعته وتفعيل المحاضرة لك في أقرب وقت.
+          ✓ تم إرسال طلبك بنجاح! سيتم مراجعته وفتح المحاضرة مباشرة لك في أقرب وقت.
         </div>
       `;
       fb.style.display = 'block';
 
-      // Reset specific inputs
-      document.getElementById('reqCourseTitle').value = '';
+      // Reset
       document.getElementById('reqNotes').value = '';
       clearSelectedTicket();
+      populateTeachers();
 
       await loadMyOfflineRequests();
     } catch (err) {
@@ -313,7 +531,7 @@
           <div style="text-align:center;padding:32px 16px;color:var(--ink-dim);">
             <div style="font-size:2rem;margin-bottom:8px;">🏢</div>
             <p style="margin:0;font-weight:600;">لم تقدم أي طلبات سيشن أوفلاين بعد</p>
-            <span style="font-size:0.82rem;color:var(--ink-faint);">عند تقديمك طلباً، ستظهر تفاصيل وحالة الموافقة والأكواد هنا.</span>
+            <span style="font-size:0.82rem;color:var(--ink-faint);">عند تقديمك طلباً، ستظهر تفاصيل وحالة الموافقة والتفعيل هنا.</span>
           </div>
         `;
         return;

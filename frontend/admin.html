@@ -2934,9 +2934,18 @@
             <td style="text-align:center;">
               <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;">
                 ${isPending ? `
-                  <button class="btn btn-primary btn-sm" onclick="adminOpenDirectUnlockModal('${r.id}', '${escapeHtml(r.studentName)}', '${escapeHtml(r.courseTitle || '')}', '${r.lessonId || ''}')" style="font-weight:700;background:#16a34a;border-color:#16a34a;padding:4px 10px;">
-                    🔓 فتح المحاضرة
-                  </button>
+                  ${r.lessonId ? `
+                    <button class="btn btn-primary btn-sm" onclick="adminQuickApproveDirect('${r.id}', '${escapeHtml(r.studentName || '')}', '${escapeHtml(r.lesson?.title || r.courseTitle || 'المحاضرة')}', '${r.lessonId}')" style="font-weight:700;background:#16a34a;border-color:#16a34a;padding:4px 10px;" title="موافقة وفتح فوري للمحاضرة التي اختارها الطالب">
+                      ⚡ موافقة وفتح فوري
+                    </button>
+                    <button class="btn btn-line btn-sm" onclick="adminOpenDirectUnlockModal('${r.id}', '${escapeHtml(r.studentName)}', '${escapeHtml(r.courseTitle || '')}', '${r.lessonId}')" style="color:var(--brand);border-color:rgba(14,165,233,0.4);font-weight:600;padding:4px 8px;" title="تغيير المحاضرة قبل الفتح">
+                      🔄 تغيير المحاضرة
+                    </button>
+                  ` : `
+                    <button class="btn btn-primary btn-sm" onclick="adminOpenDirectUnlockModal('${r.id}', '${escapeHtml(r.studentName)}', '${escapeHtml(r.courseTitle || '')}', '')" style="font-weight:700;background:#16a34a;border-color:#16a34a;padding:4px 10px;">
+                      🔓 فتح المحاضرة
+                    </button>
+                  `}
                   <button class="btn btn-line btn-sm" onclick="adminOpenSendCodeModal('${r.id}', '${escapeHtml(r.studentName)}', '${escapeHtml(r.courseTitle || '')}', ${r.lesson?.price || 50})" style="color:#6366f1;border-color:rgba(99,102,241,0.4);font-weight:700;padding:4px 10px;">
                     🎟️ إرسال كود
                   </button>
@@ -2980,6 +2989,17 @@
       return lessons;
     } catch (_) {
       return [];
+    }
+  }
+
+  async function adminQuickApproveDirect(id, studentName, lessonTitle, lessonId) {
+    if (!confirm(`هل أنت متأكد من تفعيل وفتح محاضرة "${lessonTitle}" مباشرة للطالب "${studentName}" بدون أي كود أو خصم؟`)) return;
+    try {
+      await window.KhatwaAPI.admin.approveOfflineRequestUnlock(id, lessonId);
+      alert('🎉 تم فتح المحاضرة للطالب فوراً بنجاح!');
+      await loadAdminOfflineRequests();
+    } catch (err) {
+      alert(err.message || 'فشل فتح المحاضرة');
     }
   }
 
