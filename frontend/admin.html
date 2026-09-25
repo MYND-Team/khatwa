@@ -842,9 +842,21 @@
     <!-- Financial Breakdown by Teacher Table -->
     <div id="adminTeacherSettlementTableWrap" style="margin-bottom:20px;"></div>
 
-    <h4 style="margin:18px 0 10px;font-size:0.95rem;display:flex;align-items:center;gap:8px;">
-      <span>📋 سجل المعاملات التفصيلي بين الطلاب والمدرسين والإدارة:</span>
-    </h4>
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin:24px 0 14px;">
+      <h4 style="margin:0;font-size:1.02rem;display:flex;align-items:center;gap:8px;">
+        <span>📋 سجل المعاملات التفصيلي بين الطلاب والمدرسين والإدارة:</span>
+      </h4>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <label for="paymentTeacherFilter" style="font-size:0.85rem;font-weight:700;color:var(--ink-dim);">👨‍🏫 تصفية بالمدرس:</label>
+        <select id="paymentTeacherFilter" class="form-control" style="height:38px;font-size:0.88rem;min-width:210px;border-radius:10px;" onchange="loadAdminPayments()">
+          <option value="">جميع المدرسين (عرض الكل)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Dynamic Teacher Financial Breakdown Summary Card -->
+    <div id="teacherSpecificBreakdownCard" style="display:none;margin-bottom:20px;"></div>
+
     <div class="table-container">
       <table class="data-table">
         <thead>
@@ -1769,132 +1781,285 @@
 
   // ─── Traceable Payments Ledger & Financial Settlements ─────────────────────
   let currentAdminPayments = [];
+  let adminTeachersCached = false;
+
+  async function populatePaymentTeachersDropdown() {
+    const teacherSelect = document.getElementById('paymentTeacherFilter');
+    if (!teacherSelect || adminTeachersCached) return;
+    try {
+      const teachers = await window.KhatwaAPI.admin.getTeachers();
+      if (Array.isArray(teachers) && teachers.length > 0) {
+        const curVal = teacherSelect.value;
+        teacherSelect.innerHTML = '<option value="">جميع المدرسين (عرض الكل)</option>';
+        teachers.forEach(t => {
+          const opt = document.createElement('option');
+          opt.value = t.id || t.userId;
+          opt.textContent = `${t.displayName || t.name || 'مدرس'} (${t.subject || 'عام'})`;
+          teacherSelect.appendChild(opt);
+        });
+        if (curVal) teacherSelect.value = curVal;
+        adminTeachersCached = true;
+      }
+    } catch (err) {
+      console.warn('Error populating payment teachers dropdown:', err);
+    }
+  }
 
   async function loadAdminPayments() {
+    await populatePaymentTeachersDropdown();
+
     const stage = document.getElementById('paymentStageFilter')?.value || '';
+    const teacherId = document.getElementById('paymentTeacherFilter')?.value || '';
     const tbody = document.getElementById('adminPaymentsTableBody');
     const cardsContainer = document.getElementById('adminFinancialSettlementCards');
     const teacherTableWrap = document.getElementById('adminTeacherSettlementTableWrap');
+    const teacherCardEl = document.getElementById('teacherSpecificBreakdownCard');
 
     try {
       const query = {};
       if (stage) query.stage = stage;
+      if (teacherId) query.teacherId = teacherId;
 
-      const payments = await window.KhatwaAPI.admin.getPayments(query);
-      currentAdminPayments = payments || [];
-      if (payments.length === 0) {
+      const stageNames = {
+        'FIRST_SECONDARY': 'الصف الأول الثانوي',
+        'SECOND_SECONDARY': 'الصف الثاني الثانوي',
+        'THIRD_SECONDARY': 'الصف الثالث الثانوي',
+        'MIDDLE_1': 'الصف الأول الإعدادي',
+        'MIDDLE_2': 'الصف الثاني الإعدادي',
+        'MIDDLE_3': 'الصف الثالث الإعدادي',
+      };
+
+      // ─── Case 1: Specific Teacher Selected ──────────────────────────────────
+      if (teacherId) {
+        let summary = null;
+        try {
+          summary = await window.KhatwaAPI.admin.getTeacherFinancialSummary(teacherId);
+        } catch (e) {
+          console.warn('Failed to load teacher financial summary:', e);
+        }
+
+        const payments = await window.KhatwaAPI.admin.getPayments(query);
+        currentAdminPayments = payments || [];
+
+        // Hide global summary cards and multi-teacher settlement table
         if (cardsContainer) cardsContainer.innerHTML = '';
         if (teacherTableWrap) teacherTableWrap.innerHTML = '';
-        tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:var(--ink-dim);padding:30px;">لا توجد معاملات مسجلة في هذا النطاق</td></tr>';
-        return;
-      }
 
-      // 1. Calculate overall financial split
-      let totalAmount = 0;
-      let totalTeacherShare = 0;
-      let totalPlatformFee = 0;
-      const teacherMap = new Map();
+        // Render Dynamic Teacher Breakdown Summary Card
+        if (teacherCardEl) {
+          teacherCardEl.style.display = 'block';
+          const tName = summary?.teacher?.displayName || 'المدرس المختار';
+          const tSubject = summary?.teacher?.subject ? ` · مادة ${summary.teacher.subject}` : '';
+          const totalSales = Number(summary?.totalSales ?? 0);
+          const teacherNet = Number(summary?.teacherNetBalance ?? 0);
+          const platformFee = Number(summary?.platformFee ?? 0);
+          const totalStudents = Number(summary?.totalStudentsEnrolled ?? 0);
+          const stageBreakdown = summary?.stageBreakdown || {};
 
-      payments.forEach(p => {
-        let amt = Number(p.amount || 0);
-        let tEarn = Number(p.teacherEarning || 0);
-        if (amt === 0 && Number(p.pointsUsed || 0) > 0) {
-          amt = Number(p.pointsUsed);
-          if (tEarn === 0) tEarn = Math.round(amt * 0.8);
+          const stageBadges = Object.keys(stageBreakdown).length > 0
+            ? Object.entries(stageBreakdown).map(([stg, count]) => `
+                <div style="background:var(--bg-raised);border:1px solid var(--line-soft);border-radius:12px;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;min-width:180px;">
+                  <span style="font-weight:600;font-size:0.86rem;color:var(--ink);">${stageNames[stg] || stg}:</span>
+                  <span class="tag tag-ok" style="font-size:0.85rem;font-weight:800;padding:4px 10px;border-radius:8px;">${count} طالب</span>
+                </div>
+              `).join('')
+            : '<span style="color:var(--ink-dim);font-size:0.88rem;">لا توجد اشتراكات مسجلة لهذا المدرس حتى الآن.</span>';
+
+          teacherCardEl.innerHTML = `
+            <div style="background:var(--bg-card);border:2px solid var(--primary);border-radius:18px;padding:22px 24px;box-shadow:0 12px 32px rgba(0,0,0,0.06);position:relative;overflow:hidden;">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:14px;border-bottom:1px solid var(--line-soft);padding-bottom:16px;margin-bottom:18px;">
+                <div>
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <span style="font-size:1.6rem;">👨‍🏫</span>
+                    <div>
+                      <h3 style="margin:0;font-size:1.3rem;font-weight:800;color:var(--ink);">تقرير وأرباح المدرس: ${escapeHtml(tName)}</h3>
+                      <p style="margin:4px 0 0;font-size:0.86rem;color:var(--ink-dim);">${tSubject}</p>
+                    </div>
+                  </div>
+                </div>
+                <div style="display:flex;gap:8px;">
+                  <button class="btn btn-line btn-sm" onclick="document.getElementById('paymentTeacherFilter').value='';loadAdminPayments();" style="border-radius:10px;font-size:0.82rem;">
+                    ✕ إزالة الفلتر وعرض الكل
+                  </button>
+                </div>
+              </div>
+
+              <!-- Top Row: Financial & Student Summary Metrics -->
+              <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(210px, 1fr));gap:14px;margin-bottom:20px;">
+                <div style="background:linear-gradient(135deg, rgba(34,197,94,0.12) 0%, rgba(34,197,94,0.02) 100%);border:1.5px solid #22c55e;border-radius:14px;padding:16px;">
+                  <div style="font-size:0.82rem;color:#16a34a;font-weight:700;margin-bottom:4px;">💵 صافي مستحقات المدرس (الأرباح)</div>
+                  <div style="font-size:1.7rem;font-weight:900;color:#16a34a;">${teacherNet.toLocaleString('ar-EG')} ج.م</div>
+                  <div style="font-size:0.75rem;color:#16a34a;margin-top:4px;">الرصيد الصافي القابل للتسوية</div>
+                </div>
+
+                <div style="background:var(--bg-raised);border:1px solid var(--line-soft);border-radius:14px;padding:16px;">
+                  <div style="font-size:0.82rem;color:var(--ink-dim);margin-bottom:4px;">💰 إجمالي المبيعات المحققة</div>
+                  <div style="font-size:1.7rem;font-weight:900;color:var(--ink);">${totalSales.toLocaleString('ar-EG')} ج.م</div>
+                  <div style="font-size:0.75rem;color:var(--ink-dim);margin-top:4px;">من واقع ${summary?.transactionsCount || payments.length} عملية دفع</div>
+                </div>
+
+                <div style="background:linear-gradient(135deg, rgba(59,130,246,0.1) 0%, rgba(59,130,246,0.02) 100%);border:1px solid rgba(59,130,246,0.3);border-radius:14px;padding:16px;">
+                  <div style="font-size:0.82rem;color:#2563eb;font-weight:700;margin-bottom:4px;">🏛️ عمولة المنصة المحصلة</div>
+                  <div style="font-size:1.7rem;font-weight:900;color:#2563eb;">${platformFee.toLocaleString('ar-EG')} ج.م</div>
+                  <div style="font-size:0.75rem;color:#2563eb;margin-top:4px;">نسبة إدارة المنصة التشغيلية</div>
+                </div>
+
+                <div style="background:var(--bg-raised);border:1px solid var(--line-soft);border-radius:14px;padding:16px;">
+                  <div style="font-size:0.82rem;color:var(--ink-dim);margin-bottom:4px;">👥 إجمالي الطلاب المشتركين</div>
+                  <div style="font-size:1.7rem;font-weight:900;color:var(--primary);">${totalStudents.toLocaleString('ar-EG')} طالب</div>
+                  <div style="font-size:0.75rem;color:var(--ink-dim);margin-top:4px;">في جميع كورسات ومحاضرات المدرس</div>
+                </div>
+              </div>
+
+              <!-- Bottom Row: Grade/Stage Distribution Breakdown -->
+              <div style="background:var(--bg-base, rgba(0,0,0,0.02));border:1px solid var(--line-soft);border-radius:14px;padding:16px;">
+                <h5 style="margin:0 0 12px;font-size:0.92rem;font-weight:700;display:flex;align-items:center;gap:6px;">
+                  <span>📊 توزيع الطلاب المسجلين حسب المرحلة الدراسية (Grade Breakdown):</span>
+                </h5>
+                <div style="display:flex;flex-wrap:wrap;gap:10px;">
+                  ${stageBadges}
+                </div>
+              </div>
+            </div>
+          `;
         }
-        const pFee = Number(p.platformFee !== undefined && p.platformFee > 0 ? p.platformFee : (amt > tEarn ? amt - tEarn : 0));
 
-        totalAmount += amt;
-        totalTeacherShare += tEarn;
-        totalPlatformFee += pFee;
+        document.getElementById('paymentSummaryBadge').textContent = `إجمالي مبيعات ${summary?.teacher?.displayName || 'المدرس'}: ${(summary?.totalSales || 0).toLocaleString('ar-EG')} ج.م`;
 
-        const teacherName = p.teacherProfile?.displayName || 'مدرس غير محدد';
-        if (!teacherMap.has(teacherName)) {
-          teacherMap.set(teacherName, {
-            name: teacherName,
-            count: 0,
-            totalSales: 0,
-            teacherEarn: 0,
-            platformFee: 0,
-          });
+        if (payments.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:var(--ink-dim);padding:30px;">لا توجد معاملات مسجلة لهذا المدرس في هذا النطاق</td></tr>';
+          return;
         }
-        const tData = teacherMap.get(teacherName);
-        tData.count += 1;
-        tData.totalSales += amt;
-        tData.teacherEarn += tEarn;
-        tData.platformFee += pFee;
-      });
 
-      document.getElementById('paymentSummaryBadge').textContent = `إجمالي مبيعات المنصة: ${totalAmount.toLocaleString('ar-EG')} ج.م`;
+      } else {
+        // ─── Case 2: All Teachers Selected (Global Overview) ──────────────────
+        if (teacherCardEl) {
+          teacherCardEl.style.display = 'none';
+          teacherCardEl.innerHTML = '';
+        }
 
-      // 2. Render Financial Settlement Summary Cards
-      if (cardsContainer) {
-        cardsContainer.innerHTML = `
-          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:14px;">
-            <div style="background:var(--bg-raised);border:1px solid var(--line-soft);border-radius:14px;padding:16px;">
-              <div style="font-size:0.82rem;color:var(--ink-dim);margin-bottom:4px;">💰 إجمالي مدفوعات الطلاب</div>
-              <div style="font-size:1.6rem;font-weight:900;color:var(--ink);">${totalAmount.toLocaleString('ar-EG')} ج.م</div>
-              <div style="font-size:0.75rem;color:var(--ink-dim);margin-top:4px;">من إجمالي ${payments.length} معاملة مسجلة</div>
+        const payments = await window.KhatwaAPI.admin.getPayments(query);
+        currentAdminPayments = payments || [];
+
+        if (payments.length === 0) {
+          if (cardsContainer) cardsContainer.innerHTML = '';
+          if (teacherTableWrap) teacherTableWrap.innerHTML = '';
+          tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:var(--ink-dim);padding:30px;">لا توجد معاملات مسجلة في هذا النطاق</td></tr>';
+          return;
+        }
+
+        // 1. Calculate overall financial split
+        let totalAmount = 0;
+        let totalTeacherShare = 0;
+        let totalPlatformFee = 0;
+        const teacherMap = new Map();
+
+        payments.forEach(p => {
+          let amt = Number(p.amount || 0);
+          let tEarn = Number(p.teacherEarning || 0);
+          if (amt === 0 && Number(p.pointsUsed || 0) > 0) {
+            amt = Number(p.pointsUsed);
+            if (tEarn === 0) tEarn = Math.round(amt * 0.8);
+          }
+          const pFee = Number(p.platformFee !== undefined && p.platformFee > 0 ? p.platformFee : (amt > tEarn ? amt - tEarn : 0));
+
+          totalAmount += amt;
+          totalTeacherShare += tEarn;
+          totalPlatformFee += pFee;
+
+          const teacherName = p.teacherProfile?.displayName || 'مدرس غير محدد';
+          if (!teacherMap.has(teacherName)) {
+            teacherMap.set(teacherName, {
+              id: p.teacherProfileId || p.teacherProfile?.id,
+              name: teacherName,
+              count: 0,
+              totalSales: 0,
+              teacherEarn: 0,
+              platformFee: 0,
+            });
+          }
+          const tData = teacherMap.get(teacherName);
+          tData.count += 1;
+          tData.totalSales += amt;
+          tData.teacherEarn += tEarn;
+          tData.platformFee += pFee;
+        });
+
+        document.getElementById('paymentSummaryBadge').textContent = `إجمالي مبيعات المنصة: ${totalAmount.toLocaleString('ar-EG')} ج.م`;
+
+        // 2. Render Financial Settlement Summary Cards
+        if (cardsContainer) {
+          cardsContainer.innerHTML = `
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:14px;">
+              <div style="background:var(--bg-raised);border:1px solid var(--line-soft);border-radius:14px;padding:16px;">
+                <div style="font-size:0.82rem;color:var(--ink-dim);margin-bottom:4px;">💰 إجمالي مدفوعات الطلاب</div>
+                <div style="font-size:1.6rem;font-weight:900;color:var(--ink);">${totalAmount.toLocaleString('ar-EG')} ج.م</div>
+                <div style="font-size:0.75rem;color:var(--ink-dim);margin-top:4px;">من إجمالي ${payments.length} معاملة مسجلة</div>
+              </div>
+              <div style="background:linear-gradient(135deg, rgba(34,197,94,0.08) 0%, rgba(34,197,94,0.02) 100%);border:1px solid rgba(34,197,94,0.3);border-radius:14px;padding:16px;">
+                <div style="font-size:0.82rem;color:#16a34a;margin-bottom:4px;font-weight:700;">👨‍🏫 إجمالي مستحقات المعلمين</div>
+                <div style="font-size:1.6rem;font-weight:900;color:#16a34a;">${totalTeacherShare.toLocaleString('ar-EG')} ج.م</div>
+                <div style="font-size:0.75rem;color:#16a34a;margin-top:4px;">حصة المعلمين المعتمدة من المبيعات</div>
+              </div>
+              <div style="background:linear-gradient(135deg, rgba(59,130,246,0.08) 0%, rgba(59,130,246,0.02) 100%);border:1px solid rgba(59,130,246,0.3);border-radius:14px;padding:16px;">
+                <div style="font-size:0.82rem;color:#2563eb;margin-bottom:4px;font-weight:700;">🏛️ إجمالي صافي عمولة الإدارة (المنصة)</div>
+                <div style="font-size:1.6rem;font-weight:900;color:#2563eb;">${totalPlatformFee.toLocaleString('ar-EG')} ج.م</div>
+                <div style="font-size:0.75rem;color:#2563eb;margin-top:4px;">أرباح المنصة التشغيلية المحصلة</div>
+              </div>
             </div>
-            <div style="background:linear-gradient(135deg, rgba(34,197,94,0.08) 0%, rgba(34,197,94,0.02) 100%);border:1px solid rgba(34,197,94,0.3);border-radius:14px;padding:16px;">
-              <div style="font-size:0.82rem;color:#16a34a;margin-bottom:4px;font-weight:700;">👨‍🏫 إجمالي مستحقات المعلمين</div>
-              <div style="font-size:1.6rem;font-weight:900;color:#16a34a;">${totalTeacherShare.toLocaleString('ar-EG')} ج.م</div>
-              <div style="font-size:0.75rem;color:#16a34a;margin-top:4px;">حصة المعلمين المعتمدة من المبيعات</div>
+          `;
+        }
+
+        // 3. Render Breakdown by Teacher Table
+        if (teacherTableWrap) {
+          teacherTableWrap.innerHTML = `
+            <div style="background:var(--bg-card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:14px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+                <h5 style="margin:0;font-size:1rem;display:flex;align-items:center;gap:6px;">
+                  <span>📊 جدول التسوية المالية المجمعة لكل مدرس:</span>
+                </h5>
+                <span class="tag tag-stage">${teacherMap.size} معلمين لديهم مبيعات</span>
+              </div>
+              <div style="overflow-x:auto;">
+                <table class="data-table" style="font-size:0.88rem;">
+                  <thead>
+                    <tr>
+                      <th>اسم المدرس</th>
+                      <th>عدد العمليات</th>
+                      <th>إجمالي المبيعات</th>
+                      <th style="color:#16a34a;">مستحقات المدرس (حصة المعلم)</th>
+                      <th style="color:#2563eb;">حصة إدارة المنصة (العمولة)</th>
+                      <th>نسبة المدرس</th>
+                      <th>إجراء</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${Array.from(teacherMap.values()).map(t => {
+                      const pct = t.totalSales > 0 ? Math.round((t.teacherEarn / t.totalSales) * 100) : 100;
+                      return `
+                        <tr>
+                          <td><b>👨‍🏫 ${escapeHtml(t.name)}</b></td>
+                          <td><span class="tag">${t.count} عملية</span></td>
+                          <td><b>${t.totalSales.toLocaleString('ar-EG')} ج.م</b></td>
+                          <td><b style="color:#16a34a;">${t.teacherEarn.toLocaleString('ar-EG')} ج.م</b></td>
+                          <td><b style="color:#2563eb;">${t.platformFee.toLocaleString('ar-EG')} ج.م</b></td>
+                          <td><span class="tag tag-ok">${pct}%</span></td>
+                          <td>
+                            ${t.id ? `<button class="btn btn-sm btn-line" onclick="document.getElementById('paymentTeacherFilter').value='${t.id}';loadAdminPayments();" style="padding:3px 10px;font-size:0.8rem;">تصفية بهذا المدرس 🔍</button>` : '—'}
+                          </td>
+                        </tr>
+                      `;
+                    }).join('')}
+                  </tbody>
+                </table>
+              </div>
             </div>
-            <div style="background:linear-gradient(135deg, rgba(59,130,246,0.08) 0%, rgba(59,130,246,0.02) 100%);border:1px solid rgba(59,130,246,0.3);border-radius:14px;padding:16px;">
-              <div style="font-size:0.82rem;color:#2563eb;margin-bottom:4px;font-weight:700;">🏛️ إجمالي صافي عمولة الإدارة (المنصة)</div>
-              <div style="font-size:1.6rem;font-weight:900;color:#2563eb;">${totalPlatformFee.toLocaleString('ar-EG')} ج.م</div>
-              <div style="font-size:0.75rem;color:#2563eb;margin-top:4px;">أرباح المنصة التشغيلية المحصلة</div>
-            </div>
-          </div>
-        `;
+          `;
+        }
       }
 
-      // 3. Render Breakdown by Teacher Table
-      if (teacherTableWrap) {
-        teacherTableWrap.innerHTML = `
-          <div style="background:var(--bg-card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:14px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
-              <h5 style="margin:0;font-size:1rem;display:flex;align-items:center;gap:6px;">
-                <span>📊 جدول التسوية المالية المجمعة لكل مدرس:</span>
-              </h5>
-              <span class="tag tag-stage">${teacherMap.size} معلمين لديهم مبيعات</span>
-            </div>
-            <div style="overflow-x:auto;">
-              <table class="data-table" style="font-size:0.88rem;">
-                <thead>
-                  <tr>
-                    <th>اسم المدرس</th>
-                    <th>عدد العمليات</th>
-                    <th>إجمالي المبيعات</th>
-                    <th style="color:#16a34a;">مستحقات المدرس (حصة المعلم)</th>
-                    <th style="color:#2563eb;">حصة إدارة المنصة (العمولة)</th>
-                    <th>نسبة المدرس</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${Array.from(teacherMap.values()).map(t => {
-                    const pct = t.totalSales > 0 ? Math.round((t.teacherEarn / t.totalSales) * 100) : 100;
-                    return `
-                      <tr>
-                        <td><b>👨‍🏫 ${escapeHtml(t.name)}</b></td>
-                        <td><span class="tag">${t.count} عملية</span></td>
-                        <td><b>${t.totalSales.toLocaleString('ar-EG')} ج.م</b></td>
-                        <td><b style="color:#16a34a;">${t.teacherEarn.toLocaleString('ar-EG')} ج.م</b></td>
-                        <td><b style="color:#2563eb;">${t.platformFee.toLocaleString('ar-EG')} ج.م</b></td>
-                        <td><span class="tag tag-ok">${pct}%</span></td>
-                      </tr>
-                    `;
-                  }).join('')}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        `;
-      }
-
-      // 4. Render Transaction Rows
-      tbody.innerHTML = payments.map(p => {
+      // ─── Render Transaction Rows (Common for both views) ───────────────────
+      tbody.innerHTML = currentAdminPayments.map(p => {
         let amt = Number(p.amount || 0);
         let tEarn = Number(p.teacherEarning || 0);
         if (amt === 0 && Number(p.pointsUsed || 0) > 0) {
@@ -1905,18 +2070,19 @@
         const teacherPct = amt > 0 ? Math.round((tEarn / amt) * 100) : 100;
 
         const studentDisplay = escapeHtml(p.student?.name || p.student?.displayName || p.student?.username || 'طالب');
-        const phoneDisplay = p.student?.phoneNumber ? `<br><span style="font-size:0.75rem;color:var(--ink-dim);">${escapeHtml(p.student.phoneNumber)}</span>` : '';
+        const studentPhone = p.student?.studentProfile?.studentPhoneNumber || p.student?.phoneNumber;
+        const phoneDisplay = studentPhone ? `<br><span style="font-size:0.75rem;color:var(--ink-dim);direction:ltr;display:inline-block;">📞 ${escapeHtml(studentPhone)}</span>` : '';
 
         return `
         <tr>
           <td><code>${p.transactionNumber || p.id}</code></td>
           <td><b>${studentDisplay}</b>${phoneDisplay}</td>
           <td>${escapeHtml(p.teacherProfile?.displayName || 'المدرس')}</td>
-          <td><span class="tag tag-stage">${p.academicStage}</span></td>
+          <td><span class="tag tag-stage">${p.academicStage || '—'}</span></td>
           <td>${escapeHtml(p.course?.title || '')} / <b>${escapeHtml(p.lesson?.title || 'محاضرة')}</b></td>
-          <td><b>${amt} ج.م</b></td>
-          <td><b style="color:#16a34a;">${tEarn} ج.م</b></td>
-          <td><b style="color:#2563eb;">${pFee} ج.م</b></td>
+          <td><b>${amt.toLocaleString('ar-EG')} ج.م</b></td>
+          <td><b style="color:#16a34a;">${tEarn.toLocaleString('ar-EG')} ج.م</b></td>
+          <td><b style="color:#2563eb;">${pFee.toLocaleString('ar-EG')} ج.م</b></td>
           <td><span class="tag tag-ok">${teacherPct}%</span></td>
           <td><code>${p.paymentMethod || 'WALLET_EGP'}</code></td>
           <td>${new Date(p.createdAt).toLocaleDateString('ar-EG')}</td>
@@ -2624,26 +2790,34 @@
     }
 
     tbody.innerHTML = list.map(c => {
-      const isRedeemed = c.status === 'REDEEMED' || c.redeemedBy;
+      const isRedeemed = c.status === 'REDEEMED' || Boolean(c.redeemedById) || Boolean(c.redeemedBy) || c.isUsed;
       const isRevoked = c.status === 'REVOKED';
       const isExpired = c.status === 'EXPIRED';
       const isActive = c.status === 'ACTIVE' && !isRedeemed && !isRevoked;
 
       let statusBadge = '<span class="tag tag-ok">نشط متاح ✓</span>';
-      if (isRedeemed) statusBadge = '<span class="tag" style="background:rgba(59, 130, 246, 0.2);color:#60a5fa;border:1px solid rgba(59, 130, 246, 0.4);">تم الشحن</span>';
+      if (isRedeemed) statusBadge = '<span class="tag tag-ok" style="background:rgba(34,197,94,0.15);color:#16a34a;border:1px solid rgba(34,197,94,0.3);font-weight:700;">مشحون / مستخدم ✓</span>';
       else if (isRevoked) statusBadge = '<span class="tag tag-err">ملغي ✕</span>';
       else if (isExpired) statusBadge = '<span class="tag tag-dim">منتهي الصلاحية</span>';
 
       const createdDate = c.createdAt ? (window.KhatwaI18n ? window.KhatwaI18n.formatDate(c.createdAt) : new Date(c.createdAt).toLocaleDateString()) : '—';
-      const redeemedDate = c.redeemedAt ? (window.KhatwaI18n ? window.KhatwaI18n.formatDate(c.redeemedAt) : new Date(c.redeemedAt).toLocaleDateString()) : (c.expiresAt ? `ينتهي: ${new Date(c.expiresAt).toLocaleDateString()}` : 'دائم');
-      const studentName = c.redeemedBy?.username ? `<b>@${c.redeemedBy.username}</b>` : '<span style="color:var(--ink-dim);">لم يُستخدم بعد</span>';
-      const creatorName = c.createdBy?.username ? `@${c.createdBy.username}` : 'الإدارة';
+      const redeemedDate = c.redeemedAt 
+        ? `<span style="color:#16a34a;font-weight:600;">${new Date(c.redeemedAt).toLocaleString('ar-EG', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' })}</span>` 
+        : (c.expiresAt ? `ينتهي: ${new Date(c.expiresAt).toLocaleDateString('ar-EG')}` : 'دائم');
+      
+      const student = c.redeemedBy;
+      const studentPhone = student?.studentProfile?.studentPhoneNumber ? `<span style="font-size:0.75rem;color:var(--ink-dim);display:block;">📱 ${escapeHtml(student.studentProfile.studentPhoneNumber)}</span>` : '';
+      const studentId = student?.id ? `<span style="font-size:0.72rem;color:var(--ink-dim);display:block;">ID: ${escapeHtml(student.id)}</span>` : '';
+      const studentName = student?.username 
+        ? `<div><b style="color:var(--ink);">@${escapeHtml(student.username)}</b>${studentPhone}${studentId}</div>`
+        : '<span style="color:var(--ink-dim);">لم يُستخدم بعد</span>';
+      const creatorName = c.createdBy?.username ? `@${escapeHtml(c.createdBy.username)}` : 'الإدارة';
 
       return `
         <tr>
           <td>
             <div style="display:flex;align-items:center;gap:6px;">
-              <code style="font-family:monospace;font-weight:700;font-size:0.92rem;color:var(--primary);background:rgba(11,37,69,0.06);padding:3px 8px;border-radius:6px;letter-spacing:1px;">${c.code || c.id}</code>
+              <code style="font-family:monospace;font-weight:700;font-size:0.92rem;color:var(--primary);background:rgba(11,37,69,0.06);padding:3px 8px;border-radius:6px;letter-spacing:1px;">${escapeHtml(c.code || c.id)}</code>
               <button class="btn btn-text btn-sm" onclick="copyCodeToClipboard('${c.code || c.id}')" title="نسخ الكود" style="padding:2px 6px;font-size:0.85rem;">📋</button>
             </div>
           </td>
@@ -2652,7 +2826,7 @@
           <td style="font-size:0.85rem;color:var(--ink-dim);">${creatorName}</td>
           <td>${studentName}</td>
           <td>${createdDate}</td>
-          <td style="font-size:0.85rem;color:var(--ink-dim);">${redeemedDate}</td>
+          <td style="font-size:0.85rem;">${redeemedDate}</td>
           <td>
             <div style="display:flex;gap:6px;align-items:center;">
               ${isActive ? `
@@ -2676,10 +2850,12 @@
     if (!q) return renderAccessCodes(allAccessCodes);
     const filtered = allAccessCodes.filter(c => {
       const cid = (c.id || '').toLowerCase();
+      const code = (c.code || '').toLowerCase();
       const student = (c.redeemedBy?.username || '').toLowerCase();
+      const phone = (c.redeemedBy?.studentProfile?.studentPhoneNumber || '').toLowerCase();
       const creator = (c.createdBy?.username || '').toLowerCase();
       const pts = String(c.points || '');
-      return cid.includes(q) || student.includes(q) || creator.includes(q) || pts.includes(q);
+      return cid.includes(q) || code.includes(q) || student.includes(q) || phone.includes(q) || creator.includes(q) || pts.includes(q);
     });
     renderAccessCodes(filtered);
   }

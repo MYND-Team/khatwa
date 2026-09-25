@@ -86,64 +86,6 @@
   </main>
 </div>
 
-<script src="js/api.js"></script>
-<script src="js/main.js"></script>
-<script>
-  async function renderResults() {
-    const user = window.KhatwaAPI.getUser();
-    if (!user) {
-      window.location.href = 'login.html';
-      return;
-    }
-
-    const studentName = user.name || user.displayName || user.username || 'الطالب';
-    document.getElementById('resultsHeadTitle').textContent = `نتائج الطالب: ${studentName}`;
-
-    let stats = {};
-    try {
-      stats = (await window.KhatwaAPI.student.getStats()) || {};
-    } catch (_) {
-      stats = {};
-    }
-    const attempts = stats.quizAttempts || [];
-    const enrolled = stats.enrolledCourses || [];
-
-    document.getElementById('statAvgScore').textContent = stats.averageScore || '—';
-    document.getElementById('statCompletedLectures').textContent = stats.completedLectures || 0;
-    document.getElementById('statTotalExams').textContent = attempts.length;
-
-    // Render Subjects
-    const subjectList = document.getElementById('resultsSubjectList');
-    if (enrolled.length === 0) {
-      subjectList.innerHTML = `
-        <div class="row-item">
-          <div class="ri-main">
-            <span style="color:var(--ink-faint);">لا توجد كورسات مشتركة حالياً لمتابعة التقدم.</span>
-          </div>
-          <div class="ri-side">
-            <a href="courses.html" class="btn btn-line btn-sm">تصفح الكورسات</a>
-          </div>
-        </div>
-      `;
-    } else {
-      subjectList.innerHTML = enrolled.map(c => `
-        <div class="row-item">
-          <div class="ri-main">
-            <div class="ri-text">
-              <b>${escapeHtml(c.title)}</b>
-              <span>${escapeHtml(c.teacherName)} · ${c.completedCount} من ${c.totalLectures} حصة مكتملة</span>
-            </div>
-          </div>
-          <div class="ri-side" style="width:220px;">
-            <div class="progress-wrap" style="width:140px;">
-              <div class="progress"><span style="width:${c.progressPercent}%;"></span></div>
-            </div>
-            <span class="tag ${c.progressPercent >= 50 ? 'tag-ok' : 'tag-warn'}">${c.progressPercent}%</span>
-          </div>
-        </div>
-      `).join('');
-    }
-
 <!-- Review Modal -->
 <div class="modal-backdrop" id="attemptReviewModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;align-items:center;justify-content:center;padding:16px;overflow-y:auto;">
   <div style="background:var(--bg-card);border:1px solid var(--line-soft);border-radius:22px;max-width:820px;width:100%;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(0,0,0,0.5);margin:auto;overflow:hidden;">
@@ -415,6 +357,12 @@
                     `;
                   }).join('')}
                 </div>
+                ${(q.rubric || q.sampleAnswer) ? `
+                  <div style="background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.25);border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:0.9rem;">
+                    <b style="color:var(--primary, #3b82f6);">💡 التوضيح والحل النموذجي:</b>
+                    <span style="margin-inline-start:6px;">${escapeHtml(q.rubric || q.sampleAnswer)}</span>
+                  </div>
+                ` : ''}
               ` : `
                 <!-- Essay / Written Answer -->
                 <div style="background:var(--bg-raised);padding:14px;border-radius:12px;margin-bottom:12px;border:1px solid var(--line-soft);">

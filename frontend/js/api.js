@@ -440,6 +440,10 @@
       async settleTeacher(id, amount, notes) {
         return request('/admin/teachers/' + id + '/settle', { method: 'POST', body: { amount, notes } });
       },
+      async getTeacherFinancialSummary(id) {
+        const res = await request('/admin/teachers/' + id + '/financial-summary');
+        return res.data;
+      },
       async getPointRequests() { const res = await request('/admin/point-requests'); return res.data || []; },
       async approvePointRequest(id, points) {
         return request('/admin/point-requests/' + id + '/approve', {

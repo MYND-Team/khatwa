@@ -247,7 +247,7 @@ export async function regenerateAccessCode(codeId: string, actorId: string) {
 // ─── List access codes (STAFF / ADMIN) ───────────────────────────────────────
 
 export async function listAccessCodes(filter?: { status?: AccessCodeStatus; createdById?: string }) {
-  return prisma.accessCode.findMany({
+  const codes = await prisma.accessCode.findMany({
     where: {
       ...(filter?.status ? { status: filter.status } : {}),
       ...(filter?.createdById ? { createdById: filter.createdById } : {}),
@@ -265,9 +265,23 @@ export async function listAccessCodes(filter?: { status?: AccessCodeStatus; crea
         select: { id: true, username: true, role: true },
       },
       redeemedBy: {
-        select: { id: true, username: true },
+        select: {
+          id: true,
+          username: true,
+          studentProfile: {
+            select: {
+              studentPhoneNumber: true,
+              academicStage: true,
+            },
+          },
+        },
       },
     },
     orderBy: { createdAt: 'desc' },
   });
+
+  return codes.map((c: any) => ({
+    ...c,
+    isUsed: c.status === 'REDEEMED' || Boolean(c.redeemedById),
+  }));
 }

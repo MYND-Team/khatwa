@@ -74,12 +74,17 @@ router.get(
 router.get(
   '/payments',
   asyncHandler(async (req, res) => {
-    const { studentId, teacherId, stage, page = '1', limit = '50' } = req.query as Record<string, string>;
+    const { studentId, teacherId, stage, page = '1', limit = '100' } = req.query as Record<string, string>;
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
     const where: any = {};
     if (studentId) where.studentId = studentId;
-    if (teacherId) where.teacherProfileId = teacherId;
+    if (teacherId) {
+      where.OR = [
+        { teacherProfileId: teacherId },
+        { teacherProfile: { userId: teacherId } },
+      ];
+    }
     if (stage) where.academicStage = stage as any;
 
     const [payments, total, sumAgg] = await Promise.all([
@@ -93,6 +98,7 @@ router.get(
               studentProfile: {
                 select: {
                   studentPhoneNumber: true,
+                  academicStage: true,
                   parentInfo: { select: { parentPhoneNumber: true } },
                 },
               },
@@ -769,6 +775,25 @@ router.patch(
       }),
     ]);
 
+    // Sync voucher/access code status if code matches an active AccessCode
+    if (pr.code) {
+      try {
+        const formattedCode = pr.code.trim().toUpperCase();
+        const codeHash = crypto.createHash('sha256').update(formattedCode).digest('hex');
+        await prisma.accessCode.updateMany({
+          where: {
+            OR: [{ codeHash }, { code: formattedCode }],
+            status: 'ACTIVE',
+          },
+          data: {
+            status: 'REDEEMED',
+            redeemedById: pr.userId,
+            redeemedAt: new Date(),
+          },
+        });
+      } catch (_) {}
+    }
+
     const updatedUser = await prisma.user.findUnique({
       where: { id: pr.userId },
       select: { id: true, username: true, pointsBalance: true, walletBalance: true },
@@ -1106,6 +1131,90 @@ router.post(
       data: {
         settledAmount: payoutAmount,
         remainingBalance: newBalance,
+      },
+    });
+  })
+);
+
+router.get(
+  '/teachers/:id/financial-summary',
+  asyncHandler(async (req, res) => {
+    const teacherId = req.params.id as string;
+
+    let profile = await prisma.teacherProfile.findUnique({
+      where: { id: teacherId },
+      include: { user: true, courses: true, lessons: true },
+    });
+
+    if (!profile) {
+      const user = await prisma.user.findUnique({
+        where: { id: teacherId },
+        include: { teacherProfile: { include: { user: true, courses: true, lessons: true } } },
+      });
+      if (user?.teacherProfile) {
+        profile = user.teacherProfile as any;
+      }
+    }
+
+    if (!profile) {
+      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'حساب المدرس غير موجود' } });
+      return;
+    }
+
+    // 1. Total distinct students and subscriptions by stage
+    const activeSubs = await prisma.lessonSubscription.findMany({
+      where: { teacherProfileId: profile.id, status: 'ACTIVE' },
+      select: { studentId: true, academicStage: true },
+    });
+
+    const distinctStudents = new Set<string>();
+    const stageBreakdown: Record<string, number> = {
+      PREPARATORY: 0,
+      SECONDARY_1: 0,
+      SECONDARY_2: 0,
+      BACCALAUREATE_2: 0,
+      SECONDARY_3: 0,
+      BACCALAUREATE_3: 0,
+    };
+
+    activeSubs.forEach((sub: any) => {
+      distinctStudents.add(sub.studentId);
+      if (sub.academicStage && stageBreakdown[sub.academicStage] !== undefined) {
+        stageBreakdown[sub.academicStage]++;
+      }
+    });
+
+    // 2. Financial totals from PaymentTransaction
+    const [finAgg, transactionsCount] = await Promise.all([
+      prisma.paymentTransaction.aggregate({
+        where: { teacherProfileId: profile.id, status: 'COMPLETED' },
+        _sum: { amount: true, teacherEarning: true, platformFee: true, pointsUsed: true },
+      }),
+      prisma.paymentTransaction.count({
+        where: { teacherProfileId: profile.id },
+      }),
+    ]);
+
+    const totalSales = Number(finAgg._sum.amount ?? 0);
+    const teacherNetBalance = Number(finAgg._sum.teacherEarning ?? 0);
+    const platformFee = Number(finAgg._sum.platformFee ?? 0);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        teacherId: profile.id,
+        userId: profile.userId,
+        displayName: profile.displayName,
+        subject: profile.subject,
+        commissionPct: profile.commissionPct ?? 80,
+        walletBalance: profile.user?.walletBalance ?? 0,
+        totalStudentsEnrolled: distinctStudents.size,
+        totalSubscriptionsCount: activeSubs.length,
+        stageBreakdown,
+        totalSales,
+        teacherNetBalance,
+        platformFee,
+        transactionsCount,
       },
     });
   })

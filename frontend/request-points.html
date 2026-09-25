@@ -72,8 +72,34 @@
     <a href="points.html" class="btn btn-line btn-sm">العودة للمحفظة</a>
   </div>
 
+  <!-- Instant Voucher Card (Redeem Recharge Card Instantly) -->
+  <div class="card" style="padding:22px 26px;border-radius:18px;margin-bottom:28px;background:linear-gradient(135deg, rgba(11, 37, 69, 0.45) 0%, rgba(19, 64, 116, 0.25) 100%);border:1px solid var(--line);">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:12px;">
+      <div>
+        <h3 style="margin:0 0 4px;display:flex;align-items:center;gap:8px;">
+          <span>🎟️ لديك كارت شحن مسبق الدفع؟</span>
+          <span class="tag tag-ok" style="font-size:0.75rem;">شحن فوري بدون انتظار</span>
+        </h3>
+        <p style="margin:0;color:var(--ink-dim);font-size:0.86rem;">أدخل كود الكارت هنا لتعبئة رصيدك مباشرة وفورياً دون الحاجة لرفع إيصال أو انتظار المراجعة.</p>
+      </div>
+    </div>
+    <form id="instantVoucherForm" onsubmit="handleInstantVoucherRedeem(event)" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+      <div style="flex:1;min-width:240px;">
+        <input type="text" id="instantVoucherInput" placeholder="مثال: FG-7B2A-9K1M" required style="width:100%;text-transform:uppercase;font-family:monospace;font-size:1.15rem;font-weight:700;letter-spacing:1.5px;padding:12px 16px;border-radius:10px;" class="form-control">
+      </div>
+      <button type="submit" id="btnInstantVoucher" class="btn btn-primary" style="height:48px;padding:0 24px;font-weight:700;border-radius:10px;white-space:nowrap;">
+        ⚡ شحن الكود فوراً
+      </button>
+    </form>
+    <div id="instantVoucherAlert" style="display:none;margin-top:12px;padding:10px 16px;border-radius:8px;font-size:0.9rem;font-weight:600;"></div>
+  </div>
+
   <!-- Simplified Recharge Form Card (Upload Receipt -> Enter Amount -> Enter Code -> Submit) -->
   <div class="card" style="padding:28px;border-radius:20px;margin-bottom:32px;">
+    <div style="margin-bottom:18px;">
+      <h3 style="margin:0 0 4px;">📤 أو أرسل إيصال تحويل المحفظة الإلكترونية (فودافون كاش / إنستاباي)</h3>
+      <p style="margin:0;color:var(--ink-dim);font-size:0.86rem;">إذا قمت بتحويل بنكي أو فودافون كاش، ارفع لقطة الشاشة مع رقم المعاملة للمراجعة.</p>
+    </div>
     <form id="simplifiedRechargeForm" onsubmit="submitRecharge(event)">
 
       <!-- Step 1: Upload Receipt -->
@@ -148,6 +174,43 @@
     window.KhatwaAPI.syncNav();
     await loadMyRequests();
   });
+
+  async function handleInstantVoucherRedeem(e) {
+    e.preventDefault();
+    const input = document.getElementById('instantVoucherInput');
+    const alertBox = document.getElementById('instantVoucherAlert');
+    const btn = document.getElementById('btnInstantVoucher');
+    const code = input.value.trim().toUpperCase();
+
+    if (!code) return;
+
+    btn.disabled = true;
+    btn.textContent = 'جارٍ الشحن...';
+    alertBox.style.display = 'none';
+
+    try {
+      const res = await window.KhatwaAPI.student.redeemAccessCode(code);
+      alertBox.style.display = 'block';
+      alertBox.style.background = '#ECFDF5';
+      alertBox.style.color = '#047857';
+      alertBox.style.border = '1px solid #6EE7B7';
+      const addedVal = res.walletBalanceAdded || res.amountAdded || res.pointsAdded || res.data?.pointsAdded || res.amount || '';
+      alertBox.textContent = `✓ تم شحن ${addedVal} ج.م بنجاح وفورياً إلى رصيد محفظتك! 🎉`;
+      input.value = '';
+      setTimeout(() => {
+        window.location.href = 'points.html';
+      }, 1500);
+    } catch (err) {
+      alertBox.style.display = 'block';
+      alertBox.style.background = '#FEE2E2';
+      alertBox.style.color = '#DC2626';
+      alertBox.style.border = '1px solid #FCA5A5';
+      alertBox.textContent = '❌ ' + (err.message || 'كود الشحن غير صالح أو تم استخدامه مسبقاً.');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '⚡ شحن الكود فوراً';
+    }
+  }
 
   function handleReceiptFile(input) {
     if (input.files && input.files[0]) {

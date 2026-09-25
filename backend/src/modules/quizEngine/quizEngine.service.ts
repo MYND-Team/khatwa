@@ -165,6 +165,7 @@ export async function submitAttempt(input: {
       isCorrect: isGraded ? g.isCorrect : null,
       correctOption: q?.correctOption || null,
       sampleAnswer: q?.sampleAnswer || null,
+      rubric: q?.rubric || null,
       equationLatex: q?.equationLatex || null,
     };
   });
