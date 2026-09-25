@@ -91,7 +91,7 @@
   "أخرى": "Other",
   "نظرة عامة": "Overview",
   "طلب شحن نقاط": "Recharge Points Request",
-  "حصة مكتملة": "Completed Lecture",
+  "حصة مكتملة": "Completed lecture",
   "حصص مكتملة": "Completed Lectures",
   "متوسط الامتحانات": "Average Exam Score",
   "بيانات الحساب": "Account Details",
@@ -171,7 +171,7 @@
   "قيد المراجعة ⏳": "Pending Review ⏳",
   "مرفوض": "Rejected",
   "مرفوضة": "Rejected",
-  "مقبول": "Approved",
+  "مقبول": "Fair / Pass",
   "تم الشحن": "Recharged",
   "تم الشحن بنجاح": "Recharged Successfully",
   "تم الشحن ✓": "Recharged ✓",
@@ -412,7 +412,7 @@
   "المبلغ الذي قمت بتحويله بالجنيه": "Amount transferred in EGP",
   "3. كود المعاملة / التحويل (Code)": "3. Transaction / Reference Code",
   "الرقم المرجعي أو كود العملية من رسالة التحويل": "Reference number from transfer SMS",
-  "ملاحظات إضافية (اختياري)": "Additional notes (Optional)",
+  "ملاحظات إضافية (اختياري)": "Additional Notes (Optional)",
   "أي تفاصيل تود إضافتها للإدارة...": "Any details you want to add for administration...",
   "إرسال طلب الشحن للإدارة": "Submit Recharge Request to Admin",
   "سجل النتائج والتقييمات": "Results & Evaluations Log",
@@ -483,7 +483,7 @@
   "إضافة هذا السؤال للقائمة ＋": "Add This Question to List ＋",
   "إضافة ＋": "Add ＋",
   "إظهار/إخفاء": "إظهار/إخفاء",
-  "إعادة المحاولة": "Try Again",
+  "إعادة المحاولة": "Retry",
   "إنشاء حساب | خطوة": "Sign Up | Khatwa",
   "إنشاء كورس جديد": "Create New Course",
   "ابدأ أول خطوة في مذاكرتك": "Take your first step in your studies",
@@ -494,7 +494,7 @@
   "استوديو المدرس | خطوة": "Teacher Studio | Khatwa",
   "اسم الطالب": "اسم الطالب",
   "اطلب نقاط جديدة عشان تقدر تشتري حصص.": "Request new points to purchase lectures.",
-  "اكتب إجابتك هنا...": "اكتب إجابتك هنا...",
+  "اكتب إجابتك هنا...": "Write your answer here...",
   "اكتب نص السؤال هنا...": "اكتب نص السؤال هنا...",
   "الأسئلة الشائعة | خطوة": "FAQ | Khatwa",
   "الأسئلة المضافة حالياً (": "Currently Added Questions (",
@@ -558,7 +558,7 @@
   "تم تسجيل إجاباتك بنجاح في سجل الأنشطة والتقييمات.": "Your answers have been saved in activities and assessments log.",
   "تم تسجيل إجاباتك بنجاح وحساب النتيجة في سجل درجاتك.": "Your answers have been recorded and score saved to your profile.",
   "تم تسليم الامتحان": "Exam Submitted",
-  "تم تسليم الواجب": "Homework Submitted",
+  "تم تسليم الواجب": "Homework submitted",
   "تُستخدم النقاط للاشتراك في المواد والمحاضرات المدفوعة وفتح الامتحانات.": "Points are used to enroll in paid subjects, lectures, and unlock exams.",
   "ج.م EGP": "EGP",
   "جارٍ التحميل...": "Loading...",
@@ -598,7 +598,7 @@
   "شراء الحصة بالنقاط": "Purchase Lecture with Points",
   "شرح مبسط لمحتوى الكورس...": "شرح مبسط لمحتوى الكورس...",
   "شرط فتح الحصة": "Lecture Unlock Requirement",
-  "طلب شحن رصيد": "Recharge Balance Request",
+  "طلب شحن رصيد": "Balance Recharge Request",
   "عادةً خلال ساعات العمل. يمكنك متابعة حالة الطلب (قيد المراجعة / تمت الموافقة / مرفوض) من صفحة النقاط.": "Usually during work hours. You can track status (Pending / Approved / Rejected) from the Points page.",
   "عرض 0 طالب": "Showing 0 Students",
   "عرض السجل الكامل": "View Complete History",
@@ -618,7 +618,7 @@
   "كورساتي الدراسية": "My Academic Courses",
   "لا توجد إشعارات": "No Notifications",
   "لا توجد طلبات نقاط": "No Point Requests",
-  "لا توجد نتائج": "No Results",
+  "لا توجد نتائج": "No results found",
   "لا تُفتح الحصة الجديدة إلا بعد اجتياز الامتحان وتسليم الواجب.": "Next lecture unlocks only after passing the exam and submitting homework.",
   "لا يوجد امتحان مضاف لهذه المحاضرة": "No exam added for this lecture",
   "لا يوجد واجب مضاف لهذه المحاضرة": "No homework added for this lecture",
@@ -726,7 +726,7 @@
   "الخيار الثالث (C)": "Option 3 (C)",
   "الخيار الرابع (D)": "Option 4 (D)",
   "الخيار الصحيح": "Correct Option",
-  "درجة السؤال": "Question Points",
+  "درجة السؤال": "Question Score",
   "حفظ السؤال في البنك ✓": "Save Question to Bank ✓",
   "إجمالي الكورسات المرفوعة": "Total Uploaded Courses",
   "إشعار لولي الأمر": "Parent Notification",
@@ -766,737 +766,404 @@
   "نخبة مدرسي المنصة": "Featured Platform Teachers",
   "كورساتي المشترك بها (": "My Enrolled Courses (",
   "جميع الكورسات المتاحة": "All Available Courses",
-  "ثانية ثانوي": "Secondary 2",
-  "ثالثة ثانوي": "Secondary 3",
   "متابعة حقيقية": "Genuine Progress Tracking",
-  "أحدث الحصص والمراجعات الشاملة لجميع المراحل الثانوية والإعدادية": "Latest lectures and revisions for all secondary and prep stages"
-};
-  const REVERSE_DICT = {
-  "Khatwa": "خطوة",
-  "Khatwa Platform": "منصة خطوة",
-  "Online Educational Platform": "منصة تعليمية أونلاين",
-  "Educational Platform": "منصة تعليمية",
-  "Home": "الرئيسية",
-  "Browse Courses": "تصفح الكورسات",
-  "Courses": "الكورسات",
-  "Courses & Subjects": "الكورسات والمواد",
-  "Available Courses": "الكورسات المتاحة",
-  "Enrolled Courses": "كورسات مشتركة",
-  "Uploaded Courses": "الكورسات المرفوعة",
-  "My Courses": "كورساتي",
-  "My Enrolled Courses": "كورساتي المشترك بها",
-  "Dashboard": "لوحة التحكم",
-  "Student Dashboard": "لوحة الطالب",
-  "My Dashboard": "لوحتي التعليمية",
-  "Admin Panel": "لوحة الإدارة",
-  "General Admin Panel": "لوحة الإدارة العامة",
-  "Go to Admin Panel": "الانتقال للوحة الإدارة العامة",
-  "📊 Admin Panel": "📊 لوحة الإدارة",
-  "Platform Management Dashboard": "لوحة تحكم وإدارة المنصة",
-  "Platform Administration Dashboard": "لوحة التحكم والإدارة العامة",
-  "Teacher Studio": "استوديو المدرس",
-  "Courses Studio": "استوديو الكورسات",
-  "Teacher Dashboard": "لوحة المدرس",
-  "Teacher Management Studio": "استوديو إدارة المعلم",
-  "Content & Academic Stages Studio": "استوديو إدارة المحتوى والمراحل الدراسية",
-  "Manage courses by academic stage, upload lecture videos, PDF notes, and build quizzes.": "إدارة الكورسات وفق المراحل الدراسية، رفع مذكرات الـ PDF، فيديوهات المحاضرات، وبناء الواجبات والامتحانات.",
-  "Points": "نقطة",
-  "Points & Wallet": "النقاط والمحفظة",
-  "Points Balance": "رصيد النقاط",
-  "Wallet Balance": "رصيد المحفظة",
-  "Wallet Balance (EGP)": "رصيد المحفظة (EGP)",
-  "Wallet": "المحفظة",
-  "Wallet & Balance": "المحفظة والرصيد",
-  "Wallet & Transfers": "المحفظة والتحويلات",
-  "Wallet & Balance Management": "المحفظة وإدارة الرصيد",
-  "Notifications": "الإشعارات",
-  "Results": "النتائج",
-  "My Results": "نتائجي",
-  "My Profile": "بياناتي",
-  "My Personal Information": "بياناتي الشخصية",
-  "Manage and edit your registered account details.": "إدارة وتعديل بيانات حسابك المسجلة على المنصة.",
-  "Profile": "الملف الشخصي",
-  "FAQ": "الأسئلة الشائعة",
-  "Help Center": "مركز المساعدة",
-  "Login": "سجل الدخول",
-  "Sign Up": "إنشاء حساب",
-  "Create New Account": "إنشاء حساب جديد",
-  "Create Student Account": "إنشاء حساب طالب",
-  "Create Account Now": "إنشاء حساب الآن",
-  "Create Account": "إنشاء الحساب",
-  "Create Account & Continue": "إنشاء الحساب والمتابعة",
-  "Logout": "تسجيل الخروج",
-  "Menu": "القائمة",
-  "Close": "إغلاق",
-  "Cancel": "إلغاء",
-  "Cancel Action": "إلغاء الأمر",
-  "Save": "حفظ",
-  "Edit": "تعديل",
-  "Delete": "حذف",
-  "Confirm": "تأكيد",
-  "Back": "رجوع",
-  "Next": "التالي",
-  "Previous": "السابق",
-  "Search": "بحث",
-  "Filter": "تصفية",
-  "View All": "عرض الكل",
-  "More": "المزيد",
-  "Details": "تفاصيل",
-  "Download": "تحميل",
-  "Preview": "معاينة",
-  "Submit": "إرسال",
-  "OK": "موافق",
-  "Yes": "نعم",
-  "No": "لا",
-  "All": "الكل",
-  "General": "عام",
-  "Other": "أخرى",
-  "Overview": "نظرة عامة",
-  "Recharge Points Request": "طلب شحن نقاط",
-  "Completed Lecture": "حصة مكتملة",
-  "Completed Lectures": "حصص مكتملة",
-  "Average Exam Score": "متوسط الامتحانات",
-  "Account Details": "بيانات الحساب",
-  "Secondary Stage": "المرحلة الثانوية",
-  "Preparatory Stage": "المرحلة الإعدادية",
-  "Secondary Year 1": "الصف الأول الثانوي",
-  "Secondary Year 2": "الصف الثاني الثانوي",
-  "Secondary Year 3": "الصف الثالث الثانوي",
-  "Secondary 1": "أولى ثانوي",
-  "Secondary 2": "ثانية ثانوي",
-  "Secondary 3": "ثالثة ثانوي",
-  "All Academic Stages": "جميع المراحل الدراسية",
-  "All Stages": "جميع المراحل",
-  "Academic Stages": "المراحل الدراسية",
-  "Accredited Academic Stages": "المراحل الدراسية المعتمدة",
-  "Physics": "الفيزياء",
-  "Chemistry": "الكيمياء",
-  "Biology": "الأحياء",
-  "Mathematics": "الرياضيات",
-  "Arabic Language": "اللغة العربية",
-  "English Language": "اللغة الإنجليزية",
-  "French Language": "اللغة الفرنسية",
-  "German Language": "اللغة الألمانية",
-  "Date": "التاريخ",
-  "Geography": "الجغرافيا",
-  "Philosophy & Logic": "الفلسفة والمنطق",
-  "Psychology & Sociology": "علم النفس والاجتماع",
-  "Geology": "الجيولوجيا",
-  "Student": "الطالب",
-  "Accredited Student": "طالب معتمد",
-  "Teacher": "المعلم",
-  "Accredited Teacher": "مدرس معتمد",
-  "Platform Director": "مدير عام المنصة",
-  "Admin": "مدير",
-  "Supervisor": "مشرف",
-  "Follow-up Supervisor (Staff)": "مشرف متابعة (Staff)",
-  "Support Staff": "فريق المتابعة",
-  "Administrator": "المسؤول",
-  "Management": "الإدارة",
-  "S": "ط",
-  "T": "م",
-  "A": "إ",
-  "Active": "نشط",
-  "Verified": "معتمد",
-  "Content": "محتوى",
-  "Live": "مباشر",
-  "Balance": "رصيد",
-  "Disabled": "معطل",
-  "Enable": "تفعيل",
-  "Disable": "تعطيل",
-  "Active ✓": "نشط ✓",
-  "Disabled ✕": "معطل ✕",
-  "Completed": "مكتمل",
-  "Pending": "معلق",
-  "Pending Review": "قيد المراجعة",
-  "Pending Review ⏳": "قيد المراجعة ⏳",
-  "Rejected": "مرفوضة",
-  "Approved": "مقبول",
-  "Recharged": "تم الشحن",
-  "Recharged Successfully": "تم الشحن بنجاح",
-  "Recharged ✓": "تم الشحن ✓",
-  "Rejected ✕": "مرفوضة ✕",
-  "Approve": "موافقة",
-  "Approve ✓": "موافقة ✓",
-  "Reject": "رفض",
-  "Reject ✕": "رفض ✕",
-  "Reject Request ✕": "رفض الطلب ✕",
-  "Approve & Credit Balance to Student ✓": "موافقة وشحن الرصيد للطالب ✓",
-  "EGP": "ج.م EGP",
-  "Course": "كورس",
-  "Lecture": "المحاضرة",
-  "Lectures": "الحصص",
-  "Chapter": "فصل",
-  "Chapters": "فصول",
-  "Chapters & Lectures": "الفصول والمحاضرات",
-  "Enter your account details to resume lectures or manage courses": "ادخل بيانات حسابك لمتابعة حصصك أو إدارة كورساتك",
-  "Username": "اسم المستخدم",
-  "Password": "كلمة المرور",
-  "Temporary Password": "كلمة المرور المؤقتة",
-  "Confirm Password": "تأكيد كلمة المرور",
-  "Remember Me": "تذكرني",
-  "Forgot Password?": "نسيت كلمة المرور؟",
-  "Don't have an account?": "ليس لديك حساب؟",
-  "Create a new account": "أنشئ حسابًا جديدًا",
-  "Already have an account?": "لديك حساب بالفعل؟",
-  "Show": "إظهار",
-  "Hide": "إخفاء",
-  "Verifying...": "جارٍ التحقق...",
-  "Invalid username or password.": "اسم المستخدم أو كلمة المرور غير صحيحة.",
-  "Registration is available for students only. Teachers should contact platform administration.": "التسجيل على المنصة متاح للطلاب فقط. إذا كنت مدرساً، تواصل مع الإدارة لإنشاء حسابك.",
-  "Student Information": "بيانات الطالب",
-  "Student Phone Number": "رقم هاتف الطالب",
-  "Academic Year": "الصف الدراسي",
-  "Parent Information": "بيانات ولي الأمر",
-  "Parent Phone Number (for result SMS)": "رقم هاتف ولي الأمر (لإرسال النتائج)",
-  "Parent Phone Number": "رقم هاتف ولي الأمر",
-  "Father's Profession": "وظيفة الأب",
-  "Parent Email (Optional)": "البريد الإلكتروني لولي الأمر (اختياري)",
-  "Parental Status": "حالة الوالدين",
-  "Deceased Parent Status (If applicable)": "حالة وفاة أحد الوالدين (إن وُجدت)",
-  "None (Both Parents Alive)": "لا يوجد (كلاهما على قيد الحياة)",
-  "Both Parents Alive": "الوالدان على قيد الحياة",
-  "Father Deceased": "الأب متوفى",
-  "Mother Deceased": "الأم متوفاة",
-  "Both Parents Deceased": "كلاهما متوفى",
-  "Create Account & Start Learning": "إنشاء الحساب وبدء التعلم",
-  "At least 8 characters": "8 أحرف على الأقل",
-  "I agree to Terms, Conditions and Privacy Policy": "أوافق على الشروط والأحكام وسياسة الخصوصية",
-  "Passwords do not match": "كلمتا المرور غير متطابقتين",
-  "Khatwa is where students follow lectures, take exams, and submit assignments seamlessly from home.": "خطوة هي المكان اللي بيتابع فيه الطالب حصصه، يمتحن، ويسلّم واجباته من غير ما يتحرك من مكانه.",
-  "Built on genuine progress tracking: pre-lecture exam, interactive assignments, linear course progression, with instant parent report notifications.": "النظام مبني على متابعة حقيقية: امتحان قبل كل حصة، واجب بنفس أسلوب الامتحان الإلكتروني، ولا تُفتح حصة جديدة إلا بعد إنهاء اللي قبلها. وولي الأمر يعرف النتيجة أول بأول.",
-  "100% Online": "أونلاين بالكامل",
-  "From any device, anywhere": "من أي جهاز ومكان",
-  "Points System": "نظام النقاط",
-  "Purchase courses with internal points": "شراء الحصص بعملة داخلية",
-  "Exam Before Each Lecture": "امتحان قبل كل حصة",
-  "Lecture unlocks only after passing": "لا تفتح الحصة إلا بعد اجتيازه",
-  "Interactive Homework": "واجب إلكتروني",
-  "Instant grading after every lecture": "تصحيح فوري بعد كل حصة",
-  "Parent SMS Alerts": "رسائل لولي الأمر",
-  "Grades sent instantly to parents": "الدرجة بتوصل في نفس اللحظة",
-  "Why Choose Khatwa Platform?": "ليه تختار منصة خطوة؟",
-  "Designed to provide a complete learning experience guaranteeing discipline and excellence": "صُممت المنصة لتمنح الطالب تجربة تعليمية متكاملة تضمن الالتزام والتفوق",
-  "Top Elite Educators": "نخبة من أفضل المدرسين",
-  "Professional explanations and continuously updated content from top specialized teachers.": "شروحات احترافية ومحتوى محدث باستمرار لأفضل المعلمين المتخصصين.",
-  "Rigorous Evaluation System": "نظام تقييم ومتابعة صارم",
-  "No skipping lectures without completing homework and passing the required exam.": "لا يمكن تخطي أي محاضرة دون حل الواجب واجتياز الاختبار الخاص بها.",
-  "Fast & Smooth Experience": "تجربة مستخدم سريعة وسلسة",
-  "Ultra-fast modern UI operating smoothly across all mobile and desktop screens.": "واجهة حديثة وسريعة تعمل بكفاءة على جميع شاشات الهواتف والحواسيب.",
-  "How Khatwa Works": "كيف تعمل المنصة",
-  "3 Simple Steps to Academic Excellence": "3 خطوات تفصلك عن التفوق الأكاديمي",
-  "1. Choose Teacher & Course": "1. اختر المدرس والكورس",
-  "Explore course library and choose the right subject and teacher for your grade.": "استكشف مكتبة الكورسات والمحاضرات واختر المادة والمدرس المناسب لمرحلتك الدراسية.",
-  "2. Recharge Points": "2. اشحن رصيد النقاط",
-  "Easily top up your points via available payment methods to unlock courses.": "اشحن محفظتك بالنقاط بسهولة عبر طرق الدفع المتاحة لفتح الكورسات والمحاضرات.",
-  "3. Watch, Exam & Excel": "3. شاهد، امتحن، وتفوق",
-  "Watch high-definition videos, download study notes, and submit homework continuously.": "شاهد الفيديوهات بجودة عالية، حمّل المذكرات، وسلّم واجباتك أولاً بأول.",
-  "Latest Available Courses": "أحدث الكورسات المتاحة",
-  "Explore latest lectures and comprehensive reviews for secondary and prep grades": "استكشف أحدث الحصص والمراجعات الشاملة لجميع المراحل الثانوية والإعدادية",
-  "View Course": "تصفح الكورس",
-  "Comprehensive educational course for subject mastery.": "كورس تعليمي شامل لإتقان المادة.",
-  "Free": "مجاني",
-  "Enroll Now": "اشتراك الآن",
-  "Enrolled": "مشترك بالفعل",
-  "Start Your Learning Journey Now with Khatwa": "ابدأ رحلتك التعليمية الآن مع خطوة",
-  "Join thousands of students and start tracking your classes and exams easily.": "انضم لآلاف الطلاب وابدأ بمتابعة حصصك وامتحاناتك بكل سهولة.",
-  "© 2026 Khatwa — All Rights Reserved": "© 2026 خطوة — نسخة تصميم واجهة أمامية فقط",
-  "© 2026 Khatwa — Smart Educational Platform. Courses and progress backed by database.": "© 2026 خطوة — منصة تعليمية ذكية. الكورسات والمحاضرات والتقدم مرتبطة بالخادم.",
-  "How do I access a lecture?": "إزاي بشوف الحصة؟",
-  "Access the subject from \"My Courses\", choose the available lecture, take the prerequisite exam, and the lecture unlocks.": "تدخل على المادة من \"موادي\"، تختار الحصة المتاحة، تؤدي امتحان بداية الحصة، وبعدها تفتح لك الحصة.",
-  "Why is the next lecture locked?": "ليه الحصة التالية مقفلة؟",
-  "The platform requires completing the current lecture, exam, and homework before unlocking the next one.": "النظام بيشترط إنهاء الحصة الحالية وامتحانها وواجبها عشان تفتح اللي بعدها. ده بيضمن متابعة حقيقية.",
-  "How do I recharge points?": "إزاي أشحن نقاط؟",
-  "Go to the \"Points\" page, click \"Recharge\", transfer funds via Vodafone Cash or InstaPay, and upload receipt with reference code.": "من صفحة \"النقاط\" اضغط \"شحن رصيد\"، حوّل المبلغ على فودافون كاش أو إنستاباي، وارفع صورة إيصال التحويل مع كود المعاملة ليتم تفعيل النقاط في محفظتك.",
-  "How long does request approval take?": "قد إيه بياخد وقت موافقة الطلب؟",
-  "Requests are usually reviewed and credited within a few minutes to hours.": "عادةً بيتم مراجعة الطلب وتأكيد النقاط في حسابك خلال دقائق إلى ساعات قليلة.",
-  "Can I return to a previous question in an exam?": "هل ينفع أرجع لسؤال فات في الامتحان؟",
-  "Yes, you can navigate between questions using Previous and Next buttons before final submission.": "أيوه، تقدر تتنقل بين الأسئلة بزر \"السؤال السابق\" و\"السؤال التالي\" قبل التسليم النهائي.",
-  "How does my parent receive my grades?": "ولي أمري هيعرف نتيجتي إزاي؟",
-  "Immediately after submitting the exam, an automated report is sent to the parent with score, teacher name, and student details.": "فور ما تخلّص امتحان بداية الحصة، بترسل رسالة تلقائية لولي الأمر فيها الدرجة واسم المدرس واسمك.",
-  "I forgot my password, what should I do?": "نسيت كلمة المرور، أعمل إيه؟",
-  "Click \"Forgot Password?\" on the login page and follow instructions to reset your credentials.": "اضغط \"نسيت كلمة المرور؟\" في صفحة تسجيل الدخول واتبع الخطوات لإعادة تعيينها.",
-  "Account": "الحساب",
-  "Page Not Found | Khatwa": "الصفحة غير موجودة | خطوة",
-  "The page you are looking for does not exist": "الصفحة اللي بتدور عليها مش موجودة",
-  "The link may have changed or the page was removed. Try returning to the Dashboard or Home.": "ممكن يكون الرابط اتغيّر أو الصفحة اتشالت. جرّب ترجع للوحة التحكم أو الرئيسية.",
-  "Refresh Data": "تحديث البيانات",
-  "Refresh Data 🔄": "تحديث البيانات 🔄",
-  "Refresh List 🔄": "تحديث القائمة 🔄",
-  "Total Registered Students": "إجمالي الطلاب المسجلين",
-  "Total Students": "إجمالي الطلاب",
-  "Total Teachers": "إجمالي المدرسين",
-  "Total Courses": "إجمالي الكورسات",
-  "Total Courses & Lessons": "إجمالي الكورسات والحصص",
-  "Pending Recharge Requests": "طلبات شحن معلقة حالياً",
-  "Requests Pending Review": "طلبات بانتظار المراجعة",
-  "Approved Requests": "طلبات تمت الموافقة عليها",
-  "Rejected Requests": "طلبات مرفوضة",
-  "Total Recharged Points": "إجمالي النقاط المشحونة",
-  "Total Approved Points": "إجمالي النقاط المعتمدة",
-  "Database Accounts": "حسابات بقاعدة البيانات",
-  "Academic Staff": "الكادر الأكاديمي",
-  "Academic Staff & Verified Teachers": "الكادر الأكاديمي والمدرسين المعتمدين",
-  "Lectures & Educational Content": "محاضرات ومحتوى تعليمي",
-  "Receipts Awaiting Approval": "إيصالات بانتظار الاعتماد",
-  "Live Database 🛡️": "قاعدة البيانات المباشرة 🛡️",
-  "Real-time monitoring of all students, teachers, courses, recharge requests, and platform finances.": "متابعة فورية وشاملة لجميع الطلاب، المدرسين، الكورسات، طلبات الشحن، والمحفظة المالية.",
-  "Students Directory & Tracking": "إدارة ومتابعة الطلاب",
-  "Teachers Directory": "إدارة المدرسين",
-  "Review Recharge Requests": "مراجعة طلبات الشحن",
-  "Review & Process Recharge Requests (Staff / Admin)": "مراجعة وشحن طلبات النقاط (Staff / Admin)",
-  "Recharge Requests Review Panel": "لوحة مراجعة طلبات الشحن",
-  "Review payment receipts submitted by students, specify point amounts, and credit student wallets immediately.": "راجع صور إثباتات الدفع المحولة من الطلاب، وحدد عدد النقاط واشحنها فورًا إلى محفظة الطالب.",
-  "Review Receipts & Recharge Requests": "مراجعة إيصالات وطلبات الشحن",
-  "Security & System Logs": "سجلات الأمان والنظام",
-  "Add New Teacher": "إضافة مدرس جديد",
-  "👨‍🏫 Add New Teacher": "👨‍🏫 إضافة مدرس جديد",
-  "＋ Create New Teacher Account": "＋ إنشاء حساب مدرس جديد",
-  "Create New Teacher Account": "إنشاء حساب مدرس جديد",
-  "👨‍🏫 Create New Teacher Account": "👨‍🏫 إنشاء حساب مدرس جديد",
-  "Accredit teacher into platform academic staff": "اعتماد المدرس في الكادر الأكاديمي للمنصة",
-  "Enter teacher credentials to create and accredit their account.": "أدخل بيانات المدرس لإنشاء حسابه واعتماده في الكادر الأكاديمي للمنصة.",
-  "Login Username": "اسم المستخدم للدخول",
-  "Display Name (Full Title)": "الاسم المعروض (اللقب الكامل)",
-  "Display Name": "الاسم المعروض",
-  "Specialized Subject": "المادة التخصصية",
-  "Subject": "التخصص",
-  "Teacher Avatar (File Upload)": "صورة المدرس الشخصية (رفع ملف صورة)",
-  "Bio / Resume": "نبذة وسيرة ذاتية (Bio)",
-  "Create & Save Teacher": "إنشاء وحفظ المدرس",
-  "Create & Save Teacher ✓": "إنشاء وحفظ المدرس ✓",
-  "Student Phone": "هاتف الطالب",
-  "Parent Phone": "هاتف ولي الأمر",
-  "Status": "الحالة",
-  "Registration Date": "تاريخ التسجيل",
-  "Actions": "الإجراءات",
-  "Action": "الإجراء",
-  "Dossier & Operations": "الملف والعمليات",
-  "📂 Dossier & Operations": "📂 الملف والعمليات",
-  "Rating": "التقييم",
-  "Amount": "المبلغ",
-  "Amount (EGP)": "المبلغ (EGP)",
-  "Amount in EGP": "المبلغ بالجنيه (EGP)",
-  "Transferred Amount": "المبلغ المحول",
-  "Transfer Code": "كود التحويل",
-  "Transfer / Reference Code": "رقم / كود التحويل",
-  "Receipt": "الإيصال",
-  "Receipt Image": "صورة الإيصال",
-  "Preview Transfer Receipt": "معاينة إثبات التحويل",
-  "Verify that amount and reference code match before crediting": "تأكد من مطابقة المبلغ ورقم التحويل قبل الشحن",
-  "Click to Enlarge": "اضغط للتكبير",
-  "Specify points amount to credit": "حدد عدد النقاط المراد شحنها للطالب",
-  "Points to Credit to Student": "عدد النقاط المطلوب شحنها للطالب",
-  "Notes or Rejection Reason (Visible to student)": "ملاحظات أو سبب الرفض (يظهر للطالب)",
-  "Optional for approvals, required for rejections": "اختياري في حالة الموافقة، إجباري في حالة الرفض",
-  "Notes": "ملاحظات",
-  "Video Playback & Security Logs": "سجلات تشغيل وحماية الفيديوهات",
-  "IP Address": "عنوان IP",
-  "Timestamp": "الوقت",
-  "Comprehensive Student Dossier": "ملف الطالب الشامل",
-  "Academic & Personal Information": "البيانات الأكاديمية والشخصية",
-  "Financial & Points Transaction History": "سجل المعاملات المالية والنقاط",
-  "Exams & Assignments Log": "سجل الامتحانات والواجبات",
-  "Edit Account Information": "تعديل بيانات الحساب",
-  "Disable Student Account": "تعطيل حساب الطالب",
-  "Enable Student Account": "تفعيل حساب الطالب",
-  "Delete Account Permanently": "حذف الحساب نهائياً",
-  "Student Notes": "ملاحظات الطالب",
-  "Add a new note about this student...": "أضف ملاحظة جديدة حول الطالب...",
-  "Add New Note": "إضافة ملاحظة جديدة",
-  "Add Note": "إضافة ملاحظة",
-  "Notes History": "سجل الملاحظات",
-  "Instant Funds Transfer": "تحويل رصيد مالي فوري",
-  "Instant Points Balance Adjustment": "تعديل رصيد النقاط فورياً",
-  "Number of Points": "عدد النقاط",
-  "Reason for Operation": "سبب العملية",
-  "Execute Funds Transfer": "تنفيذ التحويل المالي",
-  "Execute Points Adjustment": "تنفيذ تعديل النقاط",
-  "⚡ Permission Alert:": "⚡ تنبيه الصلاحيات:",
-  "You are currently not logged in with a Staff administrator account. Click the button to switch to an administrator account:": "أنت غير مسجل حالياً بحساب مسؤول Staff. اضغط الزر للتحويل الفوري بحساب مسؤول:",
-  "👑 Activate Staff / Admin Permissions": "👑 تفعيل صلاحيات Staff / Admin",
-  "No requests in this section currently": "لا توجد طلبات في هذا القسم حالياً",
-  "Proof of Payment": "إثبات الدفع",
-  "Payment Method": "طريقة الدفع",
-  "Vodafone Cash": "فودافون كاش",
-  "InstaPay": "إنستاباي",
-  "Bank Account": "حساب بنكي",
-  "Equivalent Points": "النقاط المقابلة",
-  "Upload Transfer Receipt Image": "رفع صورة إيصال التحويل",
-  "Drag image here or click to browse": "اسحب الصورة هنا أو اضغط للاختيار",
-  "Submit Recharge Request for Review": "إرسال طلب الشحن للمراجعة",
-  "Additional Notes": "ملاحظات إضافية",
-  "Recharge Wallet & Points | Khatwa": "شحن المحفظة والنقاط | خطوة",
-  "Currently Available Balance": "الرصيد المتاح حاليًا",
-  "💳 Request Points Recharge & Attach Receipt": "💳 طلب شحن نقاط وإرفاق إيصال التحويل",
-  "Recharge Requests & Review Status": "طلبات الشحن وحالة المراجعة",
-  "＋ New Recharge Request": "＋ طلب شحن جديد",
-  "Points Usage & Transaction History": "سجل استخدام وحركات النقاط",
-  "Upload transfer receipt, enter amount and code to confirm recharge immediately.": "ارفع إيصال التحويل وأدخل المبلغ والكود لتأكيد الشحن فورياً.",
-  "Back to Wallet": "العودة للمحفظة",
-  "1. Upload Receipt Image": "1. صورة إيصال التحويل (Upload Receipt)",
-  "Click to select receipt image or drag image here": "اضغط لاختيار صورة الإيصال أو اسحب الصورة هنا",
-  "Supports JPG, PNG, WebP (Transfer screenshot)": "يدعم JPG, PNG, WebP (لقطة شاشة التحويل)",
-  "✕ Change Image": "✕ تغيير الصورة",
-  "2. Paid Amount (Amount)": "2. المبلغ المدفوع (Amount)",
-  "Amount transferred in EGP": "المبلغ الذي قمت بتحويله بالجنيه",
-  "3. Transaction / Reference Code": "3. كود المعاملة / التحويل (Code)",
-  "Reference number from transfer SMS": "الرقم المرجعي أو كود العملية من رسالة التحويل",
-  "Additional notes (Optional)": "ملاحظات إضافية (اختياري)",
-  "Any details you want to add for administration...": "أي تفاصيل تود إضافتها للإدارة...",
-  "Submit Recharge Request to Admin": "إرسال طلب الشحن للإدارة",
-  "Results & Evaluations Log": "سجل النتائج والتقييمات",
-  "Log of exams and assignments completed across academic subjects.": "سجل الامتحانات والواجبات المنجزة عبر المواد الدراسية.",
-  "Completed Exams": "امتحانات مؤداة",
-  "Progress by Course": "التقدم حسب الكورس",
-  "Course Details | Khatwa": "تفاصيل الكورس | خطوة",
-  "Course Details": "تفاصيل الكورس",
-  "Teacher · Stage": "المدرس · المرحلة",
-  "Your Progress in Course": "تقدمك في الكورس",
-  "Course Content & Lectures": "محتوى الكورس والمحاضرات",
-  "＋ Create Course in Current Stage": "＋ إنشاء كورس في المرحلة الحالية",
-  "📁 Preparatory Stage Courses": "📁 كورسات المرحلة الإعدادية",
-  "Fetching courses from database...": "جارٍ جلب الكورسات من قاعدة البيانات...",
-  "Course / Curriculum Title": "عنوان الكورس / المنهج",
-  "Academic Stage": "المرحلة الدراسية",
-  "Enrollment Cost (Points)": "تكلفة الاشتراك (نقاط)",
-  "Course Price (EGP)": "سعر الكورس (EGP)",
-  "Cover Image File Upload": "رفع صورة الغلاف",
-  "Course Description": "وصف الكورس",
-  "Create Course Now": "إنشاء الكورس الآن",
-  "Interface States | Khatwa": "حالات الواجهة | خطوة",
-  "Design System": "نظام التصميم",
-  "States & Components Library": "مكتبة الحالات والمكوّنات",
-  "Reference for empty, error, and loading states used across Khatwa Platform to guarantee visual consistency.": "مرجع الحالات الفارغة، حالات الخطأ، والتحميل المستخدمة عبر منصة خطوة، لضمان اتساق اللغة البصرية.",
-  "No Subjects": "لا توجد مواد",
-  "You have not enrolled in any subject yet": "لسه مشتركتش في أي مادة",
-  "Enroll in a new subject to start tracking your lectures.": "اشترك في مادة جديدة عشان تبدأ متابعة حصصك.",
-  "Browse Subjects": "تصفح المواد",
-  "No Lectures": "لا توجد حصص",
-  "No lectures available right now": "مفيش حصص متاحة دلوقتي",
-  "Student Monitoring | Khatwa": "متابعة الطالب | خطوة",
-  "Student Monitoring": "متابعة الطالب",
-  "Monitor Student": "متابعة طالب",
-  "Browse Platform": "تصفح المنصة",
-  "Monitor Student Performance": "متابعة أداء الطالب",
-  "Registered": "مسجل",
-  "✏️ Edit Profile": "✏️ تعديل البيانات",
-  "January": "يناير",
-  "February": "فبراير",
-  "March": "مارس",
-  "April": "أبريل",
-  "May": "مايو",
-  "June": "يونيو",
-  "July": "يوليو",
-  "August": "أغسطس",
-  "September": "سبتمبر",
-  "October": "أكتوبر",
-  "November": "نوفمبر",
-  "December": "ديسمبر",
-  "0 Points": "0 نقطة",
-  "© 2026 Khatwa": "© 2026 خطوة",
-  "Latest alerts regarding your account and lectures.": "آخر التنبيهات الخاصة بحسابك وحصصك الدراسية.",
-  "Latest Exam Results": "آخر نتائج الامتحانات",
-  "Last Recorded Activity": "آخر نشاط مسجل",
-  "Answer the following questions to verify your understanding.": "أجب عن الأسئلة التالية للتأكد من استيعابك لمحتوى الحصة.",
-  "Exams & Assignments Performance": "أداء الامتحانات والواجبات",
-  "أدخل كود التحويل المرجعي من رسالة الدفع": "أدخل كود التحويل المرجعي من رسالة الدفع",
-  "Subject Professor": "أستاذ المادة",
-  "أضف ملاحظة خاصة عن هذا الطالب...": "أضف ملاحظة خاصة عن هذا الطالب...",
-  "Brand Colors": "ألوان الهوية",
-  "Video Security": "أمان الفيديو",
-  "Create account now — as a teacher to upload courses, or as a student to follow your favorite teachers.": "أنشئ حسابك الآن — كمدرس لترفع كورساتك، أو كطالب لتتابع حصصك مع المدرس الذي تختاره.",
-  "Welcome back": "أهلًا بعودتك",
-  "أهم النقاط والتوجيهات...": "أهم النقاط والتوجيهات...",
-  "Review & Process Points Recharge | Khatwa": "إدارة ومراجعة طلبات شحن النقاط | خطوة",
-  "Add This Question to List ＋": "إضافة هذا السؤال للقائمة ＋",
-  "Add ＋": "إضافة ＋",
-  "إظهار/إخفاء": "إظهار/إخفاء",
-  "Try Again": "إعادة المحاولة",
-  "Sign Up | Khatwa": "إنشاء حساب | خطوة",
-  "Create New Course": "إنشاء كورس جديد",
-  "Take your first step in your studies": "ابدأ أول خطوة في مذاكرتك",
-  "Passing the quiz and submitting homework is an essential prerequisite.": "اجتياز الامتحان وتسليم الواجب شرط أساسي لا يمكن تجاوزه.",
-  "Choose subject teacher and browse accredited chapters and lectures.": "اختر أستاذ المادة وتصفح الفصول والمحاضرات الدراسية المعتمدة.",
-  "Choose Teacher & Subject": "اختيار المدرس والمادة",
-  "Multiple Choice": "اختيار من متعدد (Multiple Choice)",
-  "Teacher Studio | Khatwa": "استوديو المدرس | خطوة",
-  "اسم الطالب": "اسم الطالب",
-  "Request new points to purchase lectures.": "اطلب نقاط جديدة عشان تقدر تشتري حصص.",
-  "اكتب إجابتك هنا...": "اكتب إجابتك هنا...",
-  "اكتب نص السؤال هنا...": "اكتب نص السؤال هنا...",
-  "FAQ | Khatwa": "الأسئلة الشائعة | خطوة",
-  "Currently Added Questions (": "الأسئلة المضافة حالياً (",
-  "Correct Answer": "الإجابة الصحيحة",
-  "Notifications | Khatwa": "الإشعارات | خطوة",
-  "Full / Display Name": "الاسم الكامل / المعروض",
-  "Online Exam": "الامتحان الإلكتروني",
-  "Online Exam | Khatwa": "الامتحان الإلكتروني | خطوة",
-  "Lecture Online Exam": "الامتحان الإلكتروني للمحاضرة",
-  "Exams & Assignments": "الامتحانات والواجبات",
-  "Academic Subject": "التخصص الأكاديمي",
-  "Next Lecture in Your Plan": "الحصة التالية في خطتك",
-  "Lectures are purchased with internal points. Students transfer funds to the platform wallet and receive equivalent points.": "الحصص تُشترى بنقاط، وهي عملة افتراضية داخل المنصة وليست دفعًا مباشرًا. يدفع الطالب المبلغ الحقيقي بالتحويل إلى رقم محفظة خارجية تابعة للمنصة، ثم يحدد بنفسه عدد النقاط والمدرس المعني.",
-  "Step 1: Submit Homework": "الخطوة 1: تسليم الواجب",
-  "Step 2: Pass Exam": "الخطوة 2: اجتياز الامتحان",
-  "Step 3: Watch Lecture & PDF": "الخطوة 3: مشاهدة المحاضرة وPDF",
-  "Option (A)": "الخيار (أ)",
-  "Option (B)": "الخيار (ب)",
-  "Option (C)": "الخيار (ج)",
-  "Option (D)": "الخيار (د)",
-  "Payment": "الدفع",
-  "Go to Dashboard": "الذهاب للوحة التحكم",
-  "Next Question": "السؤال التالي",
-  "Previous Question": "السؤال السابق",
-  "السبب (اختياري)": "السبب (اختياري)",
-  "Students select the teacher from the teachers directory.": "الطالب يحدد المدرس اللي هيذاكر معاه من صفحة المدرسين.",
-  "Courses Available on Platform": "الكورسات المتاحة على المنصة",
-  "المبلغ (مثال: 150)": "المبلغ (مثال: 150)",
-  "Lecture & Lesson | Khatwa": "المحاضرة والدرس | خطوة",
-  "Teacher has not added new lectures to this subject yet.": "المدرس لسه ما ضافش حصص جديدة لهذه المادة.",
-  "The teacher has not added an exam for this lecture. You may proceed to other lectures.": "المدرس لم يقم بإضافة امتحان إلكتروني لهذه المحاضرة. يمكنك متابعة المحاضرات الأخرى أو مراجعة نتائجك.",
-  "The teacher has not attached homework to this lecture. You can continue the course.": "المدرس لم يقم بربط واجب بهذه المحاضرة. يمكنك متابعة باقي دروس الكورس.",
-  "Educators & Academic Courses": "المعلمون والكورسات الدراسية",
-  "النقاط (مثال: 150 أو -50)": "النقاط (مثال: 150 أو -50)",
-  "Points | Khatwa": "النقاط | خطوة",
-  "النقاط الأساسية المطلوبة في إجابة الطالب": "النقاط الأساسية المطلوبة في إجابة الطالب",
-  "Online Homework": "الواجب الإلكتروني",
-  "Online Homework | Khatwa": "الواجب الإلكتروني | خطوة",
-  "Lecture Online Homework": "الواجب الإلكتروني للمحاضرة",
-  "Pre-Lecture Exam": "امتحان بداية الحصة",
-  "A short quiz before each video ensuring students are prepared.": "امتحان قصير قبل أي فيديو، للتأكد إن الطالب جاهز للمحتوى الجديد.",
-  "بحث باسم المستخدم أو رقم الهاتف...": "بحث باسم المستخدم أو رقم الهاتف...",
-  "Student info, parent phone number, and father's occupation are required during sign up.": "بيانات الطالب، رقم هاتف ولي الأمر، ووظيفة الأب ضمن التسجيل.",
-  "My Profile | Khatwa": "بياناتي | خطوة",
-  "Join Date": "تاريخ الانضمام",
-  "Student Experience": "تجربة الطالب",
-  "Teacher & Center Experience": "تجربة المدرس والسنتر",
-  "Refresh 🔄": "تحديث 🔄",
-  "Transfer Balance Now ✓": "تحويل الرصيد الآن ✓",
-  "Login | Khatwa": "تسجيل الدخول | خطوة",
-  "Submit Exam": "تسليم الامتحان",
-  "Submit Homework": "تسليم الواجب",
-  "Browse Teachers & Courses | Khatwa": "تصفح المعلمين والكورسات | خطوة",
-  "Browse as Student": "تصفح كطالب",
-  "Edit Profile": "تعديل البيانات",
-  "Adjust Points Now ✓": "تعديل النقاط الآن ✓",
-  "Mark All as Read": "تعليم الكل كمقروء",
-  "Additional Details": "تفاصيل إضافية",
-  "Processed ✓ (": "تم الشحن ✓ (",
-  "Your answers have been saved in activities and assessments log.": "تم تسجيل إجاباتك بنجاح في سجل الأنشطة والتقييمات.",
-  "Your answers have been recorded and score saved to your profile.": "تم تسجيل إجاباتك بنجاح وحساب النتيجة في سجل درجاتك.",
-  "Exam Submitted": "تم تسليم الامتحان",
-  "Homework Submitted": "تم تسليم الواجب",
-  "Points are used to enroll in paid subjects, lectures, and unlock exams.": "تُستخدم النقاط للاشتراك في المواد والمحاضرات المدفوعة وفتح الامتحانات.",
-  "Loading...": "جارٍ التحميل...",
-  "Loading available courses...": "جارٍ تحميل الكورسات المتاحة...",
-  "Loading recharge requests...": "جارٍ تحميل طلبات الشحن...",
-  "Loading your previous requests...": "جارٍ تحميل طلباتك السابقة...",
-  "Loading students list from database...": "جارٍ تحميل قائمة الطلاب من قاعدة البيانات...",
-  "Loading teachers list from database...": "جارٍ تحميل قائمة المدرسين...",
-  "Loading your courses...": "جارٍ تحميل كورساتك...",
-  "Loading featured teachers...": "جارٍ جلب نخبة المدرسين...",
-  "Checking access permissions and educational sequence...": "جارٍ فحص صلاحيات الوصول والتسلسل التعليمي...",
-  "Try refreshing the page, or contact support if the problem persists.": "جرّب تحدّث الصفحة، ولو المشكلة استمرت تواصل مع الدعم الفني.",
-  "An unexpected error occurred": "حصل خطأ غير متوقع",
-  "Save Changes": "حفظ التعديلات",
-  "Save Chapter ✓": "حفظ الفصل ✓",
-  "Save Course ✓": "حفظ الكورس ✓",
-  "Save & Publish Lesson ✓": "حفظ ونشر الدرس ✓",
-  "Answer homework questions to reinforce concepts and assess understanding.": "حل أسئلة الواجب والتدريبات لتثبيت المفاهيم وتقييم فهمك للدرس.",
-  "Video Protection": "حماية للفيديو",
-  "General Error": "خطأ عام",
-  "Khatwa | Online Educational Platform": "خطوة | منصة تعليمية أونلاين",
-  "Khatwa is where students follow their lectures,": "خطوة هي المكان اللي بيتابع فيه الطالب حصصه،",
-  "Chapter Cover Image File Upload": "رفع صورة الغلاف للفصل",
-  "🎬 Upload Lecture Video File (Google Drive)": "🎬 رفع ملف فيديو المحاضرة (Upload Video File)",
-  "The video will be uploaded directly to Google Drive and protected against downloads.": "سيتم رفع ملف الفيديو مباشرة وتخزينه في Google Drive وتأمينه ضد التحميل والسرقة.",
-  "Back to Course": "رجوع للكورس",
-  "Automated result notifications": "رسالة نتيجة تلقائية",
-  "Your Balance: 0 Points": "رصيدك: 0 نقطة",
-  "Question 1 of 1": "سؤال 1 من 1",
-  "Math / Equation Question": "سؤال معادلة ورموز رياضية (Math Equation)",
-  "Essay Question": "سؤال مقالي كتابي (Essay Question)",
-  "Recent Activity Log": "سجل النشاط الأخير",
-  "Previous Recharge Requests Log": "سجل طلبات الشحن السابقة",
-  "Samer Yasser": "سمير ياسر",
-  "Enrolled students will be able to view and download study notes on the platform.": "سيتمكن الطلاب المشتركون من استعراض المذكرة وتحميلها داخل المنصة.",
-  "Recharge Wallet & Balance": "شحن المحفظة والرصيد",
-  "Purchase Lecture with Points": "شراء الحصة بالنقاط",
-  "شرح مبسط لمحتوى الكورس...": "شرح مبسط لمحتوى الكورس...",
-  "Lecture Unlock Requirement": "شرط فتح الحصة",
-  "Recharge Balance Request": "طلب شحن رصيد",
-  "Usually during work hours. You can track status (Pending / Approved / Rejected) from the Points page.": "عادةً خلال ساعات العمل. يمكنك متابعة حالة الطلب (قيد المراجعة / تمت الموافقة / مرفوض) من صفحة النقاط.",
-  "Showing 0 Students": "عرض 0 طالب",
-  "View Complete History": "عرض السجل الكامل",
-  "View Results History": "عرض سجل النتائج",
-  "View All Results": "عرض كل النتائج",
-  "Internal currency to buy courses": "عملة داخلية لشراء الحصص",
-  "Lesson / Lecture Title": "عنوان الدرس / الحصة",
-  "Chapter / Section Title": "عنوان الفصل / الباب",
-  "Course Title": "عنوان الكورس",
-  "Unlock Next Lecture": "فتح الحصة التالية",
-  "Upon exam completion, an automated report with score, teacher name, and student details is sent to the parent instantly.": "فور انتهاء الطالب من امتحان الحصة، تُرسل رسالة تلقائية إلى ولي الأمر تتضمن الدرجة المحصّلة، اسم المدرس، واسم الطالب — دون الحاجة لمتابعة يدوية من أحد.",
-  "Protected video preventing screen recording, followed by multiple-choice homework.": "فيديو محمي من التسجيل والتنزيل، يليه واجب باختيارات (أ - ب - ج - د).",
-  "Pending Review ⏳ (": "قيد المراجعة ⏳ (",
-  "All Requests (": "كل الطلبات (",
-  "Math Formula Code (LaTeX)": "كود المعادلة الرياضية (LaTeX / Math Formula)",
-  "My Academic Courses": "كورساتي الدراسية",
-  "No Notifications": "لا توجد إشعارات",
-  "No Point Requests": "لا توجد طلبات نقاط",
-  "No Results": "لا توجد نتائج",
-  "Next lecture unlocks only after passing the exam and submitting homework.": "لا تُفتح الحصة الجديدة إلا بعد اجتياز الامتحان وتسليم الواجب.",
-  "No exam added for this lecture": "لا يوجد امتحان مضاف لهذه المحاضرة",
-  "No homework added for this lecture": "لا يوجد واجب مضاف لهذه المحاضرة",
-  "You must complete the current lecture exam and submit its homework first to automatically unlock the next lecture.": "لازم تخلّص امتحان بداية الحصة الحالية وتسلّم واجبها الأول، وبعدين تفتح الحصة اللي بعدها تلقائيًا.",
-  "You have no results yet": "لسه ماعندكش نتائج",
-  "You haven't submitted any recharge request yet": "لسه ماقدمتش أي طلب شحن",
-  "General Administration & Control Panel | Khatwa": "لوحة التحكم والإدارة العامة | خطوة",
-  "Teacher studios grant educators and assistants full access to student performance, assignment status, and subject progress.": "لوحة السناتر تمنح المدرس (المستر) والمساعدين (الأسيستانت) صلاحية دخول للاطلاع على بيانات كل طالب: أداءه في الامتحانات، حالة تسليم الواجبات، وتقدمه في المادة.",
-  "Student Dashboard | Khatwa": "لوحة الطالب | خطوة",
-  "Complete tracking from one dashboard": "متابعة كاملة من لوحة واحدة",
-  "Parent Tracking": "متابعة ولي الأمر",
-  "مثال: 50 أو 100 أو 150": "مثال: 50 أو 100 أو 150",
-  "مثال: dr_tamer_elkady": "مثال: dr_tamer_elkady",
-  "مثال: x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}": "مثال: x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}",
-  "مثال: الفصل الأول: الحركة الدائرية": "مثال: الفصل الأول: الحركة الدائرية",
-  "مثال: الفيزياء، الكيمياء...": "مثال: الفيزياء، الكيمياء...",
-  "مثال: الفيزياء، الكيمياء، الرياضيات...": "مثال: الفيزياء، الكيمياء، الرياضيات...",
-  "مثال: المحاضرة الأولى: شرح القوانين الأساسية": "مثال: المحاضرة الأولى: شرح القوانين الأساسية",
-  "مثال: المراجعة النهائية في الفيزياء": "مثال: المراجعة النهائية في الفيزياء",
-  "مثال: د. تامر القاضي": "مثال: د. تامر القاضي",
-  "مثال: موظف / مهندس / طبيب": "مثال: موظف / مهندس / طبيب",
-  "مثال: موظف حكومي / مهندس": "مثال: موظف حكومي / مهندس",
-  "Points Wallet": "محفظة النقاط",
-  "Rejected ✕ (": "مرفوضة ✕ (",
-  "Notifications & Alerts Center": "مركز الإشعارات والتنبيهات",
-  "Watch Lecture & Submit Homework": "مشاهدة الحصة وتسليم الواجب",
-  "معلم خبير ومعد المناهج بالمرحلة الثانوية...": "معلم خبير ومعد المناهج بالمرحلة الثانوية...",
-  "No new notifications": "مفيش إشعارات جديدة",
-  "ملخص ما يتناوله هذا الفصل": "ملخص ما يتناوله هذا الفصل",
-  "Student File: —": "ملف الطالب: —",
-  "From login to unlocking next lecture": "من الدخول حتى فتح الحصة التالية",
-  "From the \"Recharge Points\" page, enter points, transfer funds to platform wallet, and upload receipt image.": "من صفحة \"طلب شحن نقاط\"، تحدد عدد النقاط والمدرس، تحوّل المبلغ لرقم المحفظة، وترفع صورة التحويل. الإدارة تراجع الطلب وتوافق عليه.",
-  "seamlessly from anywhere.": "من غير ما يتحرك من مكانه.",
-  "Prevent download & recording": "منع التنزيل والتصوير",
-  "Prevents downloads and screen recording during playback.": "منع خاصية التنزيل، ومنع تصوير الشاشة أثناء المشاهدة.",
-  "Admin reviews transfer receipts and approves requests, providing full clarity on points and transactions.": "مهمة الإدارة تنحصر في مراجعة صورة التحويل والموافقة على الطلب، مما يجعل معرفة عدد النقاط والمدرس المرتبط بكل عملية واضحة ومباشرة لكل الأطراف.",
-  "Teacher profile and academic background.": "نبذة عن المدرس والخبرات الأكاديمية.",
-  "Your exam and homework results will appear here after your first lecture.": "نتائج امتحاناتك وواجباتك هتظهر هنا أول ما تبدأ أول حصة.",
-  "My Results | Khatwa": "نتائجي | خطوة",
-  "Question Text": "نص السؤال",
-  "Role-based access system determines permissions: teacher master codes, assistant codes, admin accounts, and editor roles.": "نظام أكواد الدخول يحدد نوع الصلاحية: كود خاص بكل مدرس ومعه 5 أكواد للمساعدين، أكواد أدمن بصلاحية كاملة، وكود محرر لدخول فني محدود دون صلاحيات مطلقة.",
-  "Rubric & Grading Notes": "نموذج الإجابة وملاحظات التصحيح (Rubric)",
-  "Question Type": "نوع السؤال",
-  "Here is a quick overview of your academic progress and upcoming lectures.": "هذه نظرة سريعة على تقدمك الدراسي ومحاضراتك القادمة.",
-  "We will notify you once your courses or points are updated.": "هنعلمك أول ما يكون فيه تحديث على حصصك أو نقاطك.",
-  "Brief Description": "وصف مختصر",
-  "Lecture Description & Notes": "وصف وملاحظات المحاضرة",
-  "Students transfer amount to platform wallet, request points, and admin approves the request.": "يحوّل الطالب المبلغ لرقم محفظة المنصة، ثم يطلب تحويل نقاط، وتراجع الإدارة الطلب.",
-  "Actual payments are always transferred to the platform's official external wallet.": "يظل التحويل الفعلي دائمًا عبر رقم محفظة خارجية للمنصة.",
-  "Real-time grade notifications": "يعرف النتيجة أول بأول",
-  "take exams, and submit homework": "يمتحن، ويسلّم واجباته",
-  "✕ Close": "✕ إغلاق",
-  "🎓 Students Directory (": "🎓 إدارة ومتابعة الطلاب (",
-  "🎬 Add Lesson & Lecture": "🎬 إضافة درس ومحاضرة",
-  "👨‍🏫 Teachers Directory (": "👨‍🏫 إدارة المدرسين (",
-  "👨‍🏫 Featured Platform Teachers": "👨‍🏫 نخبة مدرسي المنصة",
-  "💎 Adjust Points": "💎 تعديل النقاط",
-  "💳 Review Receipts & Recharge Requests": "💳 مراجعة إيصالات وطلبات الشحن",
-  "💳 Review Recharge Requests": "💳 مراجعة طلبات الشحن",
-  "💵 Funds Transfer (EGP)": "💵 تحويل رصيد مالي (EGP)",
-  "📁 Secondary 1": "📁 أولى ثانوي",
-  "📁 Add New Chapter / Unit": "📁 إضافة فصل / وحدة جديدة (Chapter)",
-  "📁 Secondary Year 1": "📁 الصف الأول الثانوي",
-  "📁 Secondary Year 3": "📁 الصف الثالث الثانوي",
-  "📁 Secondary Year 2": "📁 الصف الثاني الثانوي",
-  "📁 Preparatory Stage": "📁 المرحلة الإعدادية",
-  "📁 Secondary 3": "📁 ثالثة ثانوي",
-  "📁 Secondary 2": "📁 ثانية ثانوي",
-  "📁 All Stages": "📁 جميع المراحل",
-  "📄 Upload Lesson Notes (PDF Document)": "📄 رفع مذكرة الدرس (PDF Document)",
-  "📚 Available Courses & Lectures for This Teacher:": "📚 الكورسات والمحاضرات المتاحة لهذا المعلم:",
-  "📚 My Enrolled Courses (": "📚 كورساتي المشترك بها (",
-  "📝 Build Questions (Homework / Exam)": "📝 بناء الأسئلة (واجب / امتحان)",
-  "📝 Admin & Supervisor Notes on Student": "📝 ملاحظات المشرفين والمدير عن الطالب",
-  "🔍 All Available Courses": "🔍 جميع الكورسات المتاحة",
-  "🚀 Submit Recharge Request for Review": "🚀 إرسال طلب الشحن للمراجعة",
-  "🛡️ Security & System Logs": "🛡️ سجلات الأمان والنظام",
-  "🛡️ Video Playback & Security Logs": "🛡️ سجلات تشغيل وحماية الفيديوهات",
-  "＋ Add New Question": "＋ إضافة سؤال جديد",
-  "＋ Add New Course": "＋ إضافة كورس جديد",
-  "Answer all questions then submit your results.": "أجب عن جميع الأسئلة ثم اضغط تسليم النتيجة.",
-  "Congratulations, you passed the exam!": "مبروك، اجتزت الامتحان بنجاح!",
-  "Homework Passed Successfully!": "تم اجتياز الواجب بنجاح!",
-  "Add New Course": "إضافة كورس جديد",
-  "Add New Chapter / Unit": "إضافة فصل / وحدة جديدة (Chapter)",
-  "Save Chapter": "حفظ الفصل",
-  "🎬 Add New Lecture (Lesson)": "🎬 إضافة محاضرة جديدة (Lesson)",
-  "Add New Lecture (Lesson)": "إضافة محاضرة جديدة (Lesson)",
-  "Lecture / Lesson Title": "عنوان المحاضرة / الدرس",
-  "🎬 Upload Lecture Video File": "🎬 رفع ملف فيديو المحاضرة (Video File)",
-  "📄 Upload Lecture PDF Notes": "📄 رفع مذكرة المحاضرة (PDF Document)",
-  "Lecture Price in Points": "سعر المحاضرة بالنقاط (Points)",
-  "Save Lecture ✓": "حفظ المحاضرة ✓",
-  "📝 Question Bank & Exams": "📝 بنك الأسئلة والاختبارات",
-  "Question Bank & Exams": "بنك الأسئلة والاختبارات",
-  "Add New Question to Question Bank": "إضافة سؤال جديد لبنك الأسئلة",
-  "Question Type:": "نوع السؤال:",
-  "Full Question Text": "نص السؤال الكامل",
-  "Options (Multiple Choice)": "الخيارات (اختيار من متعدد)",
-  "Option 1 (A)": "الخيار الأول (A)",
-  "Option 2 (B)": "الخيار الثاني (B)",
-  "Option 3 (C)": "الخيار الثالث (C)",
-  "Option 4 (D)": "الخيار الرابع (D)",
-  "Correct Option": "الخيار الصحيح",
-  "Question Points": "درجة السؤال",
-  "Save Question to Bank ✓": "حفظ السؤال في البنك ✓",
-  "Total Uploaded Courses": "إجمالي الكورسات المرفوعة",
-  "Parent Notification": "إشعار لولي الأمر",
-  "Automated WhatsApp / SMS notification with grades sent to parent immediately.": "رسالة تلقائية على واتساب / SMS لولي الأمر بالدرجة فور انتهاء الامتحان.",
-  "Discover Teachers": "اكتشف المدرسين",
-  "Browse teachers and subjects available on the platform and start learning online.": "تصفح قائمة المدرسين والمواد المتاحة على المنصة، وابدأ في متابعة حصصك أونلاين.",
-  "Join Now": "انضم الآن",
-  "Create Teacher Account": "إنشاء حساب مدرس",
-  "Login to Account": "تسجيل الدخول للحساب",
-  "Browse Teachers": "تصفح المدرسين",
-  "Why Khatwa Platform?": "لماذا منصة خطوة؟",
-  "An integrated solution connecting students, teachers, and parents in one interactive ecosystem": "حل متكامل يجمع الطالب والمعلم وولي الأمر في منظومة تعليمية تفاعلية واحدة",
-  "Advanced Content Protection": "حماية متقدمة للمحتوى",
-  "Cutting-edge technologies preventing screen recording and video downloads to protect educational content.": "تقنيات متطورة لمنع تصوير الشاشة وتنزيل الفيديوهات التعليمية، لضمان حقوق المدرس وحصرية المحتوى.",
-  "Continuous Parent Follow-up": "متابعة دورية لولي الأمر",
-  "Instant reports sent to parents with exam scores, homework results, and attendance.": "تقارير فورية تُرسل لولي الأمر بنتائج الامتحانات والواجبات ونسبة الحضور أولاً بأول.",
-  "Strict Linear Progression": "نظام التسلسل الصارم",
-  "Smart learning path requiring students to complete homework and pass quizzes before unlocking next lessons.": "نظام تعليمي ذكي يلزم الطالب باجتياز الواجب والاختبار قبل فتح أي محاضرة تالية.",
-  "Fast & Direct Communication": "تواصل مباشر وسريع",
-  "Ability to ask questions and interact under every lecture to receive direct answers from teachers.": "إمكانية طرح الأسئلة والتفاعل تحت كل محاضرة للحصول على إجابات وافية من المدرس.",
-  "Add Lesson & Lecture": "إضافة درس ومحاضرة",
-  "Upload Lesson Notes (PDF Document)": "رفع مذكرة الدرس (PDF Document)",
-  "Build Questions (Homework / Exam)": "بناء الأسئلة (واجب / امتحان)",
-  "Add New Question": "إضافة سؤال جديد",
-  "Multiple Choice Question": "سؤال اختيار من متعدد",
-  "Short Essay Question": "سؤال مقالي قصير",
-  "Math / Scientific Equation": "معادلة رياضية / علمية",
-  "Four Options (A, B, C, D)": "الخيارات الأربعة (أ، ب، ج، د)",
-  "Correct Option:": "الإجابة الصحيحة هي:",
-  "Score": "الدرجة",
-  "Save Question to Course ✓": "حفظ السؤال في الكورس ✓",
-  "Students Enrolled in This Course": "الطلاب المشتركون في هذا الكورس",
-  "Attendance Rate": "نسبة الحضور",
-  "Enrollment Date": "تاريخ الاشتراك",
-  "Students Directory (": "إدارة ومتابعة الطلاب (",
-  "Teachers Directory (": "إدارة المدرسين (",
-  "Featured Platform Teachers": "نخبة مدرسي المنصة",
-  "My Enrolled Courses (": "كورساتي المشترك بها (",
-  "All Available Courses": "جميع الكورسات المتاحة",
-  "Genuine Progress Tracking": "متابعة حقيقية",
-  "Latest lectures and revisions for all secondary and prep stages": "أحدث الحصص والمراجعات الشاملة لجميع المراحل الثانوية والإعدادية"
-};
+  "أحدث الحصص والمراجعات الشاملة لجميع المراحل الثانوية والإعدادية": "Latest lectures and revisions for all secondary and prep stages",
+  "طلب حضور سيشن أوفلاين": "Offline Session Attendance Request",
+  "طلب حضور سيشن أوفلاين 🏢": "Offline Session Attendance Request 🏢",
+  "طلبات حضور سيشن أوفلاين": "Offline Session Attendance Requests",
+  "طلبات سيشنات الأوفلاين": "Offline Sessions Requests",
+  "نموذج طلب حضور حصة أوفلاين أونلاين": "Offline-to-Online Session Request Form",
+  "اسم المدرس (Teacher Name)": "Teacher Name",
+  "اسم المدرس": "Teacher Name",
+  "المحاضرة أو الحصة المطلوبة": "Required Lecture / Session",
+  "المحاضرة المطلوبة": "Required Lecture",
+  "الحصة المطلوبة": "Required Session",
+  "مكان السنتر / القاعة": "Center / Hall Location",
+  "مكان السنتر": "Center Location",
+  "السنتر": "Center",
+  "القاعة": "Hall",
+  "صورة إيصال السنتر (إن وجد)": "Center Receipt Photo (If available)",
+  "صورة إيصال السنتر": "Center Receipt Photo",
+  "إيصال السنتر": "Center Receipt",
+  "لا ملاحظات": "No notes",
+  "إرسال الطلب الآن": "Submit Request Now",
+  "إرسال الطلب": "Submit Request",
+  "طلباتي السابقة": "My Previous Requests",
+  "طلباتي": "My Requests",
+  "حالة الطلب": "Request Status",
+  "تاريخ الطلب": "Request Date",
+  "مشاهدة الحصة الآن": "Watch Lecture Now",
+  "مشاهدة الحصة": "Watch Lecture",
+  "مشاهدة المحاضرة": "Watch Lecture",
+  "نسخ الكود": "Copy Code",
+  "تم نسخ الكود!": "Code copied!",
+  "تم نسخ الكود": "Code copied",
+  "تأكيد وشحن الكود": "Redeem Code",
+  "كود التفعيل": "Activation Code",
+  "كود الشحن": "Recharge Code",
+  "كود تفعيل": "Activation Code",
+  "تم إرسال كود": "Code Sent",
+  "تم إرسال كود تفعيل": "Activation Code Sent",
+  "تمت الموافقة وتم الفتح": "Approved & Unlocked",
+  "تم فتح المحاضرة": "Lecture Unlocked",
+  "تم تفعيل المحاضرة": "Lecture Activated",
+  "تم فتح المحاضرة لك بنجاح": "Lecture unlocked for you successfully",
+  "مدرس آخر غير مدرج": "Other Teacher (Not Listed)",
+  "محاضرة أخرى غير مدرجة": "Other Lecture (Not Listed)",
+  "يرجى اختيار الصف الدراسي أولاً": "Please choose academic stage first",
+  "يرجى اختيار الصف أولاً": "Please choose stage first",
+  "جارٍ تحميل قائمة المحاضرات...": "Loading lectures list...",
+  "لا توجد محاضرات متاحة لهذا المدرس في هذا الصف": "No lectures available for this teacher in this stage",
+  "لا توجد محاضرات متاحة": "No lectures available",
+  "اختر الصف الدراسي...": "Choose Academic Stage...",
+  "اختر الصف...": "Choose Stage...",
+  "اختر المدرس...": "Choose Teacher...",
+  "اختر المحاضرة أو الحصة المطلوبة...": "Choose Required Lecture or Session...",
+  "اختر المحاضرة...": "Choose Lecture...",
+  "⚡ موافقة وفتح فوري": "⚡ Approve & Instant Unlock",
+  "موافقة وفتح فوري": "Approve & Instant Unlock",
+  "🔄 تغيير المحاضرة": "🔄 Change Lecture",
+  "تغيير المحاضرة": "Change Lecture",
+  "🔓 فتح المحاضرة": "🔓 Unlock Lecture",
+  "فتح المحاضرة": "Unlock Lecture",
+  "🎟️ إرسال كود": "🎟️ Send Code",
+  "إرسال كود": "Send Code",
+  "✕ رفض": "✕ Reject",
+  "رفض الطلب": "Reject Request",
+  "تأكيد الفتح المباشر للمحاضرة": "Confirm Direct Lecture Unlock",
+  "المحاضرة المراد فتحها": "Lecture to Unlock",
+  "تأكيد وفتح المحاضرة للطالب الآن": "Confirm & Unlock Lecture for Student Now",
+  "إرسال كود تفعيل للطالب": "Send Activation Code to Student",
+  "توليد كود جديد": "Generate New Code",
+  "إرسال الكود للطالب الآن": "Send Code to Student Now",
+  "أدخل سبب رفض طلب السيشن الأوفلاين (ليظهر للطالب)": "Enter reason for rejecting offline request (shown to student):",
+  "لم نجد اسم الطالب في كشوف الحضور للسنتر": "Student name was not found on center attendance records",
+  "تم رفض الطلب وإشعار الطالب.": "Request rejected and student notified.",
+  "تم رفض الطلب وإشعار الطالب": "Request rejected and student notified",
+  "تم رفض الطلب بنجاح": "Request rejected successfully",
+  "فشل رفض الطلب": "Failed to reject request",
+  "فشل فتح المحاضرة": "Failed to unlock lecture",
+  "فشل إرسال الكود": "Failed to send code",
+  "فشل تحميل طلبات الأوفلاين": "Failed to load offline requests",
+  "لا توجد طلبات حضور أوفلاين معلقة حالياً": "No pending offline session requests currently",
+  "لا توجد طلبات حضور أوفلاين مطابقة": "No matching offline session requests found",
+  "إدارة طلبات حضور السنتر أونلاين ومطابقة الحضور وتفعيل المحاضرات فوراً": "Manage offline session requests, verify attendance and instantly unlock lectures",
+  "الواجب المنزلي": "Homework",
+  "واجب منزلي": "Homework",
+  "حل الواجب": "Solve Homework",
+  "تأكيد تسليم الواجب": "Confirm Homework Submission",
+  "هل أنت متأكد من تسليم الواجب؟": "Are you sure you want to submit homework?",
+  "تم تسليم الواجب بنجاح!": "Homework submitted successfully!",
+  "تم تسليم الواجب بنجاح": "Homework submitted successfully",
+  "واجب الحصة": "Lecture Homework",
+  "واجب المحاضرة": "Lecture Homework",
+  "أسئلة الواجب": "Homework Questions",
+  "نموذج الإجابة والشرح": "Model Answer & Explanation",
+  "نموذج الإجابة": "Model Answer",
+  "الإجابة النموذجية": "Model Answer",
+  "عرض نموذج الإجابة": "View Model Answer",
+  "إخفاء نموذج الإجابة": "Hide Model Answer",
+  "إجابة صحيحة": "Correct Answer",
+  "إجابة خاطئة": "Incorrect Answer",
+  "إجابة غير صحيحة": "Incorrect Answer",
+  "إجابتك": "Your Answer",
+  "إجابتك:": "Your Answer:",
+  "الإجابة الصحيحة:": "Correct Answer:",
+  "الشرح والتوضيح": "Explanation & Walkthrough",
+  "الشرح والتوضيح:": "Explanation:",
+  "الشرح": "Explanation",
+  "تفسير الإجابة": "Answer Explanation",
+  "الدرجة المحققة": "Achieved Score",
+  "الدرجة الكاملة": "Full Score",
+  "النسبة المئوية": "Percentage",
+  "سؤال مقالي": "Essay Question",
+  "سؤال اختياري": "Multiple Choice Question",
+  "اختيار من متعدد": "Multiple Choice",
+  "لم تقم بالإجابة على هذا السؤال": "You have not answered this question",
+  "لم يتم الحل": "Not answered",
+  "أحسنت! إجابة صحيحة": "Well done! Correct answer",
+  "للأسف، إجابة غير صحيحة": "Unfortunately, incorrect answer",
+  "راجع إجاباتك بالتفصيل أدناه": "Review your answers in detail below",
+  "السؤال": "Question",
+  "الأسئلة": "Questions",
+  "إنهاء وتسليم": "Finish & Submit",
+  "إنهاء الواجب": "Finish Homework",
+  "لا يوجد واجب لهذه المحاضرة": "No homework for this lecture",
+  "الواجب مغلق": "Homework is closed",
+  "يجب مشاهدة المحاضرة أولاً": "You must watch the lecture first",
+  "امتحان الحصة": "Lecture Exam",
+  "امتحان شامل": "Comprehensive Exam",
+  "امتحان": "Exam",
+  "اختبار": "Quiz / Exam",
+  "بدء الامتحان": "Start Exam",
+  "بدء الاختبار": "Start Quiz",
+  "الوقت المتبقي": "Time Remaining",
+  "إنهاء الاختبار": "Finish Quiz",
+  "إنهاء وتسليم الامتحان": "Finish & Submit Exam",
+  "تأكيد إنهاء الامتحان": "Confirm Exam Submission",
+  "هل أنت متأكد من تسليم الامتحان؟": "Are you sure you want to submit the exam?",
+  "لن يمكنك تعديل إجاباتك بعد التسليم": "You will not be able to modify your answers after submission",
+  "تم تسليم وتصحيح الامتحان بنجاح!": "Exam submitted and graded successfully!",
+  "تم تصحيح الامتحان بنجاح": "Exam graded successfully",
+  "مراجعة إجابات الامتحان": "Review Exam Answers",
+  "مراجعة الإجابات": "Review Answers",
+  "النتيجة الفورية": "Instant Result",
+  "درجة الامتحان": "Exam Score",
+  "درجة الواجب": "Homework Score",
+  "عدد الأسئلة": "Number of Questions",
+  "الإجابات الصحيحة": "Correct Answers",
+  "الإجابات الخاطئة": "Incorrect Answers",
+  "نسبة النجاح": "Pass Rate",
+  "ناجح": "Passed",
+  "راسب": "Failed",
+  "اجتياز": "Passed",
+  "لم يجتز": "Failed",
+  "مبروك! لقد اجتزت الاختبار بنجاح": "Congratulations! You passed the exam successfully",
+  "للأسف لم تجتز الاختبار، يمكنك المحاولة مرة أخرى": "Unfortunately you did not pass, you can try again",
+  "سجل النتائج والاختبارات": "Results & Exams Record",
+  "سجل النتائج": "Results Record",
+  "نتائج الامتحانات": "Exam Results",
+  "نتائج الواجبات": "Homework Results",
+  "التقرير التفصيلي": "Detailed Report",
+  "تاريخ الاختبار": "Test Date",
+  "تاريخ التسليم": "Submission Date",
+  "عرض التفاصيل والحلول": "View Details & Solutions",
+  "عرض التفاصيل": "View Details",
+  "عرض الحل": "View Solution",
+  "متوسط الدرجات": "Grade Average",
+  "نسبة الإتقان": "Mastery Rate",
+  "الترتيب": "Rank",
+  "ممتاز": "Excellent",
+  "جيد جداً": "Very Good",
+  "جيد": "Good",
+  "بحاجة إلى تحسين": "Needs Improvement",
+  "لا توجد نتائج سابقة حتى الآن": "No previous results yet",
+  "طلب شحن رصيد جديد": "New Balance Recharge Request",
+  "المبلغ المطلوب شحنه (ج.م)": "Amount to Recharge (EGP)",
+  "المبلغ المطلوب": "Requested Amount",
+  "المبلغ المطلوب (ج.م)": "Requested Amount (EGP)",
+  "المبلغ المستحق": "Due Amount",
+  "طريقة التحويل": "Transfer Method",
+  "فودافون كاش (Vodafone Cash)": "Vodafone Cash",
+  "إنستاباي (InstaPay)": "InstaPay",
+  "فوري (Fawry)": "Fawry",
+  "فوري": "Fawry",
+  "تحويل بنكي": "Bank Transfer",
+  "رقم المحفظة المحول منها": "Sender Wallet Number",
+  "رقم الهاتف المحول منه": "Sender Phone Number",
+  "رقم المحول منه": "Sender Number",
+  "إرفاق صورة إيصال التحويل": "Attach Transfer Receipt Screenshot",
+  "صورة إيصال التحويل": "Transfer Receipt Screenshot",
+  "إثبات تحويل الطالب": "Student Transfer Proof",
+  "بدون صورة": "No image",
+  "إرسال طلب الشحن": "Submit Recharge Request",
+  "تأكيد الشحن": "Confirm Recharge",
+  "تحديد النقاط والشحن": "Set Points & Recharge",
+  "شحن الرصيد": "Recharge Balance",
+  "تم شحن": "Recharged",
+  "تم الرفض": "Rejected",
+  "تعذر تحميل الطلبات": "Failed to load requests",
+  "تعذر شحن النقاط": "Failed to recharge points",
+  "تعذر رفض الطلب": "Failed to reject request",
+  "أرقام التواصل": "Contact Numbers",
+  "سجل المعاملات المالية": "Financial Transactions Log",
+  "سجل المعاملات": "Transactions Log",
+  "السجل المالي والمدفوعات": "Financial Record & Payments",
+  "إيداع رصيد ＋": "Credit Deposit ＋",
+  "خصم شراء －": "Purchase Deduction －",
+  "إيداع رصيد": "Credit Deposit",
+  "خصم شراء": "Purchase Deduction",
+  "شراء محاضرة": "Purchase Lecture",
+  "شراء كورس": "Purchase Course",
+  "كود المعاملة": "Transaction Code",
+  "جنيه مصري": "Egyptian Pound (EGP)",
+  "إجمالي الرصيد المشحون": "Total Recharged Balance",
+  "إجمالي رصيد المحافظ المعتمد": "Total Approved Wallets Balance",
+  "مراقبة اشتراكات الطلاب": "Monitor Student Subscriptions",
+  "المراحل الأكاديمية": "Academic Stages",
+  "مظهر وهوية المنصة": "Platform Appearance & Identity",
+  "كروت وأكواد الشحن": "Recharge Cards & Codes",
+  "طلبات تعديل بيانات الطلاب": "Student Profile Edit Requests",
+  "طلبات تعديل البيانات": "Profile Edit Requests",
+  "كل المراحل": "All Stages",
+  "الصف الثالث الإعدادي (3 إعدادي)": "3rd Preparatory (3rd Prep)",
+  "الصف الأول الثانوي (1 ثانوي)": "1st Secondary (Secondary 1)",
+  "الصف الثاني الثانوي (2 ثانوي)": "2nd Secondary (Secondary 2)",
+  "الصف الثاني باكلوريا (2 باكلوريا)": "2nd Baccalaureate",
+  "الصف الثالث الثانوي (3 ثانوي)": "3rd Secondary (Secondary 3)",
+  "الصف الثالث باكلوريا (3 باكلوريا)": "3rd Baccalaureate",
+  "تفعيل الحساب": "Activate Account",
+  "تعطيل الحساب": "Deactivate Account",
+  "حذف حساب المدرس": "Delete Teacher Account",
+  "حذف حساب الطالب": "Delete Student Account",
+  "تم تسجيل الدخول بنجاح كمسؤول": "Successfully logged in as administrator",
+  "تم تفعيل وضع المعاينة المحلي": "Local preview mode activated",
+  "أكواد الشحن والتفعيل": "Recharge & Activation Codes",
+  "إنشاء كود جديد": "Create New Code",
+  "نوع الكود": "Code Type",
+  "كود شحن رصيد": "Balance Recharge Code",
+  "كود تفعيل محاضرة": "Lecture Activation Code",
+  "قيمة الكود (ج.م)": "Code Value (EGP)",
+  "تاريخ الانتهاء": "Expiration Date",
+  "أقصى عدد استخدامات": "Max Uses",
+  "عدد مرات الاستخدام": "Usage Count",
+  "كود صالح": "Valid Code",
+  "كود منتهي": "Expired Code",
+  "كود مستخدم": "Used Code",
+  "نسخ كود": "Copy Code",
+  "توليد كود": "Generate Code",
+  "توليد أكواد": "Generate Codes",
+  "عدد الأكواد": "Number of Codes",
+  "كورساتي ومحاضراتي": "My Courses & Lectures",
+  "إضافة محاضرة جديدة": "Add New Lecture",
+  "تعديل الكورس": "Edit Course",
+  "حذف الكورس": "Delete Course",
+  "تعديل المحاضرة": "Edit Lecture",
+  "حذف المحاضرة": "Delete Lecture",
+  "سعر الكورس (ج.م)": "Course Price (EGP)",
+  "سعر المحاضرة (ج.م)": "Lecture Price (EGP)",
+  "سعر المحاضرة": "Lecture Price",
+  "رفع فيديو المحاضرة": "Upload Lecture Video",
+  "رابط الفيديو": "Video URL",
+  "رفع ملف PDF": "Upload PDF File",
+  "مذكرة PDF": "PDF Notes",
+  "مذكرة الدرس": "Lesson Notes",
+  "بنك الأسئلة": "Question Bank",
+  "إضافة سؤال واجب": "Add Homework Question",
+  "إضافة سؤال امتحان": "Add Exam Question",
+  "الخيارات": "Options",
+  "الخيار الأول": "Option 1",
+  "الخيار الثاني": "Option 2",
+  "الخيار الثالث": "Option 3",
+  "الخيار الرابع": "Option 4",
+  "تحديد الإجابة الصحيحة": "Select Correct Answer",
+  "تفسير وشرح الإجابة": "Explanation & Reason",
+  "حفظ السؤال": "Save Question",
+  "الطلاب المشتركون": "Enrolled Students",
+  "متابعة درجات الطلاب": "Monitor Student Grades",
+  "تسوية المستحقات": "Settlement of Dues",
+  "طلب سحب أرباح": "Withdraw Profits Request",
+  "الأرباح المتاحة": "Available Profits",
+  "إجمالي المبيعات": "Total Sales",
+  "نسبة المنصة": "Platform Commission",
+  "صافي الأرباح": "Net Profit",
+  "مرحباً بك": "Welcome",
+  "استئناف المذاكرة": "Resume Learning",
+  "متابعة المشاهدة": "Continue Watching",
+  "جدول الحصص الأسبوعي": "Weekly Lecture Schedule",
+  "آخر الأنشطة": "Recent Activities",
+  "التقدم الدراسي": "Study Progress",
+  "لم تشترك في أي كورس بعد": "You have not enrolled in any course yet",
+  "تصفح الكورسات المتاحة الآن": "Browse Available Courses Now",
+  "المحاضرة السابقة": "Previous Lecture",
+  "المحاضرة القادمة": "Next Lecture",
+  "المحاضرة التالية": "Next Lecture",
+  "انتقل للمحاضرة التالية": "Proceed to Next Lecture",
+  "المحاضرة مغلقة": "Lecture Locked",
+  "يجب اجتياز واجب المحاضرة السابقة لفتح هذه الحصة": "You must complete the previous lecture homework to unlock this session",
+  "فيديو المحاضرة": "Lecture Video",
+  "ملفات وملحقات الحصة": "Session Files & Attachments",
+  "تحميل المذكرة": "Download Notes",
+  "المناقشة والأسئلة": "Discussion & Questions",
+  "اطرح سؤالاً على المدرس": "Ask Teacher a Question",
+  "اكتب تعليقك أو سؤالك هنا...": "Write your comment or question here...",
+  "إرسال السؤال": "Submit Question",
+  "الردود": "Replies",
+  "رد المدرس": "Teacher Reply",
+  "البيانات الأساسية": "Basic Information",
+  "الاسم الكامل": "Full Name",
+  "اسم الطالب الكامل": "Full Student Name",
+  "رقم هاتف الطالب المسجل": "Registered Student Phone",
+  "رقم هاتف ولي الأمر المسجل": "Registered Parent Phone",
+  "المحافظة المسجلة": "Registered Governorate",
+  "المحافظة": "Governorate",
+  "تعديل كلمة المرور": "Change Password",
+  "كلمة المرور الحالية": "Current Password",
+  "كلمة المرور الجديدة": "New Password",
+  "تأكيد كلمة المرور الجديدة": "Confirm New Password",
+  "تحديث البيانات الشخصية": "Update Personal Information",
+  "طلب تعديل بيانات": "Request Profile Edit",
+  "تم إرسال طلب التعديل للإدارة": "Edit request sent to administration",
+  "جميع الإشعارات": "All Notifications",
+  "إشعارات غير مقروءة": "Unread Notifications",
+  "تحديد الكل كمقروء": "Mark All as Read",
+  "لا توجد إشعارات جديدة": "No new notifications",
+  "مركز المساعدة والدعم": "Help & Support Center",
+  "تواصل معنا عبر واتساب": "Contact Us via WhatsApp",
+  "الدعم الفني": "Technical Support",
+  "فريق خدمة الطلاب": "Student Support Team",
+  "جاري التحميل...": "Loading...",
+  "جاري التحميل": "Loading",
+  "يرجى الانتظار...": "Please wait...",
+  "يرجى الانتظار": "Please wait",
+  "حدث خطأ": "An error occurred",
+  "حدث خطأ ما": "Something went wrong",
+  "حدث خطأ في الاتصال بالخادم": "Server connection error",
+  "تم بنجاح": "Done successfully",
+  "تم الحفظ بنجاح": "Saved successfully",
+  "تم الحذف بنجاح": "Deleted successfully",
+  "تأكيد الإجراء": "Confirm Action",
+  "هل أنت متأكد؟": "Are you sure?",
+  "نعم، تأكيد": "Yes, confirm",
+  "حصة": "Lecture",
+  "حصص": "Lectures",
+  "طلاب": "Students",
+  "مدرسين": "Teachers",
+  "معلمون": "Teachers",
+  "مشترك": "Enrolled",
+  "غير مشترك": "Not Enrolled",
+  "مدفوع": "Paid",
+  "قريباً": "Coming Soon",
+  "جديد": "New",
+  "الأعلى تقييماً": "Top Rated",
+  "الأكثر مبيعاً": "Best Seller",
+  "كورس شامل ومكثف مع أستاذ المادة": "Comprehensive intensive course with subject professor",
+  "محاضرة وشرح تفصيلي للمنهج": "Detailed curriculum lecture and explanation",
+  "شرح تفصيلي للمفاهيم الأساسية، تطبيقات نموذجية وتدريبات وافية.": "Detailed explanation of core concepts, model applications and comprehensive exercises.",
+  "🎬 فيديو محاضرة": "🎬 Lecture Video",
+  "📄 مذكرة PDF": "📄 PDF Notes",
+  "القيمة:": "Price:",
+  "السعر:": "Price:",
+  "الرصيد:": "Balance:",
+  "الحالة:": "Status:",
+  "التاريخ:": "Date:",
+  "المدرس:": "Teacher:",
+  "الصف:": "Grade:",
+  "المادة:": "Subject:",
+  "الكورس:": "Course:",
+  "المحاضرة:": "Lecture:",
+  "الطالب:": "Student:",
+  "الهاتف:": "Phone:",
+  "ولي الأمر:": "Parent:",
+  "لا توجد بيانات": "No data available",
+  "واجب": "Homework"
+  };
+
+  // Generate Reverse Dictionary (English -> Arabic)
+  const REVERSE_DICT = {};
+  for (const [ar, en] of Object.entries(DICTIONARY)) {
+    if (typeof en === 'string' && en.trim()) {
+      const trimmedEn = en.trim();
+      if (!REVERSE_DICT[trimmedEn]) {
+        REVERSE_DICT[trimmedEn] = ar.trim();
+      }
+    }
+  }
+
+  // Pre-sort dictionary keys by length descending for greedy substring matching
+  const SORTED_AR_KEYS = Object.keys(DICTIONARY)
+    .filter(k => k.length > 2 && /[\u0600-\u06FF]/.test(k))
+    .sort((a, b) => b.length - a.length);
+
   const ARABIC_DIGITS = { '٠':'0', '١':'1', '٢':'2', '٣':'3', '٤':'4', '٥':'5', '٦':'6', '٧':'7', '٨':'8', '٩':'9' };
+  const ENGLISH_DIGITS = { '0':'٠', '1':'١', '2':'٢', '3':'٣', '4':'٤', '5':'٥', '6':'٦', '7':'٧', '8':'٨', '9':'٩' };
 
   const textNodeMap = new WeakMap();
   const placeholderMap = new WeakMap();
   const titleMap = new WeakMap();
+  const valueMap = new WeakMap();
+
+  let isTranslating = false;
 
   function getLanguage() {
     return localStorage.getItem('khatwa_lang') || 'ar';
@@ -1513,94 +1180,219 @@
     setLanguage(nextLang);
   }
 
+  // Split text into: leading symbols + core text + trailing symbols
+  function splitSymbols(str) {
+    if (!str || typeof str !== 'string') return { prefix: '', core: '', suffix: '' };
+
+    // Leading symbols: whitespace, bullets, numbers, icons, emojis, dashes, brackets
+    const leadMatch = str.match(/^([\s\d\/•✓✕👨‍🏫👑🛡️⭐📊❤️⚡🔥📖🎓✏️📝✨🌐＋👥🎬⏳💎💰🔍📁📂🏢🔒🔓💡📌⚠️✅❌🎯🚀📚🎉🏷️ℹ️👤🔑📱📞🔔💳🕒—()\[\]<>\.-]+)(.*)/s);
+    let prefix = '';
+    let rest = str;
+    if (leadMatch) {
+      prefix = leadMatch[1];
+      rest = leadMatch[2];
+    }
+
+    // Trailing symbols: whitespace, punctuation, asterisks, colons, question marks, emojis
+    const trailMatch = rest.match(/^(.*?)([\s\*!؟\?…—()\[\]<>:🏢🔒🔓💡📌⚠️✅❌🎯🚀📚🎉🏷️💰ℹ️👤🔑📱📞🔔💳🕒\.-]+)$/s);
+    let suffix = '';
+    let core = rest;
+    if (trailMatch) {
+      core = trailMatch[1];
+      suffix = trailMatch[2];
+    }
+
+    return { prefix, core: core.trim(), suffix };
+  }
+
   function translateString(str, lang) {
     if (!str || typeof str !== 'string') return str;
     const trimmed = str.trim();
     if (!trimmed) return str;
 
     if (lang === 'en') {
-      // 1. Direct dictionary match
+      // 1. Direct dictionary match for entire string
       if (DICTIONARY[trimmed]) {
         return str.replace(trimmed, DICTIONARY[trimmed]);
       }
 
-      // 2. Direct match without symbols/icons
-      const clean = trimmed.replace(/^[\s\d\.\-—\(\)\/•✓✕👨‍🏫👑🛡️⭐📊❤️⚡🔥📖🎓✏️📝✨🌐＋👥🎬⏳💎💰🔍📁📂]+\s*/u, '').trim();
-      if (DICTIONARY[clean]) {
-        return str.replace(clean, DICTIONARY[clean]);
+      // 2. Separate symbols / emojis / punctuation
+      const { prefix, core, suffix } = splitSymbols(str);
+      if (core) {
+        // Direct core match
+        if (DICTIONARY[core]) {
+          const enSuffix = suffix.replace(/؟/g, '?').replace(/،/g, ',').replace(/؛/g, ';');
+          return prefix + DICTIONARY[core] + enSuffix;
+        }
+
+        // Check if core contains parenthetical note like (Teacher Name) or (اختياري)
+        const parenMatch = core.match(/^(.*?)\s*\(([^\)]+)\)$/);
+        if (parenMatch) {
+          const mainPart = parenMatch[1].trim();
+          const insideParen = parenMatch[2].trim();
+          const mainEn = DICTIONARY[mainPart] || mainPart;
+          const insideEn = DICTIONARY[insideParen] || insideParen;
+          const enSuffix = suffix.replace(/؟/g, '?').replace(/،/g, ',').replace(/؛/g, ';');
+          return prefix + mainEn + ' (' + insideEn + ')' + enSuffix;
+        }
       }
 
-      // 3. Dynamic Regex Replacements
+      // 3. Dynamic Regex Replacements for patterns with numbers & variables
       let result = str;
+
+      // Currency & Points
+      result = result.replace(/([0-9٠-٩\.]+)\s*(?:ج\.م|جنيه مصري|جنيه|EGP)/gi, '$1 EGP');
+      result = result.replace(/([0-9٠-٩]+)\s*(?:نقطة|نقاط|pts|Points)/gi, '$1 Points');
+
+      // Academic counters
+      result = result.replace(/سؤال\s*([0-9٠-٩]+)\s*من\s*([0-9٠-٩]+)/g, 'Question $1 of $2');
+      result = result.replace(/السؤال\s*([0-9٠-٩]+)/g, 'Question $1');
+      result = result.replace(/سؤال\s*([0-9٠-٩]+)/g, 'Question $1');
+      result = result.replace(/المحاضرة\s*([0-9٠-٩]+)/g, 'Lecture $1');
+      result = result.replace(/محاضرة\s*([0-9٠-٩]+)/g, 'Lecture $1');
+      result = result.replace(/الحصة\s*([0-9٠-٩]+)/g, 'Lecture $1');
+      result = result.replace(/كورس\s*([0-9٠-٩]+)/g, 'Course $1');
+      result = result.replace(/الدرس\s*([0-9٠-٩]+)/g, 'Lesson $1');
+
+      // Directories & Headers (Specific patterns must precede generic quantities)
       result = result.replace(/عرض\s+([0-9٠-٩]+)\s+طالب/g, 'Showing $1 Students');
       result = result.replace(/إدارة ومتابعة الطلاب\s*\(([0-9٠-٩]+)\)/g, 'Students Directory ($1)');
       result = result.replace(/إدارة المدرسين\s*\(([0-9٠-٩]+)\)/g, 'Teachers Directory ($1)');
+      result = result.replace(/كورساتي المشترك بها\s*\(([0-9٠-٩]+)\)/g, 'My Enrolled Courses ($1)');
+      result = result.replace(/الطلاب المشتركون في هذا الكورس\s*\(([0-9٠-٩]+)\)/g, 'Enrolled Students ($1)');
+
+      // Quantities
       result = result.replace(/([0-9٠-٩]+)\s+كورس/g, '$1 Courses');
       result = result.replace(/([0-9٠-٩]+)\s+محاضرات/g, '$1 Lectures');
       result = result.replace(/([0-9٠-٩]+)\s+محاضرة/g, '$1 Lecture');
-      result = result.replace(/([0-9٠-٩]+)\s+نقطة/g, '$1 Points');
-      result = result.replace(/([0-9٠-٩\.]+)\s+ج\.م/g, '$1 EGP');
+      result = result.replace(/([0-9٠-٩]+)\s+حصة مكتملة/g, '$1 Completed Lectures');
+      result = result.replace(/([0-9٠-٩]+)\s+حصة/g, '$1 Lectures');
+      result = result.replace(/([0-9٠-٩]+)\s+طالب/g, '$1 Students');
+      result = result.replace(/([0-9٠-٩]+)\s+مدرس/g, '$1 Teachers');
+      result = result.replace(/([0-9٠-٩]+)\s+أسئلة/g, '$1 Questions');
+      result = result.replace(/([0-9٠-٩]+)\s+سؤال/g, '$1 Questions');
+      result = result.replace(/([0-9٠-٩]+)\s+درجة/g, '$1 Points');
+      result = result.replace(/([0-9٠-٩]+)\s+دقيقة/g, '$1 Minutes');
+      result = result.replace(/([0-9٠-٩]+)\s+دقائق/g, '$1 Minutes');
+      result = result.replace(/([0-9٠-٩]+)\s+ثانية/g, '$1 Seconds');
+      result = result.replace(/([0-9٠-٩]+)\s+ساعة/g, '$1 Hours');
+      result = result.replace(/([0-9٠-٩]+)\s+ساعات/g, '$1 Hours');
+
+      // Key-Value Labels
+      result = result.replace(/كود:\s*([A-Za-z0-9\-_]+)/g, 'Code: $1');
+      result = result.replace(/كود التفعيل:\s*([A-Za-z0-9\-_]+)/g, 'Activation Code: $1');
+      result = result.replace(/رقم الهاتف:\s*([0-9\+\-]+)/g, 'Phone: $1');
+      result = result.replace(/الدرجة:\s*([0-9٠-٩\.\/]+)/g, 'Score: $1');
+      result = result.replace(/النسبة:\s*([0-9٠-٩\.]+%)/g, 'Percentage: $1');
+
+      // Convert Arabic numerals to standard numerals
       result = result.replace(/[٠-٩]/g, d => ARABIC_DIGITS[d] || d);
+
+      // 4. Multi-clause / Substring Phrase Replacement for compound sentences
+      if (/[\u0600-\u06FF]/.test(result)) {
+        // If there are newline breaks or bullet points, translate each line
+        if (result.includes('\n')) {
+          result = result.split('\n').map(line => translateString(line, 'en')).join('\n');
+        } else {
+          // Replace known phrases greedily from longest to shortest
+          for (const k of SORTED_AR_KEYS) {
+            if (result.includes(k)) {
+              const enVal = DICTIONARY[k];
+              result = result.split(k).join(enVal);
+              if (!/[\u0600-\u06FF]/.test(result)) break;
+            }
+          }
+        }
+      }
+
+      // Convert remaining Arabic punctuation
+      result = result.replace(/؟/g, '?').replace(/،/g, ',').replace(/؛/g, ';');
 
       return result;
     } else {
+      // Restore to Arabic
       if (REVERSE_DICT[trimmed]) {
         return str.replace(trimmed, REVERSE_DICT[trimmed]);
       }
+
+      const { prefix, core, suffix } = splitSymbols(str);
+      if (core && REVERSE_DICT[core]) {
+        const arSuffix = suffix.replace(/\?/g, '؟').replace(/,/g, '،').replace(/;/g, '؛');
+        return prefix + REVERSE_DICT[core] + arSuffix;
+      }
+
+      // Convert Western digits to Arabic digits if desired, or keep standard
       return str;
     }
   }
 
   function translateTree(rootNode, lang) {
     if (!rootNode) return;
+    isTranslating = true;
 
-    // Process input & textarea placeholders & titles
-    const inputs = rootNode.querySelectorAll ? rootNode.querySelectorAll('input, textarea') : [];
-    inputs.forEach(inp => {
-      if (inp.placeholder) {
-        if (!placeholderMap.has(inp)) placeholderMap.set(inp, inp.placeholder);
-        const orig = placeholderMap.get(inp);
-        inp.placeholder = lang === 'en' ? translateString(orig, 'en') : orig;
-      }
-      if (inp.title) {
-        if (!titleMap.has(inp)) titleMap.set(inp, inp.title);
-        const orig = titleMap.get(inp);
-        inp.title = lang === 'en' ? translateString(orig, 'en') : orig;
-      }
-    });
-
-    // Process all text nodes with TreeWalker
-    const walker = document.createTreeWalker(
-      rootNode,
-      NodeFilter.SHOW_TEXT,
-      {
-        acceptNode: function(node) {
-          const parent = node.parentElement;
-          if (!parent) return NodeFilter.FILTER_REJECT;
-          const tag = parent.tagName.toLowerCase();
-          if (['script', 'style', 'code', 'pre', 'svg', 'noscript'].includes(tag)) {
-            return NodeFilter.FILTER_REJECT;
-          }
-          if (!node.nodeValue || !node.nodeValue.trim()) {
-            return NodeFilter.FILTER_SKIP;
-          }
-          return NodeFilter.FILTER_ACCEPT;
+    try {
+      // 1. Process inputs & textareas
+      const inputs = rootNode.querySelectorAll ? rootNode.querySelectorAll('input, textarea') : [];
+      inputs.forEach(inp => {
+        if (inp.placeholder) {
+          if (!placeholderMap.has(inp)) placeholderMap.set(inp, inp.placeholder);
+          const orig = placeholderMap.get(inp);
+          inp.placeholder = lang === 'en' ? translateString(orig, 'en') : orig;
         }
-      },
-      false
-    );
+        if (inp.title) {
+          if (!titleMap.has(inp)) titleMap.set(inp, inp.title);
+          const orig = titleMap.get(inp);
+          inp.title = lang === 'en' ? translateString(orig, 'en') : orig;
+        }
+        if (['button', 'submit', 'reset'].includes(inp.type) && inp.value) {
+          if (!valueMap.has(inp)) valueMap.set(inp, inp.value);
+          const orig = valueMap.get(inp);
+          inp.value = lang === 'en' ? translateString(orig, 'en') : orig;
+        }
+      });
 
-    let currentNode;
-    while ((currentNode = walker.nextNode())) {
-      if (!textNodeMap.has(currentNode)) {
-        textNodeMap.set(currentNode, currentNode.nodeValue);
+      // 2. Process all text nodes with TreeWalker
+      const walker = document.createTreeWalker(
+        rootNode,
+        NodeFilter.SHOW_TEXT,
+        {
+          acceptNode: function(node) {
+            const parent = node.parentElement;
+            if (!parent) return NodeFilter.FILTER_REJECT;
+            const tag = parent.tagName.toLowerCase();
+            if (['script', 'style', 'code', 'pre', 'svg', 'noscript'].includes(tag)) {
+              return NodeFilter.FILTER_REJECT;
+            }
+            if (!node.nodeValue || !node.nodeValue.trim()) {
+              return NodeFilter.FILTER_SKIP;
+            }
+            return NodeFilter.FILTER_ACCEPT;
+          }
+        },
+        false
+      );
+
+      let currentNode;
+      while ((currentNode = walker.nextNode())) {
+        if (!textNodeMap.has(currentNode)) {
+          textNodeMap.set(currentNode, currentNode.nodeValue);
+        }
+        const origValue = textNodeMap.get(currentNode);
+        if (lang === 'en') {
+          currentNode.nodeValue = translateString(origValue, 'en');
+        } else {
+          // If original Arabic is stored, restore it; otherwise try reverse dictionary
+          currentNode.nodeValue = origValue ? origValue : translateString(currentNode.nodeValue, 'ar');
+        }
       }
-      const origValue = textNodeMap.get(currentNode);
-      if (lang === 'en') {
-        currentNode.nodeValue = translateString(origValue, 'en');
-      } else {
-        currentNode.nodeValue = origValue;
+
+      // 3. Translate document title
+      if (document.title) {
+        if (!window._origDocTitle) window._origDocTitle = document.title;
+        document.title = lang === 'en' ? translateString(window._origDocTitle, 'en') : window._origDocTitle;
       }
+    } finally {
+      isTranslating = false;
     }
   }
 
@@ -1624,12 +1416,11 @@
   function initObserver() {
     if (observer || typeof MutationObserver === 'undefined') return;
     observer = new MutationObserver(() => {
-      if (getLanguage() === 'en') {
-        clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(() => {
-          if (document.body) translateTree(document.body, 'en');
-        }, 30);
-      }
+      if (isTranslating) return;
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        if (document.body) translateTree(document.body, getLanguage());
+      }, 35);
     });
     if (document.body) {
       observer.observe(document.body, { childList: true, subtree: true, characterData: true });
@@ -1666,6 +1457,8 @@
     toggleLanguage,
     applyLanguage,
     translateElement: (el) => translateTree(el, getLanguage()),
-    DICTIONARY
+    translateString,
+    DICTIONARY,
+    REVERSE_DICT
   };
 })(window);

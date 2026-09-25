@@ -20,7 +20,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!input) return;
       const hidden = input.type === 'password';
       input.type = hidden ? 'text' : 'password';
-      btn.textContent = hidden ? 'إخفاء' : 'إظهار';
+      const isEn = window.KhatwaI18n?.getLanguage() === 'en';
+      btn.textContent = hidden ? (isEn ? 'Hide' : 'إخفاء') : (isEn ? 'Show' : 'إظهار');
     });
   });
 
@@ -65,7 +66,10 @@ document.addEventListener('DOMContentLoaded', () => {
     function render() {
       qs.forEach((q, i) => q.style.display = i === idx ? 'block' : 'none');
       if (progress) progress.style.width = `${((idx + 1) / total) * 100}%`;
-      if (label) label.textContent = `سؤال ${idx + 1} من ${total}`;
+      if (label) {
+        const isEn = window.KhatwaI18n?.getLanguage() === 'en';
+        label.textContent = isEn ? `Question ${idx + 1} of ${total}` : `سؤال ${idx + 1} من ${total}`;
+      }
       if (prevBtn) prevBtn.disabled = idx === 0;
       if (nextBtn) nextBtn.style.display = idx === total - 1 ? 'none' : 'inline-flex';
       if (submitBtn) submitBtn.style.display = idx === total - 1 ? 'inline-flex' : 'none';
