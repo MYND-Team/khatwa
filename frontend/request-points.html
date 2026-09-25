@@ -94,6 +94,56 @@
     <div id="instantVoucherAlert" style="display:none;margin-top:12px;padding:10px 16px;border-radius:8px;font-size:0.9rem;font-weight:600;"></div>
   </div>
 
+  <!-- InstaPay Direct Payment Card -->
+  <div class="card" style="padding:24px 28px;border-radius:20px;margin-bottom:28px;background:var(--bg-card);border:1px solid var(--line-soft);box-shadow:var(--shadow-md);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+      <h3 style="margin:0;display:flex;align-items:center;gap:8px;font-size:1.25rem;">
+        <span>Pay via InstaPay 💳</span>
+      </h3>
+      <span class="tag tag-ok" style="font-weight:700;">تحويل فوري بدون رسوم ⚡</span>
+    </div>
+
+    <!-- 1 & 2: QR Code Centered & Medium-sized -->
+    <div style="text-align:center;margin-bottom:20px;">
+      <div style="display:inline-block;padding:12px;background:#FFFFFF;border-radius:18px;border:1.5px solid var(--line-soft);box-shadow:0 4px 18px rgba(0,0,0,0.06);">
+        <img id="instapayQrImage" src="images/instapay-qr.png" alt="InstaPay QR Code" style="width:190px;height:auto;max-width:100%;border-radius:10px;display:block;margin:0 auto;">
+      </div>
+      <p style="margin:10px 0 2px;font-size:0.92rem;font-weight:700;color:var(--ink);">Scan the QR Code to pay directly</p>
+      <span style="font-size:0.82rem;color:var(--ink-faint);display:block;">امسح رمز الاستجابة السريعة (QR Code) للدفع المباشر عبر تطبيق إنستاباي</span>
+    </div>
+
+    <!-- 3, 4 & 5: InstaPay Account Box, Copy Button & Open InstaPay Button -->
+    <div style="background:var(--bg-raised);border:1.5px solid var(--line-soft);border-radius:14px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-size:1.4rem;">📱</span>
+        <div>
+          <span style="font-size:0.78rem;color:var(--ink-faint);display:block;font-weight:700;">حساب إنستاباي للدفع المباشر (InstaPay Account)</span>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:2px;">
+            <span style="font-weight:600;font-size:0.92rem;color:var(--ink-dim);">InstaPay:</span>
+            <b id="instapayUsernameDisplay" style="font-family:monospace;font-size:1.05rem;color:var(--primary);direction:ltr;display:inline-block;letter-spacing:0.5px;">samiryasser99@instapay</b>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;position:relative;">
+        <button type="button" id="copyInstapayBtn" class="btn btn-line btn-sm" onclick="copyInstapayAccount()" style="font-weight:700;padding:7px 14px;border-radius:8px;display:inline-flex;align-items:center;gap:6px;">
+          <span>📋 Copy</span>
+        </button>
+        <a id="openInstapayBtn" href="https://ipn.eg/S/samiryasser99/instapay/7u8kgC" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm" style="font-weight:700;padding:7px 14px;border-radius:8px;display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg, #10b981 0%, #059669 100%);border-color:#059669;">
+          <span>Open InstaPay 🔗</span>
+        </a>
+        <div id="instapayCopyToast" style="display:none;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#1E293B;color:#FFFFFF;padding:6px 14px;border-radius:8px;font-size:0.8rem;font-weight:600;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:10;pointer-events:none;">
+          InstaPay account copied ✓
+        </div>
+      </div>
+    </div>
+
+    <!-- 6: Small Note -->
+    <div style="background:rgba(217, 119, 6, 0.06);border:1px solid rgba(217, 119, 6, 0.25);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:10px;font-size:0.88rem;color:var(--ink);">
+      <span style="font-size:1.2rem;flex-shrink:0;">💡</span>
+      <span>After completing the transfer, keep your receipt and upload it below. <span style="color:var(--ink-dim);font-size:0.84rem;">(بعد إتمام التحويل، يرجى الاحتفاظ بصورة الإيصال ورفعها في النموذج بالأسفل لتأكيد الشحن فورياً).</span></span>
+    </div>
+  </div>
+
   <!-- Simplified Recharge Form Card (Upload Receipt -> Enter Amount -> Enter Code -> Submit) -->
   <div class="card" style="padding:28px;border-radius:20px;margin-bottom:32px;">
     <div style="margin-bottom:18px;">
@@ -165,7 +215,66 @@
 <script>
   let selectedFile = null;
 
+  // Configurable InstaPay settings (easy to replace/configure globally or via admin settings)
+  const INSTAPAY_CONFIG = window.INSTAPAY_CONFIG || {
+    username: 'samiryasser99@instapay',
+    link: 'https://ipn.eg/S/samiryasser99/instapay/7u8kgC',
+    qrImage: 'images/instapay-qr.png',
+  };
+
+  function initInstapayCard() {
+    const userDisplay = document.getElementById('instapayUsernameDisplay');
+    const qrImg = document.getElementById('instapayQrImage');
+    const openBtn = document.getElementById('openInstapayBtn');
+    if (userDisplay && INSTAPAY_CONFIG.username) userDisplay.textContent = INSTAPAY_CONFIG.username;
+    if (qrImg && INSTAPAY_CONFIG.qrImage) qrImg.src = INSTAPAY_CONFIG.qrImage;
+    if (openBtn && INSTAPAY_CONFIG.link) openBtn.href = INSTAPAY_CONFIG.link;
+  }
+
+  function copyInstapayAccount() {
+    const username = INSTAPAY_CONFIG.username || 'samiryasser99@instapay';
+    const toast = document.getElementById('instapayCopyToast');
+    const btn = document.getElementById('copyInstapayBtn');
+
+    function showToast() {
+      if (toast) {
+        toast.style.display = 'block';
+        setTimeout(() => { toast.style.display = 'none'; }, 2400);
+      }
+      if (btn) {
+        const orig = btn.innerHTML;
+        btn.innerHTML = '<span>✓ Copied!</span>';
+        setTimeout(() => { btn.innerHTML = orig; }, 2000);
+      }
+    }
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(username).then(showToast).catch(() => {
+        fallbackCopyText(username, showToast);
+      });
+    } else {
+      fallbackCopyText(username, showToast);
+    }
+  }
+
+  function fallbackCopyText(text, cb) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try {
+      document.execCommand('copy');
+      if (cb) cb();
+    } catch (_) {
+      alert('InstaPay account: ' + text);
+    }
+    document.body.removeChild(ta);
+  }
+
   document.addEventListener('DOMContentLoaded', async () => {
+    initInstapayCard();
     const user = window.KhatwaAPI.getUser();
     if (user) {
       document.getElementById('navName').textContent = user.name || user.username;
