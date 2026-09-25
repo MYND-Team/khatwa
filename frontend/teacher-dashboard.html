@@ -439,27 +439,171 @@
         </div>
       </div>
 
-      <!-- القسم 3: التجهيز الأكاديمي (الواجب والامتحان قبل النشر) -->
+      <!-- القسم 3: التجهيز الأكاديمي (الواجب والامتحان مباشرة هنا) -->
       <div style="background:var(--bg-raised);padding:14px 16px;border-radius:14px;border:1px solid var(--line-soft);margin-bottom:14px;">
         <label class="form-label" style="font-weight:700;margin-bottom:8px;">📝 3. التجهيز الأكاديمي للمحاضرة (الواجب والامتحان):</label>
-        <p style="font-size:0.82rem;color:var(--ink-dim);margin:0 0 10px;">حدد ما إذا كانت هذه المحاضرة تتطلب واجباً أو امتحاناً قبل أو بعد مشاهدتها:</p>
+        <p style="font-size:0.82rem;color:var(--ink-dim);margin:0 0 10px;">يمكنك كتابة وإضافة أسئلة الواجب والامتحان هنا مباشرة أثناء إنشاء المحاضرة:</p>
         
-        <div style="display:flex;flex-direction:column;gap:10px;">
-          <label style="display:flex;align-items:center;gap:10px;background:var(--bg-card);border:1px solid var(--line-soft);padding:10px 14px;border-radius:10px;cursor:pointer;">
-            <input type="checkbox" id="lessonAddHasAssignment" style="width:18px;height:18px;accent-color:var(--primary);">
-            <div>
-              <b style="font-size:0.88rem;color:var(--ink);">📝 تفعيل واجب منزلي لهذه المحاضرة (Homework)</b>
-              <span style="font-size:0.78rem;color:var(--ink-dim);display:block;">يلزم الطالب بحل الواجب، وسيتم فتح منشئ الأسئلة مباشرة لإضافة أسئلة الواجب فور الحفظ.</span>
-            </div>
-          </label>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <!-- 1. Homework Switch & Inline Box -->
+          <div>
+            <label style="display:flex;align-items:center;gap:10px;background:var(--bg-card);border:1px solid var(--line-soft);padding:10px 14px;border-radius:10px;cursor:pointer;">
+              <input type="checkbox" id="lessonAddHasAssignment" onchange="toggleInlineAssignmentBuilder(this.checked)" style="width:18px;height:18px;accent-color:var(--primary);">
+              <div>
+                <b style="font-size:0.88rem;color:var(--ink);">📝 تفعيل واجب منزلي لهذه المحاضرة (Homework)</b>
+                <span style="font-size:0.78rem;color:var(--ink-dim);display:block;">يلزم الطالب بحل الواجب - يمكنك إضافة أسئلته فوراً أدناه.</span>
+              </div>
+            </label>
 
-          <label style="display:flex;align-items:center;gap:10px;background:var(--bg-card);border:1px solid var(--line-soft);padding:10px 14px;border-radius:10px;cursor:pointer;">
-            <input type="checkbox" id="lessonAddHasExam" style="width:18px;height:18px;accent-color:var(--primary);">
-            <div>
-              <b style="font-size:0.88rem;color:var(--ink);">🏆 تفعيل امتحان على المحاضرة (Exam)</b>
-              <span style="font-size:0.78rem;color:var(--ink-dim);display:block;">يلزم الطالب باجتياز الامتحان لفتح المحاضرة أو إثبات الحضور.</span>
+            <!-- Inline Assignment Container -->
+            <div id="inlineAssignmentWrap" style="display:none;background:var(--bg-card);border:1px solid rgba(37,99,235,0.3);border-radius:12px;padding:14px;margin-top:8px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                <b style="color:var(--primary);font-size:0.9rem;">📝 أسئلة الواجب المنزلي (<span id="inlineHwCount">0</span> أسئلة مضافة)</b>
+              </div>
+
+              <!-- Question Form for Homework -->
+              <div style="background:var(--bg-raised);padding:12px;border-radius:10px;border:1px solid var(--line-soft);margin-bottom:12px;">
+                <div class="form-group" style="margin-bottom:8px;">
+                  <label class="form-label" style="font-size:0.8rem;">نوع السؤال</label>
+                  <select class="form-control" id="inlineHwQType" style="font-size:0.85rem;" onchange="toggleInlineQTypeFields('hw', this.value)">
+                    <option value="MULTIPLE_CHOICE">اختيار من متعدد (Multiple Choice)</option>
+                    <option value="ESSAY">سؤال مقالي كتابي (Essay)</option>
+                    <option value="EQUATION">معادلة ورموز رياضية (LaTeX Equation)</option>
+                  </select>
+                </div>
+
+                <div class="form-group" style="margin-bottom:8px;">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;">
+                    <label class="form-label" style="font-size:0.8rem;margin:0;">نص السؤال</label>
+                    <span style="font-size:0.72rem;color:var(--primary);cursor:pointer;" onclick="insertInlineLatex('inlineHwQText')">＋ رمز LaTeX</span>
+                  </div>
+                  <textarea class="form-control" id="inlineHwQText" rows="2" placeholder="اكتب نص سؤال الواجب هنا..." style="font-size:0.85rem;"></textarea>
+                </div>
+
+                <!-- MC Options -->
+                <div id="inlineHwMCOptionsWrap">
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;">
+                    <input type="text" class="form-control" id="inlineHwOptA" placeholder="الخيار (أ)" style="font-size:0.82rem;">
+                    <input type="text" class="form-control" id="inlineHwOptB" placeholder="الخيار (ب)" style="font-size:0.82rem;">
+                    <input type="text" class="form-control" id="inlineHwOptC" placeholder="الخيار (ج)" style="font-size:0.82rem;">
+                    <input type="text" class="form-control" id="inlineHwOptD" placeholder="الخيار (د)" style="font-size:0.82rem;">
+                  </div>
+                  <div class="form-group" style="margin-bottom:8px;">
+                    <label class="form-label" style="font-size:0.8rem;">الإجابة الصحيحة</label>
+                    <select class="form-control" id="inlineHwCorrectOpt" style="font-size:0.85rem;">
+                      <option value="A">الخيار (أ)</option>
+                      <option value="B">الخيار (ب)</option>
+                      <option value="C">الخيار (ج)</option>
+                      <option value="D">الخيار (د)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Equation Wrap -->
+                <div id="inlineHwEquationWrap" style="display:none;margin-bottom:8px;">
+                  <label class="form-label" style="font-size:0.8rem;">كود المعادلة (LaTeX)</label>
+                  <input type="text" class="form-control" id="inlineHwEquationLatex" placeholder="مثال: x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}" style="font-size:0.82rem;">
+                </div>
+
+                <!-- Essay Wrap -->
+                <div id="inlineHwEssayWrap" style="display:none;margin-bottom:8px;">
+                  <label class="form-label" style="font-size:0.8rem;">نموذج الإجابة وملاحظات التصحيح</label>
+                  <input type="text" class="form-control" id="inlineHwSampleAnswer" placeholder="النقاط المطلوبة من الطالب" style="font-size:0.82rem;">
+                </div>
+
+                <div style="display:flex;justify-content:flex-end;">
+                  <button type="button" class="btn btn-primary btn-sm" onclick="addInlineQuestion('hw')" style="padding:5px 14px;font-size:0.8rem;">
+                    ＋ إضافة السؤال للواجب
+                  </button>
+                </div>
+              </div>
+
+              <!-- List of added HW questions -->
+              <div id="inlineHwQuestionsList" style="display:flex;flex-direction:column;gap:6px;max-height:160px;overflow-y:auto;">
+                <span style="font-size:0.8rem;color:var(--ink-dim);">لم تتم إضافة أسئلة للواجب بعد (يمكنك إضافة أسئلة الآن أو تركها لإنشائها لاحقاً).</span>
+              </div>
             </div>
-          </label>
+          </div>
+
+          <!-- 2. Exam Switch & Inline Box -->
+          <div>
+            <label style="display:flex;align-items:center;gap:10px;background:var(--bg-card);border:1px solid var(--line-soft);padding:10px 14px;border-radius:10px;cursor:pointer;">
+              <input type="checkbox" id="lessonAddHasExam" onchange="toggleInlineExamBuilder(this.checked)" style="width:18px;height:18px;accent-color:var(--primary);">
+              <div>
+                <b style="font-size:0.88rem;color:var(--ink);">🏆 تفعيل امتحان على المحاضرة (Exam)</b>
+                <span style="font-size:0.78rem;color:var(--ink-dim);display:block;">يلزم الطالب باجتياز الامتحان لفتح المحاضرة - يمكنك إضافة أسئلته فوراً أدناه.</span>
+              </div>
+            </label>
+
+            <!-- Inline Exam Container -->
+            <div id="inlineExamWrap" style="display:none;background:var(--bg-card);border:1px solid rgba(245,158,11,0.35);border-radius:12px;padding:14px;margin-top:8px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                <b style="color:#d97706;font-size:0.9rem;">🏆 أسئلة الامتحان (<span id="inlineExamCount">0</span> أسئلة مضافة)</b>
+              </div>
+
+              <!-- Question Form for Exam -->
+              <div style="background:var(--bg-raised);padding:12px;border-radius:10px;border:1px solid var(--line-soft);margin-bottom:12px;">
+                <div class="form-group" style="margin-bottom:8px;">
+                  <label class="form-label" style="font-size:0.8rem;">نوع السؤال</label>
+                  <select class="form-control" id="inlineExamQType" style="font-size:0.85rem;" onchange="toggleInlineQTypeFields('exam', this.value)">
+                    <option value="MULTIPLE_CHOICE">اختيار من متعدد (Multiple Choice)</option>
+                    <option value="ESSAY">سؤال مقالي كتابي (Essay)</option>
+                    <option value="EQUATION">معادلة ورموز رياضية (LaTeX Equation)</option>
+                  </select>
+                </div>
+
+                <div class="form-group" style="margin-bottom:8px;">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;">
+                    <label class="form-label" style="font-size:0.8rem;margin:0;">نص السؤال</label>
+                    <span style="font-size:0.72rem;color:var(--primary);cursor:pointer;" onclick="insertInlineLatex('inlineExamQText')">＋ رمز LaTeX</span>
+                  </div>
+                  <textarea class="form-control" id="inlineExamQText" rows="2" placeholder="اكتب نص سؤال الامتحان هنا..." style="font-size:0.85rem;"></textarea>
+                </div>
+
+                <!-- MC Options -->
+                <div id="inlineExamMCOptionsWrap">
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;">
+                    <input type="text" class="form-control" id="inlineExamOptA" placeholder="الخيار (أ)" style="font-size:0.82rem;">
+                    <input type="text" class="form-control" id="inlineExamOptB" placeholder="الخيار (ب)" style="font-size:0.82rem;">
+                    <input type="text" class="form-control" id="inlineExamOptC" placeholder="الخيار (ج)" style="font-size:0.82rem;">
+                    <input type="text" class="form-control" id="inlineExamOptD" placeholder="الخيار (د)" style="font-size:0.82rem;">
+                  </div>
+                  <div class="form-group" style="margin-bottom:8px;">
+                    <label class="form-label" style="font-size:0.8rem;">الإجابة الصحيحة</label>
+                    <select class="form-control" id="inlineExamCorrectOpt" style="font-size:0.85rem;">
+                      <option value="A">الخيار (أ)</option>
+                      <option value="B">الخيار (ب)</option>
+                      <option value="C">الخيار (ج)</option>
+                      <option value="D">الخيار (د)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Equation Wrap -->
+                <div id="inlineExamEquationWrap" style="display:none;margin-bottom:8px;">
+                  <label class="form-label" style="font-size:0.8rem;">كود المعادلة (LaTeX)</label>
+                  <input type="text" class="form-control" id="inlineExamEquationLatex" placeholder="مثال: x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}" style="font-size:0.82rem;">
+                </div>
+
+                <!-- Essay Wrap -->
+                <div id="inlineExamEssayWrap" style="display:none;margin-bottom:8px;">
+                  <label class="form-label" style="font-size:0.8rem;">نموذج الإجابة وملاحظات التصحيح</label>
+                  <input type="text" class="form-control" id="inlineExamSampleAnswer" placeholder="النقاط المطلوبة من الطالب" style="font-size:0.82rem;">
+                </div>
+
+                <div style="display:flex;justify-content:flex-end;">
+                  <button type="button" class="btn btn-primary btn-sm" onclick="addInlineQuestion('exam')" style="padding:5px 14px;font-size:0.8rem;background:#d97706;border-color:#d97706;">
+                    ＋ إضافة السؤال للامتحان
+                  </button>
+                </div>
+              </div>
+
+              <!-- List of added Exam questions -->
+              <div id="inlineExamQuestionsList" style="display:flex;flex-direction:column;gap:6px;max-height:160px;overflow-y:auto;">
+                <span style="font-size:0.8rem;color:var(--ink-dim);">لم تتم إضافة أسئلة للامتحان بعد (يمكنك إضافة أسئلة الآن أو تركها لإنشائها لاحقاً).</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1926,6 +2070,125 @@
     }
   }
 
+  // ─── Inline Homework & Exam Question Management in Add Lesson Modal ──────
+  let inlineHwQuestions = [];
+  let inlineExamQuestions = [];
+
+  function toggleInlineAssignmentBuilder(checked) {
+    const wrap = document.getElementById('inlineAssignmentWrap');
+    if (wrap) wrap.style.display = checked ? 'block' : 'none';
+  }
+
+  function toggleInlineExamBuilder(checked) {
+    const wrap = document.getElementById('inlineExamWrap');
+    if (wrap) wrap.style.display = checked ? 'block' : 'none';
+  }
+
+  function toggleInlineQTypeFields(role, type) {
+    const prefix = role === 'hw' ? 'inlineHw' : 'inlineExam';
+    const mc = document.getElementById(prefix + 'MCOptionsWrap');
+    const eq = document.getElementById(prefix + 'EquationWrap');
+    const es = document.getElementById(prefix + 'EssayWrap');
+    if (mc) mc.style.display = type === 'MULTIPLE_CHOICE' ? 'block' : 'none';
+    if (eq) eq.style.display = type === 'EQUATION' ? 'block' : 'none';
+    if (es) es.style.display = type === 'ESSAY' ? 'block' : 'none';
+  }
+
+  function insertInlineLatex(targetId) {
+    insertLatexTemplate(targetId);
+  }
+
+  function addInlineQuestion(role) {
+    const prefix = role === 'hw' ? 'inlineHw' : 'inlineExam';
+    const qType = document.getElementById(prefix + 'QType').value;
+    const qText = (document.getElementById(prefix + 'QText')?.value || '').trim();
+
+    if (!qText) {
+      alert('يرجى كتابة نص السؤال أولاً');
+      return;
+    }
+
+    const payload = { questionType: qType, questionText: qText };
+    if (qType === 'MULTIPLE_CHOICE') {
+      payload.optionA = (document.getElementById(prefix + 'OptA')?.value || '').trim() || 'أ';
+      payload.optionB = (document.getElementById(prefix + 'OptB')?.value || '').trim() || 'ب';
+      payload.optionC = (document.getElementById(prefix + 'OptC')?.value || '').trim() || 'ج';
+      payload.optionD = (document.getElementById(prefix + 'OptD')?.value || '').trim() || 'د';
+      payload.correctOption = document.getElementById(prefix + 'CorrectOpt')?.value || 'A';
+    } else if (qType === 'EQUATION') {
+      payload.equationLatex = (document.getElementById(prefix + 'EquationLatex')?.value || '').trim();
+    } else if (qType === 'ESSAY') {
+      payload.sampleAnswer = (document.getElementById(prefix + 'SampleAnswer')?.value || '').trim();
+    }
+
+    if (role === 'hw') {
+      inlineHwQuestions.push(payload);
+    } else {
+      inlineExamQuestions.push(payload);
+    }
+
+    // Clear inputs for next question
+    const textEl = document.getElementById(prefix + 'QText');
+    if (textEl) textEl.value = '';
+    if (qType === 'MULTIPLE_CHOICE') {
+      const a = document.getElementById(prefix + 'OptA'); if (a) a.value = '';
+      const b = document.getElementById(prefix + 'OptB'); if (b) b.value = '';
+      const c = document.getElementById(prefix + 'OptC'); if (c) c.value = '';
+      const d = document.getElementById(prefix + 'OptD'); if (d) d.value = '';
+    } else if (qType === 'EQUATION') {
+      const eq = document.getElementById(prefix + 'EquationLatex'); if (eq) eq.value = '';
+    } else if (qType === 'ESSAY') {
+      const sa = document.getElementById(prefix + 'SampleAnswer'); if (sa) sa.value = '';
+    }
+
+    renderInlineQuestionsList(role);
+  }
+
+  function removeInlineQuestion(role, index) {
+    if (role === 'hw') {
+      inlineHwQuestions.splice(index, 1);
+    } else {
+      inlineExamQuestions.splice(index, 1);
+    }
+    renderInlineQuestionsList(role);
+  }
+
+  function renderInlineQuestionsList(role) {
+    const listEl = document.getElementById(role === 'hw' ? 'inlineHwQuestionsList' : 'inlineExamQuestionsList');
+    const countEl = document.getElementById(role === 'hw' ? 'inlineHwCount' : 'inlineExamCount');
+    const arr = role === 'hw' ? inlineHwQuestions : inlineExamQuestions;
+
+    if (countEl) countEl.textContent = arr.length;
+    if (!listEl) return;
+
+    if (arr.length === 0) {
+      listEl.innerHTML = `<span style="font-size:0.8rem;color:var(--ink-dim);">لم تتم إضافة أسئلة بعد (يمكنك إضافة أسئلة الآن أو تركها لإنشائها لاحقاً).</span>`;
+      return;
+    }
+
+    listEl.innerHTML = arr.map((q, idx) => `
+      <div style="background:var(--bg-raised);padding:8px 12px;border-radius:8px;border:1px solid var(--line-soft);display:flex;justify-content:space-between;align-items:center;gap:8px;">
+        <div style="flex:1;font-size:0.84rem;">
+          <b>${idx + 1}. ${escapeHtml(q.questionText)}</b>
+          <span class="tag" style="margin-inline-start:4px;font-size:0.72rem;">${q.questionType === 'MULTIPLE_CHOICE' ? 'اختياري (' + (q.correctOption || 'A') + ')' : q.questionType}</span>
+          ${q.equationLatex ? `<div style="font-size:0.8rem;color:var(--primary);margin-top:2px;">$$${escapeHtml(q.equationLatex)}$$</div>` : ''}
+        </div>
+        <button type="button" class="btn btn-text btn-sm" style="color:var(--err);padding:2px 6px;" onclick="removeInlineQuestion('${role}', ${idx})">✕ حذف</button>
+      </div>
+    `).join('');
+
+    triggerKaTeX(listEl);
+  }
+
+  function resetInlineQuizBuilders() {
+    inlineHwQuestions = [];
+    inlineExamQuestions = [];
+    renderInlineQuestionsList('hw');
+    renderInlineQuestionsList('exam');
+    toggleInlineAssignmentBuilder(false);
+    toggleInlineExamBuilder(false);
+  }
+
   function openAddLessonModal(chapterId) {
     const chIdEl = document.getElementById('lessonChapterId');
     if (chIdEl) chIdEl.value = chapterId;
@@ -1952,6 +2215,8 @@
     const hasExamCb = document.getElementById('lessonAddHasExam');
     if (hasExamCb) hasExamCb.checked = false;
 
+    resetInlineQuizBuilders();
+
     // Reset publish mode to 'now'
     const nowRadio = document.querySelector('input[name="publishMode"][value="now"]');
     if (nowRadio) nowRadio.checked = true;
@@ -1967,6 +2232,7 @@
 
   function closeAddLessonModal() {
     document.getElementById('addLessonModal').style.display = 'none';
+    resetInlineQuizBuilders();
     const notice = document.getElementById('videoSizeNotice');
     if (notice) notice.style.display = 'none';
     const progressWrapper = document.getElementById('videoUploadProgressWrapper');
@@ -2054,6 +2320,45 @@
         hasExam,
       });
 
+      // ─── 1. Create and populate Assignment if enabled ───
+      if (hasAssignment && lesson?.id) {
+        btn.textContent = 'جارٍ حفظ أسئلة الواجب... 📝';
+        try {
+          const hwQuiz = await window.KhatwaAPI.teacher.createQuiz({
+            title: `واجب: ${title}`,
+            type: 'HOMEWORK',
+          });
+          await window.KhatwaAPI.teacher.assignQuizToLesson(lesson.id, hwQuiz.id, 'assignment');
+          if (inlineHwQuestions.length > 0) {
+            for (const q of inlineHwQuestions) {
+              await window.KhatwaAPI.teacher.addQuizQuestion(hwQuiz.id, q);
+            }
+          }
+        } catch (hwErr) {
+          console.error('Failed to create assignment quiz:', hwErr);
+        }
+      }
+
+      // ─── 2. Create and populate Exam if enabled ───
+      if (hasExam && lesson?.id) {
+        btn.textContent = 'جارٍ حفظ أسئلة الامتحان... 🏆';
+        try {
+          const examQuiz = await window.KhatwaAPI.teacher.createQuiz({
+            title: `امتحان: ${title}`,
+            type: 'EXAM',
+          });
+          await window.KhatwaAPI.teacher.assignQuizToLesson(lesson.id, examQuiz.id, 'exam');
+          if (inlineExamQuestions.length > 0) {
+            for (const q of inlineExamQuestions) {
+              await window.KhatwaAPI.teacher.addQuizQuestion(examQuiz.id, q);
+            }
+          }
+        } catch (examErr) {
+          console.error('Failed to create exam quiz:', examErr);
+        }
+      }
+
+      // ─── 3. Video Upload if File Selected ───
       if (videoFile && lesson?.id) {
         if (progressWrapper) progressWrapper.style.display = 'block';
         btn.textContent = 'جارٍ رفع ملف الفيديو إلى Google Drive... ⏳';
@@ -2070,10 +2375,11 @@
             }
           });
         } catch (uploadErr) {
-          alert('⚠️ تم حفظ المحاضرة ولكن تعذر رفع ملف الفيديو من الجهاز: ' + (uploadErr.message || 'خطأ في الاتصال') + '\n\n💡 يُرجى التأكد من اتصال الإنترنت أو استخدام رابط Drive أو YouTube.');
+          alert('⚠️ تم حفظ المحاضرة والأسئلة ولكن تعذر رفع ملف الفيديو من الجهاز: ' + (uploadErr.message || 'خطأ في الاتصال') + '\n\n💡 يُرجى التأكد من اتصال الإنترنت أو استخدام رابط Drive أو YouTube.');
         }
       }
 
+      // ─── 4. PDF Upload if File Selected ───
       if (pdfFile && lesson?.id) {
         if (progressWrapper) progressWrapper.style.display = 'block';
         if (progressBar) progressBar.style.width = '0%';
@@ -2098,41 +2404,24 @@
 
       closeAddLessonModal();
       document.getElementById('addLessonForm').reset();
+      resetInlineQuizBuilders();
       await refreshWorkspace();
 
-      // Smart transition: If assignment or exam was toggled, open Quiz Builder immediately!
-      if (hasAssignment && hasExam) {
-        pendingNextQuizLessonId = lesson.id;
-        pendingNextQuizRole = 'exam';
-        showToast('✅ تم حفظ المحاضرة! ننتقل الآن لوضع أسئلة الواجب أولاً 📝 ثم الامتحان 🏆');
-        setTimeout(() => {
-          openQuizBuilderForLesson(lesson.id, 'assignment');
-        }, 500);
-      } else if (hasAssignment) {
-        pendingNextQuizLessonId = null;
-        pendingNextQuizRole = null;
-        showToast('✅ تم حفظ المحاضرة بنجاح! ننتقل الآن لوضع أسئلة الواجب 📝');
-        setTimeout(() => {
-          openQuizBuilderForLesson(lesson.id, 'assignment');
-        }, 500);
-      } else if (hasExam) {
-        pendingNextQuizLessonId = null;
-        pendingNextQuizRole = null;
-        showToast('✅ تم حفظ المحاضرة بنجاح! ننتقل الآن لوضع أسئلة الامتحان 🏆');
-        setTimeout(() => {
-          openQuizBuilderForLesson(lesson.id, 'exam');
-        }, 500);
+      let successMsg = '✅ تم إنشاء المحاضرة بنجاح!';
+      if (inlineHwQuestions.length > 0 && inlineExamQuestions.length > 0) {
+        successMsg = `✅ تم حفظ المحاضرة مع ${inlineHwQuestions.length} أسئلة واجب و ${inlineExamQuestions.length} أسئلة امتحان!`;
+      } else if (inlineHwQuestions.length > 0) {
+        successMsg = `✅ تم حفظ المحاضرة مع ${inlineHwQuestions.length} أسئلة واجب!`;
+      } else if (inlineExamQuestions.length > 0) {
+        successMsg = `✅ تم حفظ المحاضرة مع ${inlineExamQuestions.length} أسئلة امتحان!`;
+      } else if (publishMode === 'schedule') {
+        successMsg = '⏰ تم حفظ وجدولة نشر المحاضرة بنجاح!';
+      } else if (publishMode === 'draft') {
+        successMsg = '📁 تم حفظ المحاضرة كمسودة بنجاح!';
       } else {
-        pendingNextQuizLessonId = null;
-        pendingNextQuizRole = null;
-        if (publishMode === 'schedule') {
-          showToast('⏰ تم حفظ وجدولة نشر المحاضرة بنجاح!');
-        } else if (publishMode === 'draft') {
-          showToast('📁 تم حفظ المحاضرة كمسودة بنجاح!');
-        } else {
-          showToast('🚀 تم حفظ ونشر المحاضرة بنجاح!');
-        }
+        successMsg = '🚀 تم حفظ ونشر المحاضرة بنجاح!';
       }
+      showToast(successMsg);
     } catch (err) {
       alert(err.message || 'حدث خطأ أثناء حفظ ورفع الدرس');
     } finally {

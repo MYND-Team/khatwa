@@ -115,26 +115,16 @@
 
     <div style="background:var(--bg-raised);padding:14px;border-radius:12px;margin:16px 0;border:1px solid var(--line-soft);">
       <div style="display:flex;justify-content:space-between;margin-bottom:8px;padding-bottom:8px;border-bottom:1px dashed var(--line-soft);">
-        <span>رصيدك المتوفر:</span>
-        <span id="modalUserBalance" style="color:var(--primary);font-weight:700;">0 ج.م · 0 نقطة</span>
-      </div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
-        <span>سعر المحاضرة بالجنيه:</span>
-        <b id="modalPriceEGP" style="color:#22c55e;">0 ج.م</b>
+        <span>رصيدك المتوفر بالمحفظة:</span>
+        <span id="modalUserBalance" style="color:var(--primary);font-weight:700;">0 ج.م</span>
       </div>
       <div style="display:flex;justify-content:space-between;">
-        <span>سعر المحاضرة بالنقاط:</span>
-        <b id="modalPricePoints" style="color:#f59e0b;">0 نقطة</b>
+        <span>سعر المحاضرة:</span>
+        <b id="modalPriceEGP" style="color:#22c55e;font-size:1.1rem;">0 ج.م</b>
       </div>
     </div>
 
-    <div class="form-group" style="margin-bottom:20px;">
-      <label class="form-label">طريقة الدفع:</label>
-      <select class="form-control" id="modalPaymentMethodSelect">
-        <option value="WALLET_EGP">💳 خصم من محفظة الجنيه المصري</option>
-        <option value="POINTS">💎 خصم من رصيد النقاط</option>
-      </select>
-    </div>
+    <input type="hidden" id="modalPaymentMethodSelect" value="WALLET_EGP">
 
     <div style="display:flex;gap:10px;justify-content:flex-end;">
       <button type="button" class="btn btn-line btn-sm" onclick="closePurchaseModal()">إلغاء</button>
@@ -228,7 +218,7 @@
             <div class="unit-lessons">
         `;
 
-        const lessons = ch.lessons || [];
+        const lessons = (ch.lessons || []).filter(l => !l.scheduledPublishAt || new Date(l.scheduledPublishAt) <= new Date());
         if (lessons.length === 0) {
           html += `<div style="color:var(--ink-dim);font-size:0.85rem;padding:8px 0;">لا توجد محاضرات في هذه الوحدة بعد.</div>`;
         } else {
@@ -240,36 +230,35 @@
         html += `</div></div>`;
       });
     } else if (currentCourse.lessons && currentCourse.lessons.length > 0) {
-      html += `<div class="unit-box"><div class="unit-lessons">`;
-      currentCourse.lessons.forEach((l) => {
-        html += renderLessonRow(l);
-      });
-      html += `</div></div>`;
+      const directLessons = (currentCourse.lessons || []).filter(l => !l.scheduledPublishAt || new Date(l.scheduledPublishAt) <= new Date());
+      if (directLessons.length > 0) {
+        html += `<div class="unit-box"><div class="unit-lessons">`;
+        directLessons.forEach((l) => {
+          html += renderLessonRow(l);
+        });
+        html += `</div></div>`;
+      }
     }
 
     container.innerHTML = html;
   }
 
   function renderLessonRow(lesson) {
+    if (lesson.scheduledPublishAt && new Date(lesson.scheduledPublishAt) > new Date()) {
+      return '';
+    }
+
     const isSubscribed = (lesson.subscriptions && lesson.subscriptions.length > 0) || (lesson.unlockedBy && lesson.unlockedBy.length > 0);
     const priceEGP = Number(lesson.price) || 0;
-    const pointCost = Number(lesson.pointCost) || 0;
-    const isFree = priceEGP === 0 && pointCost === 0;
-
-    const isScheduled = lesson.scheduledPublishAt && new Date(lesson.scheduledPublishAt) > new Date();
-    const schedDate = isScheduled
-      ? new Date(lesson.scheduledPublishAt).toLocaleString('ar-EG', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
-      : null;
+    const isFree = priceEGP === 0;
 
     let priceBadge = '';
-    if (isScheduled) {
-      priceBadge = `<span class="tag" style="background:rgba(245,158,11,0.12);color:#d97706;border:1px solid rgba(245,158,11,0.3);font-size:0.8rem;">⏳ تتاح بتاريخ ${schedDate}</span>`;
-    } else if (isSubscribed) {
+    if (isSubscribed) {
       priceBadge = '<span class="tag tag-ok">✓ تم الشراء / مشترك</span>';
     } else if (isFree) {
       priceBadge = '<span class="tag tag-ok">مجانية</span>';
     } else {
-      priceBadge = `<span class="tag tag-warn" style="font-weight:700;">💵 ${priceEGP} ج.م · 💎 ${pointCost} نقطة</span>`;
+      priceBadge = `<span class="tag tag-warn" style="font-weight:700;">💵 ${priceEGP} ج.م</span>`;
     }
 
     let gradesHtml = '';
@@ -281,13 +270,7 @@
     }
 
     let actionBtn = '';
-    if (isScheduled) {
-      actionBtn = `
-        <button type="button" class="btn btn-line btn-sm" disabled style="opacity:0.7;cursor:not-allowed;color:#d97706;border-color:rgba(245,158,11,0.4);background:rgba(245,158,11,0.06);font-size:0.8rem;font-weight:700;">
-          🔒 مجدولة (تتاح ${schedDate})
-        </button>
-      `;
-    } else if (isSubscribed || isFree) {
+    if (isSubscribed || isFree) {
       actionBtn = `
         <a href="lesson.html?lessonId=${lesson.id}" class="btn btn-primary btn-sm">
           ▶ مشاهدة المحاضرة
@@ -296,7 +279,7 @@
     } else {
       actionBtn = `
         <button class="btn btn-primary btn-sm" onclick='openPurchaseModal(${JSON.stringify(lesson)})'>
-          🛒 شراء وتفعيل المحاضرة (${priceEGP > 0 ? priceEGP + ' ج.م' : pointCost + ' نقطة'})
+          🛒 شراء وتفعيل المحاضرة (${priceEGP > 0 ? priceEGP + ' ج.م' : 'مجاناً'})
         </button>
       `;
     }
@@ -325,13 +308,11 @@
     activeLessonToPurchase = lesson;
     const user = window.KhatwaAPI.getUser();
     const priceEGP = Number(lesson.price) || 0;
-    const pointCost = Number(lesson.pointCost) || 0;
 
     document.getElementById('modalLessonTitle').textContent = `شراء: ${lesson.title}`;
     document.getElementById('modalPriceEGP').textContent = `${priceEGP} ج.م`;
-    document.getElementById('modalPricePoints').textContent = `${pointCost} نقطة`;
     if (document.getElementById('modalUserBalance')) {
-      document.getElementById('modalUserBalance').textContent = `${user?.walletBalance || 0} ج.م · ${user?.pointsBalance || 0} نقطة`;
+      document.getElementById('modalUserBalance').textContent = `${user?.walletBalance || 0} ج.م`;
     }
     document.getElementById('purchaseModal').style.display = 'flex';
   }

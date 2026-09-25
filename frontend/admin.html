@@ -629,16 +629,16 @@
       </div>
     </div>
 
-    <!-- Total Points -->
+    <!-- Total Recharged Wallet (EGP) -->
     <div class="modern-stat-card" style="--card-accent: #10b981; --icon-bg: rgba(16, 185, 129, 0.12); --icon-border: rgba(16, 185, 129, 0.25); --icon-shadow: rgba(16, 185, 129, 0.2);">
       <div class="stat-card-top">
-        <div class="stat-icon-wrapper">💎</div>
+        <div class="stat-icon-wrapper">💵</div>
         <span class="stat-badge-pill">رصيد</span>
       </div>
       <div>
-        <div class="stat-label">إجمالي النقاط المشحونة</div>
-        <div class="stat-value" id="statTotalPoints" style="color:#34d399;">0</div>
-        <div class="stat-sub"><span>💰</span> إجمالي النقاط المعتمدة</div>
+        <div class="stat-label">إجمالي الرصيد المشحون</div>
+        <div class="stat-value" id="statTotalPoints" style="color:#34d399;">0 ج.م</div>
+        <div class="stat-sub"><span>💰</span> إجمالي رصيد المحافظ المعتمد</div>
       </div>
     </div>
   </div>
@@ -672,6 +672,10 @@
     </button>
     <button class="admin-nav-tab" data-target="tabPointRequests" onclick="switchAdminTab('tabPointRequests', this)">
       <span>💳 مراجعة طلبات الشحن</span>
+    </button>
+    <button class="admin-nav-tab" data-target="tabOfflineRequests" onclick="switchAdminTab('tabOfflineRequests', this)">
+      <span>🏢 طلبات سيشنات الأوفلاين</span>
+      <span class="tab-count-badge" id="tabBadgeOfflineRequests" style="background:#f59e0b;color:#fff;display:none;">0</span>
     </button>
     <button class="admin-nav-tab" data-target="tabProfileRequests" onclick="switchAdminTab('tabProfileRequests', this)">
       <span>📋 طلبات تعديل بيانات الطلاب</span>
@@ -719,7 +723,6 @@
             <th>هاتف ولي الأمر</th>
             <th>وظيفة الأب</th>
             <th>رصيد المحفظة (EGP)</th>
-            <th>رصيد النقاط</th>
             <th>الحالة</th>
             <th>تاريخ التسجيل</th>
             <th>الإجراءات</th>
@@ -1085,6 +1088,50 @@
     </div>
   </div>
 
+  <!-- Tab: Offline Session Requests Review (Center to Online) -->
+  <div id="tabOfflineRequests" class="admin-tab-content" style="display:none;">
+    <div class="block">
+      <div class="block-head" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+        <div>
+          <h3 style="margin:0;">🏢 مراجعة طلبات حضور السيشنات الأوفلاين</h3>
+          <p style="margin:4px 0 0;font-size:0.86rem;color:var(--ink-dim);">
+            طلبات الطلاب الذين حضروا سيشن في السنتر ويرغبون بإعادة حضورها أونلاين. يمكنك فتح المحاضرة مباشرة للطالب أو إرسال كود تفعيل خاص.
+          </p>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <input type="text" id="offlineSearchInput" class="form-control" placeholder="بحث باسم الطالب، الهاتف، السنتر..." style="font-size:0.86rem;padding:6px 12px;border-radius:10px;width:240px;" oninput="loadAdminOfflineRequests()">
+          <select id="offlineRequestStatusFilter" class="form-control" style="font-size:0.86rem;padding:6px 12px;border-radius:10px;" onchange="loadAdminOfflineRequests()">
+            <option value="">جميع الحالات</option>
+            <option value="PENDING" selected>قيد المراجعة فقط ⏳</option>
+            <option value="APPROVED">تمت الموافقة ✓</option>
+            <option value="REJECTED">مرفوضة ✕</option>
+          </select>
+          <button class="btn btn-sm btn-line" onclick="loadAdminOfflineRequests()">🔄 تحديث</button>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>الطالب والصف</th>
+              <th>رقم الهاتف</th>
+              <th>المدرس والسنتر</th>
+              <th>المحاضرة / الكورس المطلوب</th>
+              <th>تفاصيل الحصة / الوصل</th>
+              <th>الحالة</th>
+              <th>تاريخ الطلب</th>
+              <th style="text-align:center;">إجراءات الإدارة</th>
+            </tr>
+          </thead>
+          <tbody id="offlineRequestsTableBody">
+            <tr><td colspan="8" style="text-align:center;color:var(--ink-dim);padding:30px;">جارٍ تحميل طلبات الأوفلاين...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
   <!-- Tab: Student Profile Edit Requests (Admin Approval Workflow) -->
   <div id="tabProfileRequests" class="admin-tab-content" style="display:none;">
     <div class="block">
@@ -1336,21 +1383,15 @@
     </div>
 
     <!-- Quick Operations -->
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:22px 0;">
+    <div style="margin:22px 0;">
       <!-- Wallet Transfer -->
-      <div style="background:#f8fafc; padding:16px; border-radius:16px; border:1px solid #e2e8f0;">
-        <h4 style="margin:0 0 10px; color:#10b981; font-size:0.95rem; font-weight:700; display:flex; align-items:center; gap:6px;">💵 تحويل رصيد مالي (EGP)</h4>
-        <input type="number" id="quickWalletAmount" placeholder="المبلغ (مثال: 150)" class="form-control" style="margin-bottom:8px; border-radius:10px; background:#fff; color:#0f172a; border:1px solid #cbd5e1;">
-        <input type="text" id="quickWalletReason" placeholder="السبب (اختياري)" class="form-control" style="margin-bottom:10px; border-radius:10px; background:#fff; color:#0f172a; border:1px solid #cbd5e1;">
-        <button type="button" class="btn btn-primary btn-sm" style="width:100%; border-radius:10px; font-weight:700; background:var(--primary, #B88E4F); color:#fff;" onclick="submitQuickWallet()">تحويل الرصيد الآن ✓</button>
-      </div>
-
-      <!-- Points Adjust -->
-      <div style="background:#f8fafc; padding:16px; border-radius:16px; border:1px solid #e2e8f0;">
-        <h4 style="margin:0 0 10px; color:#d97706; font-size:0.95rem; font-weight:700; display:flex; align-items:center; gap:6px;">💎 تعديل النقاط</h4>
-        <input type="number" id="quickPointsAmount" placeholder="النقاط (مثال: 150 أو -50)" class="form-control" style="margin-bottom:8px; border-radius:10px; background:#fff; color:#0f172a; border:1px solid #cbd5e1;">
-        <input type="text" id="quickPointsReason" placeholder="السبب (اختياري)" class="form-control" style="margin-bottom:10px; border-radius:10px; background:#fff; color:#0f172a; border:1px solid #cbd5e1;">
-        <button type="button" class="btn btn-primary btn-sm" style="width:100%; border-radius:10px; font-weight:700; background:var(--primary, #B88E4F); color:#fff;" onclick="submitQuickPoints()">تعديل النقاط الآن ✓</button>
+      <div style="background:#f8fafc; padding:18px; border-radius:16px; border:1px solid #e2e8f0;">
+        <h4 style="margin:0 0 10px; color:#10b981; font-size:0.95rem; font-weight:700; display:flex; align-items:center; gap:6px;">💵 شحن / تحويل رصيد مالي للمحفظة (EGP)</h4>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+          <input type="number" id="quickWalletAmount" placeholder="المبلغ بالجنيه (مثال: 150 أو -50)" class="form-control" style="border-radius:10px; background:#fff; color:#0f172a; border:1px solid #cbd5e1;">
+          <input type="text" id="quickWalletReason" placeholder="السبب (اختياري)" class="form-control" style="border-radius:10px; background:#fff; color:#0f172a; border:1px solid #cbd5e1;">
+        </div>
+        <button type="button" class="btn btn-primary btn-sm" style="width:100%; border-radius:10px; font-weight:700; background:var(--primary, #B88E4F); color:#fff; padding:10px;" onclick="submitQuickWallet()">تنفيذ تعديل الرصيد الآن ✓</button>
       </div>
     </div>
 
@@ -1401,6 +1442,77 @@
     </div>
   </div>
 </div>
+
+<!-- Modal: Admin Offline Direct Unlock -->
+<div class="modal-overlay" id="adminOfflineUnlockModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:1000;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
+  <div class="modal-card" style="max-width:560px;width:95%;padding:24px;border-radius:20px;background:var(--bg-card);border:1px solid var(--line);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <h3 style="margin:0;font-size:1.2rem;">🔓 فتح وتفعيل المحاضرة مباشرة للطالب</h3>
+      <button type="button" onclick="closeOfflineUnlockModal()" class="btn btn-text" style="font-size:1.2rem;cursor:pointer;">✕</button>
+    </div>
+    
+    <div style="background:var(--bg-raised);padding:14px;border-radius:12px;margin-bottom:18px;font-size:0.9rem;">
+      <div>الطالب: <b id="unlockModalStudentName">—</b></div>
+      <div style="margin-top:4px;">الطلب المدخل من الطالب: <b id="unlockModalCourseTitle" style="color:var(--primary);">—</b></div>
+    </div>
+
+    <div class="field" style="margin-bottom:20px;">
+      <label for="unlockModalLessonSelect" style="font-weight:700;display:block;margin-bottom:6px;">اختر المحاضرة من المنصة لفتحها وتفعيل اشتراكها فوراً:</label>
+      <select id="unlockModalLessonSelect" class="form-control" style="font-size:0.92rem;padding:8px 12px;border-radius:10px;">
+        <option value="">جارٍ تحميل المحاضرات...</option>
+      </select>
+      <span style="font-size:0.8rem;color:var(--ink-dim);display:block;margin-top:4px;">سيتم تفعيل الاشتراك مجاناً بحساب الطالب وإرسال إشعار فوري له بالفتح.</span>
+    </div>
+
+    <input type="hidden" id="unlockModalRequestId">
+
+    <div style="display:flex;justify-content:flex-end;gap:10px;">
+      <button type="button" class="btn btn-line" onclick="closeOfflineUnlockModal()">إلغاء</button>
+      <button type="button" class="btn btn-primary" id="confirmUnlockLessonBtn" onclick="adminSubmitDirectUnlock()" style="font-weight:700;background:#16a34a;border-color:#16a34a;">
+        🔓 تأكيد وفتح المحاضرة للطالب الآن
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Admin Offline Send Code -->
+<div class="modal-overlay" id="adminOfflineSendCodeModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:1000;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
+  <div class="modal-card" style="max-width:540px;width:95%;padding:24px;border-radius:20px;background:var(--bg-card);border:1px solid var(--line);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <h3 style="margin:0;font-size:1.2rem;">🎟️ إنشاء وإرسال كود تفعيل للطالب</h3>
+      <button type="button" onclick="closeOfflineSendCodeModal()" class="btn btn-text" style="font-size:1.2rem;cursor:pointer;">✕</button>
+    </div>
+
+    <div style="background:var(--bg-raised);padding:14px;border-radius:12px;margin-bottom:18px;font-size:0.9rem;">
+      <div>الطالب: <b id="sendCodeModalStudentName">—</b></div>
+      <div style="margin-top:4px;">السيشن المطلوبة: <b id="sendCodeModalCourseTitle" style="color:var(--primary);">—</b></div>
+    </div>
+
+    <div class="field" style="margin-bottom:16px;">
+      <label for="sendCodeModalInput" style="font-weight:700;display:block;margin-bottom:6px;">كود التفعيل (تم توليده تلقائياً ويمكنك تخصيصه):</label>
+      <div style="display:flex;gap:8px;">
+        <input type="text" id="sendCodeModalInput" class="form-control" style="font-family:monospace;font-size:1.1rem;font-weight:700;letter-spacing:1px;text-align:center;">
+        <button type="button" class="btn btn-line" onclick="generateNewOfflineCode()">توليد جديد 🔄</button>
+      </div>
+    </div>
+
+    <div class="field" style="margin-bottom:20px;">
+      <label for="sendCodeModalPoints" style="font-weight:700;display:block;margin-bottom:6px;">القيمة المالية للكود إن تم استخدامه كشحن رصيد (EGP):</label>
+      <input type="number" id="sendCodeModalPoints" class="form-control" value="50" min="0" step="10">
+      <span style="font-size:0.8rem;color:var(--ink-dim);display:block;margin-top:4px;">سيصل الكود في إشعار للطالب ويظهر في سجل طلباته لتفعيله فوراً.</span>
+    </div>
+
+    <input type="hidden" id="sendCodeModalRequestId">
+
+    <div style="display:flex;justify-content:flex-end;gap:10px;">
+      <button type="button" class="btn btn-line" onclick="closeOfflineSendCodeModal()">إلغاء</button>
+      <button type="button" class="btn btn-primary" id="confirmSendCodeBtn" onclick="adminSubmitSendCode()" style="font-weight:700;background:#6366f1;border-color:#6366f1;">
+        🎟️ إرسال الكود للطالب الآن
+      </button>
+    </div>
+  </div>
+</div>
+
 
 <script src="js/i18n.js?v=1.0.2"></script>
 <script src="js/api.js?v=1.0.2"></script>
@@ -1461,6 +1573,8 @@
     if (tabId === 'tabPayments') loadAdminPayments();
     if (tabId === 'tabStages') loadAdminStages();
     if (tabId === 'tabAppearance') loadAppearanceSettings();
+    if (tabId === 'tabPointRequests') loadPointRequests();
+    if (tabId === 'tabOfflineRequests') loadAdminOfflineRequests();
     if (tabId === 'tabProfileRequests') loadAdminProfileRequests();
   }
 
@@ -1475,6 +1589,7 @@
       loadAppearanceSettings(),
       loadAccessCodes(),
       loadPointRequests(),
+      loadAdminOfflineRequests(),
       loadAdminProfileRequests(),
       loadVideoLogs(),
     ]);
@@ -1908,7 +2023,7 @@
         document.getElementById('statTotalStudents').textContent = data.totalStudents || 0;
         document.getElementById('statTotalTeachers').textContent = data.totalTeachers || 0;
         document.getElementById('statTotalLessons').textContent = data.totalLessons || 0;
-        document.getElementById('statTotalPoints').textContent = data.totalPointsCredited || 0;
+        document.getElementById('statTotalPoints').textContent = ((data.totalWalletCredited || 0).toLocaleString()) + ' ج.م';
         document.getElementById('statPendingRequests').textContent = data.pendingPointRequests || 0;
       }
     } catch (e) {
@@ -1969,7 +2084,6 @@
           <td dir="ltr" style="text-align:right;">${parentPhone}</td>
           <td>${fatherJob}</td>
           <td><b style="color:#10b981;">${wallet}</b> ج.م</td>
-          <td><b style="color:var(--gold-light);">${points}</b> نقطة</td>
           <td>${statusBadge}</td>
           <td>${dateStr}</td>
           <td>
@@ -2740,6 +2854,252 @@
     await refreshAdminData();
   }
 
+  // ─── Offline Session Requests (Center to Online Management) ───────────────
+  let cachedOfflineRequests = [];
+  let cachedPlatformLessons = [];
+
+  async function loadAdminOfflineRequests() {
+    const filter = document.getElementById('offlineRequestStatusFilter')?.value || '';
+    const search = document.getElementById('offlineSearchInput')?.value || '';
+    const tbody = document.getElementById('offlineRequestsTableBody');
+    const badge = document.getElementById('tabBadgeOfflineRequests');
+
+    try {
+      const requests = await window.KhatwaAPI.admin.getOfflineRequests(filter, search);
+      cachedOfflineRequests = requests;
+
+      // Update badge with pending count
+      const pendingReqs = await window.KhatwaAPI.admin.getOfflineRequests('PENDING');
+      if (badge) {
+        badge.textContent = (pendingReqs && pendingReqs.length) || 0;
+        badge.style.display = (pendingReqs && pendingReqs.length > 0) ? 'inline-flex' : 'none';
+      }
+
+      if (!requests || requests.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--ink-dim);padding:32px;">لا توجد طلبات سيشنات أوفلاين مطابقة</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = requests.map(r => {
+        const student = r.student || {};
+        const profile = student.studentProfile || {};
+        const stageLabel = (window.STAGE_LABELS && window.STAGE_LABELS[r.academicStage || profile.academicStage]) || r.academicStage || '—';
+        const dateStr = r.createdAt ? new Date(r.createdAt).toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
+        const receiptThumb = r.receiptUrl 
+          ? `<a href="${r.receiptUrl}" target="_blank" title="عرض الوصل"><img src="${r.receiptUrl}" style="width:40px;height:40px;object-fit:cover;border-radius:6px;border:1px solid var(--line);"></a>` 
+          : '—';
+        
+        let statusTag = '';
+        if (r.status === 'PENDING') {
+          statusTag = '<span class="tag tag-warn" style="font-weight:700;">⏳ قيد المراجعة</span>';
+        } else if (r.status === 'APPROVED') {
+          if (r.actionTaken === 'DIRECT_UNLOCK') {
+            statusTag = '<span class="tag tag-ok" style="font-weight:700;">🔓 تم الفتح مباشرة</span>';
+          } else if (r.actionTaken === 'CODE_SENT' || r.accessCode) {
+            statusTag = `<span class="tag tag-ok" style="font-weight:700;background:rgba(99,102,241,0.15);color:#4f46e5;">🎟️ كود: <code>${escapeHtml(r.accessCode)}</code></span>`;
+          } else {
+            statusTag = '<span class="tag tag-ok">✓ مقبول</span>';
+          }
+        } else if (r.status === 'REJECTED') {
+          statusTag = `<span class="tag tag-err" title="${escapeHtml(r.rejectionReason || '')}">❌ مرفوض</span>`;
+        }
+
+        const isPending = r.status === 'PENDING';
+
+        return `
+          <tr>
+            <td>
+              <b>${escapeHtml(r.studentName || student.username)}</b>
+              <span style="font-size:0.78rem;color:var(--ink-dim);display:block;">${stageLabel} · @${student.username}</span>
+            </td>
+            <td>
+              <code style="font-weight:700;">${escapeHtml(r.phoneNumber || profile.studentPhoneNumber || '—')}</code>
+            </td>
+            <td>
+              <b>${escapeHtml(r.teacherName)}</b>
+              <span style="font-size:0.78rem;color:var(--ink-dim);display:block;">${escapeHtml(r.centerLocation)}</span>
+            </td>
+            <td>
+              <b>${escapeHtml(r.courseTitle || r.lesson?.title || '—')}</b>
+              ${r.lesson ? `<span style="font-size:0.78rem;color:#16a34a;display:block;">محاضرة: ${escapeHtml(r.lesson.title)}</span>` : ''}
+            </td>
+            <td>
+              <div style="display:flex;align-items:center;gap:8px;">
+                ${receiptThumb}
+                <span style="font-size:0.82rem;color:var(--ink-dim);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(r.notes || 'لا ملاحظات')}</span>
+              </div>
+            </td>
+            <td>${statusTag}</td>
+            <td style="font-size:0.82rem;color:var(--ink-dim);">${dateStr}</td>
+            <td style="text-align:center;">
+              <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;">
+                ${isPending ? `
+                  <button class="btn btn-primary btn-sm" onclick="adminOpenDirectUnlockModal('${r.id}', '${escapeHtml(r.studentName)}', '${escapeHtml(r.courseTitle || '')}', '${r.lessonId || ''}')" style="font-weight:700;background:#16a34a;border-color:#16a34a;padding:4px 10px;">
+                    🔓 فتح المحاضرة
+                  </button>
+                  <button class="btn btn-line btn-sm" onclick="adminOpenSendCodeModal('${r.id}', '${escapeHtml(r.studentName)}', '${escapeHtml(r.courseTitle || '')}', ${r.lesson?.price || 50})" style="color:#6366f1;border-color:rgba(99,102,241,0.4);font-weight:700;padding:4px 10px;">
+                    🎟️ إرسال كود
+                  </button>
+                  <button class="btn btn-line btn-sm" onclick="adminRejectOfflineRequest('${r.id}')" style="color:var(--err);border-color:rgba(239,68,68,0.4);padding:4px 8px;">
+                    ✕ رفض
+                  </button>
+                ` : `
+                  <button class="btn btn-line btn-sm" onclick="adminOpenSendCodeModal('${r.id}', '${escapeHtml(r.studentName)}', '${escapeHtml(r.courseTitle || '')}', 50)" style="font-size:0.78rem;padding:3px 8px;">
+                    إرسال كود جديد
+                  </button>
+                `}
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    } catch (err) {
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--err);padding:30px;">فشل تحميل طلبات الأوفلاين: ${escapeHtml(err.message)}</td></tr>`;
+    }
+  }
+
+  async function ensurePlatformLessonsLoaded() {
+    if (cachedPlatformLessons.length > 0) return cachedPlatformLessons;
+    try {
+      const teachers = await window.KhatwaAPI.admin.getTeachers();
+      const lessons = [];
+      teachers.forEach(t => {
+        (t.teacherProfile?.courses || []).forEach(c => {
+          (c.lessons || []).forEach(l => {
+            lessons.push({
+              id: l.id,
+              title: `${l.title} (${c.title} - ${t.teacherProfile?.displayName || t.username})`,
+              courseTitle: c.title,
+              teacherName: t.teacherProfile?.displayName || t.username,
+              price: l.price || 0,
+            });
+          });
+        });
+      });
+      cachedPlatformLessons = lessons;
+      return lessons;
+    } catch (_) {
+      return [];
+    }
+  }
+
+  async function adminOpenDirectUnlockModal(id, studentName, courseTitle, lessonId) {
+    document.getElementById('unlockModalRequestId').value = id;
+    document.getElementById('unlockModalStudentName').textContent = studentName || 'الطالب';
+    document.getElementById('unlockModalCourseTitle').textContent = courseTitle || 'سيشن أوفلاين';
+    
+    const select = document.getElementById('unlockModalLessonSelect');
+    select.innerHTML = '<option value="">جارٍ تحميل قائمة المحاضرات...</option>';
+    document.getElementById('adminOfflineUnlockModal').style.display = 'flex';
+
+    const lessons = await ensurePlatformLessonsLoaded();
+    if (lessons.length === 0) {
+      select.innerHTML = '<option value="">لا توجد محاضرات متاحة</option>';
+      return;
+    }
+
+    select.innerHTML = '<option value="">-- اختر المحاضرة المطلوب فتحها للمستخدم --</option>' + 
+      lessons.map(l => {
+        const isMatched = lessonId ? (l.id === lessonId) : (courseTitle && l.title.includes(courseTitle));
+        return `<option value="${l.id}" ${isMatched ? 'selected' : ''}>${escapeHtml(l.title)}</option>`;
+      }).join('');
+  }
+
+  function closeOfflineUnlockModal() {
+    document.getElementById('adminOfflineUnlockModal').style.display = 'none';
+  }
+
+  async function adminSubmitDirectUnlock() {
+    const id = document.getElementById('unlockModalRequestId').value;
+    const lessonId = document.getElementById('unlockModalLessonSelect').value;
+    if (!lessonId) {
+      alert('يرجى اختيار المحاضرة أولاً');
+      return;
+    }
+
+    const btn = document.getElementById('confirmUnlockLessonBtn');
+    btn.disabled = true;
+    btn.textContent = 'جارٍ التفعيل...';
+
+    try {
+      await window.KhatwaAPI.admin.approveOfflineRequestUnlock(id, lessonId);
+      alert('🎉 تم تفعيل واشتراك المحاضرة لحساب الطالب بنجاح!');
+      closeOfflineUnlockModal();
+      await loadAdminOfflineRequests();
+    } catch (err) {
+      alert(err.message || 'فشل فتح المحاضرة');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '🔓 تأكيد وفتح المحاضرة للطالب الآن';
+    }
+  }
+
+  function generateNewOfflineCode() {
+    const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+    let p1 = '';
+    let p2 = '';
+    for (let i = 0; i < 4; i++) {
+      p1 += chars.charAt(Math.floor(Math.random() * chars.length));
+      p2 += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    const code = `OFF-${p1}-${p2}`;
+    document.getElementById('sendCodeModalInput').value = code;
+    return code;
+  }
+
+  function adminOpenSendCodeModal(id, studentName, courseTitle, defaultPrice) {
+    document.getElementById('sendCodeModalRequestId').value = id;
+    document.getElementById('sendCodeModalStudentName').textContent = studentName || 'الطالب';
+    document.getElementById('sendCodeModalCourseTitle').textContent = courseTitle || 'سيشن أوفلاين';
+    document.getElementById('sendCodeModalPoints').value = defaultPrice || 50;
+    generateNewOfflineCode();
+    document.getElementById('adminOfflineSendCodeModal').style.display = 'flex';
+  }
+
+  function closeOfflineSendCodeModal() {
+    document.getElementById('adminOfflineSendCodeModal').style.display = 'none';
+  }
+
+  async function adminSubmitSendCode() {
+    const id = document.getElementById('sendCodeModalRequestId').value;
+    const code = document.getElementById('sendCodeModalInput').value.trim();
+    const points = parseFloat(document.getElementById('sendCodeModalPoints').value) || 50;
+
+    if (!code) {
+      alert('يرجى إدخال أو توليد الكود');
+      return;
+    }
+
+    const btn = document.getElementById('confirmSendCodeBtn');
+    btn.disabled = true;
+    btn.textContent = 'جارٍ إرسال الكود...';
+
+    try {
+      await window.KhatwaAPI.admin.sendOfflineRequestCode(id, code, points);
+      alert(`🎉 تم إرسال كود التفعيل (${code}) للطالب بنجاح!`);
+      closeOfflineSendCodeModal();
+      await loadAdminOfflineRequests();
+    } catch (err) {
+      alert(err.message || 'فشل إرسال الكود');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '🎟️ إرسال الكود للطالب الآن';
+    }
+  }
+
+  async function adminRejectOfflineRequest(id) {
+    const reason = prompt('أدخل سبب رفض طلب السيشن الأوفلاين (ليظهر للطالب):', 'لم نجد اسم الطالب في كشوف الحضور للسنتر');
+    if (!reason) return;
+
+    try {
+      await window.KhatwaAPI.admin.rejectOfflineRequest(id, reason);
+      alert('تم رفض الطلب وإشعار الطالب.');
+      await loadAdminOfflineRequests();
+    } catch (err) {
+      alert(err.message || 'فشل رفض الطلب');
+    }
+  }
+
   // ─── Student Profile Requests (Approval Workflow) ─────────────────────────
   async function loadAdminProfileRequests() {
     const filter = document.getElementById('profileRequestStatusFilter')?.value || '';
@@ -3119,9 +3479,8 @@
         <div><b>رقم الهاتف:</b> <span dir="ltr" style="font-weight:600;">${phone}</span></div>
         <div><b>هاتف ولي الأمر:</b> <span dir="ltr" style="font-weight:600;">${pphone}</span></div>
         <div><b>وظيفة الأب:</b> <span style="font-weight:600;">${fatherJob}</span></div>
-        <div><b>رصيد المحفظة:</b> <b style="color:#10b981;">${wallet} ج.م</b></div>
-        <div><b>رصيد النقاط:</b> <b style="color:#d97706;">${points} نقطة</b></div>
-        <div style="grid-column: span 2;"><b>الكورسات المشترك بها:</b> <span style="font-weight:600;">${enrollmentsCount} كورس</span></div>
+        <div><b>رصيد المحفظة:</b> <b style="color:#10b981; font-size:1.05rem;">${wallet} ج.م</b></div>
+        <div><b>الكورسات المشترك بها:</b> <span style="font-weight:600;">${enrollmentsCount} كورس</span></div>
       </div>
 
       <div style="display:flex; gap:10px; align-items:center; margin-bottom:16px; padding:12px 14px; background:#fff1f2; border:1px solid #fecdd3; border-radius:14px; justify-content:space-between;">
@@ -3276,7 +3635,6 @@
       'رقم هاتف ولي الأمر',
       'وظيفة الأب',
       'رصيد المحفظة (EGP)',
-      'رصيد النقاط',
       'حالة الحساب',
       'تاريخ التسجيل'
     ];
@@ -3289,7 +3647,6 @@
       s.studentProfile?.parentInfo?.parentPhoneNumber || '',
       s.studentProfile?.parentInfo?.fatherJob || '',
       (s.walletBalance || 0).toFixed(2),
-      s.pointsBalance || 0,
       s.isActive !== false ? 'نشط' : 'معطل',
       s.createdAt ? new Date(s.createdAt).toLocaleDateString('ar-EG') : ''
     ]);

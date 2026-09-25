@@ -12,6 +12,7 @@
  */
 
 import { Router } from 'express';
+import crypto from 'crypto';
 import { requireAdmin } from '../middleware/requireAdmin';
 import * as AccessCodesController from '../modules/accessCodes/accessCodes.controller';
 import * as BrandingController from '../modules/branding/branding.controller';
@@ -723,29 +724,37 @@ router.patch(
       return;
     }
 
-    const pointsToCredit = req.body?.points
-      ? parseInt(req.body.points, 10)
-      : (pr.requestedPoints > 0 ? pr.requestedPoints : Math.max(1, Math.round(pr.amount || 0)));
+    const amountToCredit = req.body?.points
+      ? parseFloat(req.body.points)
+      : (pr.amount > 0 ? pr.amount : (pr.requestedPoints > 0 ? pr.requestedPoints : 0));
+
+    const userBefore = await prisma.user.findUnique({
+      where: { id: pr.userId },
+      select: { walletBalance: true },
+    });
+    const newBal = Math.round(((userBefore?.walletBalance || 0) + amountToCredit) * 100) / 100;
 
     await prisma.$transaction([
       prisma.user.update({
         where: { id: pr.userId },
-        data: { pointsBalance: { increment: pointsToCredit } },
+        data: { walletBalance: newBal },
       }),
-      prisma.pointsTransaction.create({
+      prisma.walletTransaction.create({
         data: {
           studentId: pr.userId,
-          type: 'CREDIT',
-          amount: pointsToCredit,
-          reason: `اعتماد طلب شحن نقاط (كود: ${pr.code || pr.id.slice(-6)})`,
           actorId: req.user!.sub,
+          type: 'CREDIT',
+          amount: amountToCredit,
+          balanceAfter: newBal,
+          reason: `اعتماد طلب شحن رصيد المحفظة (كود: ${pr.code || pr.id.slice(-6)})`,
         },
       }),
       prisma.pointRequest.update({
         where: { id: pr.id },
         data: {
           status: 'APPROVED',
-          requestedPoints: pointsToCredit,
+          amount: amountToCredit,
+          requestedPoints: Math.round(amountToCredit),
           processedById: req.user!.sub,
           processedAt: new Date(),
         },
@@ -754,7 +763,7 @@ router.patch(
         data: {
           userId: pr.userId,
           title: 'تمت الموافقة على طلب الشحن 🎉',
-          message: `تم اعتماد إيصال التحويل وشحن ${pointsToCredit} نقطة إلى رصيدك بنجاح!`,
+          message: `تم اعتماد إيصال التحويل وشحن ${amountToCredit} ج.م إلى محفظتك بنجاح!`,
           type: 'SUCCESS',
         },
       }),
@@ -767,8 +776,13 @@ router.patch(
 
     res.status(200).json({
       success: true,
-      message: `تم شحن ${pointsToCredit} نقطة للطالب بنجاح`,
-      data: { pointsCredited: pointsToCredit, user: updatedUser },
+      message: `تم شحن ${amountToCredit} ج.م للطالب بنجاح`,
+      data: {
+        id: updatedUser?.id,
+        username: updatedUser?.username,
+        walletBalance: updatedUser?.walletBalance,
+        creditedAmount: amountToCredit,
+      },
     });
   })
 );
@@ -1279,6 +1293,270 @@ router.patch(
       success: true,
       message: 'تم رفض طلب التعديل بنجاح',
     });
+  })
+);
+
+// ─── Offline Session Requests (Center to Online Admin Controls) ──────────────
+
+router.get(
+  '/offline-requests',
+  asyncHandler(async (req, res) => {
+    const { status, search } = req.query as { status?: string; search?: string };
+    const where: any = {};
+    if (status && status !== 'ALL') {
+      where.status = status;
+    }
+    if (search && search.trim()) {
+      const q = search.trim();
+      where.OR = [
+        { studentName: { contains: q, mode: 'insensitive' } },
+        { phoneNumber: { contains: q, mode: 'insensitive' } },
+        { centerLocation: { contains: q, mode: 'insensitive' } },
+        { teacherName: { contains: q, mode: 'insensitive' } },
+        { student: { username: { contains: q, mode: 'insensitive' } } },
+      ];
+    }
+
+    const requests = await prisma.offlineSessionRequest.findMany({
+      where,
+      include: {
+        student: {
+          select: {
+            id: true,
+            username: true,
+            walletBalance: true,
+            studentProfile: {
+              select: {
+                studentPhoneNumber: true,
+                academicStage: true,
+              },
+            },
+          },
+        },
+        lesson: {
+          select: {
+            id: true,
+            title: true,
+            course: { select: { id: true, title: true } },
+            teacherProfile: { select: { displayName: true } },
+          },
+        },
+        processedBy: {
+          select: { id: true, username: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 200,
+    });
+
+    res.status(200).json({ success: true, data: requests });
+  })
+);
+
+router.patch(
+  '/offline-requests/:id/approve-unlock',
+  asyncHandler(async (req, res) => {
+    const adminId = req.user!.sub;
+    const { id } = req.params;
+    const { lessonId: overrideLessonId } = req.body || {};
+
+    const reqRecord = await prisma.offlineSessionRequest.findUnique({
+      where: { id: id as string },
+      include: { student: true, lesson: true },
+    });
+
+    if (!reqRecord) {
+      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'الطلب غير موجود' } });
+      return;
+    }
+
+    const targetLessonId = overrideLessonId || reqRecord.lessonId;
+    if (!targetLessonId) {
+      res.status(400).json({
+        success: false,
+        error: { code: 'MISSING_LESSON', message: 'يرجى تحديد المحاضرة المراد فتحها للطالب' },
+      });
+      return;
+    }
+
+    const lesson = await prisma.lesson.findUnique({
+      where: { id: targetLessonId },
+      include: { teacherProfile: true },
+    });
+
+    if (!lesson) {
+      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'المحاضرة المحددة غير موجودة' } });
+      return;
+    }
+
+    // Direct unlock: Upsert active LessonSubscription and UnlockedLesson
+    await prisma.$transaction(async (tx: any) => {
+      await tx.lessonSubscription.upsert({
+        where: {
+          studentId_lessonId: {
+            studentId: reqRecord.studentId,
+            lessonId: targetLessonId,
+          },
+        },
+        update: {
+          status: 'ACTIVE',
+          paymentMethod: 'ADMIN_OFFLINE_GRANT',
+          pricePaid: 0,
+        },
+        create: {
+          studentId: reqRecord.studentId,
+          lessonId: targetLessonId,
+          courseId: lesson.courseId,
+          teacherProfileId: lesson.teacherProfileId,
+          academicStage: lesson.academicStage,
+          status: 'ACTIVE',
+          paymentMethod: 'ADMIN_OFFLINE_GRANT',
+          pricePaid: 0,
+        },
+      });
+
+      await tx.unlockedLesson.upsert({
+        where: {
+          studentId_lessonId: {
+            studentId: reqRecord.studentId,
+            lessonId: targetLessonId,
+          },
+        },
+        update: {},
+        create: {
+          studentId: reqRecord.studentId,
+          lessonId: targetLessonId,
+        },
+      });
+
+      await tx.offlineSessionRequest.update({
+        where: { id: reqRecord.id },
+        data: {
+          status: 'APPROVED',
+          actionTaken: 'DIRECT_UNLOCK',
+          lessonId: targetLessonId,
+          processedById: adminId,
+          processedAt: new Date(),
+        },
+      });
+
+      await tx.notification.create({
+        data: {
+          userId: reqRecord.studentId,
+          title: '🔓 تم تفعيل وفتح المحاضرة بنجاح!',
+          message: `تم قبول طلب حضورك الأوفلاين (${reqRecord.centerLocation}) وتم فتح محاضرة "${lesson.title}" لك على المنصة مباشرة.`,
+          type: 'SUCCESS',
+        },
+      });
+    });
+
+    res.status(200).json({ success: true, message: 'تم فتح المحاضرة وتفعيل الاشتراك للطالب بنجاح' });
+  })
+);
+
+router.patch(
+  '/offline-requests/:id/send-code',
+  asyncHandler(async (req, res) => {
+    const adminId = req.user!.sub;
+    const { id } = req.params;
+    const { code: customCode, points } = req.body || {};
+
+    const reqRecord = await prisma.offlineSessionRequest.findUnique({
+      where: { id: id as string },
+      include: { student: true, lesson: true },
+    });
+
+    if (!reqRecord) {
+      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'الطلب غير موجود' } });
+      return;
+    }
+
+    // Generate or use custom code
+    let plainCode = (customCode || '').trim().toUpperCase();
+    if (!plainCode) {
+      const rnd = Math.random().toString(36).substring(2, 6).toUpperCase();
+      const rnd2 = Math.random().toString(36).substring(2, 6).toUpperCase();
+      plainCode = `OFF-${rnd}-${rnd2}`;
+    }
+
+    const codeHash = crypto.createHash('sha256').update(plainCode).digest('hex');
+
+    // Create AccessCode record so it can also be redeemed via platform redeem codes
+    const codePoints = Number(points) > 0 ? Number(points) : (reqRecord.lesson?.price || 50);
+
+    await prisma.$transaction(async (tx: any) => {
+      // Create active access code
+      await tx.accessCode.create({
+        data: {
+          code: plainCode,
+          codeHash,
+          points: codePoints,
+          status: 'ACTIVE',
+          createdById: adminId,
+        },
+      });
+
+      await tx.offlineSessionRequest.update({
+        where: { id: reqRecord.id },
+        data: {
+          status: 'APPROVED',
+          actionTaken: 'CODE_SENT',
+          accessCode: plainCode,
+          processedById: adminId,
+          processedAt: new Date(),
+        },
+      });
+
+      await tx.notification.create({
+        data: {
+          userId: reqRecord.studentId,
+          title: '🎟️ كود تفعيل المحاضرات الأوفلاين',
+          message: `تم قبول طلبك الأوفلاين! كود التفعيل الخاص بك هو: ${plainCode} (يمكنك استخدامه لتفعيل المحاضرة أو شحن رصيدك).`,
+          type: 'SUCCESS',
+        },
+      });
+    });
+
+    res.status(200).json({ success: true, accessCode: plainCode, message: 'تم إنشاء وإرسال كود التفعيل للطالب بنجاح' });
+  })
+);
+
+router.patch(
+  '/offline-requests/:id/reject',
+  asyncHandler(async (req, res) => {
+    const adminId = req.user!.sub;
+    const { id } = req.params;
+    const { reason } = req.body || {};
+
+    const reqRecord = await prisma.offlineSessionRequest.findUnique({
+      where: { id: id as string },
+    });
+
+    if (!reqRecord) {
+      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'الطلب غير موجود' } });
+      return;
+    }
+
+    await prisma.offlineSessionRequest.update({
+      where: { id: reqRecord.id },
+      data: {
+        status: 'REJECTED',
+        rejectionReason: reason ? String(reason).trim() : 'لم يتم استيفاء شروط الحضور الأوفلاين',
+        processedById: adminId,
+        processedAt: new Date(),
+      },
+    });
+
+    await prisma.notification.create({
+      data: {
+        userId: reqRecord.studentId,
+        title: '❌ بخصوص طلب السيشن الأوفلاين',
+        message: `تم رفض طلب السيشن الأوفلاين (${reqRecord.centerLocation}): ${reason || 'يرجى مراجعة إدارة السنتر للتأكد من بيانات الحضور'}.`,
+        type: 'WARNING',
+      },
+    });
+
+    res.status(200).json({ success: true, message: 'تم رفض الطلب وإشعار الطالب' });
   })
 );
 

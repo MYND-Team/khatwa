@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>طلب حضور سيشن أوفلاين أونلاين | خطوة</title>
+<link rel="icon" type="image/png" href="logo/logo-khatwa.png">
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .upload-dropzone {
+    border: 2px dashed var(--line);
+    border-radius: 16px;
+    padding: 24px 20px;
+    text-align: center;
+    background: var(--bg-raised);
+    cursor: pointer;
+    transition: all .2s ease;
+  }
+  .upload-dropzone:hover {
+    border-color: var(--primary);
+    background: rgba(184, 142, 79, 0.05);
+  }
+  .preview-wrap {
+    margin-top: 12px;
+    display: none;
+    background: var(--bg-card);
+    border: 1px solid var(--line-soft);
+    border-radius: 12px;
+    padding: 10px 14px;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .preview-thumb {
+    width: 48px;
+    height: 48px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid var(--line-soft);
+  }
+  .info-box {
+    background: linear-gradient(135deg, rgba(184, 142, 79, 0.1), rgba(140, 101, 39, 0.05));
+    border: 1px solid rgba(184, 142, 79, 0.3);
+    border-radius: 16px;
+    padding: 18px 20px;
+    margin-bottom: 24px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="container nav-inner">
+    <a href="index.html" class="brand"><img src="logo/logo-khatwa.png" alt="خطوة" class="brand-logo"><span class="brand-text">خطوة</span></a>
+    <ul class="nav-links">
+      <li><a href="dashboard.html">لوحة التحكم</a></li>
+      <li><a href="courses.html">الكورسات</a></li>
+      <li><a href="points.html">المحفظة والرصيد</a></li>
+    </ul>
+    <div class="nav-cta" style="display:flex;align-items:center;gap:10px;">
+      <button class="lang-switcher-btn" onclick="window.KhatwaI18n.toggleLanguage()">🌐 English</button>
+      <a href="profile.html" class="user-line" id="navUserLine">
+        <span class="avatar" id="navAvatar">ط</span>
+        <span>
+          <span class="name" id="navName">الطالب</span>
+          <span class="role" id="navRole">طالب</span>
+        </span>
+      </a>
+    </div>
+  </div>
+</nav>
+
+<div class="container" style="padding-top:36px;padding-bottom:60px;max-width:760px;">
+
+  <div class="page-head" style="margin-bottom:24px;">
+    <div>
+      <h1>طلب حضور سيشن أوفلاين أونلاين 🏢</h1>
+      <p class="page-sub" style="margin:4px 0 0;">حضرت سيشن في السنتر أو القاعة وعايز تعيدها أو تحضرها أونلاين؟ املأ البيانات وسيتم تفعيل المحاضرة لك فوراً.</p>
+    </div>
+    <a href="dashboard.html" class="btn btn-line btn-sm">العودة للرئيسية</a>
+  </div>
+
+  <div class="info-box">
+    <span style="font-size:1.8rem;">💡</span>
+    <div>
+      <b style="color:var(--primary);display:block;margin-bottom:4px;font-size:1rem;">كيف يعمل هذا النظام؟</b>
+      <p style="margin:0;font-size:0.9rem;color:var(--ink-dim);line-height:1.6;">
+        بعد إرسال طلبك، تقوم الإدارة بمطابقة بيانات حضورك في السنتر، وإما أن يتم <b>فتح المحاضرة مباشرة لحسابك</b> أو <b>إرسال كود تفعيل خاص</b> يظهر لك في الجدول أدناه وفي إشعاراتك.
+      </p>
+    </div>
+  </div>
+
+  <!-- Offline Session Request Form Card -->
+  <div class="card" style="padding:28px;border-radius:20px;margin-bottom:32px;box-shadow:0 10px 30px rgba(0,0,0,0.06);">
+    <form id="offlineRequestForm" onsubmit="submitOfflineRequest(event)">
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px;">
+        <!-- Full Name -->
+        <div class="field">
+          <label for="reqStudentName" style="font-weight:700;font-size:0.92rem;margin-bottom:6px;display:block;">الاسم بالكامل (Full Name) *</label>
+          <input type="text" id="reqStudentName" class="form-control" placeholder="اسمك ثلاثي أو رباعي" required>
+        </div>
+
+        <!-- Academic Stage -->
+        <div class="field">
+          <label for="reqAcademicStage" style="font-weight:700;font-size:0.92rem;margin-bottom:6px;display:block;">الصف الدراسي (Grade) *</label>
+          <select id="reqAcademicStage" class="form-control" required>
+            <option value="SECONDARY_1">الصف الأول الثانوي</option>
+            <option value="SECONDARY_2">الصف الثاني الثانوي</option>
+            <option value="SECONDARY_3">الصف الثالث الثانوي</option>
+            <option value="PREPARATORY">المرحلة الإعدادية</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px;">
+        <!-- Phone Number -->
+        <div class="field">
+          <label for="reqPhoneNumber" style="font-weight:700;font-size:0.92rem;margin-bottom:6px;display:block;">رقم هاتف الطالب (Phone) *</label>
+          <input type="tel" id="reqPhoneNumber" class="form-control" placeholder="01xxxxxxxxx" required style="direction:ltr;text-align:right;">
+        </div>
+
+        <!-- Center Location -->
+        <div class="field">
+          <label for="reqCenterLocation" style="font-weight:700;font-size:0.92rem;margin-bottom:6px;display:block;">مكان السيشن / السنتر (Center / Hall) *</label>
+          <input type="text" id="reqCenterLocation" class="form-control" placeholder="مثال: سنتر الأهرام - قاعة 2" required>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px;">
+        <!-- Teacher Name -->
+        <div class="field">
+          <label for="reqTeacherName" style="font-weight:700;font-size:0.92rem;margin-bottom:6px;display:block;">اسم المدرس (Teacher Name) *</label>
+          <input type="text" id="reqTeacherName" class="form-control" placeholder="مثال: مستر أحمد محمد" required>
+        </div>
+
+        <!-- Target Course/Lesson -->
+        <div class="field">
+          <label for="reqCourseTitle" style="font-weight:700;font-size:0.92rem;margin-bottom:6px;display:block;">المحاضرة أو الحصة المطلوبة *</label>
+          <input type="text" id="reqCourseTitle" class="form-control" placeholder="مثال: محاضرة الباب الثاني - الحركة الدائرية" required>
+        </div>
+      </div>
+
+      <!-- Notes -->
+      <div class="field" style="margin-bottom:18px;">
+        <label for="reqNotes" style="font-weight:700;font-size:0.92rem;margin-bottom:6px;display:block;">تفاصيل إضافية / ميعاد المجموعة (Notes)</label>
+        <textarea id="reqNotes" class="form-control" rows="2" placeholder="ميعاد الحصة الأوفلاين (مثال: الأحد الساعة 4 عصراً) أو رقم المقعد"></textarea>
+      </div>
+
+      <!-- Optional Receipt / Ticket -->
+      <div class="field" style="margin-bottom:24px;">
+        <label style="font-weight:700;font-size:0.92rem;margin-bottom:6px;display:block;">صورة إيصال الحضور أو كارنيه السنتر (اختياري لتسريع القبول)</label>
+        <div class="upload-dropzone" id="ticketDropzone" onclick="document.getElementById('ticketFile').click()">
+          <div id="ticketDropzonePrompt">
+            <div style="font-size:2rem;margin-bottom:4px;">🎫</div>
+            <p style="margin:0;font-weight:600;font-size:0.92rem;color:var(--ink);">اضغط لاختيار صورة الوصل أو الكارنيه</p>
+            <span style="font-size:0.78rem;color:var(--ink-dim);display:block;margin-top:2px;">JPG, PNG, WebP (اختياري)</span>
+          </div>
+          <input type="file" id="ticketFile" accept="image/*" style="display:none;" onchange="handleTicketFile(this)">
+        </div>
+
+        <div class="preview-wrap" id="ticketPreviewWrap">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <img id="ticketPreviewImg" class="preview-thumb" src="" alt="معاينة">
+            <div>
+              <b id="ticketFileName" style="font-size:0.85rem;color:var(--ink);display:block;">ticket.jpg</b>
+              <span id="ticketFileSize" style="font-size:0.75rem;color:var(--ink-dim);">—</span>
+            </div>
+          </div>
+          <button type="button" class="btn btn-text btn-sm" style="color:var(--err);" onclick="clearSelectedTicket()">✕ إزالة</button>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block" id="submitOfflineBtn" style="padding:14px;font-size:1.05rem;font-weight:700;">
+        📤 إرسال طلب السيشن الأوفلاين للإدارة
+      </button>
+
+      <div id="reqFeedback" style="margin-top:14px;display:none;"></div>
+    </form>
+  </div>
+
+  <!-- Previous Offline Requests -->
+  <div class="card" style="padding:24px;border-radius:20px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <h3 style="margin:0;font-size:1.15rem;">سجل طلباتي لحضور سيشنات الأوفلاين</h3>
+      <button class="btn btn-sm btn-line" onclick="loadMyOfflineRequests()">🔄 تحديث</button>
+    </div>
+
+    <div id="myRequestsContainer">
+      <div style="text-align:center;padding:30px;color:var(--ink-dim);">جارٍ تحميل طلباتك...</div>
+    </div>
+  </div>
+
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/main.js"></script>
+<script>
+  let selectedTicketBase64 = null;
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    const user = window.KhatwaAPI.getUser();
+    if (!user) {
+      window.location.href = 'login.html';
+      return;
+    }
+
+    // Pre-fill student info
+    document.getElementById('reqStudentName').value = user.name || user.displayName || user.username || '';
+    if (user.studentPhoneNumber) {
+      document.getElementById('reqPhoneNumber').value = user.studentPhoneNumber;
+    }
+
+    window.KhatwaAPI.syncNav();
+    await loadMyOfflineRequests();
+  });
+
+  function handleTicketFile(input) {
+    if (!input.files || !input.files[0]) return;
+    const file = input.files[0];
+    if (file.size > 8 * 1024 * 1024) {
+      alert('حجم الصورة كبير جداً، الحد الأقصى 8 ميجابايت');
+      input.value = '';
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      selectedTicketBase64 = e.target.result;
+      document.getElementById('ticketPreviewImg').src = selectedTicketBase64;
+      document.getElementById('ticketFileName').textContent = file.name;
+      document.getElementById('ticketFileSize').textContent = (file.size / 1024).toFixed(1) + ' KB';
+      document.getElementById('ticketDropzonePrompt').style.display = 'none';
+      document.getElementById('ticketPreviewWrap').style.display = 'flex';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function clearSelectedTicket() {
+    selectedTicketBase64 = null;
+    document.getElementById('ticketFile').value = '';
+    document.getElementById('ticketPreviewWrap').style.display = 'none';
+    document.getElementById('ticketDropzonePrompt').style.display = 'block';
+  }
+
+  async function submitOfflineRequest(e) {
+    e.preventDefault();
+    const btn = document.getElementById('submitOfflineBtn');
+    const fb = document.getElementById('reqFeedback');
+
+    const studentName = document.getElementById('reqStudentName').value.trim();
+    const academicStage = document.getElementById('reqAcademicStage').value;
+    const phoneNumber = document.getElementById('reqPhoneNumber').value.trim();
+    const centerLocation = document.getElementById('reqCenterLocation').value.trim();
+    const teacherName = document.getElementById('reqTeacherName').value.trim();
+    const courseTitle = document.getElementById('reqCourseTitle').value.trim();
+    const notes = document.getElementById('reqNotes').value.trim();
+
+    if (!studentName || !phoneNumber || !centerLocation || !teacherName) {
+      alert('يرجى ملء جميع الحقول الإلزامية');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'جارٍ إرسال الطلب...';
+    fb.style.display = 'none';
+
+    try {
+      await window.KhatwaAPI.student.createOfflineRequest({
+        studentName,
+        academicStage,
+        phoneNumber,
+        centerLocation,
+        teacherName,
+        courseTitle,
+        notes,
+        receiptUrl: selectedTicketBase64
+      });
+
+      fb.innerHTML = `
+        <div style="background:rgba(34,197,94,0.1);border:1px solid #22c55e;color:#16a34a;padding:14px;border-radius:12px;font-weight:700;text-align:center;">
+          ✓ تم إرسال طلبك بنجاح! سيتم مراجعته وتفعيل المحاضرة لك في أقرب وقت.
+        </div>
+      `;
+      fb.style.display = 'block';
+
+      // Reset specific inputs
+      document.getElementById('reqCourseTitle').value = '';
+      document.getElementById('reqNotes').value = '';
+      clearSelectedTicket();
+
+      await loadMyOfflineRequests();
+    } catch (err) {
+      fb.innerHTML = `
+        <div style="background:rgba(239,68,68,0.1);border:1px solid #ef4444;color:#dc2626;padding:14px;border-radius:12px;font-weight:700;text-align:center;">
+          ✕ فشل إرسال الطلب: ${escapeHtml(err.message || 'حدث خطأ')}
+        </div>
+      `;
+      fb.style.display = 'block';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '📤 إرسال طلب السيشن الأوفلاين للإدارة';
+    }
+  }
+
+  async function loadMyOfflineRequests() {
+    const container = document.getElementById('myRequestsContainer');
+    try {
+      const requests = await window.KhatwaAPI.student.getOfflineRequests();
+      if (!requests || requests.length === 0) {
+        container.innerHTML = `
+          <div style="text-align:center;padding:32px 16px;color:var(--ink-dim);">
+            <div style="font-size:2rem;margin-bottom:8px;">🏢</div>
+            <p style="margin:0;font-weight:600;">لم تقدم أي طلبات سيشن أوفلاين بعد</p>
+            <span style="font-size:0.82rem;color:var(--ink-faint);">عند تقديمك طلباً، ستظهر تفاصيل وحالة الموافقة والأكواد هنا.</span>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = `
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          ${requests.map(r => {
+            const dateStr = r.createdAt ? new Date(r.createdAt).toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
+            let statusBadge = '';
+            let actionBox = '';
+
+            if (r.status === 'PENDING') {
+              statusBadge = '<span class="tag tag-warn" style="font-weight:700;">⏳ قيد المراجعة</span>';
+            } else if (r.status === 'APPROVED') {
+              if (r.actionTaken === 'DIRECT_UNLOCK') {
+                statusBadge = '<span class="tag tag-ok" style="font-weight:700;">🔓 تم فتح المحاضرة مباشرة ✓</span>';
+                if (r.lessonId) {
+                  actionBox = `
+                    <div style="margin-top:10px;">
+                      <a href="lesson.html?lessonId=${r.lessonId}" class="btn btn-primary btn-sm" style="font-weight:700;">
+                        ▶ مشاهدة المحاضرة الآن
+                      </a>
+                    </div>
+                  `;
+                }
+              } else if (r.actionTaken === 'CODE_SENT' || r.accessCode) {
+                statusBadge = '<span class="tag tag-ok" style="font-weight:700;background:rgba(99,102,241,0.15);color:#4f46e5;">🎟️ تم إرسال كود التفعيل</span>';
+                actionBox = `
+                  <div style="margin-top:10px;background:rgba(99,102,241,0.08);border:1px dashed #6366f1;padding:12px;border-radius:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+                    <div>
+                      <span style="font-size:0.82rem;color:var(--ink-dim);display:block;">كود التفعيل الخاص بك:</span>
+                      <code style="font-size:1.15rem;font-weight:700;color:#4f46e5;letter-spacing:1px;">${escapeHtml(r.accessCode)}</code>
+                    </div>
+                    <div style="display:flex;gap:6px;">
+                      <button class="btn btn-sm btn-line" onclick="copyCode('${r.accessCode}')">📋 نسخ الكود</button>
+                      <button class="btn btn-sm btn-primary" onclick="redeemThisCode('${r.accessCode}')">تفعيل الآن ⚡</button>
+                    </div>
+                  </div>
+                `;
+              } else {
+                statusBadge = '<span class="tag tag-ok">✓ تم القبول</span>';
+              }
+            } else if (r.status === 'REJECTED') {
+              statusBadge = '<span class="tag tag-err">❌ مرفوض</span>';
+              if (r.rejectionReason) {
+                actionBox = `
+                  <div style="margin-top:8px;font-size:0.85rem;color:var(--err);background:rgba(239,68,68,0.06);padding:8px 12px;border-radius:8px;">
+                    سبب الرفض: ${escapeHtml(r.rejectionReason)}
+                  </div>
+                `;
+              }
+            }
+
+            return `
+              <div style="background:var(--bg-raised);border:1px solid var(--line-soft);border-radius:14px;padding:16px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px;">
+                  <div>
+                    <b style="font-size:1rem;color:var(--ink);">${escapeHtml(r.courseTitle || r.lesson?.title || 'سيشن أوفلاين')}</b>
+                    <span style="font-size:0.82rem;color:var(--ink-dim);display:block;margin-top:2px;">
+                      المدرس: <b>${escapeHtml(r.teacherName)}</b> · السنتر: <b>${escapeHtml(r.centerLocation)}</b>
+                    </span>
+                  </div>
+                  <div>
+                    ${statusBadge}
+                  </div>
+                </div>
+
+                <div style="font-size:0.82rem;color:var(--ink-dim);margin-top:6px;">
+                  <span>تاريخ الطلب: ${dateStr}</span>
+                  ${r.notes ? ` · <span style="color:var(--ink);">ملاحظات: ${escapeHtml(r.notes)}</span>` : ''}
+                </div>
+
+                ${actionBox}
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    } catch (e) {
+      container.innerHTML = `<div style="text-align:center;padding:20px;color:var(--err);">فشل تحميل سجل الطلبات</div>`;
+    }
+  }
+
+  function copyCode(code) {
+    if (!code) return;
+    navigator.clipboard.writeText(code).then(() => {
+      alert('تم نسخ الكود بنجاح: ' + code);
+    }).catch(() => {
+      prompt('انسخ الكود التالي:', code);
+    });
+  }
+
+  async function redeemThisCode(code) {
+    if (!confirm(`هل تريد تفعيل الكود (${code}) الآن لحسابك؟`)) return;
+    try {
+      const res = await window.KhatwaAPI.student.redeemAccessCode(code);
+      alert('🎉 تم تفعيل الكود بنجاح! تم شحن رصيدك أو تفعيل المحاضرة.');
+      await loadMyOfflineRequests();
+    } catch (err) {
+      alert('فشل تفعيل الكود: ' + (err.message || 'الكود غير صالح أو تم استخدامه'));
+    }
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+</script>
+<script src="js/i18n.js"></script>
+</body>
+</html>

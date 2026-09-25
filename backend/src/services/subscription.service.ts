@@ -22,8 +22,8 @@ export async function purchaseLesson({
       },
     });
 
-    if (!lesson || !lesson.isPublished) {
-      throw NotFoundError('المحاضرة غير متاحة أو تم إلغاء نشرها');
+    if (!lesson || !lesson.isPublished || (lesson.scheduledPublishAt && lesson.scheduledPublishAt > new Date())) {
+      throw NotFoundError('المحاضرة غير متاحة حالياً');
     }
 
     // 2. Check Idempotency (Already subscribed?)
@@ -236,7 +236,16 @@ export async function getStudentSubscriptions(studentId: string, stage?: string)
 
   const [subscriptions, enrollments] = await Promise.all([
     prisma.lessonSubscription.findMany({
-      where: subWhere,
+      where: {
+        ...subWhere,
+        lesson: {
+          isPublished: true,
+          OR: [
+            { scheduledPublishAt: null },
+            { scheduledPublishAt: { lte: new Date() } },
+          ],
+        },
+      },
       include: {
         lesson: {
           select: {
@@ -289,7 +298,13 @@ export async function getStudentSubscriptions(studentId: string, stage?: string)
               },
             },
             lessons: {
-              where: { isPublished: true },
+              where: {
+                isPublished: true,
+                OR: [
+                  { scheduledPublishAt: null },
+                  { scheduledPublishAt: { lte: new Date() } },
+                ],
+              },
               orderBy: { orderIndex: 'asc' },
               select: {
                 id: true,

@@ -163,7 +163,8 @@ export async function submitAttempt(input: {
       selectedOption: g.selectedOption,
       textAnswer: g.textAnswer,
       isCorrect: isGraded ? g.isCorrect : null,
-      correctOption: passed ? (q?.correctOption || null) : null,
+      correctOption: q?.correctOption || null,
+      sampleAnswer: q?.sampleAnswer || null,
       equationLatex: q?.equationLatex || null,
     };
   });
@@ -181,12 +182,19 @@ export async function hasPassed(studentId: string, quizId: string): Promise<bool
   return attempt?.passed ?? false;
 }
 
-// ─── Get attempt result ───────────────────────────────────────────────────────
+// ─── Get attempt result with full review for student ─────────────────────────
 
-export async function getAttempt(studentId: string, quizId: string) {
-  const attempt = await prisma.quizAttempt.findUnique({
-    where: { studentId_quizId: { studentId, quizId } },
+export async function getAttempt(studentId: string, quizIdOrAttemptId: string) {
+  let attempt = await prisma.quizAttempt.findUnique({
+    where: { studentId_quizId: { studentId, quizId: quizIdOrAttemptId } },
     include: {
+      quiz: {
+        select: {
+          id: true,
+          title: true,
+          type: true,
+        },
+      },
       answers: {
         select: {
           id: true,
@@ -194,6 +202,8 @@ export async function getAttempt(studentId: string, quizId: string) {
           selectedOption: true,
           textAnswer: true,
           isCorrect: true,
+          pointsAwarded: true,
+          manualFeedback: true,
           question: {
             select: {
               questionText: true,
@@ -204,22 +214,57 @@ export async function getAttempt(studentId: string, quizId: string) {
               optionD: true,
               equationLatex: true,
               correctOption: true,
+              sampleAnswer: true,
+              rubric: true,
+              orderIndex: true,
             },
           },
         },
+        orderBy: { question: { orderIndex: 'asc' } },
       },
     },
   });
 
-  if (!attempt) return null;
-
-  // Restrict correctOption disclosure to attempts where passed is true
-  if (!attempt.passed) {
-    for (const ans of attempt.answers) {
-      if (ans.question && 'correctOption' in ans.question) {
-        delete (ans.question as any).correctOption;
-      }
-    }
+  if (!attempt) {
+    attempt = await prisma.quizAttempt.findFirst({
+      where: { id: quizIdOrAttemptId, studentId },
+      include: {
+        quiz: {
+          select: {
+            id: true,
+            title: true,
+            type: true,
+          },
+        },
+        answers: {
+          select: {
+            id: true,
+            questionId: true,
+            selectedOption: true,
+            textAnswer: true,
+            isCorrect: true,
+            pointsAwarded: true,
+            manualFeedback: true,
+            question: {
+              select: {
+                questionText: true,
+                questionType: true,
+                optionA: true,
+                optionB: true,
+                optionC: true,
+                optionD: true,
+                equationLatex: true,
+                correctOption: true,
+                sampleAnswer: true,
+                rubric: true,
+                orderIndex: true,
+              },
+            },
+          },
+          orderBy: { question: { orderIndex: 'asc' } },
+        },
+      },
+    });
   }
 
   return attempt;

@@ -110,6 +110,38 @@
     const quizId = getQueryParam('quizId');
 
     if (quizId) {
+      // Check if student already completed this quiz to show review
+      try {
+        const prevAttempt = await window.KhatwaAPI.student.getQuizAttempt(quizId);
+        if (prevAttempt && prevAttempt.answers && prevAttempt.answers.length > 0) {
+          const reviewItems = prevAttempt.answers.map(ans => ({
+            questionId: ans.questionId,
+            questionText: ans.question?.questionText || '',
+            equationLatex: ans.question?.equationLatex || null,
+            questionType: ans.question?.questionType || 'MCQ',
+            optionA: ans.question?.optionA,
+            optionB: ans.question?.optionB,
+            optionC: ans.question?.optionC,
+            optionD: ans.question?.optionD,
+            selectedOption: ans.selectedOption,
+            textAnswer: ans.textAnswer,
+            isCorrect: ans.isCorrect,
+            correctOption: ans.question?.correctOption || null,
+            sampleAnswer: ans.question?.sampleAnswer || null,
+          }));
+          const total = prevAttempt.totalQuestions || reviewItems.length;
+          const score = prevAttempt.score;
+          const passed = prevAttempt.passed;
+          document.getElementById('resultScoreText').textContent = `${score} / ${total}`;
+          document.getElementById('resultKicker').textContent = passed ? '✓ مبروك، اجتزت الامتحان بنجاح!' : 'تم تسليم الامتحان مسبقاً';
+          document.getElementById('resultMsg').textContent = `درجتك المسجلة هي ${score} من ${total}. تجد أدناه مراجعة كاملة لإجاباتك وحلول الأسئلة النموذجية.`;
+          renderExamReview(reviewItems);
+          document.getElementById('examActiveView').style.display = 'none';
+          document.getElementById('examDoneView').style.display = 'block';
+          return;
+        }
+      } catch (_) {}
+
       try {
         const quiz = await window.KhatwaAPI.student.getQuiz(quizId);
         if (quiz && quiz.questions && quiz.questions.length > 0) {

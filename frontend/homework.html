@@ -94,6 +94,38 @@
     const quizId = getQueryParam('quizId');
 
     if (quizId) {
+      // Check if student already completed this homework to show review
+      try {
+        const prevAttempt = await window.KhatwaAPI.student.getQuizAttempt(quizId);
+        if (prevAttempt && prevAttempt.answers && prevAttempt.answers.length > 0) {
+          const reviewItems = prevAttempt.answers.map(ans => ({
+            questionId: ans.questionId,
+            questionText: ans.question?.questionText || '',
+            equationLatex: ans.question?.equationLatex || null,
+            questionType: ans.question?.questionType || 'MCQ',
+            optionA: ans.question?.optionA,
+            optionB: ans.question?.optionB,
+            optionC: ans.question?.optionC,
+            optionD: ans.question?.optionD,
+            selectedOption: ans.selectedOption,
+            textAnswer: ans.textAnswer,
+            isCorrect: ans.isCorrect,
+            correctOption: ans.question?.correctOption || null,
+            sampleAnswer: ans.question?.sampleAnswer || null,
+          }));
+          const total = prevAttempt.totalQuestions || reviewItems.length;
+          const score = prevAttempt.score;
+          const passed = prevAttempt.passed;
+          document.getElementById('hwScoreText').textContent = `${score} / ${total}`;
+          document.getElementById('hwResultKicker').textContent = passed ? '✓ تم اجتياز الواجب بنجاح!' : 'تم تسليم الواجب مسبقاً';
+          document.getElementById('hwResultMsg').textContent = `حققت ${score} من إجمالي ${total} أسئلة. تجد أدناه مراجعة تفصيلية للإجابات الصائبة والخاطئة.`;
+          renderHwReview(reviewItems);
+          document.getElementById('hwActiveView').style.display = 'none';
+          document.getElementById('hwDoneView').style.display = 'block';
+          return;
+        }
+      } catch (_) {}
+
       try {
         const quiz = await window.KhatwaAPI.student.getQuiz(quizId);
         if (quiz && quiz.questions && quiz.questions.length > 0) {

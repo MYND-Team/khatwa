@@ -453,7 +453,16 @@ router.get(
           course: {
             include: {
               teacherProfile: { select: { displayName: true } },
-              lessons: { where: { isPublished: true }, select: { id: true, examQuizId: true, assignmentQuizId: true } },
+              lessons: {
+                where: {
+                  isPublished: true,
+                  OR: [
+                    { scheduledPublishAt: null },
+                    { scheduledPublishAt: { lte: new Date() } },
+                  ],
+                },
+                select: { id: true, examQuizId: true, assignmentQuizId: true },
+              },
             },
           },
         },
@@ -464,7 +473,16 @@ router.get(
           course: {
             include: {
               teacherProfile: { select: { displayName: true } },
-              lessons: { where: { isPublished: true }, select: { id: true, examQuizId: true, assignmentQuizId: true } },
+              lessons: {
+                where: {
+                  isPublished: true,
+                  OR: [
+                    { scheduledPublishAt: null },
+                    { scheduledPublishAt: { lte: new Date() } },
+                  ],
+                },
+                select: { id: true, examQuizId: true, assignmentQuizId: true },
+              },
             },
           },
         },
@@ -839,7 +857,13 @@ router.get(
           orderBy: { orderIndex: 'asc' },
           include: {
             lessons: {
-              where: { isPublished: true },
+              where: {
+                isPublished: true,
+                OR: [
+                  { scheduledPublishAt: null },
+                  { scheduledPublishAt: { lte: new Date() } },
+                ],
+              },
               orderBy: { orderIndex: 'asc' },
               select: {
                 id: true,
@@ -865,7 +889,14 @@ router.get(
           },
         },
         lessons: {
-          where: { isPublished: true, chapterId: null },
+          where: {
+            isPublished: true,
+            chapterId: null,
+            OR: [
+              { scheduledPublishAt: null },
+              { scheduledPublishAt: { lte: new Date() } },
+            ],
+          },
           orderBy: { orderIndex: 'asc' },
           select: {
             id: true,
@@ -1007,18 +1038,11 @@ router.get(
       hasAssignment = Boolean(hq && hq._count.questions > 0);
     }
 
-    // 0. Scheduled Gate: Lesson not yet available
+    // 0. Scheduled Gate: Lesson not yet available (hidden completely until publish time)
     if (lesson.scheduledPublishAt && lesson.scheduledPublishAt > new Date()) {
-      res.status(200).json({
-        success: true,
-        data: {
-          canAccess: false,
-          reason: 'SCHEDULED',
-          step: 'scheduled',
-          scheduledPublishAt: lesson.scheduledPublishAt,
-          hasAssignment,
-          hasExam,
-        },
+      res.status(404).json({
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'المحاضرة غير متاحة حالياً' },
       });
       return;
     }
@@ -1234,6 +1258,7 @@ router.post('/lessons/:id/homework/submit', LessonsController.submitHomework);
 router.get('/quizzes/:id', QuizController.getQuiz);
 router.post('/quizzes/:id/attempt', QuizController.submitAttempt);
 router.get('/quizzes/:id/attempt', QuizController.getAttempt);
+router.get('/attempts/:id', QuizController.getAttempt);
 
 // ─── Wallet (EGP) ─────────────────────────────────────────────────────────────
 
@@ -1342,6 +1367,86 @@ router.patch(
       data: { isRead: true },
     });
     res.status(200).json({ success: true });
+  })
+);
+
+// ─── Offline Session Requests (Center to Online) ───────────────────────────
+
+router.get(
+  '/offline-requests',
+  asyncHandler(async (req, res) => {
+    const studentId = req.user!.sub;
+    const requests = await prisma.offlineSessionRequest.findMany({
+      where: { studentId },
+      include: {
+        lesson: {
+          select: {
+            id: true,
+            title: true,
+            course: { select: { id: true, title: true } },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    res.status(200).json({ success: true, data: requests });
+  })
+);
+
+router.post(
+  '/offline-requests',
+  asyncHandler(async (req, res) => {
+    const studentId = req.user!.sub;
+    const {
+      studentName,
+      academicStage,
+      phoneNumber,
+      centerLocation,
+      teacherName,
+      lessonId,
+      courseTitle,
+      notes,
+      receiptUrl,
+    } = req.body;
+
+    if (!studentName || !phoneNumber || !centerLocation || !teacherName) {
+      res.status(400).json({
+        success: false,
+        error: { code: 'MISSING_FIELDS', message: 'يرجى ملء جميع الحقول المطلوبة (الاسم، الهاتف، السنتر/المكان، اسم المدرس)' },
+      });
+      return;
+    }
+
+    const request = await prisma.offlineSessionRequest.create({
+      data: {
+        studentId,
+        studentName: String(studentName).trim(),
+        academicStage: academicStage || 'SECONDARY_1',
+        phoneNumber: String(phoneNumber).trim(),
+        centerLocation: String(centerLocation).trim(),
+        teacherName: String(teacherName).trim(),
+        lessonId: lessonId || null,
+        courseTitle: courseTitle ? String(courseTitle).trim() : null,
+        notes: notes ? String(notes).trim() : null,
+        receiptUrl: receiptUrl || null,
+        status: 'PENDING',
+      },
+      include: {
+        lesson: { select: { id: true, title: true } },
+      },
+    });
+
+    // Create confirmation notification for student
+    await prisma.notification.create({
+      data: {
+        userId: studentId,
+        title: 'تم استلام طلب حضور السيشن الأوفلاين',
+        message: `تم استلام طلبك لحضور سيشن (${centerLocation} - ${teacherName}) بنجاح، جاري مراجعته من قِبل الإدارة.`,
+        type: 'INFO',
+      },
+    });
+
+    res.status(201).json({ success: true, data: request });
   })
 );
 

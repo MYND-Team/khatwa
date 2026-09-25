@@ -473,6 +473,35 @@
       async rejectProfileRequest(id, reason = '') {
         return request('/admin/profile-requests/' + id + '/reject', { method: 'PATCH', body: { reason } });
       },
+      async getOfflineRequests(status = '', search = '') {
+        const params = new URLSearchParams();
+        if (status && status !== 'ALL') params.set('status', status);
+        if (search) params.set('search', search);
+        const qs = params.toString() ? ('?' + params.toString()) : '';
+        const res = await request('/admin/offline-requests' + qs);
+        return res.data || [];
+      },
+      async approveOfflineRequestUnlock(id, lessonId) {
+        const res = await request('/admin/offline-requests/' + id + '/approve-unlock', {
+          method: 'PATCH',
+          body: lessonId ? { lessonId } : undefined,
+        });
+        return res;
+      },
+      async sendOfflineRequestCode(id, code, points) {
+        const res = await request('/admin/offline-requests/' + id + '/send-code', {
+          method: 'PATCH',
+          body: { code, points },
+        });
+        return res;
+      },
+      async rejectOfflineRequest(id, reason) {
+        const res = await request('/admin/offline-requests/' + id + '/reject', {
+          method: 'PATCH',
+          body: { reason },
+        });
+        return res;
+      },
     },
 
     // ─── Teacher Studio & Workspaces ─────────────────────────────────────────
@@ -759,6 +788,8 @@
         return res.data;
       },
       async getQuizAttempt(quizId) { const res = await request('/student/quizzes/' + quizId + '/attempt'); return res.data; },
+      async getOfflineRequests() { const res = await request('/student/offline-requests'); return res.data || []; },
+      async createOfflineRequest(data) { const res = await request('/student/offline-requests', { method: 'POST', body: data }); return res.data; },
       async getWallet() { const res = await request('/student/wallet'); return res.data || { walletBalance: 0, pointsBalance: 0, walletTransactions: [] }; },
       async requestPoints(formData) { const res = await request('/student/point-requests', { method: 'POST', body: formData }); return res.data; },
       async getPointRequests() { const res = await request('/student/point-requests'); return res.data || []; },

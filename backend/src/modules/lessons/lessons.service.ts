@@ -89,12 +89,9 @@ export async function getLessonContent(lessonId: string, studentId: string) {
   });
   if (!lesson || !lesson.isPublished) throw NotFoundError('Lesson');
 
-  // Scheduled Gate: Lesson not yet available
+  // Scheduled Gate: Lesson not yet available (hidden completely until publish time)
   if (lesson.scheduledPublishAt && lesson.scheduledPublishAt > new Date()) {
-    throw Object.assign(
-      new Error('المحاضرة مجدولة ولم يحن موعد نشرها بعد'),
-      { statusCode: 403, code: 'SCHEDULED', scheduledPublishAt: lesson.scheduledPublishAt }
-    );
+    throw NotFoundError('Lesson');
   }
 
   const isFree = lesson.price === 0 && lesson.pointCost === 0;
