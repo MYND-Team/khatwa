@@ -56,7 +56,6 @@
       <li><a href="courses.html">تصفح كطالب</a></li>
     </ul>
     <div class="nav-cta" style="display:flex;align-items:center;gap:12px;">
-      <button class="lang-switcher-btn" onclick="window.KhatwaI18n.toggleLanguage()">🌐 English</button>
       <div class="user-line" id="navUserLine" style="cursor:default;">
         <span class="avatar" id="navAvatar">م</span>
         <span>
@@ -871,7 +870,7 @@
         </div>
 
         <div class="form-group" style="margin-bottom:14px;">
-          <label class="form-label">ملاحظات وتعليق المدرس / الأسيستانت للطالب:</label>
+          <label class="form-label">ملاحظات وتعليق المدرس للطالب:</label>
           <textarea id="regradeTeacherFeedbackInput" class="form-control" rows="2" placeholder="اكتب ملاحظاتك للطالب على إجابته أو التوجيهات المطلوبة..."></textarea>
         </div>
 
@@ -2874,7 +2873,7 @@
           <div style="background:var(--bg-raised);border:1px solid var(--line-soft);border-radius:14px;padding:16px;">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
               <b>س ${idx + 1}: ${escapeHtml(q.questionText)}</b>
-              <span class="tag" style="font-size:0.75rem;">${qType}</span>
+              <span class="tag" style="font-size:0.75rem;">${qType === 'MULTIPLE_CHOICE' ? 'اختيار من متعدد' : 'سؤال مقالي'}</span>
             </div>
             ${q.equationLatex ? `<div style="margin:4px 0;">$$${escapeHtml(q.equationLatex)}$$</div>` : ''}
             ${ansBody}

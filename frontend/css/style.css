@@ -1273,27 +1273,9 @@ table.plain tr:hover td{background:var(--primary-faint);}
   box-shadow: 0 0 0 3px rgba(11, 37, 69, 0.1);
 }
 
-/* Language Switcher */
+/* Language Switcher - Disabled for Pure Arabic Platform */
 .lang-switcher-btn {
-  background: var(--header-btn-bg);
-  border: 1.5px solid var(--header-btn-border);
-  color: var(--header-btn-text);
-  padding: 7px 16px;
-  border-radius: 20px;
-  font-size: 0.85rem;
-  font-weight: 700;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  transition: all 0.2s ease;
-}
-
-.lang-switcher-btn:hover {
-  background: var(--header-btn-hover-bg);
-  border-color: var(--primary);
-  color: var(--primary);
-  transform: translateY(-1px);
+  display: none !important;
 }
 
 /* ─── Universal Modal System ─────────────────────────────────── */
