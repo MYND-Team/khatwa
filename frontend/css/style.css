@@ -1273,9 +1273,28 @@ table.plain tr:hover td{background:var(--primary-faint);}
   box-shadow: 0 0 0 3px rgba(11, 37, 69, 0.1);
 }
 
-/* Language Switcher - Disabled for Pure Arabic Platform */
+/* Language Switcher */
 .lang-switcher-btn {
-  display: none !important;
+  background: var(--header-btn-bg, rgba(255,255,255,0.08));
+  border: 1.5px solid var(--header-btn-border, var(--line));
+  color: var(--header-btn-text, var(--ink));
+  padding: 7px 16px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.lang-switcher-btn:hover {
+  background: var(--header-btn-hover-bg, var(--primary-faint));
+  border-color: var(--primary);
+  color: var(--primary);
+  transform: translateY(-1px);
 }
 
 /* ─── Universal Modal System ─────────────────────────────────── */

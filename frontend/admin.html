@@ -544,6 +544,7 @@
       <li><a href="admin.html" class="active">📊 لوحة الإدارة</a></li>
     </ul>
     <div class="nav-cta" style="display:flex;align-items:center;gap:12px;">
+      <button class="lang-switcher-btn" onclick="window.KhatwaI18n.toggleLanguage()">🌐 English</button>
       <div class="user-line" id="navUserLine" style="cursor:default;">
         <span class="avatar" id="navAvatar">👑</span>
         <span>
@@ -1821,9 +1822,12 @@
         const curVal = teacherSelect.value;
         teacherSelect.innerHTML = '<option value="">جميع المدرسين (عرض الكل)</option>';
         teachers.forEach(t => {
+          const profile = t.teacherProfile || {};
+          const name = profile.displayName || t.displayName || t.username || t.name || 'مدرس';
+          const subject = profile.subject || t.subject || '';
           const opt = document.createElement('option');
           opt.value = t.id || t.userId;
-          opt.textContent = `${t.displayName || t.name || 'مدرس'} (${t.subject || 'عام'})`;
+          opt.textContent = subject ? `${name} (${subject})` : name;
           teacherSelect.appendChild(opt);
         });
         if (curVal) teacherSelect.value = curVal;
