@@ -330,23 +330,47 @@
         <label class="form-label">التخصص / المادة الدراسية</label>
         <input type="text" class="form-control" id="profileSubjectInput" placeholder="مثال: اللغة العربية، الرياضيات...">
       </div>
-      <div class="form-group" style="margin-bottom:12px;">
-        <label class="form-label">رابط أو مسار الصورة الشخصية (Avatar URL)</label>
-        <input type="text" class="form-control" id="profileAvatarUrlInput" placeholder="https://... أو مسار الصورة">
+      <div class="form-group" style="margin-bottom:14px;">
+        <label class="form-label" style="font-weight:600;margin-bottom:6px;display:block;">صورة البروفيل الشخصية (رفع ملف)</label>
+        <div style="display:flex;gap:12px;align-items:center;">
+          <div id="teacherProfileAvatarPreview" style="width:46px;height:46px;border-radius:50%;background:var(--primary-faint);border:2px solid var(--primary);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;font-size:1.3rem;">👨‍🏫</div>
+          <div style="flex:1;">
+            <input type="file" id="teacherProfileAvatarFileInput" accept="image/*" class="form-control" onchange="handleTeacherProfileAvatarUpload(this)" style="border-radius:10px;padding:8px 12px;font-size:0.85rem;">
+            <input type="hidden" id="profileAvatarUrlInput">
+          </div>
+        </div>
       </div>
       <div class="form-group" style="margin-bottom:14px;">
         <label class="form-label">نبذة تعريفية عن المدرس (Bio)</label>
         <textarea class="form-control" id="profileBioInput" rows="3" placeholder="مدرس أول خبير، خبرة 15 عاماً في تدريس..."></textarea>
       </div>
       <div class="form-group" style="margin-bottom:18px;">
-        <label class="form-label">المراحل الدراسية المتاحة لبيئة عملك</label>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;" id="teacherStagesCheckboxGroup">
-          <label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;"><input type="checkbox" value="PREPARATORY" class="profile-stage-chk"> 3 إعدادي</label>
-          <label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;"><input type="checkbox" value="SECONDARY_1" class="profile-stage-chk"> 1 ثانوي</label>
-          <label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;"><input type="checkbox" value="SECONDARY_2" class="profile-stage-chk"> 2 ثانوي</label>
-          <label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;"><input type="checkbox" value="BACCALAUREATE_2" class="profile-stage-chk"> 2 باكلوريا</label>
-          <label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;"><input type="checkbox" value="SECONDARY_3" class="profile-stage-chk"> 3 ثانوي</label>
-          <label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;"><input type="checkbox" value="BACCALAUREATE_3" class="profile-stage-chk"> 3 باكلوريا</label>
+        <label class="form-label" style="font-weight:600;margin-bottom:8px;display:block;">المراحل والسنوات الدراسية المتاحة لبيئة عملك</label>
+        <div class="stage-chips-grid" id="teacherStagesCheckboxGroup">
+          <label class="stage-chip" onclick="toggleTeacherProfileStageChip(this)">
+            <input type="checkbox" value="PREPARATORY" class="profile-stage-chk">
+            <span>3 إعدادي</span>
+          </label>
+          <label class="stage-chip" onclick="toggleTeacherProfileStageChip(this)">
+            <input type="checkbox" value="SECONDARY_1" class="profile-stage-chk">
+            <span>1 ثانوي</span>
+          </label>
+          <label class="stage-chip" onclick="toggleTeacherProfileStageChip(this)">
+            <input type="checkbox" value="SECONDARY_2" class="profile-stage-chk">
+            <span>2 ثانوي</span>
+          </label>
+          <label class="stage-chip" onclick="toggleTeacherProfileStageChip(this)">
+            <input type="checkbox" value="BACCALAUREATE_2" class="profile-stage-chk">
+            <span>2 باكلوريا</span>
+          </label>
+          <label class="stage-chip" onclick="toggleTeacherProfileStageChip(this)">
+            <input type="checkbox" value="SECONDARY_3" class="profile-stage-chk">
+            <span>3 ثانوي</span>
+          </label>
+          <label class="stage-chip" onclick="toggleTeacherProfileStageChip(this)">
+            <input type="checkbox" value="BACCALAUREATE_3" class="profile-stage-chk">
+            <span>3 باكلوريا</span>
+          </label>
         </div>
       </div>
       <div style="display:flex;gap:10px;justify-content:flex-end;">
@@ -1886,18 +1910,90 @@
     }
   }
 
+  function renderTeacherProfileAvatarPreview(url) {
+    const preview = document.getElementById('teacherProfileAvatarPreview');
+    if (!preview) return;
+    if (url && (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:'))) {
+      preview.innerHTML = `<img src="${url}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='👨‍🏫'">`;
+    } else {
+      preview.innerHTML = '👨‍🏫';
+    }
+  }
+
+  function handleTeacherProfileAvatarUpload(input) {
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      if (!file.type.startsWith('image/')) {
+        alert('يرجى اختيار ملف صورة صالح (JPEG, PNG, WebP)');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement('canvas');
+          const maxDim = 320;
+          let width = img.width;
+          let height = img.height;
+          if (width > height) {
+            if (width > maxDim) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            }
+          } else {
+            if (height > maxDim) {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.88);
+          document.getElementById('profileAvatarUrlInput').value = compressedDataUrl;
+          renderTeacherProfileAvatarPreview(compressedDataUrl);
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  function toggleTeacherProfileStageChip(label) {
+    setTimeout(() => {
+      const checkbox = label.querySelector('input[type="checkbox"]');
+      if (checkbox) {
+        if (checkbox.checked) {
+          label.classList.add('selected');
+        } else {
+          label.classList.remove('selected');
+        }
+      }
+    }, 10);
+  }
+
   async function openTeacherProfileModal() {
     try {
       const profile = await window.KhatwaAPI.teacher.getProfile();
       const user = window.KhatwaAPI.getUser() || {};
       document.getElementById('profileDisplayNameInput').value = profile.displayName || user.name || user.username || '';
       document.getElementById('profileSubjectInput').value = profile.subject || '';
-      document.getElementById('profileAvatarUrlInput').value = profile.avatarUrl || '';
+      const avatarUrl = profile.avatarUrl || '';
+      document.getElementById('profileAvatarUrlInput').value = avatarUrl;
+      renderTeacherProfileAvatarPreview(avatarUrl);
+      const fileInput = document.getElementById('teacherProfileAvatarFileInput');
+      if (fileInput) fileInput.value = '';
       document.getElementById('profileBioInput').value = profile.bio || '';
 
       const stages = (profile.academicStages || '').split(',').map(s => s.trim()).filter(Boolean);
-      document.querySelectorAll('.profile-stage-chk').forEach(chk => {
+      document.querySelectorAll('#teacherProfileModal .profile-stage-chk').forEach(chk => {
         chk.checked = stages.includes(chk.value);
+        const label = chk.closest('.stage-chip');
+        if (label) {
+          if (chk.checked) label.classList.add('selected');
+          else label.classList.remove('selected');
+        }
       });
       document.getElementById('teacherProfileModal').style.display = 'flex';
     } catch (err) {

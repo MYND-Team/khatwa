@@ -1355,15 +1355,45 @@
             <input type="password" class="form-control" id="editTeacherPassword" placeholder="اتركه فارغاً للإبقاء على الحالية" minlength="6" style="border-radius:10px;padding:10px 14px;">
           </div>
           <div class="form-group" style="margin-bottom:0;">
-            <label class="form-label" style="font-weight:600;margin-bottom:6px;display:block;">رابط صورة البروفيل (Avatar URL)</label>
-            <input type="text" class="form-control" id="editTeacherAvatarUrl" placeholder="https://..." style="border-radius:10px;padding:10px 14px;">
+            <label class="form-label" style="font-weight:600;margin-bottom:6px;display:block;">صورة المدرس الشخصية (رفع ملف)</label>
+            <div style="display:flex;gap:12px;align-items:center;">
+              <div id="editTeacherAvatarPreview" style="width:46px;height:46px;border-radius:50%;background:var(--primary-faint);border:2px solid var(--primary);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;font-size:1.3rem;">👨‍🏫</div>
+              <div style="flex:1;">
+                <input type="file" id="editTeacherAvatarFileInput" accept="image/*" class="form-control" onchange="handleEditTeacherAvatarUpload(this)" style="border-radius:10px;padding:8px 12px;font-size:0.85rem;">
+                <input type="hidden" id="editTeacherAvatarUrl">
+              </div>
+            </div>
           </div>
         </div>
 
-        <div class="form-group" style="margin-bottom:14px;">
-          <label class="form-label" style="font-weight:600;margin-bottom:6px;display:block;">المراحل الدراسية المعتمدة (مفصولة بفواصل)</label>
-          <input type="text" class="form-control" id="editTeacherStages" placeholder="PREPARATORY,SECONDARY_1,SECONDARY_2,SECONDARY_3" style="border-radius:10px;padding:10px 14px;">
-          <span style="font-size:0.78rem;color:var(--ink-dim);display:block;margin-top:4px;">المراحل: PREPARATORY (إعدادي)، SECONDARY_1 (1 ثانوي)، SECONDARY_2 (2 ثانوي)، BACCALAUREATE_2 (2 باكلوريا)، SECONDARY_3 (3 ثانوي)، BACCALAUREATE_3 (3 باكلوريا)</span>
+        <div class="form-group" style="margin-bottom:16px;">
+          <label class="form-label" style="font-weight:600;margin-bottom:8px;display:block;">المراحل والسنوات الدراسية المعتمدة</label>
+          <div class="stage-chips-grid">
+            <label class="stage-chip" onclick="toggleEditTeacherStageChip(this)">
+              <input type="checkbox" name="editTeacherStage" value="PREPARATORY">
+              <span>3 إعدادي</span>
+            </label>
+            <label class="stage-chip" onclick="toggleEditTeacherStageChip(this)">
+              <input type="checkbox" name="editTeacherStage" value="SECONDARY_1">
+              <span>1 ثانوي</span>
+            </label>
+            <label class="stage-chip" onclick="toggleEditTeacherStageChip(this)">
+              <input type="checkbox" name="editTeacherStage" value="SECONDARY_2">
+              <span>2 ثانوي</span>
+            </label>
+            <label class="stage-chip" onclick="toggleEditTeacherStageChip(this)">
+              <input type="checkbox" name="editTeacherStage" value="BACCALAUREATE_2">
+              <span>2 باكلوريا</span>
+            </label>
+            <label class="stage-chip" onclick="toggleEditTeacherStageChip(this)">
+              <input type="checkbox" name="editTeacherStage" value="SECONDARY_3">
+              <span>3 ثانوي</span>
+            </label>
+            <label class="stage-chip" onclick="toggleEditTeacherStageChip(this)">
+              <input type="checkbox" name="editTeacherStage" value="BACCALAUREATE_3">
+              <span>3 باكلوريا</span>
+            </label>
+          </div>
         </div>
 
         <div style="padding:16px 0 24px;display:flex;justify-content:flex-end;gap:10px;border-top:1px solid var(--line-soft);margin-top:16px;">
@@ -2613,6 +2643,69 @@
   }
 
   // ─── Admin Edit Teacher Profile Handlers ────────────────────────────────────
+  function renderEditTeacherAvatarPreview(url) {
+    const preview = document.getElementById('editTeacherAvatarPreview');
+    if (!preview) return;
+    if (url && (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:'))) {
+      preview.innerHTML = `<img src="${url}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='👨‍🏫'">`;
+    } else {
+      preview.innerHTML = '👨‍🏫';
+    }
+  }
+
+  function handleEditTeacherAvatarUpload(input) {
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      if (!file.type.startsWith('image/')) {
+        alert('يرجى اختيار ملف صورة صالح (JPEG, PNG, WebP)');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement('canvas');
+          const maxDim = 320;
+          let width = img.width;
+          let height = img.height;
+          if (width > height) {
+            if (width > maxDim) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            }
+          } else {
+            if (height > maxDim) {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.88);
+          document.getElementById('editTeacherAvatarUrl').value = compressedDataUrl;
+          renderEditTeacherAvatarPreview(compressedDataUrl);
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  function toggleEditTeacherStageChip(label) {
+    setTimeout(() => {
+      const checkbox = label.querySelector('input[type="checkbox"]');
+      if (checkbox) {
+        if (checkbox.checked) {
+          label.classList.add('selected');
+        } else {
+          label.classList.remove('selected');
+        }
+      }
+    }, 10);
+  }
+
   function openAdminEditTeacherModal(id) {
     const t = cachedTeachersMap.get(id);
     if (!t) return;
@@ -2623,8 +2716,23 @@
     document.getElementById('editTeacherSubject').value = profile.subject || '';
     document.getElementById('editTeacherBio').value = profile.bio || '';
     document.getElementById('editTeacherPassword').value = '';
-    document.getElementById('editTeacherAvatarUrl').value = profile.avatarUrl || '';
-    document.getElementById('editTeacherStages').value = profile.academicStages || '';
+
+    const avatarUrl = profile.avatarUrl || '';
+    document.getElementById('editTeacherAvatarUrl').value = avatarUrl;
+    renderEditTeacherAvatarPreview(avatarUrl);
+    const fileInput = document.getElementById('editTeacherAvatarFileInput');
+    if (fileInput) fileInput.value = '';
+
+    const stages = (profile.academicStages || '').split(',').map(s => s.trim()).filter(Boolean);
+    document.querySelectorAll('#editTeacherModal input[name="editTeacherStage"]').forEach(cb => {
+      cb.checked = stages.includes(cb.value);
+      const label = cb.closest('.stage-chip');
+      if (label) {
+        if (cb.checked) label.classList.add('selected');
+        else label.classList.remove('selected');
+      }
+    });
+
     const alertBox = document.getElementById('editTeacherAlert');
     if (alertBox) alertBox.style.display = 'none';
     document.getElementById('editTeacherModal').style.display = 'flex';
@@ -2642,7 +2750,9 @@
     const bio = document.getElementById('editTeacherBio').value.trim();
     const password = document.getElementById('editTeacherPassword').value;
     const avatarUrl = document.getElementById('editTeacherAvatarUrl').value.trim();
-    const academicStages = document.getElementById('editTeacherStages').value.trim();
+
+    const checkboxes = document.querySelectorAll('#editTeacherModal input[name="editTeacherStage"]:checked');
+    const academicStages = Array.from(checkboxes).map(cb => cb.value).join(',');
 
     const btn = document.getElementById('editTeacherSubmitBtn');
     btn.disabled = true;
