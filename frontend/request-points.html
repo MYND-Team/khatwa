@@ -1,394 +1,438 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>شحن المحفظة والنقاط | خطوة</title>
-<link rel="icon" type="image/png" href="logo/logo-khatwa.png">
-<link rel="stylesheet" href="css/style.css">
-<style>
-  .upload-dropzone {
-    border: 2px dashed var(--line);
-    border-radius: 16px;
-    padding: 28px 20px;
-    text-align: center;
-    background: var(--bg-raised);
-    cursor: pointer;
-    transition: all .2s ease;
-  }
-  .upload-dropzone:hover {
-    border-color: var(--primary);
-    background: #F8FAFC;
-  }
-  .preview-wrap {
-    margin-top: 14px;
-    display: none;
-    background: #FFFFFF;
-    border: 1px solid var(--primary-border);
-    border-radius: 12px;
-    padding: 12px 16px;
-    align-items: center;
-    justify-content: space-between;
-  }
-  .preview-thumb {
-    width: 52px;
-    height: 52px;
-    object-fit: cover;
-    border-radius: 8px;
-    border: 1px solid var(--line-soft);
-  }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>شحن المحفظة والنقاط | خطوة</title>
+  <link rel="icon" type="image/png" href="logo/logo-khatwa.png">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .upload-dropzone {
+      border: 2px dashed var(--line);
+      border-radius: 16px;
+      padding: 28px 20px;
+      text-align: center;
+      background: var(--bg-raised);
+      cursor: pointer;
+      transition: all .2s ease;
+    }
+
+    .upload-dropzone:hover {
+      border-color: var(--primary);
+      background: #F8FAFC;
+    }
+
+    .preview-wrap {
+      margin-top: 14px;
+      display: none;
+      background: #FFFFFF;
+      border: 1px solid var(--primary-border);
+      border-radius: 12px;
+      padding: 12px 16px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .preview-thumb {
+      width: 52px;
+      height: 52px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 1px solid var(--line-soft);
+    }
+  </style>
 </head>
+
 <body>
 
-<nav class="nav">
-  <div class="container nav-inner">
-    <a href="index.html" class="brand"><img src="logo/logo-khatwa.png" alt="خطوة" class="brand-logo"><span class="brand-text">خطوة</span></a>
-    <ul class="nav-links">
-      <li><a href="dashboard.html">لوحة التحكم</a></li>
-      <li><a href="courses.html">الكورسات</a></li>
-      <li><a href="points.html">المحفظة والرصيد</a></li>
-    </ul>
-    <div class="nav-cta" style="display:flex;align-items:center;gap:10px;">
-      <button class="lang-switcher-btn" onclick="window.KhatwaI18n.toggleLanguage()">🌐 English</button>
-      <a href="profile.html" class="user-line" id="navUserLine">
-        <span class="avatar" id="navAvatar">ط</span>
-        <span>
-          <span class="name" id="navName">الطالب</span>
-          <span class="role" id="navRole">طالب</span>
-        </span>
-      </a>
-    </div>
-  </div>
-</nav>
-
-<div class="container" style="padding-top:36px;padding-bottom:60px;max-width:680px;">
-
-  <div class="page-head" style="margin-bottom:24px;">
-    <div>
-      <h1>شحن المحفظة والرصيد</h1>
-      <p class="page-sub" style="margin:4px 0 0;">ارفع إيصال التحويل وأدخل المبلغ والكود لتأكيد الشحن فورياً.</p>
-    </div>
-    <a href="points.html" class="btn btn-line btn-sm">العودة للمحفظة</a>
-  </div>
-
-  <!-- Instant Voucher Card (Redeem Recharge Card Instantly) -->
-  <div class="card" style="padding:22px 26px;border-radius:18px;margin-bottom:28px;background:linear-gradient(135deg, rgba(11, 37, 69, 0.45) 0%, rgba(19, 64, 116, 0.25) 100%);border:1px solid var(--line);">
-    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:12px;">
-      <div>
-        <h3 style="margin:0 0 4px;display:flex;align-items:center;gap:8px;">
-          <span>🎟️ لديك كارت شحن مسبق الدفع؟</span>
-          <span class="tag tag-ok" style="font-size:0.75rem;">شحن فوري بدون انتظار</span>
-        </h3>
-        <p style="margin:0;color:var(--ink-dim);font-size:0.86rem;">أدخل كود الكارت هنا لتعبئة رصيدك مباشرة وفورياً دون الحاجة لرفع إيصال أو انتظار المراجعة.</p>
-      </div>
-    </div>
-    <form id="instantVoucherForm" onsubmit="handleInstantVoucherRedeem(event)" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
-      <div style="flex:1;min-width:240px;">
-        <input type="text" id="instantVoucherInput" placeholder="مثال: FG-7B2A-9K1M" required style="width:100%;text-transform:uppercase;font-family:monospace;font-size:1.15rem;font-weight:700;letter-spacing:1.5px;padding:12px 16px;border-radius:10px;" class="form-control">
-      </div>
-      <button type="submit" id="btnInstantVoucher" class="btn btn-primary" style="height:48px;padding:0 24px;font-weight:700;border-radius:10px;white-space:nowrap;">
-        ⚡ شحن الكود فوراً
-      </button>
-    </form>
-    <div id="instantVoucherAlert" style="display:none;margin-top:12px;padding:10px 16px;border-radius:8px;font-size:0.9rem;font-weight:600;"></div>
-  </div>
-
-  <!-- InstaPay Direct Payment Card -->
-  <div class="card" style="padding:24px 28px;border-radius:20px;margin-bottom:28px;background:var(--bg-card);border:1px solid var(--line-soft);box-shadow:var(--shadow-md);">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
-      <h3 style="margin:0;display:flex;align-items:center;gap:8px;font-size:1.25rem;">
-        <span>Pay via InstaPay 💳</span>
-      </h3>
-      <span class="tag tag-ok" style="font-weight:700;">تحويل فوري بدون رسوم ⚡</span>
-    </div>
-
-    <!-- 1 & 2: QR Code Centered & Medium-sized -->
-    <div style="text-align:center;margin-bottom:20px;">
-      <div style="display:inline-block;padding:12px;background:#FFFFFF;border-radius:18px;border:1.5px solid var(--line-soft);box-shadow:0 4px 18px rgba(0,0,0,0.06);">
-        <img id="instapayQrImage" src="images/instapay-qr.png" alt="InstaPay QR Code" style="width:190px;height:auto;max-width:100%;border-radius:10px;display:block;margin:0 auto;">
-      </div>
-      <p style="margin:10px 0 2px;font-size:0.92rem;font-weight:700;color:var(--ink);">Scan the QR Code to pay directly</p>
-      <span style="font-size:0.82rem;color:var(--ink-faint);display:block;">امسح رمز الاستجابة السريعة (QR Code) للدفع المباشر عبر تطبيق إنستاباي</span>
-    </div>
-
-    <!-- 3, 4 & 5: InstaPay Account Box, Copy Button & Open InstaPay Button -->
-    <div style="background:var(--bg-raised);border:1.5px solid var(--line-soft);border-radius:14px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
-      <div style="display:flex;align-items:center;gap:10px;">
-        <span style="font-size:1.4rem;">📱</span>
-        <div>
-          <span style="font-size:0.78rem;color:var(--ink-faint);display:block;font-weight:700;">حساب إنستاباي للدفع المباشر (InstaPay Account)</span>
-          <div style="display:flex;align-items:center;gap:6px;margin-top:2px;">
-            <span style="font-weight:600;font-size:0.92rem;color:var(--ink-dim);">InstaPay:</span>
-            <b id="instapayUsernameDisplay" style="font-family:monospace;font-size:1.05rem;color:var(--primary);direction:ltr;display:inline-block;letter-spacing:0.5px;">samiryasser99@instapay</b>
-          </div>
-        </div>
-      </div>
-      <div style="display:flex;align-items:center;gap:8px;position:relative;">
-        <button type="button" id="copyInstapayBtn" class="btn btn-line btn-sm" onclick="copyInstapayAccount()" style="font-weight:700;padding:7px 14px;border-radius:8px;display:inline-flex;align-items:center;gap:6px;">
-          <span>📋 Copy</span>
-        </button>
-        <a id="openInstapayBtn" href="https://ipn.eg/S/samiryasser99/instapay/7u8kgC" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm" style="font-weight:700;padding:7px 14px;border-radius:8px;display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg, #10b981 0%, #059669 100%);border-color:#059669;">
-          <span>Open InstaPay 🔗</span>
+  <nav class="nav">
+    <div class="container nav-inner">
+      <a href="index.html" class="brand"><img src="logo/logo-khatwa.png" alt="خطوة" class="brand-logo"><span
+          class="brand-text">خطوة</span></a>
+      <ul class="nav-links">
+        <li><a href="dashboard.html">لوحة التحكم</a></li>
+        <li><a href="courses.html">الكورسات</a></li>
+        <li><a href="points.html">المحفظة والرصيد</a></li>
+      </ul>
+      <div class="nav-cta" style="display:flex;align-items:center;gap:10px;">
+        <button class="lang-switcher-btn" onclick="window.KhatwaI18n.toggleLanguage()">🌐 English</button>
+        <a href="profile.html" class="user-line" id="navUserLine">
+          <span class="avatar" id="navAvatar">ط</span>
+          <span>
+            <span class="name" id="navName">الطالب</span>
+            <span class="role" id="navRole">طالب</span>
+          </span>
         </a>
-        <div id="instapayCopyToast" style="display:none;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#1E293B;color:#FFFFFF;padding:6px 14px;border-radius:8px;font-size:0.8rem;font-weight:600;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:10;pointer-events:none;">
-          InstaPay account copied ✓
+      </div>
+    </div>
+  </nav>
+
+  <div class="container" style="padding-top:36px;padding-bottom:60px;max-width:680px;">
+
+    <div class="page-head" style="margin-bottom:24px;">
+      <div>
+        <h1>شحن المحفظة والرصيد</h1>
+        <p class="page-sub" style="margin:4px 0 0;">ارفع إيصال التحويل وأدخل المبلغ والكود لتأكيد الشحن فورياً.</p>
+      </div>
+      <a href="points.html" class="btn btn-line btn-sm">العودة للمحفظة</a>
+    </div>
+
+    <!-- Instant Voucher Card (Redeem Recharge Card Instantly) -->
+    <div class="card"
+      style="padding:22px 26px;border-radius:18px;margin-bottom:28px;background:linear-gradient(135deg, rgba(11, 37, 69, 0.45) 0%, rgba(19, 64, 116, 0.25) 100%);border:1px solid var(--line);">
+      <div
+        style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:12px;">
+        <div>
+          <h3 style="margin:0 0 4px;display:flex;align-items:center;gap:8px;">
+            <span>🎟️ لديك كارت شحن مسبق الدفع؟</span>
+            <span class="tag tag-ok" style="font-size:0.75rem;">شحن فوري بدون انتظار</span>
+          </h3>
+          <p style="margin:0;color:var(--ink-dim);font-size:0.86rem;">أدخل كود الكارت هنا لتعبئة رصيدك مباشرة وفورياً
+            دون الحاجة لرفع إيصال أو انتظار المراجعة.</p>
         </div>
+      </div>
+      <form id="instantVoucherForm" onsubmit="handleInstantVoucherRedeem(event)"
+        style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+        <div style="flex:1;min-width:240px;">
+          <input type="text" id="instantVoucherInput" placeholder="مثال: FG-7B2A-9K1M" required
+            style="width:100%;text-transform:uppercase;font-family:monospace;font-size:1.15rem;font-weight:700;letter-spacing:1.5px;padding:12px 16px;border-radius:10px;"
+            class="form-control">
+        </div>
+        <button type="submit" id="btnInstantVoucher" class="btn btn-primary"
+          style="height:48px;padding:0 24px;font-weight:700;border-radius:10px;white-space:nowrap;">
+          ⚡ شحن الكود فوراً
+        </button>
+      </form>
+      <div id="instantVoucherAlert"
+        style="display:none;margin-top:12px;padding:10px 16px;border-radius:8px;font-size:0.9rem;font-weight:600;">
       </div>
     </div>
 
-    <!-- 6: Small Note -->
-    <div style="background:rgba(217, 119, 6, 0.06);border:1px solid rgba(217, 119, 6, 0.25);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:10px;font-size:0.88rem;color:var(--ink);">
-      <span style="font-size:1.2rem;flex-shrink:0;">💡</span>
-      <span>After completing the transfer, keep your receipt and upload it below. <span style="color:var(--ink-dim);font-size:0.84rem;">(بعد إتمام التحويل، يرجى الاحتفاظ بصورة الإيصال ورفعها في النموذج بالأسفل لتأكيد الشحن فورياً).</span></span>
-    </div>
-  </div>
+    <!-- InstaPay Direct Payment Card -->
+    <div class="card"
+      style="padding:24px 28px;border-radius:20px;margin-bottom:28px;background:var(--bg-card);border:1px solid var(--line-soft);box-shadow:var(--shadow-md);">
+      <div
+        style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+        <h3 style="margin:0;display:flex;align-items:center;gap:8px;font-size:1.25rem;">
+          <span>Pay via InstaPay 💳</span>
+        </h3>
+        <span class="tag tag-ok" style="font-weight:700;">تحويل فوري بدون رسوم ⚡</span>
+      </div>
 
-  <!-- Simplified Recharge Form Card (Upload Receipt -> Enter Amount -> Enter Code -> Submit) -->
-  <div class="card" style="padding:28px;border-radius:20px;margin-bottom:32px;">
-    <div style="margin-bottom:18px;">
-      <h3 style="margin:0 0 4px;">📤 أو أرسل إيصال تحويل المحفظة الإلكترونية (فودافون كاش / إنستاباي)</h3>
-      <p style="margin:0;color:var(--ink-dim);font-size:0.86rem;">إذا قمت بتحويل بنكي أو فودافون كاش، ارفع لقطة الشاشة مع رقم المعاملة للمراجعة.</p>
-    </div>
-    <form id="simplifiedRechargeForm" onsubmit="submitRecharge(event)">
-
-      <!-- Step 1: Upload Receipt -->
-      <div class="field" style="margin-bottom:20px;">
-        <label style="font-weight:700;font-size:0.95rem;margin-bottom:8px;display:block;">1. صورة إيصال التحويل (Upload Receipt)</label>
-        <div class="upload-dropzone" id="receiptDropzone" onclick="document.getElementById('receiptFile').click()">
-          <div id="dropzonePrompt">
-            <div style="font-size:2.2rem;margin-bottom:6px;">🧾</div>
-            <p style="margin:0;font-weight:600;font-size:0.95rem;color:var(--ink);">اضغط لاختيار صورة الإيصال أو اسحب الصورة هنا</p>
-            <span style="font-size:0.8rem;color:var(--ink-dim);display:block;margin-top:4px;">يدعم JPG, PNG, WebP (لقطة شاشة التحويل)</span>
-          </div>
-          <input type="file" id="receiptFile" accept="image/*" style="display:none;" onchange="handleReceiptFile(this)" required>
+      <!-- 1 & 2: QR Code Centered & Medium-sized -->
+      <div style="text-align:center;margin-bottom:20px;">
+        <div
+          style="display:inline-block;padding:12px;background:#FFFFFF;border-radius:18px;border:1.5px solid var(--line-soft);box-shadow:0 4px 18px rgba(0,0,0,0.06);">
+          <img id="instapayQrImage" src="images/instapay-qr.png" alt="InstaPay QR Code"
+            style="width:190px;height:auto;max-width:100%;border-radius:10px;display:block;margin:0 auto;">
         </div>
+        <p style="margin:10px 0 2px;font-size:0.92rem;font-weight:700;color:var(--ink);">Scan the QR Code to pay
+          directly</p>
+        <span style="font-size:0.82rem;color:var(--ink-faint);display:block;">امسح رمز الاستجابة السريعة (QR Code) للدفع
+          المباشر عبر تطبيق إنستاباي</span>
+      </div>
 
-        <div class="preview-wrap" id="receiptPreviewWrap">
-          <div style="display:flex;align-items:center;gap:12px;">
-            <img id="receiptPreviewImg" class="preview-thumb" src="" alt="معاينة">
-            <div>
-              <b id="receiptFileName" style="font-size:0.88rem;color:var(--ink);display:block;">receipt.jpg</b>
-              <span id="receiptFileSize" style="font-size:0.78rem;color:var(--ink-dim);">—</span>
+      <!-- 3, 4 & 5: InstaPay Account Box, Copy Button & Open InstaPay Button -->
+      <div
+        style="background:var(--bg-raised);border:1.5px solid var(--line-soft);border-radius:14px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:1.4rem;">📱</span>
+          <div>
+            <span style="font-size:0.78rem;color:var(--ink-faint);display:block;font-weight:700;">حساب إنستاباي للدفع
+              المباشر (InstaPay Account)</span>
+            <div style="display:flex;align-items:center;gap:6px;margin-top:2px;">
+              <span style="font-weight:600;font-size:0.92rem;color:var(--ink-dim);">InstaPay:</span>
+              <b id="instapayUsernameDisplay"
+                style="font-family:monospace;font-size:1.05rem;color:var(--primary);direction:ltr;display:inline-block;letter-spacing:0.5px;">samiryasser99@instapay</b>
             </div>
           </div>
-          <button type="button" class="btn btn-text btn-sm" style="color:var(--err);" onclick="clearSelectedReceipt()">✕ تغيير الصورة</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;position:relative;">
+          <button type="button" id="copyInstapayBtn" class="btn btn-line btn-sm" onclick="copyInstapayAccount()"
+            style="font-weight:700;padding:7px 14px;border-radius:8px;display:inline-flex;align-items:center;gap:6px;">
+            <span>📋 Copy</span>
+          </button>
+          <a id="openInstapayBtn" href="https://ipn.eg/S/samiryasser99/instapay/7u8kgC" target="_blank"
+            rel="noopener noreferrer" class="btn btn-primary btn-sm"
+            style="font-weight:700;padding:7px 14px;border-radius:8px;display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg, #10b981 0%, #059669 100%);border-color:#059669;">
+            <span>Open InstaPay 🔗</span>
+          </a>
+          <div id="instapayCopyToast"
+            style="display:none;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#1E293B;color:#FFFFFF;padding:6px 14px;border-radius:8px;font-size:0.8rem;font-weight:600;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:10;pointer-events:none;">
+            InstaPay account copied ✓
+          </div>
         </div>
       </div>
 
-      <!-- Step 2: Amount -->
-      <div class="field" style="margin-bottom:18px;">
-        <label for="rechargeAmount" style="font-weight:700;font-size:0.95rem;">2. المبلغ المدفوع (Amount)</label>
-        <div style="position:relative;">
-          <input type="number" id="rechargeAmount" class="form-control" placeholder="مثال: 50 أو 100 أو 150" min="1" step="any" required style="font-size:1.1rem;font-weight:700;padding-inline-end:60px;">
-          <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-weight:700;color:var(--ink-dim);pointer-events:none;">ج.م EGP</span>
+      <!-- 6: Small Note -->
+      <div
+        style="background:rgba(217, 119, 6, 0.06);border:1px solid rgba(217, 119, 6, 0.25);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:10px;font-size:0.88rem;color:var(--ink);">
+        <span style="font-size:1.2rem;flex-shrink:0;">💡</span>
+        <span>After completing the transfer, keep your receipt and upload it below. <span
+            style="color:var(--ink-dim);font-size:0.84rem;">(بعد إتمام التحويل، يرجى الاحتفاظ بصورة الإيصال ورفعها في
+            النموذج بالأسفل لتأكيد الشحن فورياً).</span></span>
+      </div>
+    </div>
+
+    <!-- Simplified Recharge Form Card (Upload Receipt -> Enter Amount -> Enter Code -> Submit) -->
+    <div class="card" style="padding:28px;border-radius:20px;margin-bottom:32px;">
+      <div style="margin-bottom:18px;">
+        <h3 style="margin:0 0 4px;">📤 أو أرسل إيصال تحويل المحفظة الإلكترونية (فودافون كاش / إنستاباي)</h3>
+        <p style="margin:0;color:var(--ink-dim);font-size:0.86rem;">إذا قمت بتحويل بنكي أو فودافون كاش، ارفع لقطة الشاشة
+          مع رقم المعاملة للمراجعة.</p>
+      </div>
+      <form id="simplifiedRechargeForm" onsubmit="submitRecharge(event)">
+
+        <!-- Step 1: Upload Receipt -->
+        <div class="field" style="margin-bottom:20px;">
+          <label style="font-weight:700;font-size:0.95rem;margin-bottom:8px;display:block;">1. صورة إيصال التحويل
+            (Upload Receipt)</label>
+          <div class="upload-dropzone" id="receiptDropzone" onclick="document.getElementById('receiptFile').click()">
+            <div id="dropzonePrompt">
+              <div style="font-size:2.2rem;margin-bottom:6px;">🧾</div>
+              <p style="margin:0;font-weight:600;font-size:0.95rem;color:var(--ink);">اضغط لاختيار صورة الإيصال أو اسحب
+                الصورة هنا</p>
+              <span style="font-size:0.8rem;color:var(--ink-dim);display:block;margin-top:4px;">يدعم JPG, PNG, WebP
+                (لقطة شاشة التحويل)</span>
+            </div>
+            <input type="file" id="receiptFile" accept="image/*" style="display:none;"
+              onchange="handleReceiptFile(this)" required>
+          </div>
+
+          <div class="preview-wrap" id="receiptPreviewWrap">
+            <div style="display:flex;align-items:center;gap:12px;">
+              <img id="receiptPreviewImg" class="preview-thumb" src="" alt="معاينة">
+              <div>
+                <b id="receiptFileName" style="font-size:0.88rem;color:var(--ink);display:block;">receipt.jpg</b>
+                <span id="receiptFileSize" style="font-size:0.78rem;color:var(--ink-dim);">—</span>
+              </div>
+            </div>
+            <button type="button" class="btn btn-text btn-sm" style="color:var(--err);"
+              onclick="clearSelectedReceipt()">✕ تغيير الصورة</button>
+          </div>
         </div>
-      </div>
 
-      <!-- Step 3: Code -->
-      <div class="field" style="margin-bottom:24px;">
-        <label for="rechargeCode" style="font-weight:700;font-size:0.95rem;">3. كود المعاملة / التحويل (Code)</label>
-        <input type="text" id="rechargeCode" class="form-control" placeholder="أدخل كود التحويل المرجعي من رسالة الدفع" required style="font-family:monospace;font-size:1.05rem;">
-      </div>
+        <!-- Step 2: Amount -->
+        <div class="field" style="margin-bottom:18px;">
+          <label for="rechargeAmount" style="font-weight:700;font-size:0.95rem;">2. المبلغ المدفوع (Amount)</label>
+          <div style="position:relative;">
+            <input type="number" id="rechargeAmount" class="form-control" placeholder="مثال: 50 أو 100 أو 150" min="1"
+              step="any" required style="font-size:1.1rem;font-weight:700;padding-inline-end:60px;">
+            <span
+              style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-weight:700;color:var(--ink-dim);pointer-events:none;">ج.م
+              EGP</span>
+          </div>
+        </div>
 
-      <button type="submit" class="btn btn-primary btn-block" id="submitRechargeBtn" style="padding:14px;font-size:1.05rem;font-weight:700;">
-        🚀 إرسال طلب الشحن للمراجعة
-      </button>
-    </form>
+        <!-- Step 3: Code -->
+        <div class="field" style="margin-bottom:24px;">
+          <label for="rechargeCode" style="font-weight:700;font-size:0.95rem;">3. كود المعاملة / التحويل (Code)</label>
+          <input type="text" id="rechargeCode" class="form-control"
+            placeholder="أدخل كود التحويل المرجعي من رسالة الدفع" required
+            style="font-family:monospace;font-size:1.05rem;">
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block" id="submitRechargeBtn"
+          style="padding:14px;font-size:1.05rem;font-weight:700;">
+          🚀 إرسال طلب الشحن للمراجعة
+        </button>
+      </form>
+    </div>
+
+    <!-- My Point Requests History -->
+    <div class="block">
+      <div class="block-head" style="display:flex;justify-content:space-between;align-items:center;">
+        <h3 style="margin:0;">سجل طلبات الشحن السابقة</h3>
+        <button class="btn btn-text btn-sm" onclick="loadMyRequests()">تحديث 🔄</button>
+      </div>
+      <div id="myRequestsContainer">
+        <p style="color:var(--ink-dim);font-size:0.88rem;text-align:center;padding:20px;">جارٍ تحميل طلباتك السابقة...
+        </p>
+      </div>
+    </div>
+
   </div>
 
-  <!-- My Point Requests History -->
-  <div class="block">
-    <div class="block-head" style="display:flex;justify-content:space-between;align-items:center;">
-      <h3 style="margin:0;">سجل طلبات الشحن السابقة</h3>
-      <button class="btn btn-text btn-sm" onclick="loadMyRequests()">تحديث 🔄</button>
-    </div>
-    <div id="myRequestsContainer">
-      <p style="color:var(--ink-dim);font-size:0.88rem;text-align:center;padding:20px;">جارٍ تحميل طلباتك السابقة...</p>
-    </div>
-  </div>
+  <script src="js/i18n.js"></script>
+  <script src="js/api.js"></script>
+  <script>
+    let selectedFile = null;
 
-</div>
+    // Configurable InstaPay settings (easy to replace/configure globally or via admin settings)
+    const INSTAPAY_CONFIG = window.INSTAPAY_CONFIG || {
+      username: 'samiryasser99@instapay',
+      link: 'https://ipn.eg/S/samiryasser99/instapay/7u8kgC',
+      qrImage: 'images/instapay-qr.png',
+    };
 
-<script src="js/i18n.js"></script>
-<script src="js/api.js"></script>
-<script>
-  let selectedFile = null;
-
-  // Configurable InstaPay settings (easy to replace/configure globally or via admin settings)
-  const INSTAPAY_CONFIG = window.INSTAPAY_CONFIG || {
-    username: 'samiryasser99@instapay',
-    link: 'https://ipn.eg/S/samiryasser99/instapay/7u8kgC',
-    qrImage: 'images/instapay-qr.png',
-  };
-
-  function initInstapayCard() {
-    const userDisplay = document.getElementById('instapayUsernameDisplay');
-    const qrImg = document.getElementById('instapayQrImage');
-    const openBtn = document.getElementById('openInstapayBtn');
-    if (userDisplay && INSTAPAY_CONFIG.username) userDisplay.textContent = INSTAPAY_CONFIG.username;
-    if (qrImg && INSTAPAY_CONFIG.qrImage) qrImg.src = INSTAPAY_CONFIG.qrImage;
-    if (openBtn && INSTAPAY_CONFIG.link) openBtn.href = INSTAPAY_CONFIG.link;
-  }
-
-  function copyInstapayAccount() {
-    const username = INSTAPAY_CONFIG.username || 'samiryasser99@instapay';
-    const toast = document.getElementById('instapayCopyToast');
-    const btn = document.getElementById('copyInstapayBtn');
-
-    function showToast() {
-      if (toast) {
-        toast.style.display = 'block';
-        setTimeout(() => { toast.style.display = 'none'; }, 2400);
-      }
-      if (btn) {
-        const orig = btn.innerHTML;
-        btn.innerHTML = '<span>✓ Copied!</span>';
-        setTimeout(() => { btn.innerHTML = orig; }, 2000);
-      }
+    function initInstapayCard() {
+      const userDisplay = document.getElementById('instapayUsernameDisplay');
+      const qrImg = document.getElementById('instapayQrImage');
+      const openBtn = document.getElementById('openInstapayBtn');
+      if (userDisplay && INSTAPAY_CONFIG.username) userDisplay.textContent = INSTAPAY_CONFIG.username;
+      if (qrImg && INSTAPAY_CONFIG.qrImage) qrImg.src = INSTAPAY_CONFIG.qrImage;
+      if (openBtn && INSTAPAY_CONFIG.link) openBtn.href = INSTAPAY_CONFIG.link;
     }
 
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(username).then(showToast).catch(() => {
+    function copyInstapayAccount() {
+      const username = INSTAPAY_CONFIG.username || 'samiryasser99@instapay';
+      const toast = document.getElementById('instapayCopyToast');
+      const btn = document.getElementById('copyInstapayBtn');
+
+      function showToast() {
+        if (toast) {
+          toast.style.display = 'block';
+          setTimeout(() => { toast.style.display = 'none'; }, 2400);
+        }
+        if (btn) {
+          const orig = btn.innerHTML;
+          btn.innerHTML = '<span>✓ Copied!</span>';
+          setTimeout(() => { btn.innerHTML = orig; }, 2000);
+        }
+      }
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(username).then(showToast).catch(() => {
+          fallbackCopyText(username, showToast);
+        });
+      } else {
         fallbackCopyText(username, showToast);
-      });
-    } else {
-      fallbackCopyText(username, showToast);
-    }
-  }
-
-  function fallbackCopyText(text, cb) {
-    const ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.position = 'fixed';
-    ta.style.opacity = '0';
-    document.body.appendChild(ta);
-    ta.select();
-    try {
-      document.execCommand('copy');
-      if (cb) cb();
-    } catch (_) {
-      alert('InstaPay account: ' + text);
-    }
-    document.body.removeChild(ta);
-  }
-
-  document.addEventListener('DOMContentLoaded', async () => {
-    initInstapayCard();
-    const user = window.KhatwaAPI.getUser();
-    if (user) {
-      document.getElementById('navName').textContent = user.name || user.username;
-      document.getElementById('navAvatar').textContent = (user.name || user.username || 'ط').charAt(0);
-    }
-    window.KhatwaAPI.syncNav();
-    await loadMyRequests();
-  });
-
-  async function handleInstantVoucherRedeem(e) {
-    e.preventDefault();
-    const input = document.getElementById('instantVoucherInput');
-    const alertBox = document.getElementById('instantVoucherAlert');
-    const btn = document.getElementById('btnInstantVoucher');
-    const code = input.value.trim().toUpperCase();
-
-    if (!code) return;
-
-    btn.disabled = true;
-    btn.textContent = 'جارٍ الشحن...';
-    alertBox.style.display = 'none';
-
-    try {
-      const res = await window.KhatwaAPI.student.redeemAccessCode(code);
-      alertBox.style.display = 'block';
-      alertBox.style.background = '#ECFDF5';
-      alertBox.style.color = '#047857';
-      alertBox.style.border = '1px solid #6EE7B7';
-      const addedVal = res.walletBalanceAdded || res.amountAdded || res.pointsAdded || res.data?.pointsAdded || res.amount || '';
-      alertBox.textContent = `✓ تم شحن ${addedVal} ج.م بنجاح وفورياً إلى رصيد محفظتك! 🎉`;
-      input.value = '';
-      setTimeout(() => {
-        window.location.href = 'points.html';
-      }, 1500);
-    } catch (err) {
-      alertBox.style.display = 'block';
-      alertBox.style.background = '#FEE2E2';
-      alertBox.style.color = '#DC2626';
-      alertBox.style.border = '1px solid #FCA5A5';
-      alertBox.textContent = '❌ ' + (err.message || 'كود الشحن غير صالح أو تم استخدامه مسبقاً.');
-    } finally {
-      btn.disabled = false;
-      btn.textContent = '⚡ شحن الكود فوراً';
-    }
-  }
-
-  function handleReceiptFile(input) {
-    if (input.files && input.files[0]) {
-      selectedFile = input.files[0];
-      const mb = (selectedFile.size / (1024 * 1024)).toFixed(2);
-      document.getElementById('receiptFileName').textContent = selectedFile.name;
-      document.getElementById('receiptFileSize').textContent = `${mb} MB`;
-
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        document.getElementById('receiptPreviewImg').src = e.target.result;
-        document.getElementById('receiptDropzone').style.display = 'none';
-        document.getElementById('receiptPreviewWrap').style.display = 'flex';
-      };
-      reader.readAsDataURL(selectedFile);
-    }
-  }
-
-  function clearSelectedReceipt() {
-    selectedFile = null;
-    document.getElementById('receiptFile').value = '';
-    document.getElementById('receiptDropzone').style.display = 'block';
-    document.getElementById('receiptPreviewWrap').style.display = 'none';
-  }
-
-  async function submitRecharge(e) {
-    e.preventDefault();
-    const amount = document.getElementById('rechargeAmount').value;
-    const code = document.getElementById('rechargeCode').value.trim();
-
-    if (!amount || !code) {
-      alert('يرجى إدخال المبلغ والكود');
-      return;
-    }
-
-    const btn = document.getElementById('submitRechargeBtn');
-    btn.disabled = true;
-    btn.textContent = 'جارٍ إرسال الطلب...';
-
-    try {
-      const formData = new FormData();
-      formData.append('amount', amount);
-      formData.append('code', code);
-      if (selectedFile) {
-        formData.append('screenshot', selectedFile);
       }
-
-      await window.KhatwaAPI.student.requestPoints(formData);
-      alert('تم إرسال طلب الشحن بنجاح! سيتم مراجعته واعتماد الرصيد فوراً. ✅');
-      document.getElementById('simplifiedRechargeForm').reset();
-      clearSelectedReceipt();
-      await loadMyRequests();
-    } catch (err) {
-      alert(err.message || 'حدث خطأ أثناء إرسال الطلب');
-    } finally {
-      btn.disabled = false;
-      btn.textContent = '🚀 إرسال طلب الشحن للمراجعة';
     }
-  }
 
-  async function loadMyRequests() {
-    const container = document.getElementById('myRequestsContainer');
-    try {
-      const requests = await window.KhatwaAPI.student.getPointRequests();
-      if (!requests || requests.length === 0) {
-        container.innerHTML = '<p style="color:var(--ink-dim);font-size:0.88rem;text-align:center;padding:20px;">لا توجد طلبات شحن سابقة.</p>';
+    function fallbackCopyText(text, cb) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy');
+        if (cb) cb();
+      } catch (_) {
+        alert('InstaPay account: ' + text);
+      }
+      document.body.removeChild(ta);
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      initInstapayCard();
+      const user = window.KhatwaAPI.getUser();
+      if (user) {
+        document.getElementById('navName').textContent = user.name || user.username;
+        document.getElementById('navAvatar').textContent = (user.name || user.username || 'ط').charAt(0);
+      }
+      window.KhatwaAPI.syncNav();
+      await loadMyRequests();
+    });
+
+    async function handleInstantVoucherRedeem(e) {
+      e.preventDefault();
+      const input = document.getElementById('instantVoucherInput');
+      const alertBox = document.getElementById('instantVoucherAlert');
+      const btn = document.getElementById('btnInstantVoucher');
+      const code = input.value.trim().toUpperCase();
+
+      if (!code) return;
+
+      btn.disabled = true;
+      btn.textContent = 'جارٍ الشحن...';
+      alertBox.style.display = 'none';
+
+      try {
+        const res = await window.KhatwaAPI.student.redeemAccessCode(code);
+        alertBox.style.display = 'block';
+        alertBox.style.background = '#ECFDF5';
+        alertBox.style.color = '#047857';
+        alertBox.style.border = '1px solid #6EE7B7';
+        const addedVal = res.walletBalanceAdded || res.amountAdded || res.pointsAdded || res.data?.pointsAdded || res.amount || '';
+        alertBox.textContent = `✓ تم شحن ${addedVal} ج.م بنجاح وفورياً إلى رصيد محفظتك! 🎉`;
+        input.value = '';
+        setTimeout(() => {
+          window.location.href = 'points.html';
+        }, 1500);
+      } catch (err) {
+        alertBox.style.display = 'block';
+        alertBox.style.background = '#FEE2E2';
+        alertBox.style.color = '#DC2626';
+        alertBox.style.border = '1px solid #FCA5A5';
+        alertBox.textContent = '❌ ' + (err.message || 'كود الشحن غير صالح أو تم استخدامه مسبقاً.');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '⚡ شحن الكود فوراً';
+      }
+    }
+
+    function handleReceiptFile(input) {
+      if (input.files && input.files[0]) {
+        selectedFile = input.files[0];
+        const mb = (selectedFile.size / (1024 * 1024)).toFixed(2);
+        document.getElementById('receiptFileName').textContent = selectedFile.name;
+        document.getElementById('receiptFileSize').textContent = `${mb} MB`;
+
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          document.getElementById('receiptPreviewImg').src = e.target.result;
+          document.getElementById('receiptDropzone').style.display = 'none';
+          document.getElementById('receiptPreviewWrap').style.display = 'flex';
+        };
+        reader.readAsDataURL(selectedFile);
+      }
+    }
+
+    function clearSelectedReceipt() {
+      selectedFile = null;
+      document.getElementById('receiptFile').value = '';
+      document.getElementById('receiptDropzone').style.display = 'block';
+      document.getElementById('receiptPreviewWrap').style.display = 'none';
+    }
+
+    async function submitRecharge(e) {
+      e.preventDefault();
+      const amount = document.getElementById('rechargeAmount').value;
+      const code = document.getElementById('rechargeCode').value.trim();
+
+      if (!amount || !code) {
+        alert('يرجى إدخال المبلغ والكود');
         return;
       }
-      container.innerHTML = requests.map(r => `
+
+      const btn = document.getElementById('submitRechargeBtn');
+      btn.disabled = true;
+      btn.textContent = 'جارٍ إرسال الطلب...';
+
+      try {
+        const formData = new FormData();
+        formData.append('amount', amount);
+        formData.append('code', code);
+        if (selectedFile) {
+          formData.append('screenshot', selectedFile);
+        }
+
+        await window.KhatwaAPI.student.requestPoints(formData);
+        alert('تم إرسال طلب الشحن بنجاح! سيتم مراجعته واعتماد الرصيد فوراً. ✅');
+        document.getElementById('simplifiedRechargeForm').reset();
+        clearSelectedReceipt();
+        await loadMyRequests();
+      } catch (err) {
+        alert(err.message || 'حدث خطأ أثناء إرسال الطلب');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '🚀 إرسال طلب الشحن للمراجعة';
+      }
+    }
+
+    async function loadMyRequests() {
+      const container = document.getElementById('myRequestsContainer');
+      try {
+        const requests = await window.KhatwaAPI.student.getPointRequests();
+        if (!requests || requests.length === 0) {
+          container.innerHTML = '<p style="color:var(--ink-dim);font-size:0.88rem;text-align:center;padding:20px;">لا توجد طلبات شحن سابقة.</p>';
+          return;
+        }
+        container.innerHTML = requests.map(r => `
         <div style="display:flex;justify-content:space-between;align-items:center;background:var(--bg-raised);padding:14px;border-radius:12px;margin-bottom:8px;border:1px solid var(--line-soft);">
           <div>
             <b>المبلغ: ${r.amount} ج.م</b>
@@ -399,10 +443,11 @@
           </span>
         </div>
       `).join('');
-    } catch (e) {
-      container.innerHTML = '<p style="color:var(--ink-dim);font-size:0.88rem;">فشل جلب الطلبات السابقة.</p>';
+      } catch (e) {
+        container.innerHTML = '<p style="color:var(--ink-dim);font-size:0.88rem;">فشل جلب الطلبات السابقة.</p>';
+      }
     }
-  }
-</script>
+  </script>
 </body>
+
 </html>

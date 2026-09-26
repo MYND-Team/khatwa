@@ -1161,28 +1161,53 @@ router.get(
       return;
     }
 
-    // 1. Total distinct students and subscriptions by stage
-    const activeSubs = await prisma.lessonSubscription.findMany({
-      where: { teacherProfileId: profile.id, status: 'ACTIVE' },
-      select: { studentId: true, academicStage: true },
-    });
+    // 1. Total distinct students and subscriptions across lesson subscriptions & course enrollments
+    const [activeSubs, courseEnrollments] = await Promise.all([
+      prisma.lessonSubscription.findMany({
+        where: { teacherProfileId: profile.id, status: 'ACTIVE' },
+        select: { studentId: true, academicStage: true },
+      }),
+      prisma.courseEnrollment.findMany({
+        where: { course: { teacherProfileId: profile.id } },
+        select: { studentId: true, course: { select: { academicStage: true } } },
+      }),
+    ]);
 
     const distinctStudents = new Set<string>();
-    const stageBreakdown: Record<string, number> = {
-      PREPARATORY: 0,
-      SECONDARY_1: 0,
-      SECONDARY_2: 0,
-      BACCALAUREATE_2: 0,
-      SECONDARY_3: 0,
-      BACCALAUREATE_3: 0,
-    };
+    const stageStudentsMap = new Map<string, Set<string>>();
+    const stageSubsMap = new Map<string, number>();
 
+    // Process Lesson Subscriptions
     activeSubs.forEach((sub: any) => {
       distinctStudents.add(sub.studentId);
-      if (sub.academicStage && stageBreakdown[sub.academicStage] !== undefined) {
-        stageBreakdown[sub.academicStage]++;
+      const stage = sub.academicStage || 'UNKNOWN';
+      if (!stageStudentsMap.has(stage)) {
+        stageStudentsMap.set(stage, new Set<string>());
       }
+      stageStudentsMap.get(stage)!.add(sub.studentId);
+      stageSubsMap.set(stage, (stageSubsMap.get(stage) || 0) + 1);
     });
+
+    // Process Course Enrollments
+    courseEnrollments.forEach((ce: any) => {
+      distinctStudents.add(ce.studentId);
+      const stage = ce.course?.academicStage || 'UNKNOWN';
+      if (!stageStudentsMap.has(stage)) {
+        stageStudentsMap.set(stage, new Set<string>());
+      }
+      stageStudentsMap.get(stage)!.add(ce.studentId);
+    });
+
+    // Format breakdown: accurate distinct student count per stage & subscription count
+    const stageBreakdown: Record<string, { studentsCount: number; subscriptionsCount: number }> = {};
+    for (const [stg, studentSet] of stageStudentsMap.entries()) {
+      if (stg !== 'UNKNOWN') {
+        stageBreakdown[stg] = {
+          studentsCount: studentSet.size,
+          subscriptionsCount: stageSubsMap.get(stg) || 0,
+        };
+      }
+    }
 
     // 2. Financial totals from PaymentTransaction
     const [finAgg, transactionsCount] = await Promise.all([
@@ -1206,10 +1231,15 @@ router.get(
         userId: profile.userId,
         displayName: profile.displayName,
         subject: profile.subject,
+        teacher: {
+          id: profile.id,
+          displayName: profile.displayName,
+          subject: profile.subject,
+        },
         commissionPct: profile.commissionPct ?? 80,
         walletBalance: profile.user?.walletBalance ?? 0,
         totalStudentsEnrolled: distinctStudents.size,
-        totalSubscriptionsCount: activeSubs.length,
+        totalSubscriptionsCount: activeSubs.length + courseEnrollments.length,
         stageBreakdown,
         totalSales,
         teacherNetBalance,

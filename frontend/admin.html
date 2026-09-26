@@ -1821,9 +1821,15 @@
       if (teacherId) query.teacherId = teacherId;
 
       const stageNames = {
-        'FIRST_SECONDARY': 'الصف الأول الثانوي',
-        'SECOND_SECONDARY': 'الصف الثاني الثانوي',
-        'THIRD_SECONDARY': 'الصف الثالث الثانوي',
+        'PREPARATORY': 'المرحلة الإعدادية',
+        'SECONDARY_1': 'الصف الأول الثانوي (1 ثانوي)',
+        'SECONDARY_2': 'الصف الثاني الثانوي (2 ثانوي)',
+        'BACCALAUREATE_2': 'الصف الثاني باكلوريا',
+        'SECONDARY_3': 'الصف الثالث الثانوي (3 ثانوي)',
+        'BACCALAUREATE_3': 'الصف الثالث باكلوريا',
+        'FIRST_SECONDARY': 'الصف الأول الثانوي (1 ثانوي)',
+        'SECOND_SECONDARY': 'الصف الثاني الثانوي (2 ثانوي)',
+        'THIRD_SECONDARY': 'الصف الثالث الثانوي (3 ثانوي)',
         'MIDDLE_1': 'الصف الأول الإعدادي',
         'MIDDLE_2': 'الصف الثاني الإعدادي',
         'MIDDLE_3': 'الصف الثالث الإعدادي',
@@ -1848,21 +1854,34 @@
         // Render Dynamic Teacher Breakdown Summary Card
         if (teacherCardEl) {
           teacherCardEl.style.display = 'block';
-          const tName = summary?.teacher?.displayName || 'المدرس المختار';
-          const tSubject = summary?.teacher?.subject ? ` · مادة ${summary.teacher.subject}` : '';
+          const tName = summary?.teacher?.displayName || summary?.displayName || 'المدرس';
+          const tSubject = (summary?.teacher?.subject || summary?.subject) ? ` · مادة ${summary.teacher?.subject || summary.subject}` : '';
           const totalSales = Number(summary?.totalSales ?? 0);
           const teacherNet = Number(summary?.teacherNetBalance ?? 0);
           const platformFee = Number(summary?.platformFee ?? 0);
           const totalStudents = Number(summary?.totalStudentsEnrolled ?? 0);
+          const totalSubscriptions = Number(summary?.totalSubscriptionsCount ?? 0);
           const stageBreakdown = summary?.stageBreakdown || {};
 
-          const stageBadges = Object.keys(stageBreakdown).length > 0
-            ? Object.entries(stageBreakdown).map(([stg, count]) => `
-                <div style="background:var(--bg-raised);border:1px solid var(--line-soft);border-radius:12px;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;min-width:180px;">
-                  <span style="font-weight:600;font-size:0.86rem;color:var(--ink);">${stageNames[stg] || stg}:</span>
-                  <span class="tag tag-ok" style="font-size:0.85rem;font-weight:800;padding:4px 10px;border-radius:8px;">${count} طالب</span>
-                </div>
-              `).join('')
+          // Filter to active stages with enrollments
+          const activeStageEntries = Object.entries(stageBreakdown)
+            .map(([stg, data]) => {
+              const studentsCount = (typeof data === 'object' && data !== null) ? Number(data.studentsCount || 0) : Number(data || 0);
+              const subsCount = (typeof data === 'object' && data !== null) ? Number(data.subscriptionsCount || 0) : 0;
+              return { stage: stg, studentsCount, subsCount };
+            })
+            .filter(item => item.studentsCount > 0 || item.subsCount > 0);
+
+          const stageBadges = activeStageEntries.length > 0
+            ? activeStageEntries.map(item => {
+                const subsDetail = item.subsCount > 0 ? ` (${item.subsCount} اشتراك في الحصص)` : '';
+                return `
+                  <div style="background:var(--bg-raised);border:1px solid var(--line-soft);border-radius:12px;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:14px;min-width:220px;">
+                    <span style="font-weight:700;font-size:0.88rem;color:var(--ink);">${stageNames[item.stage] || item.stage}:</span>
+                    <span class="tag tag-ok" style="font-size:0.85rem;font-weight:800;padding:4px 10px;border-radius:8px;">${item.studentsCount} طالب${subsDetail}</span>
+                  </div>
+                `;
+              }).join('')
             : '<span style="color:var(--ink-dim);font-size:0.88rem;">لا توجد اشتراكات مسجلة لهذا المدرس حتى الآن.</span>';
 
           teacherCardEl.innerHTML = `
@@ -1907,7 +1926,7 @@
                 <div style="background:var(--bg-raised);border:1px solid var(--line-soft);border-radius:14px;padding:16px;">
                   <div style="font-size:0.82rem;color:var(--ink-dim);margin-bottom:4px;">👥 إجمالي الطلاب المشتركين</div>
                   <div style="font-size:1.7rem;font-weight:900;color:var(--primary);">${totalStudents.toLocaleString('ar-EG')} طالب</div>
-                  <div style="font-size:0.75rem;color:var(--ink-dim);margin-top:4px;">في جميع كورسات ومحاضرات المدرس</div>
+                  <div style="font-size:0.75rem;color:var(--ink-dim);margin-top:4px;">${totalSubscriptions > 0 ? `${totalSubscriptions.toLocaleString('ar-EG')} اشتراك بحصص المدرس` : 'في كورسات ومحاضرات المدرس'}</div>
                 </div>
               </div>
 
