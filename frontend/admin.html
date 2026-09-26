@@ -1210,7 +1210,7 @@
             <tr>
               <th>الطالب</th>
               <th>المحاضرة والكورس</th>
-              <th>عنوان IP والجهاز</th>
+              <th>عنوان IP</th>
               <th>تاريخ ووقت المشاهدة</th>
             </tr>
           </thead>
@@ -4048,7 +4048,7 @@
     try {
       const logs = await window.KhatwaAPI.admin.getSecurityLogs();
       allVideoLogs = Array.isArray(logs) ? logs : [];
-      renderVideoLogsTable(allVideoLogs);
+      filterVideoLogs();
     } catch (err) {
       tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--err);padding:24px;">⚠️ تعذر تحميل السجلات: ${escapeHtml(err.message || 'حدث خطأ')}</td></tr>`;
     }
