@@ -1182,20 +1182,36 @@
     </div>
   </div>
 
-  <!-- Tab 4: Security & Logs -->
+  <!-- Tab: Security & Logs -->
   <div id="tabSecurity" class="admin-tab-content" style="display:none;">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:14px;">
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <div class="search-box">
+          <span>🔍</span>
+          <input type="text" id="videoLogsSearchInput" placeholder="بحث باسم الطالب، المحاضرة أو عنوان IP..." oninput="filterVideoLogs()">
+        </div>
+        <button class="btn btn-line btn-sm" onclick="document.getElementById('videoLogsSearchInput').value=''; filterVideoLogs()">↺ إعادة ضبط</button>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <span style="font-size:0.85rem;color:var(--ink-dim);" id="videoLogsCountLabel">عرض 0 سجل</span>
+        <button class="btn btn-line btn-sm" onclick="loadVideoLogs()" style="font-weight:700;display:inline-flex;align-items:center;gap:6px;">
+          <span>🔄 تحديث السجلات</span>
+        </button>
+      </div>
+    </div>
+
     <div class="block">
       <div class="block-head">
-        <h3>🛡️ سجلات تشغيل وحماية الفيديوهات</h3>
+        <h3>🛡️ سجلات تشغيل وحماية الفيديوهات ومراقبة الـ IP</h3>
       </div>
       <div class="table-container">
         <table class="data-table">
           <thead>
             <tr>
               <th>الطالب</th>
-              <th>المحاضرة</th>
-              <th>عنوان IP</th>
-              <th>الوقت</th>
+              <th>المحاضرة والكورس</th>
+              <th>عنوان IP والجهاز</th>
+              <th>تاريخ ووقت المشاهدة</th>
             </tr>
           </thead>
           <tbody id="videoLogsTableBody">
@@ -1561,6 +1577,7 @@
 <script>
   let allStudents = [];
   let allAccessCodes = [];
+  let allVideoLogs = [];
   let newlyGeneratedCodes = [];
   let currentAccessCodeFilter = 'ALL';
   let currentActiveStudentId = null;
@@ -1618,6 +1635,7 @@
     if (tabId === 'tabPointRequests') loadPointRequests();
     if (tabId === 'tabOfflineRequests') loadAdminOfflineRequests();
     if (tabId === 'tabProfileRequests') loadAdminProfileRequests();
+    if (tabId === 'tabSecurity') loadVideoLogs();
   }
 
   async function refreshAdminData() {
@@ -4019,6 +4037,88 @@
     } catch (e) {
       alert('فشل تصدير بيانات المدرسين');
     }
+  }
+
+  // ─── Security & Video Playback Audit Logs ─────────────────────────────────
+  async function loadVideoLogs() {
+    const tbody = document.getElementById('videoLogsTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--ink-dim);padding:30px;">جارٍ تحميل سجلات الأمان...</td></tr>';
+    
+    try {
+      const logs = await window.KhatwaAPI.admin.getSecurityLogs();
+      allVideoLogs = Array.isArray(logs) ? logs : [];
+      renderVideoLogsTable(allVideoLogs);
+    } catch (err) {
+      tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--err);padding:24px;">⚠️ تعذر تحميل السجلات: ${escapeHtml(err.message || 'حدث خطأ')}</td></tr>`;
+    }
+  }
+
+  function renderVideoLogsTable(logsList) {
+    const tbody = document.getElementById('videoLogsTableBody');
+    const countLabel = document.getElementById('videoLogsCountLabel');
+    if (!tbody) return;
+
+    if (countLabel) {
+      countLabel.textContent = `عرض ${logsList.length} سجل`;
+    }
+
+    if (!logsList || logsList.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:36px;color:var(--ink-dim);">
+        <div style="font-size:2.2rem;margin-bottom:8px;">🛡️</div>
+        <b style="font-size:1.05rem;color:var(--ink);">لا توجد سجلات تشغيل مطابقة</b>
+        <p style="margin:6px 0 0;font-size:0.86rem;">يتم تسجيل عناوين IP وتفاصيل الأجهزة للطلاب تلقائياً عند فتح وتشغيل أي محاضرة على المنصة.</p>
+      </td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = logsList.map(log => {
+      const studentName = escapeHtml(log.student?.username || 'طالب');
+      const phone = escapeHtml(log.student?.studentProfile?.studentPhoneNumber || '');
+      const lessonTitle = escapeHtml(log.lesson?.title || 'محاضرة بدون عنوان');
+      const courseTitle = escapeHtml(log.lesson?.course?.title || '');
+      const ip = escapeHtml(log.ip || '—');
+      const timeStr = log.createdAt ? new Date(log.createdAt).toLocaleString('ar-EG', { dateStyle: 'medium', timeStyle: 'short' }) : '—';
+
+      return `<tr>
+        <td>
+          <div style="font-weight:700;color:var(--ink);">${studentName}</div>
+          ${phone ? `<div style="font-size:0.82rem;color:var(--ink-dim);margin-top:2px;">📱 ${phone}</div>` : ''}
+        </td>
+        <td>
+          <div style="font-weight:600;color:var(--primary);">${lessonTitle}</div>
+          ${courseTitle ? `<div style="font-size:0.82rem;color:var(--ink-dim);margin-top:2px;">📚 ${courseTitle}</div>` : ''}
+        </td>
+        <td>
+          <span style="font-family:monospace;background:var(--bg-raised);padding:4px 10px;border-radius:6px;font-size:0.88rem;border:1px solid var(--line-soft);letter-spacing:0.5px;">
+            ${ip}
+          </span>
+        </td>
+        <td style="font-size:0.88rem;color:var(--ink-dim);white-space:nowrap;">
+          🕒 ${timeStr}
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  function filterVideoLogs() {
+    const q = (document.getElementById('videoLogsSearchInput')?.value || '').trim().toLowerCase();
+    if (!q) {
+      renderVideoLogsTable(allVideoLogs);
+      return;
+    }
+
+    const filtered = allVideoLogs.filter(log => {
+      const student = (log.student?.username || '').toLowerCase();
+      const phone = (log.student?.studentProfile?.studentPhoneNumber || '').toLowerCase();
+      const lesson = (log.lesson?.title || '').toLowerCase();
+      const course = (log.lesson?.course?.title || '').toLowerCase();
+      const ip = (log.ip || '').toLowerCase();
+
+      return student.includes(q) || phone.includes(q) || lesson.includes(q) || course.includes(q) || ip.includes(q);
+    });
+
+    renderVideoLogsTable(filtered);
   }
 </script>
 </body>

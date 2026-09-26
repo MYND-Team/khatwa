@@ -457,7 +457,8 @@
           body: { reason },
         });
       },
-      async getVideoAccessLogs() { const res = await request('/admin/video-access-logs'); return res.data || []; },
+      async getVideoAccessLogs() { const res = await request('/admin/security-logs'); return res.data || []; },
+      async getSecurityLogs() { const res = await request('/admin/security-logs'); return res.data || []; },
       async getAccessCodes(status) {
         const query = status && status !== 'ALL' ? ('?status=' + status) : '';
         const res = await request('/admin/access-codes' + query);

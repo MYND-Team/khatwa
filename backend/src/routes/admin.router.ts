@@ -1699,5 +1699,43 @@ router.patch(
   })
 );
 
+router.get(
+  '/security-logs',
+  asyncHandler(async (_req, res) => {
+    const logs = await prisma.videoAccessLog.findMany({
+      take: 100,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        student: {
+          select: {
+            id: true,
+            username: true,
+            studentProfile: {
+              select: {
+                studentPhoneNumber: true,
+              },
+            },
+          },
+        },
+        lesson: {
+          select: {
+            id: true,
+            title: true,
+            course: {
+              select: {
+                id: true,
+                title: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    res.status(200).json({ success: true, data: logs });
+  })
+);
+
 export default router;
+
 
