@@ -1389,4 +1389,186 @@ table.plain tr:hover td{background:var(--primary-faint);}
   box-shadow: 0 2px 6px rgba(19, 64, 116, 0.08);
 }
 
+/* ─── WhatsApp Floating Support Widget ──────────────────────────────────────── */
+.khatwa-whatsapp-float {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  font-family: inherit;
+  direction: rtl;
+}
+
+html[dir="ltr"] .khatwa-whatsapp-float {
+  left: auto;
+  right: 24px;
+  direction: ltr;
+}
+
+.khatwa-whatsapp-btn {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 18px rgba(37, 211, 102, 0.45);
+  position: relative;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.khatwa-whatsapp-btn svg {
+  width: 32px;
+  height: 32px;
+  fill: #ffffff;
+  transition: transform 0.3s ease;
+}
+
+.khatwa-whatsapp-float:hover .khatwa-whatsapp-btn {
+  transform: scale(1.08) rotate(4deg);
+  box-shadow: 0 8px 24px rgba(37, 211, 102, 0.55);
+}
+
+/* Pulsing wave ring */
+.khatwa-whatsapp-btn::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid #25D366;
+  opacity: 0.7;
+  animation: wa-pulse 2s infinite ease-out;
+  pointer-events: none;
+}
+
+@keyframes wa-pulse {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.25);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+}
+
+/* Floating Label / Tooltip */
+.khatwa-whatsapp-label {
+  background: var(--bg-card, #1e293b);
+  color: var(--ink, #f8fafc);
+  border: 1px solid rgba(37, 211, 102, 0.35);
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 0.84rem;
+  font-weight: 700;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  transition: all 0.25s ease;
+  pointer-events: none;
+}
+
+.khatwa-whatsapp-float:hover .khatwa-whatsapp-label {
+  border-color: #25D366;
+  background: var(--bg-raised, #27354a);
+  transform: translateX(-4px);
+}
+
+html[dir="ltr"] .khatwa-whatsapp-float:hover .khatwa-whatsapp-label {
+  transform: translateX(4px);
+}
+
+@media (max-width: 640px) {
+  .khatwa-whatsapp-float {
+    bottom: 16px;
+    left: 16px;
+  }
+  html[dir="ltr"] .khatwa-whatsapp-float {
+    right: 16px;
+    left: auto;
+  }
+  .khatwa-whatsapp-label {
+    display: none;
+  }
+  .khatwa-whatsapp-btn {
+    width: 50px;
+    height: 50px;
+  }
+  .khatwa-whatsapp-btn svg {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+/* ─── Support Card Section Styles ───────────────────────────────────────────── */
+.support-card-section {
+  background: linear-gradient(135deg, rgba(37, 211, 102, 0.08) 0%, rgba(18, 140, 126, 0.03) 100%);
+  border: 1px solid rgba(37, 211, 102, 0.28);
+  border-radius: 18px;
+  padding: 22px 24px;
+  margin-top: 24px;
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 18px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.support-card-section:hover {
+  border-color: rgba(37, 211, 102, 0.45);
+  box-shadow: 0 6px 20px rgba(37, 211, 102, 0.08);
+}
+
+.support-badge-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  flex-shrink: 0;
+  box-shadow: 0 4px 14px rgba(37, 211, 102, 0.35);
+}
+
+.support-whatsapp-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+  color: #ffffff !important;
+  font-weight: 700;
+  font-size: 0.92rem;
+  padding: 10px 22px;
+  border-radius: 12px;
+  border: none;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(37, 211, 102, 0.32);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+.support-whatsapp-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(37, 211, 102, 0.45);
+  filter: brightness(1.05);
+}
+
+
 

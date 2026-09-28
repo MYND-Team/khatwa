@@ -116,4 +116,56 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  // ─── Global Floating WhatsApp Support Widget ─────────────────────────────
+  initWhatsAppSupport();
+
 });
+
+/**
+ * Initializes the floating WhatsApp Technical Support button
+ * Directs to the platform's support number: 01111343693
+ */
+function initWhatsAppSupport() {
+  if (document.getElementById('khatwaWhatsAppFloat')) return;
+
+  const phone = '201111343693';
+  let defaultMsg = 'مرحبًا، أحتاج إلى مساعدة أو دعم فني بخصوص منصة خطوة التعليمية.';
+
+  try {
+    const user = window.KhatwaAPI?.getUser?.();
+    if (user?.role === 'TEACHER') {
+      defaultMsg = `مرحبًا، أنا المعلم (${user.name || user.username || ''}) في منصة خطوة وأحتاج إلى دعم فني.`;
+    } else if (user?.role === 'STUDENT') {
+      defaultMsg = `مرحبًا، أنا الطالب (${user.name || user.username || ''}) في منصة خطوة وأحتاج إلى مساعدة.`;
+    }
+  } catch (e) {
+    // Fallback to default message
+  }
+
+  const encodedMsg = encodeURIComponent(defaultMsg);
+  const waUrl = `https://wa.me/${phone}?text=${encodedMsg}`;
+
+  const floatBtn = document.createElement('a');
+  floatBtn.id = 'khatwaWhatsAppFloat';
+  floatBtn.className = 'khatwa-whatsapp-float';
+  floatBtn.href = waUrl;
+  floatBtn.target = '_blank';
+  floatBtn.rel = 'noopener noreferrer';
+  floatBtn.setAttribute('aria-label', 'تواصل مع الدعم الفني عبر واتساب 01111343693');
+  floatBtn.title = 'الدعم الفني عبر واتساب: 01111343693';
+
+  floatBtn.innerHTML = `
+    <div class="khatwa-whatsapp-btn">
+      <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <path d="M16 2a13.93 13.93 0 0 0-12.08 20.94L2 30l7.25-1.9A13.93 13.93 0 1 0 16 2zm0 25.5a11.5 11.5 0 0 1-5.88-1.6l-.42-.25-4.34 1.14 1.16-4.23-.28-.44A11.54 11.54 0 1 1 16 27.5zm6.34-8.67c-.35-.17-2.06-1-2.38-1.12s-.55-.17-.79.17-.91 1.12-1.12 1.35-.41.26-.76.09a9.55 9.55 0 0 1-2.81-1.73 10.53 10.53 0 0 1-1.94-2.42c-.2-.35 0-.54.15-.71s.35-.41.52-.61a2.38 2.38 0 0 0 .35-.58.64.64 0 0 0 0-.61c-.09-.17-.79-1.9-1.08-2.61s-.58-.6-.79-.61h-.68a1.3 1.3 0 0 0-.94.44 3.94 3.94 0 0 0-1.23 2.93 6.87 6.87 0 0 0 1.44 3.64 15.77 15.77 0 0 0 6 5.34c3.58 1.55 3.58 1 4.22 1a3.61 3.61 0 0 0 2.37-1.65 3 3 0 0 0 .21-1.65c-.09-.17-.32-.26-.67-.44z"/>
+      </svg>
+    </div>
+    <span class="khatwa-whatsapp-label">
+      <span>الدعم الفني</span>
+      <span style="font-size:0.75rem;opacity:0.85;">(واتساب)</span>
+    </span>
+  `;
+
+  document.body.appendChild(floatBtn);
+}
+
