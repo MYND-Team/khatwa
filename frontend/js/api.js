@@ -323,13 +323,19 @@
     },
 
     async fetchLiveUser() {
+      if (!getStoredToken()) return null;
       try {
         const res = await request('/auth/me');
         if (res.success && res.data) {
           setStoredUser(res.data);
           return res.data;
         }
-      } catch (_) {}
+      } catch (err) {
+        if (err?.status === 401 || String(err?.message || '').includes('401')) {
+          setStoredToken(null);
+          setStoredUser(null);
+        }
+      }
       return getStoredUser();
     },
 
@@ -877,8 +883,10 @@
   document.addEventListener('DOMContentLoaded', () => {
     applyDynamicBranding();
     KhatwaAPI.syncNav();
-    KhatwaAPI.fetchLiveUser().then(() => {
-      KhatwaAPI.syncNav();
-    });
+    if (KhatwaAPI.getToken()) {
+      KhatwaAPI.fetchLiveUser().then(() => {
+        KhatwaAPI.syncNav();
+      });
+    }
   });
 })(window);

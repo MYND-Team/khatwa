@@ -1463,6 +1463,13 @@ html[dir="ltr"] .khatwa-whatsapp-float {
   }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .khatwa-whatsapp-btn::after {
+    animation: none;
+    display: none;
+  }
+}
+
 /* Floating Label / Tooltip */
 .khatwa-whatsapp-label {
   background: var(--bg-card, #1e293b);

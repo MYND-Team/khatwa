@@ -151,7 +151,7 @@
 <script src="js/main.js"></script>
 <script>
   // Dynamic navbar: show user avatar if already logged in
-  document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('DOMContentLoaded', async function() {
     const user = window.KhatwaAPI && window.KhatwaAPI.getUser();
     if (user) {
       const isAdmin = (user.role === 'ADMIN' || user.username === 'sameryasser-khatwa' || user.username?.toLowerCase()?.includes('sameryasser'));
@@ -209,33 +209,44 @@
 
     // Render top 4 courses preview
     const grid = document.getElementById('homepageCourseGrid');
-    if (grid && window.KhatwaAPI) {
-      const courses = window.KhatwaAPI.courses.getAll().slice(0, 4);
-      if (courses.length === 0) {
+    if (grid && window.KhatwaAPI?.courses?.getAll) {
+      try {
+        const allCourses = await window.KhatwaAPI.courses.getAll();
+        const courses = Array.isArray(allCourses) ? allCourses.slice(0, 4) : [];
+        if (courses.length === 0) {
+          grid.innerHTML = '<p style="color:var(--ink-faint);text-align:center;grid-column:1/-1;">سيتم نشر الكورسات قريبًا من قِبل المدرسين.</p>';
+        } else {
+          grid.innerHTML = courses.map(c => {
+            const lecCount = c.lessons?.length || c.lectures?.length || 0;
+            const teacher = c.teacherProfile || {};
+            const teacherName = teacher.displayName || c.teacherName || 'أستاذ المادة';
+            const subject = teacher.subject || c.subject || 'عام';
+            const priceBadge = (c.price > 0) ? `${c.price} ج.م` : (c.pointCost ? `${c.pointCost} نقطة` : 'مجاني');
+            const safeEscape = window.escapeHtml || (s => s || '');
+            return `
+              <div class="course-card">
+                <div>
+                  <div class="course-card-top">
+                    <span class="course-badge">${safeEscape(subject)}</span>
+                    <span class="points-tag" style="font-size:.76rem;padding:3px 8px;">${safeEscape(priceBadge)}</span>
+                  </div>
+                  <h3>${safeEscape(c.title)}</h3>
+                  <div class="teacher-info" style="margin-bottom:10px;">
+                    <span>المدرس: <b>${safeEscape(teacherName)}</b></span>
+                  </div>
+                  <p>${safeEscape(c.description || 'كورس تعليمي شامل لإتقان المادة.')}</p>
+                </div>
+                <div class="course-card-footer">
+                  <span style="font-size:.82rem;color:var(--ink-faint);">${lecCount} محاضرات</span>
+                  <a href="courses.html" class="btn btn-primary btn-sm">تصفح الكورس</a>
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+      } catch (err) {
+        console.warn('Could not load courses preview:', err);
         grid.innerHTML = '<p style="color:var(--ink-faint);text-align:center;grid-column:1/-1;">سيتم نشر الكورسات قريبًا من قِبل المدرسين.</p>';
-      } else {
-        grid.innerHTML = courses.map(c => {
-          const lecCount = c.lectures ? c.lectures.length : 0;
-          return `
-            <div class="course-card">
-              <div>
-                <div class="course-card-top">
-                  <span class="course-badge">${c.subject}</span>
-                  <span class="points-tag" style="font-size:.76rem;padding:3px 8px;">${c.pointCost} نقطة</span>
-                </div>
-                <h3>${c.title}</h3>
-                <div class="teacher-info" style="margin-bottom:10px;">
-                  <span>المدرس: <b>${c.teacherName}</b></span>
-                </div>
-                <p>${c.description || 'كورس تعليمي شامل لإتقان المادة.'}</p>
-              </div>
-              <div class="course-card-footer">
-                <span style="font-size:.82rem;color:var(--ink-faint);">${lecCount} محاضرات</span>
-                <a href="courses.html" class="btn btn-primary btn-sm">تصفح الكورس</a>
-              </div>
-            </div>
-          `;
-        }).join('');
       }
     }
   });
