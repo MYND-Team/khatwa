@@ -41,8 +41,10 @@
     try {
       if (token) {
         sessionStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, token);
+        localStorage.setItem('khatwa_has_session', '1');
       } else {
         sessionStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
+        localStorage.removeItem('khatwa_has_session');
       }
       localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
     } catch (_) {}
@@ -147,9 +149,16 @@
   async function performTokenRefresh() {
     if (_refreshPromise) return _refreshPromise;
 
+    const storedRefreshToken = getStoredRefreshToken();
+    const hasSessionMarker = localStorage.getItem('khatwa_has_session') === '1';
+
+    // If there is neither a stored refresh token nor an active session indicator, skip the request
+    if (!storedRefreshToken && !hasSessionMarker) {
+      return null;
+    }
+
     _refreshPromise = (async () => {
       try {
-        const storedRefreshToken = getStoredRefreshToken();
         const res = await fetch(DEFAULT_API_BASE + '/auth/refresh', {
           method: 'POST',
           credentials: 'include',

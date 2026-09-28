@@ -63,20 +63,35 @@
 <script src="js/i18n.js"></script>
 <script src="js/main.js"></script>
 <script>
-  // Auto-redirect if user has a valid session (HttpOnly Cookie)
+  // Auto-redirect if user already has an active session
   document.addEventListener('DOMContentLoaded', async () => {
+    function redirectUser(user) {
+      if (user.studentProfile?.academicStage) {
+        try { localStorage.setItem('khatwa_active_stage', user.studentProfile.academicStage); } catch (_) {}
+      }
+      const role = user.role || 'STUDENT';
+      if (role === 'ADMIN') window.location.href = 'admin.html';
+      else if (role === 'TEACHER') window.location.href = 'teacher-dashboard.html';
+      else if (role === 'STAFF') window.location.href = 'admin-points.html';
+      else window.location.href = 'dashboard.html';
+    }
+
+    const existingUser = window.KhatwaAPI?.getUser?.();
+    const existingToken = window.KhatwaAPI?.getToken?.();
+    if (existingUser && existingToken) {
+      redirectUser(existingUser);
+      return;
+    }
+
+    // Only attempt refresh if there is a recorded session
+    const hasSession = localStorage.getItem('khatwa_has_session') === '1' || Boolean(existingUser || existingToken);
+    if (!hasSession) return;
+
     const refreshed = await window.KhatwaAPI.auth.silentRefresh();
     if (refreshed) {
-      const user = await window.KhatwaAPI.getUser();
+      const user = window.KhatwaAPI.getUser();
       if (user) {
-        if (user.studentProfile?.academicStage) {
-          try { localStorage.setItem('khatwa_active_stage', user.studentProfile.academicStage); } catch (_) {}
-        }
-        const role = user.role || 'STUDENT';
-        if (role === 'ADMIN') window.location.href = 'admin.html';
-        else if (role === 'TEACHER') window.location.href = 'teacher-dashboard.html';
-        else if (role === 'STAFF') window.location.href = 'admin-points.html';
-        else window.location.href = 'dashboard.html';
+        redirectUser(user);
       }
     }
   });
