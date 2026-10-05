@@ -119,7 +119,396 @@ document.addEventListener('DOMContentLoaded', () => {
   // ─── Global Floating WhatsApp Support Widget ─────────────────────────────
   initWhatsAppSupport();
 
+  // ─── Khatwa 2.0 Visual Engine (Mesh Background, Collapsible Taskbar, Dark Mode) ──
+  initBackgroundMesh();
+  initDarkMode();
+  initCollapsibleTaskbar();
+  initTransparentLogos();
+
 });
+
+/**
+ * Ensures brand logos use transparent background version as requested in PDF Page 2
+ */
+function initTransparentLogos() {
+  document.querySelectorAll('img.brand-logo, .brand img, #platformLogoPreview img, .modal-head img').forEach(img => {
+    const src = img.getAttribute('src');
+    if (src && (src.includes('logo-khatwa.png') || src.includes('logo-khatwa.jpeg'))) {
+      img.src = 'logo/logo-khatwa-transparent.png';
+      img.onerror = function() { this.src = 'logo/logo-khatwa.png'; };
+    }
+  });
+}
+
+/**
+ * DecorativeBackground — خطوة Platform
+ *
+ * Injects 4 stacked decorative layers behind all content:
+ *   Layer 1 — Blobs   : 3 large radial glows (float animation, colors from --primary/--accent/--secondary)
+ *   Layer 2 — Dots    : repeating dot grid fading at edges (color from --ink)
+ *   Layer 3 — Doodles : educational line-art SVGs scattered at angles (currentColor → --ink)
+ *   Layer 4 — Path    : dashed winding SVG path referencing "خطوة" (step/path)
+ *
+ * ALL colors come from CSS custom properties — zero hardcoded hex values.
+ * theme changes (data-theme="dark") are picked up automatically via CSS transitions.
+ */
+function initBackgroundMesh() {
+  // Idempotent guard — only inject once per page
+  if (document.querySelector('.khatwa-deco-bg')) return;
+
+  // ── Educational doodle SVG definitions ──────────────────────────────────
+  // Each doodle: [top%, inset-inline-start%, size, rotation_deg, SVG_path_data]
+  const DOODLES = [
+    // Book
+    {
+      top: '8%', start: '5%', size: 44, rot: -18,
+      svg: `<svg width="44" height="44" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="11" x2="14" y2="11"/></svg>`
+    },
+    // Pencil
+    {
+      top: '14%', start: '90%', size: 40, rot: 25,
+      svg: `<svg width="40" height="40" viewBox="0 0 24 24"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>`
+    },
+    // Light Bulb
+    {
+      top: '45%', start: '3%', size: 42, rot: 10,
+      svg: `<svg width="42" height="42" viewBox="0 0 24 24"><line x1="12" y1="2" x2="12" y2="3"/><path d="M12 5a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V20a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-2.26C6.19 16.47 5 14.38 5 12a7 7 0 0 1 7-7z"/><line x1="9" y1="21" x2="15" y2="21"/></svg>`
+    },
+    // Atom
+    {
+      top: '65%', start: '88%', size: 46, rot: -12,
+      svg: `<svg width="46" height="46" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><path d="M20.2 20.2c2.04-2.03.02-7.36-4.5-11.9C11.18 3.8 5.83 1.7 3.8 3.8c-2.06 2.05-.04 7.38 4.5 11.9 4.52 4.52 9.85 6.56 11.9 4.5z"/><path d="M3.8 20.2c2.05 2.06 7.38.04 11.9-4.5 4.52-4.52 6.54-9.85 4.5-11.9"/></svg>`
+    },
+    // Graduation cap
+    {
+      top: '78%', start: '12%', size: 44, rot: 8,
+      svg: `<svg width="44" height="44" viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>`
+    },
+    // Pi symbol / math
+    {
+      top: '30%', start: '94%', size: 38, rot: -20,
+      svg: `<svg width="38" height="38" viewBox="0 0 24 24"><line x1="4" y1="7" x2="20" y2="7"/><line x1="9" y1="7" x2="9" y2="20"/><path d="M14 7v7a3 3 0 0 0 6 0V7"/></svg>`
+    },
+    // Ruler
+    {
+      top: '55%', start: '6%', size: 40, rot: 40,
+      svg: `<svg width="40" height="40" viewBox="0 0 24 24"><path d="M3 3h18v5H3z"/><line x1="7" y1="3" x2="7" y2="8"/><line x1="11" y1="3" x2="11" y2="6"/><line x1="15" y1="3" x2="15" y2="8"/><line x1="19" y1="3" x2="19" y2="6"/></svg>`
+    },
+    // Flask
+    {
+      top: '20%', start: '48%', size: 36, rot: -6,
+      svg: `<svg width="36" height="36" viewBox="0 0 24 24"><path d="M9 3h6v8l4.5 8.5A2 2 0 0 1 17.78 22H6.22a2 2 0 0 1-1.72-2.5L9 11V3z"/><line x1="9" y1="3" x2="15" y2="3"/></svg>`
+    },
+    // Star / award
+    {
+      top: '88%', start: '72%', size: 36, rot: 15,
+      svg: `<svg width="36" height="36" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`
+    },
+  ];
+
+  // ── Winding dashed path (خطوة = steps/journey) ──────────────────────────
+  // An organic cubic-bezier path that snakes across the viewport.
+  // Uses percentages via viewBox so it adapts to any screen size.
+  const PATH_D = [
+    'M -20 80',
+    'C 60 20, 120 140, 200 80',
+    'C 280 20, 340 150, 430 90',
+    'C 520 30, 580 160, 680 100',
+    'C 780 40, 840 170, 940 110',
+    'C 1040 50, 1100 180, 1200 120',
+  ].join(' ');
+
+  // ── Build the component HTML ─────────────────────────────────────────────
+  const deco = document.createElement('div');
+  deco.className = 'khatwa-deco-bg';
+  deco.setAttribute('aria-hidden', 'true');
+  deco.setAttribute('role', 'presentation');
+
+  deco.innerHTML = `
+    <!-- Layer 1: Blobs -->
+    <div class="khatwa-deco-blob khatwa-deco-blob-1"></div>
+    <div class="khatwa-deco-blob khatwa-deco-blob-2"></div>
+    <div class="khatwa-deco-blob khatwa-deco-blob-3"></div>
+
+    <!-- Layer 2: Dot grid -->
+    <div class="khatwa-deco-dots"></div>
+
+    <!-- Layer 3: Educational doodles -->
+    <div class="khatwa-deco-doodles">
+      ${DOODLES.map(d => `
+        <span class="khatwa-deco-doodle"
+          style="top:${d.top};inset-inline-start:${d.start};width:${d.size}px;height:${d.size}px;transform:rotate(${d.rot}deg);">
+          ${d.svg}
+        </span>
+      `).join('')}
+    </div>
+
+    <!-- Layer 4: Dashed winding path -->
+    <svg class="khatwa-deco-path"
+         viewBox="0 0 1200 200"
+         preserveAspectRatio="none"
+         xmlns="http://www.w3.org/2000/svg">
+      <path d="${PATH_D}"/>
+    </svg>
+  `;
+
+  // Insert as the very first child of <body>
+  document.body.prepend(deco);
+
+  // ── Keep old .khatwa-bg-mesh guard compatible (backward compat) ──────────
+  deco.classList.add('khatwa-bg-mesh');
+}
+
+/**
+ * Initializes and manages Dark Mode with local persistence
+ */
+function initDarkMode() {
+  const savedTheme = localStorage.getItem('khatwa_theme');
+  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const isDark = savedTheme === 'dark' || (!savedTheme && prefersDark);
+
+  if (isDark) {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    document.body.classList.add('dark-mode');
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+    document.body.classList.remove('dark-mode');
+  }
+
+  // Bind any existing dark-mode-toggle buttons on page
+  document.querySelectorAll('[data-dark-toggle]').forEach(btn => {
+    btn.addEventListener('click', toggleDarkMode);
+    btn.textContent = isDark ? '☀️ الوضع المضيء' : '🌙 الوضع الليلي';
+  });
+}
+
+function toggleDarkMode() {
+  const isCurrentlyDark = document.documentElement.getAttribute('data-theme') === 'dark' || document.body.classList.contains('dark-mode');
+  const newDark = !isCurrentlyDark;
+
+  if (newDark) {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    document.body.classList.add('dark-mode');
+    localStorage.setItem('khatwa_theme', 'dark');
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+    document.body.classList.remove('dark-mode');
+    localStorage.setItem('khatwa_theme', 'light');
+  }
+
+  document.querySelectorAll('[data-dark-toggle]').forEach(btn => {
+    const isEn = window.KhatwaI18n?.getLanguage() === 'en';
+    btn.textContent = newDark ? (isEn ? '☀️ Light' : '☀️ المضيء') : (isEn ? '🌙 Dark' : '🌙 الليلي');
+  });
+}
+
+/**
+ * Initializes the Responsive Collapsible Side Taskbar for all user roles
+ * (Admin, Teacher, Student) as requested in PDF Pages 2, 24, 25.
+ */
+function initCollapsibleTaskbar() {
+  if (document.getElementById('khatwaTaskbar')) return;
+
+  const currentPath = window.location.pathname.split('/').pop() || 'index.html';
+
+  // Do not show taskbar on bare login/signup/public index unless user is logged in
+  const user = window.KhatwaAPI?.getUser?.();
+  const isAdminPage = currentPath === 'admin.html';
+  const isTeacherPage = currentPath === 'teacher-dashboard.html';
+  const isStudentApp = [
+    'dashboard.html', 'courses.html', 'subject.html', 'lesson.html',
+    'points.html', 'request-points.html', 'request-offline.html',
+    'profile.html', 'results.html', 'notifications.html', 'exam.html', 'homework.html'
+  ].includes(currentPath);
+
+  if (!isAdminPage && !isTeacherPage && !isStudentApp && !user) {
+    return;
+  }
+
+  let role = 'STUDENT';
+  if (isAdminPage || user?.role === 'ADMIN' || user?.username === 'sameryasser-khatwa') {
+    role = 'ADMIN';
+  } else if (isTeacherPage || user?.role === 'TEACHER') {
+    role = 'TEACHER';
+  }
+
+  // Create Taskbar Container
+  const taskbar = document.createElement('aside');
+  taskbar.id = 'khatwaTaskbar';
+  taskbar.className = 'khatwa-taskbar';
+  taskbar.setAttribute('aria-label', 'شريط المهام والتنقل الجانبي');
+
+  // Check pinned state
+  const isPinned = localStorage.getItem('khatwa_taskbar_pinned') === 'true';
+  if (isPinned) {
+    taskbar.classList.add('expanded');
+    document.body.classList.add('taskbar-pinned');
+  }
+  document.body.classList.add('has-khatwa-taskbar');
+
+  // Backdrop for mobile
+  const backdrop = document.createElement('div');
+  backdrop.className = 'khatwa-taskbar-backdrop';
+  backdrop.addEventListener('click', () => taskbar.classList.remove('mobile-open'));
+  document.body.appendChild(backdrop);
+
+  // Define Navigation Items based on user role
+  let navItems = [];
+  const isEn = window.KhatwaI18n?.getLanguage() === 'en';
+
+  if (role === 'ADMIN') {
+    navItems = [
+      { id: 'tabStudents', icon: '🎓', label: isEn ? 'Students' : 'الطلاب', action: "switchAdminTab && switchAdminTab('tabStudents')" },
+      { id: 'tabTeachers', icon: '👨‍🏫', label: isEn ? 'Teachers' : 'المدرسين', action: "switchAdminTab && switchAdminTab('tabTeachers')" },
+      { id: 'tabSubscriptions', icon: '🔑', label: isEn ? 'Subscriptions' : 'الاشتراكات', action: "switchAdminTab && switchAdminTab('tabSubscriptions')" },
+      { id: 'tabPayments', icon: '💳', label: isEn ? 'Finance' : 'السجل المالي', action: "switchAdminTab && switchAdminTab('tabPayments')" },
+      { id: 'tabStages', icon: '🏫', label: isEn ? 'Stages' : 'المراحل', action: "switchAdminTab && switchAdminTab('tabStages')" },
+      { id: 'tabAppearance', icon: '🎨', label: isEn ? 'Appearance & Theme' : 'المظهر والألوان', action: "switchAdminTab && switchAdminTab('tabAppearance')" },
+      { id: 'tabAccessCodes', icon: '🎟️', label: isEn ? 'Voucher Codes' : 'أكواد الشحن', action: "switchAdminTab && switchAdminTab('tabAccessCodes')" },
+      { id: 'tabPointRequests', icon: '💰', label: isEn ? 'Recharge Requests' : 'طلبات الشحن', action: "switchAdminTab && switchAdminTab('tabPointRequests')" },
+      { id: 'tabOfflineRequests', icon: '🏢', label: isEn ? 'Offline Requests' : 'طلبات الأوفلاين', action: "switchAdminTab && switchAdminTab('tabOfflineRequests')" },
+      { id: 'tabProfileRequests', icon: '📋', label: isEn ? 'Profile Edits' : 'طلبات البيانات', action: "switchAdminTab && switchAdminTab('tabProfileRequests')" },
+      { id: 'tabSecurity', icon: '🛡️', label: isEn ? 'Security' : 'الأمان والنظام', action: "switchAdminTab && switchAdminTab('tabSecurity')" },
+    ];
+  } else if (role === 'TEACHER') {
+    navItems = [
+      { href: 'teacher-dashboard.html', id: 'view-courses', icon: '📊', label: isEn ? 'Studio & Courses' : 'الكورسات والمحاضرات', action: "window.switchMainView && window.switchMainView('view-courses')" },
+      { href: 'teacher-dashboard.html#students', id: 'view-students', icon: '👨‍🎓', label: isEn ? 'Students' : 'طلاب المرحلة', action: "window.switchMainView && window.switchMainView('view-students')" },
+      { href: 'teacher-dashboard.html#revenue', id: 'view-revenue', icon: '💵', label: isEn ? 'Earnings & Wallet' : 'الرصيد والأرباح', action: "window.switchMainView && window.switchMainView('view-revenue')" },
+      { href: 'teacher-dashboard.html#calendar', id: 'view-calendar', icon: '📅', label: isEn ? 'Schedule Calendar' : 'تقويم المحاضرات', action: "window.switchMainView && window.switchMainView('view-calendar'); window.loadCalendarView && window.loadCalendarView();" },
+      { href: 'courses.html', icon: '🔍', label: isEn ? 'Browse Platform' : 'تصفح المنصة كطالب' },
+    ];
+  } else {
+    // STUDENT
+    navItems = [
+      { href: 'dashboard.html', icon: '🏠', label: isEn ? 'Home' : 'الرئيسية' },
+      { href: 'profile.html', icon: '👤', label: isEn ? 'Profile' : 'الملف الشخصي' },
+      { href: 'courses.html', icon: '📚', label: isEn ? 'My Lectures & Courses' : 'محاضراتي والكورسات' },
+      { href: 'points.html', icon: '💳', label: isEn ? 'Wallet & Balance' : 'المحفظة والرصيد' },
+      { href: 'request-points.html', icon: '⚡', label: isEn ? 'Request Balance' : 'طلب شحن رصيد' },
+      { href: 'request-offline.html', icon: '🏢', label: isEn ? 'Center Request' : 'طلب سنتر / أوفلاين' },
+      { href: 'results.html', icon: '📊', label: isEn ? 'Grades & Results' : 'النتائج والتقارير' },
+    ];
+  }
+
+  // Build Taskbar Inner HTML
+  const brandTitle = role === 'ADMIN' ? 'إدارة خطوة' : (role === 'TEACHER' ? 'استوديو خطوة' : 'منصة خطوة');
+  const logoSrc = 'logo/logo-khatwa-transparent.png';
+
+  taskbar.innerHTML = `
+    <div>
+      <div class="khatwa-taskbar-head">
+        <a href="${role === 'ADMIN' ? 'admin.html' : (role === 'TEACHER' ? 'teacher-dashboard.html' : 'dashboard.html')}" class="khatwa-taskbar-brand">
+          <img src="${logoSrc}" alt="خطوة" class="khatwa-taskbar-logo" onerror="this.src='logo/logo-khatwa.png'">
+          <span class="khatwa-taskbar-title">${brandTitle}</span>
+        </a>
+        <button type="button" class="khatwa-taskbar-pin-btn" id="taskbarPinBtn" title="تثبيت / إلغاء تثبيت القائمة">
+          ${isPinned ? '📌' : '📍'}
+        </button>
+      </div>
+
+      <nav class="khatwa-taskbar-nav">
+        ${navItems.map(item => {
+          let isActive = false;
+          if (role === 'ADMIN') {
+            isActive = item.id === 'tabStudents';
+          } else if (item.href) {
+            isActive = currentPath === item.href.split('#')[0];
+          }
+
+          const actionAttr = item.action ? `onclick="${item.action}"` : '';
+          const hrefAttr = item.href ? `href="${item.href}"` : 'href="javascript:void(0)"';
+
+          return `
+            <a ${hrefAttr} ${actionAttr} class="khatwa-taskbar-item ${isActive ? 'active' : ''}" data-target-id="${item.id || ''}" data-tooltip="${item.label}">
+              <span class="khatwa-taskbar-icon">${item.icon}</span>
+              <span class="khatwa-taskbar-label">${item.label}</span>
+              ${item.badge ? `<span class="khatwa-taskbar-badge">${item.badge}</span>` : ''}
+            </a>
+          `;
+        }).join('')}
+      </nav>
+    </div>
+
+    <div class="khatwa-taskbar-foot">
+      <button type="button" class="khatwa-taskbar-foot-btn" onclick="toggleDarkMode()" title="تبديل الوضع الليلي">
+        <span class="khatwa-taskbar-icon">🌓</span>
+        <span class="khatwa-taskbar-label">الوضع الليلي / النهاري</span>
+      </button>
+
+      <button type="button" class="khatwa-taskbar-foot-btn" onclick="window.KhatwaI18n && window.KhatwaI18n.toggleLanguage()" title="تغيير اللغة">
+        <span class="khatwa-taskbar-icon">🌐</span>
+        <span class="khatwa-taskbar-label">${isEn ? 'العربية' : 'English'}</span>
+      </button>
+
+      <a href="#logout" class="khatwa-taskbar-foot-btn" style="color:var(--err);" title="تسجيل الخروج">
+        <span class="khatwa-taskbar-icon">🚪</span>
+        <span class="khatwa-taskbar-label">تسجيل الخروج</span>
+      </a>
+    </div>
+  `;
+
+  document.body.appendChild(taskbar);
+
+  // Pin Toggle Logic
+  const pinBtn = document.getElementById('taskbarPinBtn');
+  if (pinBtn) {
+    pinBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const currentlyPinned = taskbar.classList.contains('expanded');
+      if (currentlyPinned) {
+        taskbar.classList.remove('expanded');
+        document.body.classList.remove('taskbar-pinned');
+        localStorage.setItem('khatwa_taskbar_pinned', 'false');
+        pinBtn.textContent = '📍';
+      } else {
+        taskbar.classList.add('expanded');
+        document.body.classList.add('taskbar-pinned');
+        localStorage.setItem('khatwa_taskbar_pinned', 'true');
+        pinBtn.textContent = '📌';
+      }
+    });
+  }
+
+  // Hook mobile toggle button if on page
+  const navToggle = document.querySelector('.nav-toggle');
+  if (navToggle) {
+    navToggle.addEventListener('click', () => {
+      taskbar.classList.toggle('mobile-open');
+      backdrop.classList.toggle('show');
+    });
+  }
+
+  // Keep admin active item synced when clicking tabs
+  if (role === 'ADMIN') {
+    window.addEventListener('admin-tab-changed', (e) => {
+      const activeTabId = e.detail?.tabId;
+      if (!activeTabId) return;
+      taskbar.querySelectorAll('.khatwa-taskbar-item').forEach(el => {
+        el.classList.toggle('active', el.getAttribute('data-target-id') === activeTabId);
+      });
+    });
+  }
+}
+
+/**
+ * Checks if a lecture is newly published (less than 24 hours ago)
+ * as requested in PDF Page 9.
+ */
+function isLectureNew(publishDateStr) {
+  if (!publishDateStr) return false;
+  const pTime = new Date(publishDateStr).getTime();
+  if (isNaN(pTime)) return false;
+  const ageMs = Date.now() - pTime;
+  return ageMs >= 0 && ageMs < 24 * 60 * 60 * 1000;
+}
+
+window.KhatwaUI = {
+  toggleDarkMode,
+  initBackgroundMesh,
+  initCollapsibleTaskbar,
+  isLectureNew,
+};
 
 /**
  * Initializes the floating WhatsApp Technical Support button

@@ -96,8 +96,25 @@
 
   function applyBrandingToDOM(data) {
     if (!data) return;
-    const { primaryColor, secondaryColor, accentColor, backgroundColor, backgroundGradient, platformName, logoUrl } = data;
+    const {
+      primaryColor,
+      secondaryColor,
+      accentColor,
+      backgroundColor,
+      backgroundGradient,
+      gradStart,
+      gradEnd,
+      gradMid,
+      waveAngle,
+      shapesColor1,
+      shapesColor2,
+      shapesDisplay,
+      platformName,
+      logoUrl,
+    } = data;
+
     const root = document.documentElement;
+
     if (primaryColor) {
       root.style.setProperty('--primary', primaryColor);
       root.style.setProperty('--primary-hover', primaryColor);
@@ -112,10 +129,33 @@
       root.style.setProperty('--accent', accentColor);
       root.style.setProperty('--accent-color', accentColor);
     }
+
+    // Dynamic Multi-Tone Diagonal Wave Gradient Engine
+    const angle = waveAngle || '135deg';
+    const start = gradStart || '#9db3cc';
+    const mid = gradMid || '#c7d8e8';
+    const end = gradEnd || '#edf4fa';
+
+    if (gradStart) root.style.setProperty('--bg-grad-start', gradStart);
+    if (gradMid) root.style.setProperty('--bg-grad-mid', gradMid);
+    if (gradEnd) root.style.setProperty('--bg-grad-end', gradEnd);
+
     if (backgroundGradient) {
       root.style.setProperty('--bg-gradient', backgroundGradient);
       if (document.body) document.body.style.backgroundImage = backgroundGradient;
+    } else if (gradStart && gradEnd) {
+      const generatedGrad = `linear-gradient(${angle}, ${start} 0%, ${mid} 50%, ${end} 100%)`;
+      root.style.setProperty('--bg-gradient', generatedGrad);
+      if (document.body) document.body.style.backgroundImage = generatedGrad;
     }
+
+    if (shapesColor1) root.style.setProperty('--bg-shapes-color1', shapesColor1);
+    if (shapesColor2) root.style.setProperty('--bg-shapes-color2', shapesColor2);
+    if (shapesDisplay !== undefined) {
+      const mesh = document.querySelector('.khatwa-bg-mesh');
+      if (mesh) mesh.style.display = shapesDisplay === false || shapesDisplay === 'none' ? 'none' : 'block';
+    }
+
     if (backgroundColor) {
       root.style.setProperty('--bg', backgroundColor);
       if (document.body) document.body.style.backgroundColor = backgroundColor;
@@ -123,9 +163,14 @@
     if (platformName) {
       document.querySelectorAll('.brand-text').forEach((el) => (el.textContent = platformName));
     }
-    if (logoUrl) {
-      document.querySelectorAll('.brand-logo').forEach((el) => el.setAttribute('src', logoUrl));
-    }
+
+    // Logo with automatic preference for clean transparent background
+    const effectiveLogo = logoUrl || 'logo/logo-khatwa-transparent.png';
+    document.querySelectorAll('.brand-logo').forEach((el) => {
+      if (!el.getAttribute('src') || el.getAttribute('src').includes('logo-khatwa')) {
+        el.setAttribute('src', effectiveLogo);
+      }
+    });
   }
 
   // Apply cached branding IMMEDIATELY (before API call) — eliminates color flash

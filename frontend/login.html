@@ -1,136 +1,144 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>تسجيل الدخول | خطوة</title>
-<link rel="icon" type="image/png" href="logo/logo-khatwa.png">
-<link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تسجيل الدخول | خطوة</title>
+  <link rel="icon" type="image/png" href="logo/logo-khatwa.png">
+  <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
 
-<nav class="nav">
-  <div class="container nav-inner">
-    <a href="index.html" class="brand"><img src="logo/logo-khatwa.png" alt="خطوة" class="brand-logo"><span class="brand-text">خطوة</span></a>
-    <ul class="nav-links">
-      <li><a href="index.html">الرئيسية</a></li>
-      <li><a href="courses.html">تصفح الكورسات</a></li>
-      <li><a href="help.html">الأسئلة الشائعة</a></li>
-    </ul>
-    <div class="nav-cta">
-      <button class="lang-switcher-btn" onclick="window.KhatwaI18n.toggleLanguage()">🌐 English</button>
-      <a href="signup.html" class="btn btn-line">إنشاء حساب</a>
-    </div>
-    <button class="nav-toggle">القائمة</button>
-  </div>
-</nav>
-
-<div class="auth-wrap">
-  <div class="auth-box" style="max-width:440px;">
-    <div class="auth-head">
-      <div class="brand"><img src="logo/logo-khatwa.png" alt="خطوة" class="brand-logo"><span class="brand-text">خطوة</span></div>
-      <h1>تسجيل الدخول</h1>
-      <p>أهلاً بك مجدداً، أدخل بيانات حسابك للمتابعة</p>
-    </div>
-
-    <div class="alert" id="loginAlert"></div>
-
-    <form id="loginForm">
-      <!-- Account credentials -->
-      <div class="field">
-        <label for="username">اسم المستخدم</label>
-        <input type="text" id="username" placeholder="اسم المستخدم" required autocomplete="username" autocorrect="off" autocapitalize="none" spellcheck="false" inputmode="email">
+  <nav class="nav">
+    <div class="container nav-inner">
+      <a href="index.html" class="brand"><img src="logo/logo-khatwa.png" alt="خطوة" class="brand-logo"><span
+          class="brand-text">خطوة</span></a>
+      <ul class="nav-links">
+        <li><a href="index.html">الرئيسية</a></li>
+        <li><a href="courses.html">تصفح الكورسات</a></li>
+        <li><a href="help.html">الأسئلة الشائعة</a></li>
+      </ul>
+      <div class="nav-cta">
+        <button class="dark-mode-toggle-btn" data-dark-toggle onclick="toggleDarkMode()"
+          title="تبديل الوضع الليلي/النهاري">🌙 الليلي</button>
+        <button class="lang-switcher-btn" onclick="window.KhatwaI18n.toggleLanguage()">🌐 English</button>
+        <a href="signup.html" class="btn btn-line">إنشاء حساب</a>
       </div>
-      <div class="field">
-        <label for="password">كلمة المرور</label>
-        <div class="pw-wrap">
-          <input type="password" id="password" placeholder="••••••••" required autocomplete="current-password">
-          <button type="button" class="pw-toggle">إظهار</button>
+      <button class="nav-toggle">القائمة</button>
+    </div>
+  </nav>
+
+  <div class="auth-wrap">
+    <div class="auth-box" style="max-width:440px;">
+      <div class="auth-head">
+        <div class="brand"><img src="logo/logo-khatwa.png" alt="خطوة" class="brand-logo"><span
+            class="brand-text">خطوة</span></div>
+        <h1>تسجيل الدخول</h1>
+        <p>أهلاً بك مجدداً، أدخل بيانات حسابك للمتابعة</p>
+      </div>
+
+      <div class="alert" id="loginAlert"></div>
+
+      <form id="loginForm">
+        <!-- Account credentials -->
+        <div class="field">
+          <label for="username">اسم المستخدم</label>
+          <input type="text" id="username" placeholder="اسم المستخدم" required autocomplete="username" autocorrect="off"
+            autocapitalize="none" spellcheck="false" inputmode="email">
         </div>
-      </div>
+        <div class="field">
+          <label for="password">كلمة المرور</label>
+          <div class="pw-wrap">
+            <input type="password" id="password" placeholder="••••••••" required autocomplete="current-password">
+            <button type="button" class="pw-toggle">إظهار</button>
+          </div>
+        </div>
 
-      <div class="form-links" style="justify-content:flex-end;">
-        <a href="help.html">نسيت كلمة المرور؟</a>
-      </div>
-      <button type="submit" id="loginSubmitBtn" class="btn btn-primary btn-block">دخول للمنصة</button>
-    </form>
+        <div class="form-links" style="justify-content:flex-end;">
+          <a href="help.html">نسيت كلمة المرور؟</a>
+        </div>
+        <button type="submit" id="loginSubmitBtn" class="btn btn-primary btn-block">دخول للمنصة</button>
+      </form>
 
-    <div class="auth-switch">ليس لديك حساب؟ <a href="signup.html">أنشئ حسابًا جديدًا</a></div>
+      <div class="auth-switch">ليس لديك حساب؟ <a href="signup.html">أنشئ حسابًا جديدًا</a></div>
+    </div>
   </div>
-</div>
 
-<script src="js/api.js"></script>
-<script src="js/i18n.js"></script>
-<script src="js/main.js"></script>
-<script>
-  // Auto-redirect if user already has an active session
-  document.addEventListener('DOMContentLoaded', async () => {
-    function redirectUser(user) {
-      if (user.studentProfile?.academicStage) {
-        try { localStorage.setItem('khatwa_active_stage', user.studentProfile.academicStage); } catch (_) {}
-      }
-      const role = user.role || 'STUDENT';
-      if (role === 'ADMIN') window.location.href = 'admin.html';
-      else if (role === 'TEACHER') window.location.href = 'teacher-dashboard.html';
-      else if (role === 'STAFF') window.location.href = 'admin-points.html';
-      else window.location.href = 'dashboard.html';
-    }
-
-    const existingUser = window.KhatwaAPI?.getUser?.();
-    const existingToken = window.KhatwaAPI?.getToken?.();
-    if (existingUser && existingToken) {
-      redirectUser(existingUser);
-      return;
-    }
-
-    // Only attempt refresh if there is a recorded session
-    const hasSession = localStorage.getItem('khatwa_has_session') === '1' || Boolean(existingUser || existingToken);
-    if (!hasSession) return;
-
-    const refreshed = await window.KhatwaAPI.auth.silentRefresh();
-    if (refreshed) {
-      const user = window.KhatwaAPI.getUser();
-      if (user) {
-        redirectUser(user);
-      }
-    }
-  });
-
-  document.getElementById('loginForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    const btn = document.getElementById('loginSubmitBtn');
-    const alertBox = document.getElementById('loginAlert');
-    const u = document.getElementById('username').value.trim().replace(/\s+/g, '').toLowerCase();
-    const p = document.getElementById('password').value;
-
-    if (!u || !p) return;
-
-    btn.disabled = true;
-    const origText = btn.innerHTML;
-    btn.innerHTML = '<span class="spinner"></span> جارٍ التحقق...';
-    alertBox.classList.remove('show');
-
-    try {
-      const data = await window.KhatwaAPI.auth.login(u, p);
-      const user = data?.user;
-      const role = user?.role || 'STUDENT';
-
-      // Keep student's grade saved automatically from profile
-      if (user?.studentProfile?.academicStage) {
-        try { localStorage.setItem('khatwa_active_stage', user.studentProfile.academicStage); } catch (_) {}
+  <script src="js/api.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    // Auto-redirect if user already has an active session
+    document.addEventListener('DOMContentLoaded', async () => {
+      function redirectUser(user) {
+        if (user.studentProfile?.academicStage) {
+          try { localStorage.setItem('khatwa_active_stage', user.studentProfile.academicStage); } catch (_) { }
+        }
+        const role = user.role || 'STUDENT';
+        if (role === 'ADMIN') window.location.href = 'admin.html';
+        else if (role === 'TEACHER') window.location.href = 'teacher-dashboard.html';
+        else if (role === 'STAFF') window.location.href = 'admin-points.html';
+        else window.location.href = 'dashboard.html';
       }
 
-      if (role === 'ADMIN') window.location.href = 'admin.html';
-      else if (role === 'TEACHER') window.location.href = 'teacher-dashboard.html';
-      else if (role === 'STAFF') window.location.href = 'admin-points.html';
-      else window.location.href = 'dashboard.html';
-    } catch (err) {
-      alertBox.textContent = err.message || 'اسم المستخدم أو كلمة المرور غير صحيحة.';
-      alertBox.classList.add('show');
-      btn.disabled = false;
-      btn.innerHTML = origText;
-    }
-  });
-</script>
+      const existingUser = window.KhatwaAPI?.getUser?.();
+      const existingToken = window.KhatwaAPI?.getToken?.();
+      if (existingUser && existingToken) {
+        redirectUser(existingUser);
+        return;
+      }
+
+      // Only attempt refresh if there is a recorded session
+      const hasSession = localStorage.getItem('khatwa_has_session') === '1' || Boolean(existingUser || existingToken);
+      if (!hasSession) return;
+
+      const refreshed = await window.KhatwaAPI.auth.silentRefresh();
+      if (refreshed) {
+        const user = window.KhatwaAPI.getUser();
+        if (user) {
+          redirectUser(user);
+        }
+      }
+    });
+
+    document.getElementById('loginForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const btn = document.getElementById('loginSubmitBtn');
+      const alertBox = document.getElementById('loginAlert');
+      const u = document.getElementById('username').value.trim().replace(/\s+/g, '').toLowerCase();
+      const p = document.getElementById('password').value;
+
+      if (!u || !p) return;
+
+      btn.disabled = true;
+      const origText = btn.innerHTML;
+      btn.innerHTML = '<span class="spinner"></span> جارٍ التحقق...';
+      alertBox.classList.remove('show');
+
+      try {
+        const data = await window.KhatwaAPI.auth.login(u, p);
+        const user = data?.user;
+        const role = user?.role || 'STUDENT';
+
+        // Keep student's grade saved automatically from profile
+        if (user?.studentProfile?.academicStage) {
+          try { localStorage.setItem('khatwa_active_stage', user.studentProfile.academicStage); } catch (_) { }
+        }
+
+        if (role === 'ADMIN') window.location.href = 'admin.html';
+        else if (role === 'TEACHER') window.location.href = 'teacher-dashboard.html';
+        else if (role === 'STAFF') window.location.href = 'admin-points.html';
+        else window.location.href = 'dashboard.html';
+      } catch (err) {
+        alertBox.textContent = err.message || 'اسم المستخدم أو كلمة المرور غير صحيحة.';
+        alertBox.classList.add('show');
+        btn.disabled = false;
+        btn.innerHTML = origText;
+      }
+    });
+  </script>
 </body>
+
 </html>

@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0">
 <title>لوحة التحكم والإدارة العامة | خطوة</title>
 <link rel="icon" type="image/png" href="logo/logo-khatwa.png">
-<link rel="stylesheet" href="css/style.css?v=1.0.2">
+<link rel="stylesheet" href="css/style.css?v=1.0.3">
 <style>
   .admin-badge {
     background: linear-gradient(135deg, #f59e0b, #d97706);
@@ -78,7 +78,7 @@
     gap: 16px;
   }
   .voucher-card {
-    background: linear-gradient(135deg, rgba(11, 37, 69, 0.95) 0%, rgba(19, 64, 116, 0.9) 100%);
+    background: linear-gradient(135deg, var(--primary-deep, #8C6527) 0%, var(--primary, #B88E4F) 100%);
     border: 2px dashed rgba(245, 158, 11, 0.45);
     border-radius: 14px;
     padding: 16px 18px;
@@ -91,6 +91,24 @@
     position: relative;
     overflow: hidden;
   }
+  .voucher-card.voucher-theme-navy {
+    background: linear-gradient(135deg, rgba(11, 37, 69, 0.95) 0%, rgba(19, 64, 116, 0.9) 100%);
+  }
+  .voucher-card.voucher-theme-bw {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    border: 2px solid #0f172a !important;
+  }
+  .voucher-card.voucher-theme-bw .voucher-code-box {
+    background: #f8fafc !important;
+    color: #0f172a !important;
+    border: 1.5px solid #0f172a !important;
+  }
+  .voucher-card.voucher-theme-bw b,
+  .voucher-card.voucher-theme-bw span,
+  .voucher-card.voucher-theme-bw div {
+    color: #0f172a !important;
+  }
   .voucher-card::before {
     content: '';
     position: absolute;
@@ -98,7 +116,7 @@
     right: -30px;
     width: 90px;
     height: 90px;
-    background: radial-gradient(circle, rgba(245, 158, 11, 0.25) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
     border-radius: 50%;
   }
   .voucher-code-box {
@@ -108,6 +126,52 @@
     letter-spacing: 2px;
     background: rgba(0, 0, 0, 0.45);
     padding: 8px 12px;
+  }
+
+  @media print {
+    body * {
+      visibility: hidden !important;
+    }
+    #printVouchersModal, #printableVouchersArea, #printableVouchersArea * {
+      visibility: visible !important;
+    }
+    #printVouchersModal {
+      position: absolute !important;
+      left: 0 !important;
+      top: 0 !important;
+      width: 100% !important;
+      height: auto !important;
+      background: #fff !important;
+      display: block !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      overflow: visible !important;
+      backdrop-filter: none !important;
+    }
+    .modal-card {
+      max-width: 100% !important;
+      width: 100% !important;
+      box-shadow: none !important;
+      border: none !important;
+      overflow: visible !important;
+      background: transparent !important;
+    }
+    .print-hide {
+      display: none !important;
+    }
+    .voucher-grid {
+      display: grid !important;
+      grid-template-columns: repeat(2, 1fr) !important;
+      gap: 12px !important;
+    }
+    .voucher-card {
+      break-inside: avoid !important;
+      page-break-inside: avoid !important;
+      box-shadow: none !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+  }
     border-radius: 8px;
     border: 1px solid rgba(245, 158, 11, 0.6);
     color: #fde68a;
@@ -544,6 +608,7 @@
       <li><a href="admin.html" class="active">📊 لوحة الإدارة</a></li>
     </ul>
     <div class="nav-cta" style="display:flex;align-items:center;gap:12px;">
+      <button class="dark-mode-toggle-btn" data-dark-toggle onclick="toggleDarkMode()" title="تبديل الوضع الليلي/النهاري">🌙 الليلي</button>
       <button class="lang-switcher-btn" onclick="window.KhatwaI18n.toggleLanguage()">🌐 English</button>
       <div class="user-line" id="navUserLine" style="cursor:default;">
         <span class="avatar" id="navAvatar">👑</span>
@@ -892,78 +957,165 @@
     </div>
   </div>
 
-  <!-- Tab: Platform Theming & Appearance (Requirement 1) -->
+  <!-- Tab: Platform Theming & Appearance (Extended Admin Theme Engine) -->
   <div id="tabAppearance" class="admin-tab-content" style="display:none;">
-    <div style="background:var(--bg-card);border:1px solid var(--line-soft);border-radius:18px;padding:26px;max-width:700px;">
-      <h3 style="margin-top:0;">🎨 تخصيص مظهر وهوية المنصة والألوان</h3>
-      <p style="color:var(--ink-dim);font-size:0.88rem;margin-bottom:20px;">يمكنك تغيير ألوان المنصة الأساسية والفرعية واسم المنصة وتطبيقها مباشرة وفورياً على جميع صفحات الطلاب والمدرسين.</p>
+    <div style="background:var(--bg-card);border:1px solid var(--line-soft);border-radius:20px;padding:28px;max-width:850px;box-shadow:var(--shadow-md);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;border-bottom:1px solid var(--line-soft);padding-bottom:16px;flex-wrap:wrap;gap:10px;">
+        <div>
+          <h3 style="margin:0 0 4px;font-size:1.3rem;">🎨 مظهر وهوية المنصة ومحرك التدرج الموجي</h3>
+          <p style="color:var(--ink-dim);font-size:0.88rem;margin:0;">تحكم شامل وفوري في درجات الألوان، التدرج الموجي للخلفية، الأشكال العائمة، وهوية المنصة وتطبيقها مباشرة لكافة الطلاب والمدرسين.</p>
+        </div>
+        <span class="tag tag-ok" style="font-weight:700;">تحكم مباشر Live Engine ⚡</span>
+      </div>
 
       <form id="appearanceSettingsForm" onsubmit="saveAppearanceSettings(event)">
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:16px;">
-          <div class="form-group">
-            <label class="form-label">اللون الأساسي (Primary Color)</label>
-            <div style="display:flex;gap:8px;align-items:center;">
-              <input type="color" id="setPrimaryColor" style="width:44px;height:40px;border-radius:8px;border:none;cursor:pointer;">
-              <input type="text" id="setPrimaryColorHex" class="form-control" placeholder="#B88E4F">
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">لون خلفية المنصة (Background Color)</label>
-            <div style="display:flex;gap:8px;align-items:center;">
-              <input type="color" id="setBackgroundColor" style="width:44px;height:40px;border-radius:8px;border:none;cursor:pointer;">
-              <input type="text" id="setBackgroundColorHex" class="form-control" placeholder="#FAF8F5">
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">اللون الثانوي (Secondary Color)</label>
-            <div style="display:flex;gap:8px;align-items:center;">
-              <input type="color" id="setSecondaryColor" style="width:44px;height:40px;border-radius:8px;border:none;cursor:pointer;">
-              <input type="text" id="setSecondaryColorHex" class="form-control" placeholder="#8C6527">
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">اللون المميز (Accent Color)</label>
-            <div style="display:flex;gap:8px;align-items:center;">
-              <input type="color" id="setAccentColor" style="width:44px;height:40px;border-radius:8px;border:none;cursor:pointer;">
-              <input type="text" id="setAccentColorHex" class="form-control" placeholder="#CBA264">
+
+        <!-- Live Wave Gradient Preview Box (PDF Page 25 Requirement) -->
+        <div style="margin-bottom:24px;">
+          <label class="form-label" style="font-weight:700;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
+            <span>🌊 المعاينة الحية للتدرج الموجي والخلفية (Live Gradient Wave Preview)</span>
+            <span style="font-size:0.8rem;color:var(--ink-dim);font-weight:400;">تتغير فورياً عند سحب ملقط الألوان</span>
+          </label>
+          <div id="liveWavePreviewBox" style="width:100%;height:130px;border-radius:16px;border:1.5px solid var(--line);background:linear-gradient(135deg, #9db3cc 0%, #c7d8e8 50%, #edf4fa 100%);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;box-shadow:inset 0 2px 10px rgba(0,0,0,0.06);">
+            <!-- Sample floating preview orb -->
+            <div id="previewOrb" style="position:absolute;width:90px;height:90px;border-radius:50%;background:rgba(184, 142, 79, 0.25);filter:blur(18px);top:10px;right:20px;"></div>
+            <!-- Sample mini card -->
+            <div style="background:rgba(255,255,255,0.92);backdrop-filter:blur(8px);padding:10px 18px;border-radius:12px;border:1px solid rgba(255,255,255,0.8);box-shadow:0 4px 14px rgba(0,0,0,0.08);display:flex;align-items:center;gap:10px;z-index:2;">
+              <span id="previewLogoIcon" style="font-size:1.3rem;">🎓</span>
+              <div>
+                <b id="previewCardTitle" style="font-size:0.88rem;display:block;color:#1e293b;">منصة خطوة التعليمية</b>
+                <span id="previewCardSubtitle" style="font-size:0.75rem;color:#64748b;">معاينة كارت المحتوى والألوان</span>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="form-group" style="margin-bottom:14px;">
-          <label class="form-label">اسم المنصة (Platform Name)</label>
-          <input type="text" id="setPlatformName" class="form-control" placeholder="خطوة - منصتك التعليمية">
+        <!-- Section 1: Dual-Color Wave Gradient Engine -->
+        <div style="background:var(--bg-raised);border:1px solid var(--line-soft);border-radius:16px;padding:18px;margin-bottom:20px;">
+          <h4 style="margin:0 0 12px;font-size:1rem;color:var(--primary);display:flex;align-items:center;gap:8px;">
+            <span>🌈 محدد التدرج اللوني الثنائي (Dual-Color Gradient Selector)</span>
+          </h4>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;">
+            <!-- Start Color (Top-Left) -->
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" style="font-weight:600;font-size:0.86rem;margin-bottom:6px;display:block;">
+                بداية التدرج (أعلى اليسار 0% 0%)
+              </label>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <input type="color" id="setGradStart" value="#9db3cc" style="width:46px;height:42px;border-radius:10px;border:1px solid var(--line-soft);cursor:pointer;padding:2px;">
+                <input type="text" id="setGradStartHex" class="form-control" value="#9db3cc" style="font-family:monospace;font-weight:700;">
+              </div>
+            </div>
+
+            <!-- End Color (Bottom-Right) -->
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" style="font-weight:600;font-size:0.86rem;margin-bottom:6px;display:block;">
+                نهاية التدرج (أسفل اليمين 100% 100%)
+              </label>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <input type="color" id="setGradEnd" value="#edf4fa" style="width:46px;height:42px;border-radius:10px;border:1px solid var(--line-soft);cursor:pointer;padding:2px;">
+                <input type="text" id="setGradEndHex" class="form-control" value="#edf4fa" style="font-family:monospace;font-weight:700;">
+              </div>
+            </div>
+
+            <!-- Wave Angle -->
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" style="font-weight:600;font-size:0.86rem;margin-bottom:6px;display:block;">
+                زاوية انسياب التدرج (Wave Angle)
+              </label>
+              <select id="setWaveAngle" class="form-control" onchange="updateLivePreview()" style="border-radius:10px;padding:9px 12px;font-weight:600;">
+                <option value="135deg" selected>قطري انسيابي (135° Top-Left to Bottom-Right)</option>
+                <option value="160deg">موجي ناعم (160° Subtle Wave)</option>
+                <option value="115deg">انحدار ديناميكي (115° Dynamic)</option>
+                <option value="180deg">عمودي من أعلى لأسفل (180° Vertical)</option>
+              </select>
+            </div>
+          </div>
         </div>
 
-        <div class="form-group" style="margin-bottom:14px;">
-          <label class="form-label">الشعار النصي الفرعي (Platform Subtitle)</label>
-          <input type="text" id="setPlatformSubtitle" class="form-control" placeholder="طريقك نحو التفوق والدرجات النهائية">
+        <!-- Section 2: Platform Core Brand Palette -->
+        <div style="background:var(--bg-raised);border:1px solid var(--line-soft);border-radius:16px;padding:18px;margin-bottom:20px;">
+          <h4 style="margin:0 0 12px;font-size:1rem;color:var(--primary);display:flex;align-items:center;gap:8px;">
+            <span>🎨 ألوان الهوية والعناصر التفاعلية (Platform Brand Palette)</span>
+          </h4>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;">
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" style="font-weight:600;font-size:0.86rem;margin-bottom:6px;display:block;">اللون الأساسي (Primary)</label>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <input type="color" id="setPrimaryColor" value="#B88E4F" style="width:44px;height:40px;border-radius:8px;border:none;cursor:pointer;">
+                <input type="text" id="setPrimaryColorHex" class="form-control" value="#B88E4F" style="font-family:monospace;font-weight:700;">
+              </div>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" style="font-weight:600;font-size:0.86rem;margin-bottom:6px;display:block;">اللون الثانوي (Secondary)</label>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <input type="color" id="setSecondaryColor" value="#8C6527" style="width:44px;height:40px;border-radius:8px;border:none;cursor:pointer;">
+                <input type="text" id="setSecondaryColorHex" class="form-control" value="#8C6527" style="font-family:monospace;font-weight:700;">
+              </div>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" style="font-weight:600;font-size:0.86rem;margin-bottom:6px;display:block;">اللون المميز (Accent)</label>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <input type="color" id="setAccentColor" value="#CBA264" style="width:44px;height:40px;border-radius:8px;border:none;cursor:pointer;">
+                <input type="text" id="setAccentColorHex" class="form-control" value="#CBA264" style="font-family:monospace;font-weight:700;">
+              </div>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" style="font-weight:600;font-size:0.86rem;margin-bottom:6px;display:block;">ألوان الأشكال العائمة (Mesh)</label>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <input type="color" id="setShapesColor" value="#B88E4F" style="width:44px;height:40px;border-radius:8px;border:none;cursor:pointer;">
+                <label style="display:flex;align-items:center;gap:6px;font-size:0.82rem;font-weight:600;cursor:pointer;">
+                  <input type="checkbox" id="setShapesVisible" checked>
+                  <span>تفعيل الأشكال</span>
+                </label>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div class="form-group" style="margin-bottom:14px;">
-          <label class="form-label">لوجو المنصة (رفع ملف صورة Logo)</label>
-          <div style="display:flex;gap:10px;align-items:center;">
-            <input type="file" id="setLogoFile" accept="image/*" class="form-control" onchange="previewPlatformLogo(this)">
+        <!-- Section 3: Platform Branding Text & Logo -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label" style="font-weight:600;margin-bottom:6px;display:block;">اسم المنصة (Platform Name)</label>
+            <input type="text" id="setPlatformName" class="form-control" placeholder="خطوة - منصتك التعليمية" style="border-radius:10px;">
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label" style="font-weight:600;margin-bottom:6px;display:block;">الشعار النصي الفرعي (Subtitle)</label>
+            <input type="text" id="setPlatformSubtitle" class="form-control" placeholder="طريقك نحو التفوق والدرجات النهائية" style="border-radius:10px;">
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom:20px;">
+          <label class="form-label" style="font-weight:600;margin-bottom:6px;display:block;">لوجو المنصة بدون خلفية (Transparent Logo)</label>
+          <div style="display:flex;gap:12px;align-items:center;">
+            <input type="file" id="setLogoFile" accept="image/*" class="form-control" onchange="previewPlatformLogo(this)" style="border-radius:10px;padding:8px 14px;">
             <input type="hidden" id="setLogoUrl">
-            <div id="platformLogoPreview" style="width:40px;height:40px;border-radius:8px;background:var(--bg-raised);border:1px solid var(--line-soft);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;">
-              <img id="logoPreviewImg" src="logo/logo-khatwa.png" style="width:100%;height:100%;object-fit:cover;">
+            <div id="platformLogoPreview" style="width:46px;height:46px;border-radius:10px;background:rgba(255,255,255,0.8);border:1px solid var(--line-soft);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;">
+              <img id="logoPreviewImg" src="logo/logo-khatwa-transparent.png" onerror="this.src='logo/logo-khatwa.png'" style="width:100%;height:100%;object-fit:contain;">
             </div>
           </div>
+          <span style="font-size:0.78rem;color:var(--ink-dim);display:block;margin-top:4px;">* يتم دمج اللوجو بخلفية شفافة ليتناغم بسلاسة مع خلفية التدرج اللوني.</span>
         </div>
 
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">
-          <div class="form-group">
-            <label class="form-label">نسبة أرباح المدرس الافتراضية (%) <span style="font-size:0.8rem;color:var(--ink-dim);font-weight:400;">— مثال: 80 = المدرس يأخذ 80% والمنصة 20%</span></label>
-            <input type="number" step="0.5" id="setDefaultCommission" class="form-control" value="80" min="0" max="100">
-          </div>
-          <div class="form-group">
-            <label class="form-label">سعر النقطة بالجنيه (Rate)</label>
-            <input type="number" step="0.1" id="setPointsRate" class="form-control" value="1.0" min="0.1">
+        <!-- Section 4: Voucher Card Print Theme Setting (PDF Page 25 Requirement) -->
+        <div style="background:var(--bg-raised);border:1px solid var(--line-soft);border-radius:14px;padding:16px;margin-bottom:24px;">
+          <h4 style="margin:0 0 8px;font-size:0.95rem;color:var(--ink);">🎟️ مظهر وتصميم طباعة كروت وأكواد الشحن</h4>
+          <p style="font-size:0.82rem;color:var(--ink-dim);margin:0 0 12px;">اختر ستايل مظهر الكروت عند الطباعة على ورق للموزعين والسناتر.</p>
+          <div style="display:flex;gap:16px;flex-wrap:wrap;">
+            <label style="display:flex;align-items:center;gap:8px;font-size:0.88rem;cursor:pointer;font-weight:700;">
+              <input type="radio" name="voucherPrintTheme" value="platform" checked onchange="toggleVoucherPrintTheme(this.value)">
+              <span>🌟 ستايل المنصة الفاخر (تدرج ملون + ألوان الهوية)</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:0.88rem;cursor:pointer;font-weight:600;">
+              <input type="radio" name="voucherPrintTheme" value="bw" onchange="toggleVoucherPrintTheme(this.value)">
+              <span>🖨️ طباعة اقتصادية (أبيض وأسود نظيف لتوفير الحبر)</span>
+            </label>
           </div>
         </div>
 
-        <div style="display:flex;justify-content:flex-end;gap:10px;">
-          <button type="submit" id="saveAppearanceBtn" class="btn btn-primary">حفظ وتطبيق التغييرات فوراً ✓</button>
+        <div style="display:flex;justify-content:flex-end;gap:12px;border-top:1px solid var(--line-soft);padding-top:18px;">
+          <button type="button" class="btn btn-line btn-sm" onclick="resetDefaultTheme()">↺ استعادة الألوان الافتراضية</button>
+          <button type="submit" id="saveAppearanceBtn" class="btn btn-primary btn-sm" style="padding:10px 24px;font-weight:700;">حفظ وتطبيق المظهر فوراً ✓</button>
         </div>
       </form>
     </div>
@@ -997,19 +1149,19 @@
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
         <div>
           <h3 style="margin:0 0 4px;display:flex;align-items:center;gap:8px;">
-            <span>🎟️ توليد كروت وأكواد شحن النقاط</span>
+            <span>🎟️ توليد كروت وأكواد شحن الرصيد (جنيه)</span>
             <span class="tag tag-ok" style="font-size:0.75rem;">توليد فوري ومؤمّن</span>
           </h3>
-          <p style="margin:0;color:var(--ink-dim);font-size:0.88rem;">يمكنك توليد مجموعة كروت شحن مطبوعة أو إلكترونية بنقاط محددة وتوزيعها على الطلاب للشحن الفوري.</p>
+          <p style="margin:0;color:var(--ink-dim);font-size:0.88rem;">يمكنك توليد مجموعة كروت شحن مطبوعة أو إلكترونية برصيد جنيه محدد وتوزيعها على الطلاب للشحن الفوري.</p>
         </div>
       </div>
 
       <form id="generateAccessCodesForm" onsubmit="handleGenerateAccessCodes(event)" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)) auto;gap:14px;align-items:flex-end;">
         <div class="form-group" style="margin-bottom:0;">
-          <label class="form-label" style="font-weight:600;font-size:0.85rem;margin-bottom:6px;display:block;">عدد النقاط لكل كارت <span style="color:var(--err);">*</span></label>
+          <label class="form-label" style="font-weight:600;font-size:0.85rem;margin-bottom:6px;display:block;">قيمة الرصيد لكل كارت (جنيه) <span style="color:var(--err);">*</span></label>
           <div style="position:relative;">
             <input type="number" id="accessCodePoints" min="1" max="10000" value="50" required class="form-control" style="border-radius:10px;padding:10px 14px;font-weight:700;color:var(--gold-light);">
-            <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:0.8rem;color:var(--ink-dim);">💎 نقطة</span>
+            <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:0.8rem;color:var(--ink-dim);">💵 جنيه (EGP)</span>
           </div>
         </div>
 
@@ -1056,7 +1208,7 @@
         <thead>
           <tr>
             <th>معرف الكود</th>
-            <th>قيمة النقاط</th>
+            <th>قيمة الرصيد (جنيه)</th>
             <th>الحالة</th>
             <th>المنشئ</th>
             <th>المستخدم (الطالب)</th>
@@ -1479,7 +1631,12 @@
           <p style="margin:0;color:rgba(255,255,255,0.75);font-size:0.82rem;" id="printModalSubTitle">تم إنشاء الكروت وجاهزة للنسخ أو الطباعة والتوزيع</p>
         </div>
       </div>
-      <div style="display:flex;gap:8px;align-items:center;">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <select id="voucherPrintStyleSelect" onchange="changeVoucherPrintStyle(this.value)" class="form-control" style="font-size:0.82rem;padding:6px 10px;border-radius:8px;background:rgba(255,255,255,0.18);color:#fff;border:1px solid rgba(255,255,255,0.3);font-weight:700;cursor:pointer;">
+          <option value="platform" style="color:#000;">🎨 ألوان المنصة الفاخرة (ذهبي)</option>
+          <option value="bw" style="color:#000;">🖨️ طباعة اقتصادية (أبيض وأسود)</option>
+          <option value="navy" style="color:#000;">🌊 أزرق كحلي ملكي</option>
+        </select>
         <button type="button" class="btn btn-line btn-sm" onclick="copyAllGeneratedCodes()" style="color:#fde68a;border-color:rgba(253,230,138,0.4);font-weight:600;">📋 نسخ كل الأكواد</button>
         <button type="button" class="btn btn-primary btn-sm" onclick="printVoucherCards()" style="font-weight:700;">🖨️ طباعة كروت الشحن</button>
         <button type="button" onclick="closePrintCodesModal()" style="background:rgba(255,255,255,0.15);border:none;color:#fff;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;">✕</button>
@@ -1495,7 +1652,7 @@
 
     <!-- Modal Footer (hidden on print) -->
     <div class="print-hide" style="padding:14px 24px;background:var(--bg-raised);border-top:1px solid var(--line-soft);display:flex;justify-content:space-between;align-items:center;">
-      <span style="font-size:0.85rem;color:var(--ink-dim);">💡 يمكن للطالب إدخال هذا الكود في خانة "شحن كود مسبق الدفع" بحسابه لشحن النقاط فوراً.</span>
+      <span style="font-size:0.85rem;color:var(--ink-dim);">💡 يمكن للطالب إدخال هذا الكود في خانة "شحن كود مسبق الدفع" بحسابه لشحن الرصيد بالجنيه فوراً.</span>
       <button type="button" class="btn btn-line btn-sm" onclick="closePrintCodesModal()">إغلاق</button>
     </div>
   </div>
@@ -1657,42 +1814,81 @@
   }
 
   // ─── Appearance & Theming ──────────────────────────────────────────────────
+
+  /** Updates the live wave-gradient preview box in the Appearance tab */
+  function updateLivePreview() {
+    const box   = document.getElementById('liveWavePreviewBox');
+    const orb   = document.getElementById('previewOrb');
+    const angle = document.getElementById('setWaveAngle')?.value || '135deg';
+    const start = document.getElementById('setGradStartHex')?.value
+               || document.getElementById('setGradStart')?.value || '#9db3cc';
+    const end   = document.getElementById('setGradEndHex')?.value
+               || document.getElementById('setGradEnd')?.value   || '#edf4fa';
+    const prim  = document.getElementById('setPrimaryColorHex')?.value
+               || document.getElementById('setPrimaryColor')?.value || '#B88E4F';
+
+    if (box) box.style.background = `linear-gradient(${angle}, ${start} 0%, ${end} 100%)`;
+    if (orb) orb.style.background  = `${prim}40`; // ~25% opacity
+  }
+
   async function loadAppearanceSettings() {
     try {
       const data = await window.KhatwaAPI.admin.getGeneralSettings();
       if (!data) return;
 
-      const pColor = data.primaryColor || '#B88E4F';
-      const bgColor = data.backgroundColor || '#FAF8F5';
+      // ── Brand palette ───────────────────────────────────────────────────
+      const pColor = data.primaryColor   || '#B88E4F';
       const sColor = data.secondaryColor || '#8C6527';
-      const aColor = data.accentColor || '#CBA264';
+      const aColor = data.accentColor    || '#CBA264';
 
-      document.getElementById('setPrimaryColor').value = pColor;
-      document.getElementById('setPrimaryColorHex').value = pColor;
-      document.getElementById('setBackgroundColor').value = bgColor;
-      document.getElementById('setBackgroundColorHex').value = bgColor;
-      document.getElementById('setSecondaryColor').value = sColor;
-      document.getElementById('setSecondaryColorHex').value = sColor;
-      document.getElementById('setAccentColor').value = aColor;
-      document.getElementById('setAccentColorHex').value = aColor;
+      // Gradient colors (stored in backgroundColor as gradStart|gradEnd)
+      // Fall back to the CSS variable defaults when missing
+      const gradStart = data.bgGradStart || data.backgroundColor || '#9db3cc';
+      const gradEnd   = data.bgGradEnd   || '#edf4fa';
+      const waveAngle = data.bgWaveAngle || '135deg';
 
-      document.getElementById('setPlatformName').value = data.platformName || '';
-      document.getElementById('setPlatformSubtitle').value = data.platformSubtitle || '';
-      document.getElementById('setLogoUrl').value = data.logoUrl || '';
-      document.getElementById('setDefaultCommission').value = data.defaultTeacherCommissionPct ?? 80;
-      document.getElementById('setPointsRate').value = data.pointsToEgpRate || 1.0;
+      // Safe setters — elements exist in the HTML form
+      const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
 
-      // sync hex inputs with color pickers
-      ['Primary', 'Background', 'Secondary', 'Accent'].forEach(k => {
-        document.getElementById(`set${k}Color`)?.addEventListener('input', (e) => {
-          document.getElementById(`set${k}ColorHex`).value = e.target.value;
-        });
-        document.getElementById(`set${k}ColorHex`)?.addEventListener('input', (e) => {
-          if (e.target.value.startsWith('#') && e.target.value.length === 7) {
-            document.getElementById(`set${k}Color`).value = e.target.value;
-          }
+      set('setPrimaryColor',    pColor);
+      set('setPrimaryColorHex', pColor);
+      set('setSecondaryColor',    sColor);
+      set('setSecondaryColorHex', sColor);
+      set('setAccentColor',    aColor);
+      set('setAccentColorHex', aColor);
+
+      // Gradient pickers
+      set('setGradStart',    gradStart);
+      set('setGradStartHex', gradStart);
+      set('setGradEnd',    gradEnd);
+      set('setGradEndHex', gradEnd);
+
+      // Wave angle select
+      const angleEl = document.getElementById('setWaveAngle');
+      if (angleEl) angleEl.value = waveAngle;
+
+      // Branding text
+      set('setPlatformName',     data.platformName     || '');
+      set('setPlatformSubtitle', data.platformSubtitle || '');
+      set('setLogoUrl',          data.logoUrl          || '');
+
+      // ── Wire color-picker ↔ hex text sync (run once after load) ─────────
+      [['setPrimaryColor','setPrimaryColorHex'],
+       ['setSecondaryColor','setSecondaryColorHex'],
+       ['setAccentColor','setAccentColorHex'],
+       ['setGradStart','setGradStartHex'],
+       ['setGradEnd','setGradEndHex']].forEach(([pickId, hexId]) => {
+        const picker = document.getElementById(pickId);
+        const hex    = document.getElementById(hexId);
+        if (!picker || !hex) return;
+        picker.addEventListener('input', (e) => { hex.value = e.target.value; updateLivePreview(); });
+        hex.addEventListener('input', (e) => {
+          if (/^#[0-9a-fA-F]{6}$/.test(e.target.value)) { picker.value = e.target.value; updateLivePreview(); }
         });
       });
+
+      // Initial live preview sync
+      updateLivePreview();
     } catch (e) {
       console.warn('Failed to load appearance settings', e);
     }
@@ -1704,42 +1900,48 @@
     btn.disabled = true;
     btn.textContent = 'جارٍ الحفظ والتطبيق...';
 
+    // Helper: safe read — returns '' if element doesn't exist
+    const val = (id) => document.getElementById(id)?.value?.trim() ?? '';
+
     const payload = {
-      primaryColor: document.getElementById('setPrimaryColorHex').value.trim(),
-      backgroundColor: document.getElementById('setBackgroundColorHex').value.trim(),
-      secondaryColor: document.getElementById('setSecondaryColorHex').value.trim(),
-      accentColor: document.getElementById('setAccentColorHex').value.trim(),
-      platformName: document.getElementById('setPlatformName').value.trim(),
-      platformSubtitle: document.getElementById('setPlatformSubtitle').value.trim(),
-      logoUrl: document.getElementById('setLogoUrl').value.trim(),
-      defaultTeacherCommissionPct: parseFloat(document.getElementById('setDefaultCommission').value) || 15,
-      pointsToEgpRate: parseFloat(document.getElementById('setPointsRate').value) || 1.0,
+      primaryColor:   val('setPrimaryColorHex')   || val('setPrimaryColor'),
+      secondaryColor: val('setSecondaryColorHex')  || val('setSecondaryColor'),
+      accentColor:    val('setAccentColorHex')     || val('setAccentColor'),
+      bgGradStart:    val('setGradStartHex')       || val('setGradStart'),
+      bgGradEnd:      val('setGradEndHex')         || val('setGradEnd'),
+      bgWaveAngle:    val('setWaveAngle')          || '135deg',
+      platformName:    val('setPlatformName'),
+      platformSubtitle: val('setPlatformSubtitle'),
+      logoUrl:         val('setLogoUrl'),
     };
 
     try {
       await window.KhatwaAPI.admin.updateGeneralSettings(payload);
       alert('تم حفظ إعدادات ومظهر المنصة وتطبيقها بنجاح! 🎨');
-      // Apply locally to test immediately
-      if (payload.primaryColor) document.documentElement.style.setProperty('--primary', payload.primaryColor);
-      if (payload.backgroundColor) {
-        document.documentElement.style.setProperty('--bg', payload.backgroundColor);
-        document.body.style.backgroundColor = payload.backgroundColor;
-      }
+
+      // Apply changes live to current page immediately
+      const root = document.documentElement;
+      if (payload.primaryColor)   root.style.setProperty('--primary', payload.primaryColor);
       if (payload.secondaryColor) {
-        document.documentElement.style.setProperty('--secondary', payload.secondaryColor);
-        document.documentElement.style.setProperty('--secondary-color', payload.secondaryColor);
+        root.style.setProperty('--secondary', payload.secondaryColor);
+        root.style.setProperty('--secondary-color', payload.secondaryColor);
       }
       if (payload.accentColor) {
-        document.documentElement.style.setProperty('--accent', payload.accentColor);
-        document.documentElement.style.setProperty('--accent-color', payload.accentColor);
+        root.style.setProperty('--accent', payload.accentColor);
+        root.style.setProperty('--accent-color', payload.accentColor);
       }
+      if (payload.bgGradStart) root.style.setProperty('--bg-grad-start', payload.bgGradStart);
+      if (payload.bgGradEnd)   root.style.setProperty('--bg-grad-end',   payload.bgGradEnd);
+      if (payload.bgWaveAngle) root.style.setProperty('--bg-wave-angle', payload.bgWaveAngle);
+
     } catch (err) {
       alert(err.message || 'فشل حفظ الإعدادات');
     } finally {
       btn.disabled = false;
-      btn.textContent = 'حفظ وتطبيق التغييرات فوراً ✓';
+      btn.textContent = 'حفظ وتطبيق المظهر فوراً ✓';
     }
   }
+
 
   // ─── Subscriptions Monitor ─────────────────────────────────────────────────
   async function loadAdminSubscriptions() {
@@ -3063,13 +3265,13 @@
   function openPrintCodesModal(codes, points) {
     const modal = document.getElementById('printVouchersModal');
     const grid = document.getElementById('generatedVouchersGrid');
-    document.getElementById('printModalSubTitle').textContent = `تم توليد عدد (${codes.length}) كارت شحن بقيمة ${points} نقطة لكل كارت.`;
+    document.getElementById('printModalSubTitle').textContent = `تم توليد عدد (${codes.length}) كارت شحن بقيمة ${points} جنيه لكل كارت.`;
 
     grid.innerHTML = codes.map((item, idx) => `
       <div class="voucher-card print-voucher-item">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
           <div style="display:flex;align-items:center;gap:8px;">
-            <img src="logo/logo-khatwa.png" alt="خطوة" style="width:30px;height:30px;border-radius:6px;object-fit:cover;">
+            <img src="logo/logo-khatwa-transparent.png" onerror="this.src='logo/logo-khatwa.png'" alt="خطوة" style="width:30px;height:30px;object-fit:contain;">
             <b style="font-size:1rem;color:#fff;">منصة خطوة التعليمية</b>
           </div>
           <span class="admin-badge" style="background:#f59e0b;color:#000;font-size:0.72rem;font-weight:800;">كارت شحن مسبق الدفع</span>
@@ -3077,7 +3279,7 @@
 
         <div style="margin:10px 0;text-align:center;">
           <div style="font-size:0.8rem;color:rgba(255,255,255,0.75);margin-bottom:2px;">قيمة الرصيد التعليمي</div>
-          <div style="font-size:1.5rem;font-weight:900;color:#fcd34d;">+${item.points} نقطة 💎</div>
+          <div style="font-size:1.55rem;font-weight:900;color:#fcd34d;">+${item.points} جنيه 💰</div>
         </div>
 
         <div class="voucher-code-box">
@@ -3092,7 +3294,30 @@
       </div>
     `).join('');
 
+    const currentStyle = document.getElementById('voucherPrintStyleSelect')?.value || 'platform';
+    changeVoucherPrintStyle(currentStyle);
+
     modal.style.display = 'flex';
+  }
+
+  function changeVoucherPrintStyle(style) {
+    const cards = document.querySelectorAll('#generatedVouchersGrid .voucher-card');
+    cards.forEach(card => {
+      card.classList.remove('voucher-theme-bw', 'voucher-theme-navy', 'voucher-theme-platform');
+      if (style === 'bw') {
+        card.classList.add('voucher-theme-bw');
+      } else if (style === 'navy') {
+        card.classList.add('voucher-theme-navy');
+      } else {
+        card.classList.add('voucher-theme-platform');
+      }
+    });
+  }
+
+  function toggleVoucherPrintTheme(theme) {
+    const select = document.getElementById('voucherPrintStyleSelect');
+    if (select) select.value = theme;
+    changeVoucherPrintStyle(theme);
   }
 
   function closePrintCodesModal() {
@@ -3109,7 +3334,7 @@
 
   function copyAllGeneratedCodes() {
     if (!newlyGeneratedCodes || newlyGeneratedCodes.length === 0) return;
-    const textList = newlyGeneratedCodes.map((c, i) => `${i + 1}. كود: ${c.code || c.id} (+${c.points} نقطة)`).join('\n');
+    const textList = newlyGeneratedCodes.map((c, i) => `${i + 1}. كود: ${c.code || c.id} (+${c.points} جنيه)`).join('\n');
     navigator.clipboard.writeText(textList).then(() => {
       alert('✓ تم نسخ قائمة جميع الأكواد المولدة إلى الحافظة بنجاح!');
     }).catch(() => {

@@ -46,3 +46,8 @@ Thumbs.db
 # ─── Prisma Generated Clients & TS Caches ────────────────────────────────────
 backend/src/generated/
 *.tsbuildinfo
+
+# ─── PDF Dumps & Extraction Data ──────────────────────────────────────────────
+frontend/*.pdf
+frontend/pdf_extracted/
+frontend/pdf_pages/

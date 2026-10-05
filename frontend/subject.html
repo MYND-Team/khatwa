@@ -45,6 +45,7 @@
       <li><a href="points.html">النقاط والمحفظة</a></li>
     </ul>
     <div class="nav-cta">
+      <button class="dark-mode-toggle-btn" data-dark-toggle onclick="toggleDarkMode()" title="تبديل الوضع الليلي/النهاري">🌙 الليلي</button>
       <button class="lang-switcher-btn" onclick="window.KhatwaI18n.toggleLanguage()">🌐 English</button>
       <a href="profile.html" class="user-line" id="navUserLine">
         <span class="avatar" id="navAvatar">ط</span>
@@ -252,6 +253,10 @@
     const priceEGP = Number(lesson.price) || 0;
     const isFree = priceEGP === 0;
 
+    // Client Note (Page 9): New badge that disappears after 1 day from release
+    const createdTime = lesson.createdAt ? new Date(lesson.createdAt).getTime() : (lesson.scheduledPublishAt ? new Date(lesson.scheduledPublishAt).getTime() : 0);
+    const isNew = createdTime > 0 && (Date.now() - createdTime) < (24 * 60 * 60 * 1000);
+
     let priceBadge = '';
     if (isSubscribed) {
       priceBadge = '<span class="tag tag-ok">✓ تم الشراء / مشترك</span>';
@@ -279,20 +284,39 @@
     } else {
       actionBtn = `
         <button class="btn btn-primary btn-sm" onclick='openPurchaseModal(${JSON.stringify(lesson)})'>
-          🛒 شراء وتفعيل المحاضرة (${priceEGP > 0 ? priceEGP + ' ج.م' : 'مجاناً'})
+          🛒 تفعيل المحاضرة (${priceEGP > 0 ? priceEGP + ' ج.م' : 'مجاناً'})
         </button>
       `;
     }
 
+    // Client Note (Page 9): Lock icon when locked, and details under lecture
+    const statusIcon = (isSubscribed || isFree)
+      ? '<span style="font-size:1.4rem;" title="محاضرة متاحة للتشغيل">🎬</span>'
+      : '<span style="font-size:1.35rem;filter:drop-shadow(0 2px 4px rgba(239,68,68,0.3));" title="محاضرة مقفولة - تتطلب اشتراك">🔒</span>';
+
+    const newBadgeHtml = isNew
+      ? '<span class="tag" style="background:linear-gradient(135deg, #ef4444 0%, #f97316 100%);color:#fff;font-weight:800;font-size:0.72rem;padding:2px 8px;border-radius:12px;box-shadow:0 2px 6px rgba(239,68,68,0.35);margin-inline-start:6px;">جديد 🔥</span>'
+      : '';
+
+    const publishDateStr = lesson.createdAt ? new Date(lesson.createdAt).toLocaleDateString('ar-EG') : '';
+
     return `
-      <div class="lesson-row-card">
-        <div style="display:flex;align-items:center;gap:12px;">
-          <span style="font-size:1.4rem;">🎬</span>
+      <div class="lesson-row-card" style="${!isSubscribed && !isFree ? 'border-inline-start:3px solid #f59e0b;' : 'border-inline-start:3px solid #22c55e;'}">
+        <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:240px;">
+          ${statusIcon}
           <div>
-            <b style="font-size:0.95rem;display:block;">${escapeHtml(lesson.title)}</b>
-            <span style="font-size:0.8rem;color:var(--ink-dim);">
+            <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;">
+              <b style="font-size:0.96rem;">${escapeHtml(lesson.title)}</b>
+              ${newBadgeHtml}
+            </div>
+            <div style="font-size:0.8rem;color:var(--ink-dim);margin-top:2px;">
               ${escapeHtml(lesson.description || 'محاضرة وشرح تفصيلي للمنهج')}
-            </span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;font-size:0.74rem;color:var(--ink-dim);margin-top:4px;flex-wrap:wrap;">
+              ${lesson.durationMinutes ? `<span>⏱️ المدة: ${lesson.durationMinutes} دقيقة</span>` : ''}
+              ${lesson.pdfUrl ? `<span>📄 ملزمة مرفقة</span>` : ''}
+              ${publishDateStr ? `<span>📅 نُشرت: ${publishDateStr}</span>` : ''}
+            </div>
           </div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">

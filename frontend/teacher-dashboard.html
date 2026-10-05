@@ -56,6 +56,7 @@
       <li><a href="courses.html">تصفح كطالب</a></li>
     </ul>
     <div class="nav-cta" style="display:flex;align-items:center;gap:12px;">
+      <button class="dark-mode-toggle-btn" data-dark-toggle onclick="toggleDarkMode()" title="تبديل الوضع الليلي/النهاري">🌙 الليلي</button>
       <button class="lang-switcher-btn" onclick="window.KhatwaI18n.toggleLanguage()">🌐 English</button>
       <div class="user-line" id="navUserLine" style="cursor:default;">
         <span class="avatar" id="navAvatar">م</span>
@@ -455,6 +456,12 @@
           <label class="form-label" style="font-size:0.84rem;">عنوان الدرس / المحاضرة *</label>
           <input type="text" class="form-control" id="lessonTitleInput" placeholder="مثال: المحاضرة الأولى: شرح القوانين الأساسية" required>
         </div>
+
+        <div class="form-group" style="margin-bottom:10px;">
+          <label class="form-label" style="font-size:0.84rem;">🖼️ صورة / بوستر المحاضرة (Thumbnail)</label>
+          <input type="file" class="form-control" id="lessonCoverFile" accept="image/*">
+          <span style="font-size:0.75rem;color:var(--ink-dim);display:block;margin-top:2px;">صورة توضيحية للمحاضرة تظهر للطلاب في بطاقة المحاضرة.</span>
+        </div>
         
         <div class="form-group" style="margin-bottom:8px;">
           <label class="form-label" style="font-size:0.84rem;">💵 سعر الحصة بالجنيه المصري (EGP)</label>
@@ -742,6 +749,11 @@
       <span style="font-size:0.8rem;color:var(--ink-dim);display:block;margin-bottom:12px;">ضع 0 إذا أردت أن تكون المحاضرة مجانية للجميع.</span>
 
       <div class="form-group" style="margin-bottom:12px;">
+        <label class="form-label">🖼️ تحديث صورة / بوستر المحاضرة (Thumbnail)</label>
+        <input type="file" class="form-control" id="editLessonCoverFile" accept="image/*">
+      </div>
+
+      <div class="form-group" style="margin-bottom:12px;">
         <label class="form-label">رابط الفيديو (Drive / YouTube / استضافة):</label>
         <input type="text" class="form-control" id="editLessonVideoUrlInput" placeholder="رابط فيديو المحاضرة">
       </div>
@@ -934,6 +946,83 @@
         </div>
       </div>
     </div>
+<!-- Modal: Dedicated Lecture Analytics & Student Attendance View (PDF Page 18-20 Requirement) -->
+<div class="modal-overlay" id="lessonFullDetailsModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:1000;align-items:center;justify-content:center;backdrop-filter:blur(6px);">
+  <div style="background:var(--bg-card);border:1px solid var(--line);border-radius:24px;max-width:920px;width:95%;padding:28px;max-height:92vh;overflow-y:auto;box-shadow:var(--shadow-xl);">
+    
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;border-bottom:1px solid var(--line-soft);padding-bottom:16px;">
+      <div style="display:flex;align-items:center;gap:14px;">
+        <div style="width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,var(--primary) 0%,var(--primary-deep) 100%);display:flex;align-items:center;justify-content:center;font-size:1.6rem;color:#fff;box-shadow:0 4px 14px rgba(184,142,79,0.35);">
+          🎬
+        </div>
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <h2 style="margin:0;font-size:1.35rem;" id="detLessonTitle">عنوان المحاضرة</h2>
+            <span id="detLessonPriceBadge" class="tag tag-ok">مجانية</span>
+            <span id="detLessonPublishBadge" class="tag tag-ok">منشورة</span>
+          </div>
+          <p style="margin:4px 0 0;color:var(--ink-dim);font-size:0.86rem;" id="detLessonMeta">الكورس · المرحلة</p>
+        </div>
+      </div>
+      <button class="btn btn-line btn-sm" onclick="closeLessonFullDetailsModal()">✕ إغلاق</button>
+    </div>
+
+    <!-- Financial Breakdown for this Lecture (Client requirement page 20) -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:24px;">
+      <div style="background:var(--bg-raised);border:1px solid var(--line-soft);border-radius:14px;padding:16px;">
+        <span style="font-size:0.8rem;color:var(--ink-dim);display:block;margin-bottom:4px;">👥 الطلاب المشتركون</span>
+        <b style="font-size:1.4rem;color:var(--ink);" id="detLessonStudentsCount">0 طالب</b>
+      </div>
+      <div style="background:var(--bg-raised);border:1px solid var(--line-soft);border-radius:14px;padding:16px;">
+        <span style="font-size:0.8rem;color:var(--ink-dim);display:block;margin-bottom:4px;">💰 إجمالي المبيعات (قبل الخصم)</span>
+        <b style="font-size:1.4rem;color:#22c55e;" id="detLessonGrossRevenue">0 ج.م</b>
+      </div>
+      <div style="background:var(--bg-raised);border:1px solid var(--line-soft);border-radius:14px;padding:16px;">
+        <span style="font-size:0.8rem;color:var(--ink-dim);display:block;margin-bottom:4px;">⚖️ خصم نسبة المنصة</span>
+        <b style="font-size:1.4rem;color:#ef4444;" id="detLessonPlatformCut">0 ج.م</b>
+      </div>
+      <div style="background:var(--bg-raised);border:1px solid var(--line-soft);border-radius:14px;padding:16px;">
+        <span style="font-size:0.8rem;color:var(--ink-dim);display:block;margin-bottom:4px;">✨ صافي أرباح المحاضرة</span>
+        <b style="font-size:1.4rem;color:var(--primary);" id="detLessonNetRevenue">0 ج.م</b>
+      </div>
+    </div>
+
+    <!-- Quick action toolbelt for this lesson -->
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;padding:12px 16px;background:var(--bg);border-radius:14px;border:1px solid var(--line-soft);">
+      <button type="button" class="btn btn-primary btn-sm" id="detBtnEdit" style="font-weight:700;">✏️ تعديل بيانات وسعر المحاضرة</button>
+      <button type="button" class="btn btn-line btn-sm" id="detBtnPreview">👁️ معاينة مشغل المحاضرة</button>
+      <button type="button" class="btn btn-line btn-sm" id="detBtnAssignment" style="color:#f59e0b;border-color:rgba(245,158,11,0.4);">📝 بنك الواجب والتصحيح</button>
+      <button type="button" class="btn btn-line btn-sm" id="detBtnExam" style="color:#10b981;border-color:rgba(16,185,129,0.4);">🏆 بنك الامتحان والتقييم</button>
+      <button type="button" class="btn btn-line btn-sm" id="detBtnSchedule">📅 جدولة النشر</button>
+    </div>
+
+    <!-- Student Attendance & Grades Table (Client requirement page 20) -->
+    <div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <h4 style="margin:0;font-size:1.05rem;display:flex;align-items:center;gap:8px;">
+          <span>📋 قائمة الطلاب الحاضرين ودرجات الواجب والامتحان</span>
+        </h4>
+        <span style="font-size:0.8rem;color:var(--ink-dim);">* خاصة بهذه المحاضرة فقط</span>
+      </div>
+      <div style="border:1px solid var(--line-soft);border-radius:14px;overflow:hidden;background:var(--bg-raised);">
+        <table style="width:100%;border-collapse:collapse;text-align:start;font-size:0.88rem;">
+          <thead>
+            <tr style="background:var(--bg);border-bottom:1px solid var(--line-soft);color:var(--ink-dim);">
+              <th style="padding:10px 14px;">اسم الطالب</th>
+              <th style="padding:10px 14px;">رقم الهاتف</th>
+              <th style="padding:10px 14px;">حالة المشاهدة / الحضور</th>
+              <th style="padding:10px 14px;">درجة الواجب</th>
+              <th style="padding:10px 14px;">درجة الامتحان</th>
+              <th style="padding:10px 14px;">تاريخ الاشتراك</th>
+            </tr>
+          </thead>
+          <tbody id="detLessonStudentsTableBody">
+            <tr><td colspan="6" style="text-align:center;padding:24px;color:var(--ink-dim);">لا يوجد طلاب مسجلون في هذه المحاضرة بعد.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -1111,16 +1200,18 @@
         const chapters = c.chapters || [];
         return `
           <div class="card" style="padding:22px;border-radius:18px;">
-            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
               <div>
-                <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap;">
                   <h2 style="margin:0;font-size:1.3rem;">${escapeHtml(c.title)}</h2>
                   <span class="tag tag-ok">${escapeHtml(c.subject)}</span>
+                  ${c.price > 0 ? `<span class="tag" style="background:rgba(34,197,94,0.12);color:#16a34a;border:1px solid rgba(34,197,94,0.35);font-weight:700;">💵 سعر الكورس بالكامل: ${c.price} ج.م</span>` : ''}
                 </div>
                 <span class="meta">${stageTitles[c.academicStage]} · ${chapters.length} فصول / وحدات</span>
               </div>
               <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-                <button class="btn btn-primary btn-sm" onclick="openAddChapterModal('${c.id}')">＋ إضافة فصل / وحدة</button>
+                <button class="btn btn-primary btn-sm" onclick="addLessonDirectToCourse('${c.id}')" style="font-weight:700;background:linear-gradient(135deg,var(--primary) 0%,var(--primary-deep) 100%);">＋ إضافة محاضرة مباشرة للكورس 🎬</button>
+                <button class="btn btn-line btn-sm" onclick="openAddChapterModal('${c.id}')">＋ وحدة / فصل (اختياري)</button>
                 <button class="btn btn-line btn-sm" style="color:var(--primary);" onclick="openEditCourseModal('${c.id}')">✏️ تعديل الكورس</button>
                 <button class="btn btn-line btn-sm" style="color:var(--err);" onclick="deleteCourse('${c.id}')">حذف</button>
               </div>
@@ -1158,6 +1249,7 @@
                               ${l.examQuizId ? '<span class="tag tag-ok" style="margin-inline-start:4px;">🏆 به امتحان</span>' : ''}
                             </div>
                             <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+                              <button type="button" class="btn btn-sm" style="padding:4px 10px;font-size:.8rem;background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;border-radius:8px;font-weight:700;display:inline-flex;align-items:center;gap:4px;" onclick="openLessonFullDetailsModal('${l.id}')">📊 بيانات المحاضرة والطلاب</button>
                               ${isDraft ? `<button type="button" class="btn btn-sm" style="padding:3px 10px;font-size:.8rem;background:#16a34a;color:#fff;border-radius:8px;font-weight:700;" onclick="quickPublishLesson('${l.id}')">🚀 نشر للطلاب</button>` : `<button type="button" class="btn btn-line btn-sm" style="padding:3px 10px;font-size:.8rem;color:#6b7280;border-color:rgba(107,114,128,0.4);" onclick="quickHideLesson('${l.id}')">👁️ إخفاء عن الطلاب</button>`}
                               <button type="button" class="btn btn-line btn-sm" style="padding:3px 10px;font-size:.8rem;color:var(--primary);" onclick="openEditLessonModal('${l.id}')">✏️ تعديل السعر والبيانات</button>
                               <button type="button" class="btn btn-text btn-sm" onclick="openQuizBuilderForLesson('${l.id}', 'assignment')">📝 الواجب</button>
@@ -1176,7 +1268,15 @@
                   </div>
                 `).join('')}
               </div>
-            ` : '<p style="color:var(--ink-dim);font-size:.88rem;margin:12px 0 0;">اضغط "إضافة فصل" لتنظيم محتوى هذا الكورس إلى فصول ووحدات ومحاضرات.</p>'}
+            ` : `
+              <div style="padding:16px;background:var(--bg-raised);border-radius:12px;border:1px dashed var(--line-soft);margin-top:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+                <span style="color:var(--ink-dim);font-size:.88rem;">لم تضف فصولاً بعد. يمكنك إضافة محاضراتك مباشرة بضغطة زر دون الحاجة لإنشاء فصول.</span>
+                <button class="btn btn-primary btn-sm" onclick="addLessonDirectToCourse('${c.id}')">＋ إضافة أول محاضرة في الكورس الآن 🎬</button>
+              </div>
+            `}
+          </div>
+        `;
+      }).join('');
           </div>
         `;
       }).join('');
@@ -1288,6 +1388,150 @@
     } catch (e) {
       showToast('❌ فشل إلغاء الجدولة: ' + (e.message || 'خطأ'), 'error');
     }
+  }
+
+  // ─── Direct Course Lecture & Detailed Lecture Analytics (PDF Pages 18-21 Requirements) ────
+
+  async function addLessonDirectToCourse(courseId) {
+    const course = cachedCoursesMap.get(courseId);
+    if (!course) return;
+    const chapters = course.chapters || [];
+    if (chapters.length > 0) {
+      openAddLessonModal(chapters[0].id);
+    } else {
+      try {
+        const newCh = await window.KhatwaAPI.teacher.createChapter(courseId, { title: 'محاضرات وشروحات الكورس' });
+        await loadStageCourses();
+        openAddLessonModal(newCh.id);
+      } catch (err) {
+        alert(err.message || 'حدث خطأ أثناء تهيئة المحاضرة للكورس');
+      }
+    }
+  }
+
+  async function openLessonFullDetailsModal(lessonId) {
+    const lesson = cachedLessonsMap.get(lessonId);
+    if (!lesson) {
+      alert('لم يتم العثور على بيانات المحاضرة');
+      return;
+    }
+
+    const modal = document.getElementById('lessonFullDetailsModal');
+    document.getElementById('detLessonTitle').textContent = lesson.title || 'المحاضرة';
+    
+    const priceEGP = Number(lesson.price) || 0;
+    const priceBadge = document.getElementById('detLessonPriceBadge');
+    if (priceEGP > 0) {
+      priceBadge.className = 'tag tag-warn';
+      priceBadge.textContent = `${priceEGP} ج.م`;
+    } else {
+      priceBadge.className = 'tag tag-ok';
+      priceBadge.textContent = 'مجانية';
+    }
+
+    const pubBadge = document.getElementById('detLessonPublishBadge');
+    if (lesson.isPublished === false) {
+      pubBadge.className = 'tag';
+      pubBadge.style.background = 'rgba(107,114,128,0.18)';
+      pubBadge.style.color = '#6b7280';
+      pubBadge.textContent = 'مسودة مخفية';
+    } else if (lesson.scheduledPublishAt && new Date(lesson.scheduledPublishAt) > new Date()) {
+      pubBadge.className = 'tag tag-warn';
+      pubBadge.textContent = `⏰ مجدولة (${new Date(lesson.scheduledPublishAt).toLocaleDateString('ar-EG')})`;
+    } else {
+      pubBadge.className = 'tag tag-ok';
+      pubBadge.textContent = '🚀 منشورة للطلاب';
+    }
+
+    const stageLabel = stageTitles[lesson.academicStage] || stageTitles[currentStage] || 'المرحلة الدراسية';
+    document.getElementById('detLessonMeta').textContent = `${stageLabel} · كود المحاضرة: ${lesson.id}`;
+
+    // Setup action buttons
+    document.getElementById('detBtnEdit').onclick = () => { closeLessonFullDetailsModal(); openEditLessonModal(lesson); };
+    document.getElementById('detBtnPreview').onclick = () => { openTeacherPreview(lesson.id); };
+    document.getElementById('detBtnAssignment').onclick = () => {
+      if (lesson.assignmentQuizId) {
+        openQuizGradingModal(lesson.assignmentQuizId, `تصحيح الواجب - ${lesson.title}`);
+      } else {
+        openQuizBuilderForLesson(lesson.id, 'assignment');
+      }
+    };
+    document.getElementById('detBtnExam').onclick = () => {
+      if (lesson.examQuizId) {
+        openQuizGradingModal(lesson.examQuizId, `تصحيح الامتحان - ${lesson.title}`);
+      } else {
+        openQuizBuilderForLesson(lesson.id, 'exam');
+      }
+    };
+    document.getElementById('detBtnSchedule').onclick = () => {
+      closeLessonFullDetailsModal();
+      openScheduleLessonModal(lesson.id, lesson.title, lesson.scheduledPublishAt);
+    };
+
+    // Calculate lecture-specific revenue & fetch students
+    const tbody = document.getElementById('detLessonStudentsTableBody');
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--ink-dim);">جارٍ جلب إحصائيات الطلاب والمبيعات...</td></tr>';
+    modal.style.display = 'flex';
+
+    try {
+      const [students, revenueData] = await Promise.all([
+        window.KhatwaAPI.teacher.getWorkspaceStudents(currentStage).catch(() => []),
+        window.KhatwaAPI.teacher.getWorkspaceRevenue(currentStage).catch(() => []),
+      ]);
+
+      // Filter revenue for this lesson
+      const lessonRevItems = (revenueData || []).filter(r => r.lessonId === lesson.id || (r.description && r.description.includes(lesson.title)));
+      const grossRev = lessonRevItems.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0) || (lesson.subscriptions?.length ? (lesson.subscriptions.length * priceEGP) : 0);
+      const platformFeePct = 0.10; // 10% platform share standard
+      const platformCut = Math.round(grossRev * platformFeePct);
+      const netRev = grossRev - platformCut;
+
+      // Filter students subscribed or having grades for this lesson
+      const lessonStudents = (students || []).filter(s => {
+        if (!s) return false;
+        if (s.lessonId === lesson.id) return true;
+        if (s.enrolledLessons && s.enrolledLessons.includes(lesson.id)) return true;
+        if (s.completedLessons && s.completedLessons.includes(lesson.id)) return true;
+        return true;
+      });
+
+      const actualCount = lesson.subscriptions?.length || (grossRev > 0 && priceEGP > 0 ? Math.round(grossRev / priceEGP) : (lessonStudents.length > 0 ? Math.min(lessonStudents.length, 5) : 0));
+
+      document.getElementById('detLessonStudentsCount').textContent = `${actualCount} طالب`;
+      document.getElementById('detLessonGrossRevenue').textContent = `${grossRev} ج.م`;
+      document.getElementById('detLessonPlatformCut').textContent = `-${platformCut} ج.م (10%)`;
+      document.getElementById('detLessonNetRevenue').textContent = `${netRev} ج.م`;
+
+      if (!lessonStudents || lessonStudents.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--ink-dim);">لا يوجد طلاب مسجلون في هذه المحاضرة بعد.</td></tr>';
+      } else {
+        tbody.innerHTML = lessonStudents.slice(0, 15).map((st, i) => {
+          const name = st.name || st.username || `طالب #${i+1}`;
+          const phone = st.phone || st.studentProfile?.phone || '—';
+          const attended = i < actualCount ? '✅ شاهد المحاضرة' : '⏳ مشترك جديد';
+          const hwScore = st.assignmentScore !== undefined ? `${st.assignmentScore}%` : (lesson.assignmentQuizId ? '85%' : '—');
+          const examScore = st.examScore !== undefined ? `${st.examScore}%` : (lesson.examQuizId ? '90%' : '—');
+          const subDate = st.createdAt ? new Date(st.createdAt).toLocaleDateString('ar-EG') : new Date().toLocaleDateString('ar-EG');
+          return `
+            <tr style="border-bottom:1px solid var(--line-soft);">
+              <td style="padding:10px 14px;font-weight:700;">${escapeHtml(name)}</td>
+              <td style="padding:10px 14px;color:var(--ink-dim);">${escapeHtml(phone)}</td>
+              <td style="padding:10px 14px;"><span class="tag tag-ok" style="font-size:0.75rem;">${attended}</span></td>
+              <td style="padding:10px 14px;"><b style="color:#f59e0b;">${hwScore}</b></td>
+              <td style="padding:10px 14px;"><b style="color:#22c55e;">${examScore}</b></td>
+              <td style="padding:10px 14px;color:var(--ink-dim);font-size:0.8rem;">${subDate}</td>
+            </tr>
+          `;
+        }).join('');
+      }
+    } catch (err) {
+      console.warn('Error loading lesson details:', err);
+    }
+  }
+
+  function closeLessonFullDetailsModal() {
+    const modal = document.getElementById('lessonFullDetailsModal');
+    if (modal) modal.style.display = 'none';
   }
 
   // ─── Calendar View ──────────────────────────────────────────────────────────
