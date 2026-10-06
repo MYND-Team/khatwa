@@ -1180,7 +1180,109 @@
   "سؤال مقالي": "Essay Question",
   "ناجح / تم الاجتياز ✓": "Passed ✓",
   "راسب / لم يجتز ✕": "Failed ✕",
-  "حفظ وتحديث التقييم والدرجة ✓": "Save and Update Evaluation ✓"
+  "حفظ وتحديث التقييم والدرجة ✓": "Save and Update Evaluation ✓",
+
+  // ── Dark Mode toggle labels ────────────────────────────────
+  "🌙 الليلي": "🌙 Dark",
+  "☀️ المضيء": "☀️ Light",
+  "تبديل الوضع الليلي/النهاري": "Toggle Dark / Light Mode",
+  "تبديل الوضع الليلي": "Toggle Dark Mode",
+
+  // ── Login page ────────────────────────────────────────────
+  "أهلاً بك مجدداً، أدخل بيانات حسابك للمتابعة": "Welcome back, enter your account details to continue",
+  "أهلًا بعودتك": "Welcome back",
+  "دخول للمنصة": "Login to Platform",
+  "نسيت كلمة المرور؟": "Forgot your password?",
+
+  // ── Signup page ───────────────────────────────────────────
+  "الصف الدراسي (حدد مرحلتك الدراسية)": "Academic Grade (select your stage)",
+  "التسجيل على المنصة متاح للطلاب فقط. إذا كنت مدرساً، تواصل مع الإدارة لإنشاء حسابك.": "Registration is for students only. If you're a teacher, contact admin to create your account.",
+  "رقم هاتف الطالب": "Student Phone Number",
+  "رقم هاتف ولي الأمر": "Parent Phone Number",
+  "وظيفة الأب": "Father's Occupation",
+  "حالة وفاة أحد الوالدين (إن وُجدت)": "Deceased Parent (if applicable)",
+  "لا يوجد (كلاهما على قيد الحياة)": "None (both alive)",
+  "الأب متوفى": "Father deceased",
+  "الأم متوفاة": "Mother deceased",
+  "كلاهما متوفى": "Both deceased",
+  "أوافق على الشروط والأحكام وسياسة الخصوصية": "I agree to the Terms & Conditions and Privacy Policy",
+  "8 أحرف على الأقل": "At least 8 characters",
+  "كلمتا المرور غير متطابقتين": "Passwords do not match",
+  "لديك حساب بالفعل؟": "Already have an account?",
+  "تأكيد كلمة المرور": "Confirm Password",
+
+  // ── Dashboard page ────────────────────────────────────────
+  "لوحة اشتراكاتي": "My Subscriptions Dashboard",
+  "الكورسات والمدرسين": "Courses & Teachers",
+  "تصفح الكورسات والمحاضرات": "Browse Courses & Lectures",
+  "النتائج والامتحانات": "Results & Exams",
+  "المحفظة والنقاط": "Wallet & Points",
+  "الرصيد والمعاملات": "Balance & Transactions",
+  "طلب سيشن أوفلاين 🏢": "Offline Session Request 🏢",
+  "لوحة التحكم / اشتراكاتي": "Dashboard / My Subscriptions",
+  "المحاضرات والكورسات التي قمت بالاشتراك بها ومتابعة تقدمك الدراسي.": "Lectures and courses you've subscribed to, and track your academic progress.",
+  "🔍 تصفح وشراء محاضرات جديدة": "🔍 Browse & Purchase New Lectures",
+  "محاضرة مشترك بها": "Enrolled Lecture",
+  "امتحان مجتاز": "Passed Exam",
+  "📚 اشتراكاتي ومحاضراتي المدفوعة (My Subscriptions)": "📚 My Subscriptions & Paid Lectures",
+  "0 محاضرة": "0 Lectures",
+  "جارٍ جلب اشتراكاتك...": "Fetching your subscriptions...",
+  "💳 آخر المعاملات وعمليات الشراء": "💳 Latest Transactions & Purchases",
+  "عرض سجل المحفظة": "View Wallet History",
+  "قسم الدعم الفني وخدمة الطلاب": "Technical Support & Student Services",
+  "تواجهك مشكلة في تشغيل المحاضرة، شحن المحفظة، أو فتح الامتحانات؟ فريق الدعم متواجد لمساعدتك عبر واتساب:": "Having trouble playing a lecture, charging your wallet, or opening exams? Support is available via WhatsApp:",
+  "تواصل مع الدعم الفني (واتساب)": "Contact Technical Support (WhatsApp)",
+
+  // ── Courses page ──────────────────────────────────────────
+  "الدعم والمساعدة": "Support & Help",
+  "💬 الدعم الفني (واتساب)": "💬 Technical Support (WhatsApp)",
+  "رصيد المحفظة: 0 ج.م": "Wallet Balance: 0 EGP",
+  "📚 الكورسات والمحاضرات المتاحة:": "📚 Available Courses & Lectures:",
+
+  // ── Points page ───────────────────────────────────────────
+  "رصيدك بالجنيه المصري (EGP) للاشتراك في المواد والمحاضرات المدفوعة وفتح الامتحانات.": "Your EGP balance for subscribing to paid courses, lectures, and opening exams.",
+  "الرصيد المتاح حاليًا بالمحفظة": "Currently Available Wallet Balance",
+  "🧾 شحن بإيصال تحويل": "🧾 Charge via Transfer Receipt",
+  "🎟️ شحن كود مسبق الدفع (كروت الشحن)": "🎟️ Charge with Prepaid Code (Voucher Cards)",
+  "شحن فوري": "Instant Charge",
+  "إذا كان لديك كارت شحن من المدرس أو المركز التعليمي، أدخل الكود المكون من الحروف والأرقام للشحن الفوري.": "If you have a voucher card from your teacher or center, enter the alphanumeric code for instant charging.",
+  "⚡ شحن الرصيد الآن": "⚡ Charge Balance Now",
+
+  // ── Profile page ──────────────────────────────────────────
+  "طالب خطوة": "Khatwa Student",
+  "✏️ طلب تعديل البيانات": "✏️ Request Data Edit",
+  "طلب تعديل بياناتك قيد مراجعة الإدارة": "Your data edit request is under admin review",
+  "تم إرسال بياناتك المحدثة، وسيقوم مسؤول المنصة بمراجعتها واعتمادها قريباً.": "Your updated data has been submitted and will be reviewed by the admin soon.",
+  "هل تواجه مشكلة في حسابك؟ تواصل مع الدعم الفني": "Having an account issue? Contact technical support",
+  "إذا كنت بحاجة إلى استعادة حسابك، تعديل بيانات خاصة، أو الاستفسار عن الشحن والاشتراكات:": "If you need to recover your account, edit private data, or inquire about charges and subscriptions:",
+  "واتساب الدعم الفني المباشر:": "Direct Technical Support WhatsApp:",
+  "طلب تعديل بيانات الحساب": "Account Data Edit Request",
+  "تنبيه أمان:": "Security Notice:",
+  "حفاظاً على دقة السجلات، يتم إرسال طلب التعديل إلى إدارة المنصة لمراجعته والموافقة عليه قبل اعتماده رسمياً.": "To maintain record accuracy, the edit request is sent to the admin for review before being officially applied.",
+  "إرسال طلب التعديل للإدارة 📨": "Send Edit Request to Admin 📨",
+
+  // ── Results page ──────────────────────────────────────────
+  "مراجعة إجابات الامتحان / الواجب": "Review Exam / Homework Answers",
+  "تفاصيل الأسئلة والحل النموذجي": "Question Details & Model Answer",
+  "جارٍ تحميل الإجابات والحل النموذجي...": "Loading answers and model solution...",
+
+  // ── Help page ─────────────────────────────────────────────
+  "لم تجد إجابة لسؤالك؟ تواصل مع الدعم الفني": "Didn't find your answer? Contact technical support",
+  "فريق خدمة عملاء ودعم منصة خطوة متاح للإجابة على جميع استفسارات الطلاب والمعلمين وأولياء الأمور عبر واتساب:": "Khatwa support team is available to answer all inquiries via WhatsApp:",
+  "تواصل مع الدعم الفني عبر واتساب": "Contact Technical Support via WhatsApp",
+
+  // ── Notifications ─────────────────────────────────────────
+  "إشعاراتي": "My Notifications",
+  "جارٍ تحميل الإشعارات...": "Loading notifications...",
+  "لا توجد إشعارات جديدة": "No new notifications",
+
+  // ── Grade options ─────────────────────────────────────────
+  "الصف الثالث الإعدادي (3 إعدادي)": "Grade 9 (Preparatory 3)",
+  "الصف الأول الثانوي (1 ثانوي)": "Grade 10 (Secondary 1)",
+  "الصف الثاني الثانوي (2 ثانوي)": "Grade 11 (Secondary 2)",
+  "الصف الثاني باكلوريا (2 باكلوريا)": "Grade 11 Baccalaureate",
+  "الصف الثالث الثانوي (3 ثانوي)": "Grade 12 (Secondary 3)",
+  "الصف الثالث باكلوريا (3 باكلوريا)": "Grade 12 Baccalaureate"
   };
 
   const REVERSE_DICT = {};
