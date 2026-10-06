@@ -6,10 +6,34 @@
 (function (window) {
   const DICTIONARY = {
   "خطوة": "Khatwa",
+  "إدارة خطوة": "Khatwa Admin",
+  "استوديو خطوة": "Khatwa Studio",
   "منصة خطوة": "Khatwa Platform",
   "منصة تعليمية أونلاين": "Online Educational Platform",
   "منصة تعليمية": "Educational Platform",
   "الرئيسية": "Home",
+  "الطلاب": "Students",
+  "المدرسين": "Teachers",
+  "الاشتراكات": "Subscriptions",
+  "السجل المالي": "Financial Record",
+  "المراحل": "Academic Stages",
+  "المظهر والألوان": "Appearance & Theme",
+  "أكواد الشحن": "Voucher Codes",
+  "طلبات الشحن": "Recharge Requests",
+  "طلبات الأوفلاين": "Offline Requests",
+  "طلبات البيانات": "Profile Edit Requests",
+  "الأمان والنظام": "Security & System",
+  "الكورسات والمحاضرات": "Courses & Lectures",
+  "طلاب المرحلة": "Stage Students",
+  "الرصيد والأرباح": "Earnings & Wallet",
+  "تقويم المحاضرات": "Schedule Calendar",
+  "تصفح المنصة كطالب": "Browse as Student",
+  "محاضراتي والكورسات": "My Courses & Lectures",
+  "طلب سنتر / أوفلاين": "Center / Offline Request",
+  "طلب سنتر": "Center Request",
+  "النتائج والتقارير": "Grades & Reports",
+  "تثبيت / إلغاء تثبيت القائمة": "Pin / Unpin Sidebar",
+  "الوضع الليلي / النهاري": "Dark / Light Mode",
   "تصفح الكورسات": "Browse Courses",
   "الكورسات": "Courses",
   "الكورسات والمواد": "Courses & Subjects",
@@ -1357,6 +1381,10 @@
     document.querySelectorAll('.lang-switcher-btn').forEach(btn => {
       btn.innerHTML = lang === 'ar' ? '🌐 English' : '🌐 العربية';
     });
+
+    try {
+      window.dispatchEvent(new CustomEvent('khatwa:langchange', { detail: { lang } }));
+    } catch (_) {}
   }
 
   let observer = null;

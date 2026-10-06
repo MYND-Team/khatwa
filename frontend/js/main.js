@@ -133,8 +133,8 @@ document.addEventListener('DOMContentLoaded', () => {
 function initTransparentLogos() {
   document.querySelectorAll('img.brand-logo, .brand img, #platformLogoPreview img, .modal-head img').forEach(img => {
     const src = img.getAttribute('src');
-    if (src && (src.includes('logo-khatwa.png') || src.includes('logo-khatwa.jpeg'))) {
-      img.src = 'logo/logo-khatwa-transparent.png';
+    if (src && (src.includes('logo-khatwa.png') || src.includes('logo-khatwa.jpeg') || src.includes('logo-khatwa-transparent.png'))) {
+      img.src = 'logo/logo-khatwa.png';
       img.onerror = function() { this.src = 'logo/logo-khatwa.png'; };
     }
   });
@@ -275,10 +275,12 @@ function initDarkMode() {
     document.body.classList.remove('dark-mode');
   }
 
-  // Bind any existing dark-mode-toggle buttons on page
+  // Update button text only — onclick in HTML handles the click itself
+  const isEn = window.KhatwaI18n?.getLanguage() === 'en';
   document.querySelectorAll('[data-dark-toggle]').forEach(btn => {
-    btn.addEventListener('click', toggleDarkMode);
-    btn.textContent = isDark ? '☀️ الوضع المضيء' : '🌙 الوضع الليلي';
+    btn.textContent = isDark
+      ? (isEn ? '☀️ Light' : '☀️ المضيء')
+      : (isEn ? '🌙 Dark' : '🌙 الليلي');
   });
 }
 
@@ -300,6 +302,79 @@ function toggleDarkMode() {
     const isEn = window.KhatwaI18n?.getLanguage() === 'en';
     btn.textContent = newDark ? (isEn ? '☀️ Light' : '☀️ المضيء') : (isEn ? '🌙 Dark' : '🌙 الليلي');
   });
+}
+
+const TASKBAR_NAV_DEFS = {
+  ADMIN: [
+    { id: 'tabStudents', icon: '🎓', ar: 'الطلاب', en: 'Students', action: "switchAdminTab && switchAdminTab('tabStudents')" },
+    { id: 'tabTeachers', icon: '👨‍🏫', ar: 'المدرسين', en: 'Teachers', action: "switchAdminTab && switchAdminTab('tabTeachers')" },
+    { id: 'tabSubscriptions', icon: '🔑', ar: 'الاشتراكات', en: 'Subscriptions', action: "switchAdminTab && switchAdminTab('tabSubscriptions')" },
+    { id: 'tabPayments', icon: '💳', ar: 'السجل المالي', en: 'Finance', action: "switchAdminTab && switchAdminTab('tabPayments')" },
+    { id: 'tabStages', icon: '🏫', ar: 'المراحل', en: 'Stages', action: "switchAdminTab && switchAdminTab('tabStages')" },
+    { id: 'tabAppearance', icon: '🎨', ar: 'المظهر والألوان', en: 'Appearance & Theme', action: "switchAdminTab && switchAdminTab('tabAppearance')" },
+    { id: 'tabAccessCodes', icon: '🎟️', ar: 'أكواد الشحن', en: 'Voucher Codes', action: "switchAdminTab && switchAdminTab('tabAccessCodes')" },
+    { id: 'tabPointRequests', icon: '💰', ar: 'طلبات الشحن', en: 'Recharge Requests', action: "switchAdminTab && switchAdminTab('tabPointRequests')" },
+    { id: 'tabOfflineRequests', icon: '🏢', ar: 'طلبات الأوفلاين', en: 'Offline Requests', action: "switchAdminTab && switchAdminTab('tabOfflineRequests')" },
+    { id: 'tabProfileRequests', icon: '📋', ar: 'طلبات البيانات', en: 'Profile Edits', action: "switchAdminTab && switchAdminTab('tabProfileRequests')" },
+    { id: 'tabSecurity', icon: '🛡️', ar: 'الأمان والنظام', en: 'Security', action: "switchAdminTab && switchAdminTab('tabSecurity')" },
+  ],
+  TEACHER: [
+    { href: 'teacher-dashboard.html', id: 'view-courses', icon: '📊', ar: 'الكورسات والمحاضرات', en: 'Studio & Courses', action: "window.switchMainView && window.switchMainView('view-courses')" },
+    { href: 'teacher-dashboard.html#students', id: 'view-students', icon: '👨‍🎓', ar: 'طلاب المرحلة', en: 'Students', action: "window.switchMainView && window.switchMainView('view-students')" },
+    { href: 'teacher-dashboard.html#revenue', id: 'view-revenue', icon: '💵', ar: 'الرصيد والأرباح', en: 'Earnings & Wallet', action: "window.switchMainView && window.switchMainView('view-revenue')" },
+    { href: 'teacher-dashboard.html#calendar', id: 'view-calendar', icon: '📅', ar: 'تقويم المحاضرات', en: 'Schedule Calendar', action: "window.switchMainView && window.switchMainView('view-calendar'); window.loadCalendarView && window.loadCalendarView();" },
+    { href: 'courses.html', icon: '🔍', ar: 'تصفح المنصة كطالب', en: 'Browse Platform' },
+  ],
+  STUDENT: [
+    { href: 'dashboard.html', icon: '🏠', ar: 'الرئيسية', en: 'Home' },
+    { href: 'profile.html', icon: '👤', ar: 'الملف الشخصي', en: 'Profile' },
+    { href: 'courses.html', icon: '📚', ar: 'محاضراتي والكورسات', en: 'My Courses' },
+    { href: 'points.html', icon: '💳', ar: 'المحفظة والرصيد', en: 'Wallet & Balance' },
+    { href: 'request-points.html', icon: '⚡', ar: 'طلب شحن رصيد', en: 'Request Balance' },
+    { href: 'request-offline.html', icon: '🏢', ar: 'طلب سنتر / أوفلاين', en: 'Center Request' },
+    { href: 'results.html', icon: '📊', ar: 'النتائج والتقارير', en: 'Grades & Results' },
+  ]
+};
+
+function updateTaskbarLanguage(lang) {
+  const taskbar = document.getElementById('khatwaTaskbar');
+  if (!taskbar) return;
+  const isEn = (lang || window.KhatwaI18n?.getLanguage?.() || 'ar') === 'en';
+  const role = taskbar.dataset.role || 'STUDENT';
+
+  // 1. Update Brand title
+  const brandTitleEl = taskbar.querySelector('.khatwa-taskbar-title');
+  if (brandTitleEl) {
+    brandTitleEl.textContent = role === 'ADMIN'
+      ? (isEn ? 'Khatwa Admin' : 'إدارة خطوة')
+      : (role === 'TEACHER' ? (isEn ? 'Khatwa Studio' : 'استوديو خطوة') : (isEn ? 'Khatwa Platform' : 'منصة خطوة'));
+  }
+
+  // 2. Update navigation items
+  const items = TASKBAR_NAV_DEFS[role] || [];
+  taskbar.querySelectorAll('.khatwa-taskbar-item').forEach((el) => {
+    const targetId = el.getAttribute('data-target-id');
+    const href = el.getAttribute('href');
+    const item = items.find(it => (targetId && it.id === targetId) || (href && it.href === href));
+    if (!item) return;
+    const label = isEn ? item.en : item.ar;
+    const labelEl = el.querySelector('.khatwa-taskbar-label');
+    if (labelEl) labelEl.textContent = label;
+    el.setAttribute('data-tooltip', label);
+  });
+
+  // 3. Update footer buttons
+  const darkModeLabel = taskbar.querySelector('[data-taskbar-dark-label]');
+  if (darkModeLabel) darkModeLabel.textContent = isEn ? 'Dark / Light Mode' : 'الوضع الليلي / النهاري';
+
+  const langLabel = taskbar.querySelector('[data-taskbar-lang-label]');
+  if (langLabel) langLabel.textContent = isEn ? 'العربية' : 'English';
+
+  const logoutLabel = taskbar.querySelector('[data-taskbar-logout-label]');
+  if (logoutLabel) logoutLabel.textContent = isEn ? 'Logout' : 'تسجيل الخروج';
+
+  const pinBtn = document.getElementById('taskbarPinBtn');
+  if (pinBtn) pinBtn.title = isEn ? 'Pin / Unpin Sidebar' : 'تثبيت / إلغاء تثبيت القائمة';
 }
 
 /**
@@ -336,6 +411,7 @@ function initCollapsibleTaskbar() {
   const taskbar = document.createElement('aside');
   taskbar.id = 'khatwaTaskbar';
   taskbar.className = 'khatwa-taskbar';
+  taskbar.dataset.role = role;
   taskbar.setAttribute('aria-label', 'شريط المهام والتنقل الجانبي');
 
   // Check pinned state
@@ -353,56 +429,23 @@ function initCollapsibleTaskbar() {
   document.body.appendChild(backdrop);
 
   // Define Navigation Items based on user role
-  let navItems = [];
   const isEn = window.KhatwaI18n?.getLanguage() === 'en';
-
-  if (role === 'ADMIN') {
-    navItems = [
-      { id: 'tabStudents', icon: '🎓', label: isEn ? 'Students' : 'الطلاب', action: "switchAdminTab && switchAdminTab('tabStudents')" },
-      { id: 'tabTeachers', icon: '👨‍🏫', label: isEn ? 'Teachers' : 'المدرسين', action: "switchAdminTab && switchAdminTab('tabTeachers')" },
-      { id: 'tabSubscriptions', icon: '🔑', label: isEn ? 'Subscriptions' : 'الاشتراكات', action: "switchAdminTab && switchAdminTab('tabSubscriptions')" },
-      { id: 'tabPayments', icon: '💳', label: isEn ? 'Finance' : 'السجل المالي', action: "switchAdminTab && switchAdminTab('tabPayments')" },
-      { id: 'tabStages', icon: '🏫', label: isEn ? 'Stages' : 'المراحل', action: "switchAdminTab && switchAdminTab('tabStages')" },
-      { id: 'tabAppearance', icon: '🎨', label: isEn ? 'Appearance & Theme' : 'المظهر والألوان', action: "switchAdminTab && switchAdminTab('tabAppearance')" },
-      { id: 'tabAccessCodes', icon: '🎟️', label: isEn ? 'Voucher Codes' : 'أكواد الشحن', action: "switchAdminTab && switchAdminTab('tabAccessCodes')" },
-      { id: 'tabPointRequests', icon: '💰', label: isEn ? 'Recharge Requests' : 'طلبات الشحن', action: "switchAdminTab && switchAdminTab('tabPointRequests')" },
-      { id: 'tabOfflineRequests', icon: '🏢', label: isEn ? 'Offline Requests' : 'طلبات الأوفلاين', action: "switchAdminTab && switchAdminTab('tabOfflineRequests')" },
-      { id: 'tabProfileRequests', icon: '📋', label: isEn ? 'Profile Edits' : 'طلبات البيانات', action: "switchAdminTab && switchAdminTab('tabProfileRequests')" },
-      { id: 'tabSecurity', icon: '🛡️', label: isEn ? 'Security' : 'الأمان والنظام', action: "switchAdminTab && switchAdminTab('tabSecurity')" },
-    ];
-  } else if (role === 'TEACHER') {
-    navItems = [
-      { href: 'teacher-dashboard.html', id: 'view-courses', icon: '📊', label: isEn ? 'Studio & Courses' : 'الكورسات والمحاضرات', action: "window.switchMainView && window.switchMainView('view-courses')" },
-      { href: 'teacher-dashboard.html#students', id: 'view-students', icon: '👨‍🎓', label: isEn ? 'Students' : 'طلاب المرحلة', action: "window.switchMainView && window.switchMainView('view-students')" },
-      { href: 'teacher-dashboard.html#revenue', id: 'view-revenue', icon: '💵', label: isEn ? 'Earnings & Wallet' : 'الرصيد والأرباح', action: "window.switchMainView && window.switchMainView('view-revenue')" },
-      { href: 'teacher-dashboard.html#calendar', id: 'view-calendar', icon: '📅', label: isEn ? 'Schedule Calendar' : 'تقويم المحاضرات', action: "window.switchMainView && window.switchMainView('view-calendar'); window.loadCalendarView && window.loadCalendarView();" },
-      { href: 'courses.html', icon: '🔍', label: isEn ? 'Browse Platform' : 'تصفح المنصة كطالب' },
-    ];
-  } else {
-    // STUDENT
-    navItems = [
-      { href: 'dashboard.html', icon: '🏠', label: isEn ? 'Home' : 'الرئيسية' },
-      { href: 'profile.html', icon: '👤', label: isEn ? 'Profile' : 'الملف الشخصي' },
-      { href: 'courses.html', icon: '📚', label: isEn ? 'My Lectures & Courses' : 'محاضراتي والكورسات' },
-      { href: 'points.html', icon: '💳', label: isEn ? 'Wallet & Balance' : 'المحفظة والرصيد' },
-      { href: 'request-points.html', icon: '⚡', label: isEn ? 'Request Balance' : 'طلب شحن رصيد' },
-      { href: 'request-offline.html', icon: '🏢', label: isEn ? 'Center Request' : 'طلب سنتر / أوفلاين' },
-      { href: 'results.html', icon: '📊', label: isEn ? 'Grades & Results' : 'النتائج والتقارير' },
-    ];
-  }
+  const navItems = TASKBAR_NAV_DEFS[role] || [];
 
   // Build Taskbar Inner HTML
-  const brandTitle = role === 'ADMIN' ? 'إدارة خطوة' : (role === 'TEACHER' ? 'استوديو خطوة' : 'منصة خطوة');
-  const logoSrc = 'logo/logo-khatwa-transparent.png';
+  const brandTitle = role === 'ADMIN'
+    ? (isEn ? 'Khatwa Admin' : 'إدارة خطوة')
+    : (role === 'TEACHER' ? (isEn ? 'Khatwa Studio' : 'استوديو خطوة') : (isEn ? 'Khatwa Platform' : 'منصة خطوة'));
+  const logoSrc = 'logo/logo-khatwa.png';
 
   taskbar.innerHTML = `
     <div>
       <div class="khatwa-taskbar-head">
         <a href="${role === 'ADMIN' ? 'admin.html' : (role === 'TEACHER' ? 'teacher-dashboard.html' : 'dashboard.html')}" class="khatwa-taskbar-brand">
           <img src="${logoSrc}" alt="خطوة" class="khatwa-taskbar-logo" onerror="this.src='logo/logo-khatwa.png'">
-          <span class="khatwa-taskbar-title">${brandTitle}</span>
+          <span class="khatwa-taskbar-title" data-taskbar-brand-title>${brandTitle}</span>
         </a>
-        <button type="button" class="khatwa-taskbar-pin-btn" id="taskbarPinBtn" title="تثبيت / إلغاء تثبيت القائمة">
+        <button type="button" class="khatwa-taskbar-pin-btn" id="taskbarPinBtn" title="${isEn ? 'Pin / Unpin Sidebar' : 'تثبيت / إلغاء تثبيت القائمة'}">
           ${isPinned ? '📌' : '📍'}
         </button>
       </div>
@@ -416,13 +459,14 @@ function initCollapsibleTaskbar() {
             isActive = currentPath === item.href.split('#')[0];
           }
 
+          const label = isEn ? item.en : item.ar;
           const actionAttr = item.action ? `onclick="${item.action}"` : '';
           const hrefAttr = item.href ? `href="${item.href}"` : 'href="javascript:void(0)"';
 
           return `
-            <a ${hrefAttr} ${actionAttr} class="khatwa-taskbar-item ${isActive ? 'active' : ''}" data-target-id="${item.id || ''}" data-tooltip="${item.label}">
+            <a ${hrefAttr} ${actionAttr} class="khatwa-taskbar-item ${isActive ? 'active' : ''}" data-target-id="${item.id || ''}" data-tooltip="${label}">
               <span class="khatwa-taskbar-icon">${item.icon}</span>
-              <span class="khatwa-taskbar-label">${item.label}</span>
+              <span class="khatwa-taskbar-label">${label}</span>
               ${item.badge ? `<span class="khatwa-taskbar-badge">${item.badge}</span>` : ''}
             </a>
           `;
@@ -431,19 +475,19 @@ function initCollapsibleTaskbar() {
     </div>
 
     <div class="khatwa-taskbar-foot">
-      <button type="button" class="khatwa-taskbar-foot-btn" onclick="toggleDarkMode()" title="تبديل الوضع الليلي">
+      <button type="button" class="khatwa-taskbar-foot-btn" onclick="toggleDarkMode()" title="${isEn ? 'Toggle Dark Mode' : 'تبديل الوضع الليلي'}">
         <span class="khatwa-taskbar-icon">🌓</span>
-        <span class="khatwa-taskbar-label">الوضع الليلي / النهاري</span>
+        <span class="khatwa-taskbar-label" data-taskbar-dark-label>${isEn ? 'Dark / Light Mode' : 'الوضع الليلي / النهاري'}</span>
       </button>
 
-      <button type="button" class="khatwa-taskbar-foot-btn" onclick="window.KhatwaI18n && window.KhatwaI18n.toggleLanguage()" title="تغيير اللغة">
+      <button type="button" class="khatwa-taskbar-foot-btn" onclick="window.KhatwaI18n && window.KhatwaI18n.toggleLanguage()" title="${isEn ? 'Switch Language' : 'تغيير اللغة'}">
         <span class="khatwa-taskbar-icon">🌐</span>
-        <span class="khatwa-taskbar-label">${isEn ? 'العربية' : 'English'}</span>
+        <span class="khatwa-taskbar-label" data-taskbar-lang-label>${isEn ? 'العربية' : 'English'}</span>
       </button>
 
-      <a href="#logout" class="khatwa-taskbar-foot-btn" style="color:var(--err);" title="تسجيل الخروج">
+      <a href="#logout" class="khatwa-taskbar-foot-btn" style="color:var(--err);" title="${isEn ? 'Logout' : 'تسجيل الخروج'}">
         <span class="khatwa-taskbar-icon">🚪</span>
-        <span class="khatwa-taskbar-label">تسجيل الخروج</span>
+        <span class="khatwa-taskbar-label" data-taskbar-logout-label>${isEn ? 'Logout' : 'تسجيل الخروج'}</span>
       </a>
     </div>
   `;
@@ -489,6 +533,16 @@ function initCollapsibleTaskbar() {
       });
     });
   }
+
+  // Listen for language changes to update taskbar dynamically
+  window.addEventListener('khatwa:langchange', (e) => {
+    updateTaskbarLanguage(e.detail?.lang);
+  });
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'khatwa_lang') {
+      updateTaskbarLanguage(e.newValue);
+    }
+  });
 }
 
 /**
