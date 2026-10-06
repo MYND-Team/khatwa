@@ -108,10 +108,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ─── Global logout handler (any element with #logoutBtn) ──────────────────
   // (Individual pages handle their own logout button; this is a global fallback)
-  document.querySelectorAll('a[href="#logout"]').forEach(link => {
+  document.querySelectorAll('a[href="#logout"], #logoutBtn').forEach(link => {
     link.addEventListener('click', async (e) => {
       e.preventDefault();
       if (window.KhatwaAPI?.auth?.logout) await window.KhatwaAPI.auth.logout();
+      else if (window.KhatwaAPI?.logout) await window.KhatwaAPI.logout();
       else window.location.href = 'index.html';
     });
   });
@@ -275,12 +276,16 @@ function initDarkMode() {
     document.body.classList.remove('dark-mode');
   }
 
-  // Update button text only — onclick in HTML handles the click itself
+  // Update button text and attach click listener if not already in HTML
   const isEn = window.KhatwaI18n?.getLanguage() === 'en';
   document.querySelectorAll('[data-dark-toggle]').forEach(btn => {
     btn.textContent = isDark
       ? (isEn ? '☀️ Light' : '☀️ المضيء')
       : (isEn ? '🌙 Dark' : '🌙 الليلي');
+    if (!btn.hasAttribute('onclick') && !btn._hasDarkListener) {
+      btn._hasDarkListener = true;
+      btn.addEventListener('click', toggleDarkMode);
+    }
   });
 }
 
@@ -446,7 +451,10 @@ function initCollapsibleTaskbar() {
   // Backdrop for mobile
   const backdrop = document.createElement('div');
   backdrop.className = 'khatwa-taskbar-backdrop';
-  backdrop.addEventListener('click', () => taskbar.classList.remove('mobile-open'));
+  backdrop.addEventListener('click', () => {
+    taskbar.classList.remove('mobile-open');
+    backdrop.classList.remove('show');
+  });
   document.body.appendChild(backdrop);
 
   // Define Navigation Items based on user role
