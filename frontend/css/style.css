@@ -182,11 +182,11 @@ html{scroll-behavior:smooth;}
 body{
   margin:0;
   font-family:var(--font-main);
-  /* Rich radial blobs layered over gradient — essential for glass effect to show */
+  /* Dynamic multi-tone ambient lighting layered over gradient — derives from --primary-rgb */
   background:
-    radial-gradient(50rem 40rem at 88% 8%,  rgba(184, 142, 79, 0.28), transparent 65%),
-    radial-gradient(45rem 38rem at 8%  92%, rgba(56, 189, 248, 0.22),  transparent 65%),
-    radial-gradient(30rem 25rem at 55% 55%, rgba(140, 101, 39, 0.15),  transparent 65%),
+    radial-gradient(50rem 40rem at 88% 8%,  rgba(var(--primary-rgb, 184, 142, 79), 0.28), transparent 65%),
+    radial-gradient(45rem 38rem at 8%  92%, var(--bg-shapes-color2, rgba(56, 189, 248, 0.22)),  transparent 65%),
+    radial-gradient(30rem 25rem at 55% 55%, rgba(var(--primary-rgb, 184, 142, 79), 0.14),  transparent 65%),
     var(--bg-gradient);
   background-attachment:fixed;
   color:var(--ink);
@@ -200,7 +200,7 @@ body{
 /* Dark mode body blobs */
 body.dark-mode, html[data-theme="dark"] body, :root[data-theme="dark"] body {
   background:
-    radial-gradient(50rem 40rem at 88% 8%,  rgba(184, 142, 79, 0.20), transparent 65%),
+    radial-gradient(50rem 40rem at 88% 8%,  rgba(var(--primary-rgb, 184, 142, 79), 0.20), transparent 65%),
     radial-gradient(45rem 38rem at 8%  92%, rgba(56, 189, 248, 0.15),  transparent 65%),
     radial-gradient(30rem 25rem at 55% 55%, rgba(168, 85, 247, 0.12),  transparent 65%),
     linear-gradient(135deg, #0a1324 0%, #101c33 50%, #172744 100%);
@@ -360,7 +360,9 @@ body.dark-mode .brand-text, html[data-theme="dark"] .brand-text { color: var(--p
 .hero{
   padding:72px 0 56px;
   border-bottom:1px solid var(--line-soft);
-  background:linear-gradient(180deg, #FFFFFF 0%, var(--bg) 100%);
+  background:transparent;
+  position:relative;
+  z-index:1;
 }
 .hero h1{font-family:var(--serif);font-size:2.7rem;line-height:1.35;font-weight:700;max-width:820px;color:var(--ink);}
 .hero h1 em{font-style:normal;color:var(--primary);position:relative;}
@@ -393,15 +395,25 @@ body.dark-mode .brand-text, html[data-theme="dark"] .brand-text { color: var(--p
 .feature-row .ftitle{font-weight:700;font-size:1rem;min-width:220px;color:var(--ink);}
 .feature-row .fdesc{color:var(--ink-dim);font-size:.92rem;}
 
-.cta-band{border-top:1px solid var(--line-soft);padding:60px 0;text-align:center;background:#FFFFFF;}
+.cta-band{
+  border-top:1px solid var(--line-soft);
+  border-bottom:1px solid var(--line-soft);
+  padding:60px 0;
+  text-align:center;
+  background:var(--card-glass-bg);
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+}
 .cta-band h2{font-family:var(--serif);font-size:2rem;font-weight:700;margin-bottom:16px;color:var(--ink);}
 .cta-band p{color:var(--ink-dim);margin-bottom:28px;font-size:1.05rem;}
 
 /* ---------- Footer ---------- */
 footer{
-  border-top:1px solid var(--line-soft);
+  border-top:1px solid var(--glass-border);
   padding:44px 0 30px;
-  background:#FFFFFF;
+  background:var(--glass-bg);
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
 }
 .footer-row{display:flex;justify-content:space-between;flex-wrap:wrap;gap:20px;align-items:flex-start;}
 .footer-links{display:flex;gap:26px;flex-wrap:wrap;}
@@ -410,16 +422,30 @@ footer{
 .footer-note{color:var(--ink-faint);font-size:.8rem;margin-top:26px;}
 
 /* ===========================================================
-   Auth pages
+   Auth pages (Login, Sign-Up) — Glassmorphic Theme Harmonization
    =========================================================== */
-.auth-wrap{min-height:calc(100vh - 68px);display:flex;align-items:center;justify-content:center;padding:50px 20px;background:var(--bg);}
+.auth-wrap{
+  min-height:calc(100vh - 68px);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:50px 20px;
+  background:transparent;
+  position:relative;
+  z-index:1;
+}
 .auth-box{
-  width:100%;max-width:420px;
-  background:var(--bg-raised);
-  border:1px solid var(--line-soft);
+  width:100%;
+  max-width:440px;
+  background:var(--card-glass-bg);
+  backdrop-filter:blur(24px) saturate(180%);
+  -webkit-backdrop-filter:blur(24px) saturate(180%);
+  border:1px solid var(--glass-border);
   border-radius:var(--radius-lg);
   padding:36px 32px;
-  box-shadow:var(--shadow-md);
+  box-shadow:var(--glass-shadow);
+  position:relative;
+  z-index:2;
 }
 .auth-box.wide{max-width:580px;}
 .auth-head{margin-bottom:28px;}
@@ -435,12 +461,12 @@ footer{
 .field.has-error .error{display:block;}
 .field input,.field select,.field textarea{
   width:100%;padding:11px 14px;border-radius:var(--radius);
-  background:#FFFFFF;border:1.5px solid var(--line-soft);
+  background:var(--bg-raised);border:1.5px solid var(--line-soft);
   color:var(--ink);font-size:.92rem;outline:none;transition:border-color .15s, box-shadow .15s;
 }
 .field input:focus,.field select:focus,.field textarea:focus{
   border-color:var(--primary);
-  box-shadow:0 0 0 3px rgba(19, 64, 116, 0.12);
+  box-shadow:0 0 0 3px rgba(var(--primary-rgb, 184, 142, 79), 0.20);
 }
 .field input::placeholder{color:var(--ink-faint);}
 .field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}

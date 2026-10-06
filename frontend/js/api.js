@@ -94,6 +94,21 @@
   // ─── Dynamic Branding / Theme Engine ──────────────────────────────────────
   const BRANDING_CACHE_KEY = 'khatwa_branding_cache';
 
+  function hexToRgb(hex) {
+    if (!hex) return null;
+    let clean = hex.replace('#', '').trim();
+    if (clean.length === 3) {
+      clean = clean.split('').map(c => c + c).join('');
+    }
+    if (clean.length !== 6) return null;
+    const num = parseInt(clean, 16);
+    return {
+      r: (num >> 16) & 255,
+      g: (num >> 8) & 255,
+      b: num & 255,
+    };
+  }
+
   function applyBrandingToDOM(data) {
     if (!data) return;
     const {
@@ -120,6 +135,16 @@
       root.style.setProperty('--primary-hover', primaryColor);
       root.style.setProperty('--gold', primaryColor);
       root.style.setProperty('--gold-light', primaryColor);
+
+      const rgb = hexToRgb(primaryColor);
+      if (rgb) {
+        const rgbStr = `${rgb.r}, ${rgb.g}, ${rgb.b}`;
+        root.style.setProperty('--primary-rgb', rgbStr);
+        root.style.setProperty('--glass-active-bg', `rgba(${rgbStr}, 0.22)`);
+        root.style.setProperty('--glass-active-border', `rgba(${rgbStr}, 0.55)`);
+        root.style.setProperty('--primary-faint', `rgba(${rgbStr}, 0.08)`);
+        root.style.setProperty('--primary-border', `rgba(${rgbStr}, 0.28)`);
+      }
     }
     if (secondaryColor) {
       root.style.setProperty('--secondary', secondaryColor);
@@ -134,19 +159,17 @@
     const angle = waveAngle || '135deg';
     const start = gradStart || '#9db3cc';
     const mid = gradMid || '#c7d8e8';
-    const end = gradEnd || '#edf4fa';
+    const end = gradEnd || backgroundColor || '#edf4fa';
 
-    if (gradStart) root.style.setProperty('--bg-grad-start', gradStart);
-    if (gradMid) root.style.setProperty('--bg-grad-mid', gradMid);
-    if (gradEnd) root.style.setProperty('--bg-grad-end', gradEnd);
+    if (start) root.style.setProperty('--bg-grad-start', start);
+    if (mid) root.style.setProperty('--bg-grad-mid', mid);
+    if (end) root.style.setProperty('--bg-grad-end', end);
 
     if (backgroundGradient) {
       root.style.setProperty('--bg-gradient', backgroundGradient);
-      if (document.body) document.body.style.backgroundImage = backgroundGradient;
-    } else if (gradStart && gradEnd) {
+    } else {
       const generatedGrad = `linear-gradient(${angle}, ${start} 0%, ${mid} 50%, ${end} 100%)`;
       root.style.setProperty('--bg-gradient', generatedGrad);
-      if (document.body) document.body.style.backgroundImage = generatedGrad;
     }
 
     if (shapesColor1) root.style.setProperty('--bg-shapes-color1', shapesColor1);
@@ -158,7 +181,6 @@
 
     if (backgroundColor) {
       root.style.setProperty('--bg', backgroundColor);
-      if (document.body) document.body.style.backgroundColor = backgroundColor;
     }
     if (platformName) {
       document.querySelectorAll('.brand-text').forEach((el) => (el.textContent = platformName));
@@ -178,6 +200,13 @@
     const cached = localStorage.getItem(BRANDING_CACHE_KEY);
     if (cached) applyBrandingToDOM(JSON.parse(cached));
   } catch (_) {}
+
+  // Cross-tab real-time branding synchronization
+  window.addEventListener('storage', (e) => {
+    if (e.key === BRANDING_CACHE_KEY && e.newValue) {
+      try { applyBrandingToDOM(JSON.parse(e.newValue)); } catch (_) {}
+    }
+  });
 
   async function applyDynamicBranding() {
     try {
@@ -931,6 +960,11 @@
         .replace(/'/g, '&#39;');
     };
   }
+
+  KhatwaAPI.applyBrandingToDOM = applyBrandingToDOM;
+  KhatwaAPI.applyDynamicBranding = applyDynamicBranding;
+  KhatwaAPI.hexToRgb = hexToRgb;
+  KhatwaAPI.BRANDING_CACHE_KEY = BRANDING_CACHE_KEY;
 
   window.KhatwaAPI = KhatwaAPI;
 

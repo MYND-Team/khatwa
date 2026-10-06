@@ -9,6 +9,7 @@
 <title>لوحة التحكم والإدارة العامة | خطوة</title>
 <link rel="icon" type="image/png" href="logo/logo-khatwa.png">
 <link rel="stylesheet" href="css/style.css?v=1.0.3">
+<script src="js/theme-init.js"></script>
 <style>
   .admin-badge {
     background: linear-gradient(135deg, #f59e0b, #d97706);
@@ -1894,6 +1895,23 @@
     }
   }
 
+  function resetDefaultTheme() {
+    const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+    set('setPrimaryColor', '#B88E4F');
+    set('setPrimaryColorHex', '#B88E4F');
+    set('setSecondaryColor', '#8C6527');
+    set('setSecondaryColorHex', '#8C6527');
+    set('setAccentColor', '#CBA264');
+    set('setAccentColorHex', '#CBA264');
+    set('setGradStart', '#9db3cc');
+    set('setGradStartHex', '#9db3cc');
+    set('setGradEnd', '#edf4fa');
+    set('setGradEndHex', '#edf4fa');
+    const angleEl = document.getElementById('setWaveAngle');
+    if (angleEl) angleEl.value = '135deg';
+    if (typeof updateLivePreview === 'function') updateLivePreview();
+  }
+
   async function saveAppearanceSettings(e) {
     e.preventDefault();
     const btn = document.getElementById('saveAppearanceBtn');
@@ -1903,13 +1921,19 @@
     // Helper: safe read — returns '' if element doesn't exist
     const val = (id) => document.getElementById(id)?.value?.trim() ?? '';
 
+    const pColor = val('setPrimaryColorHex') || val('setPrimaryColor') || '#B88E4F';
+    const sColor = val('setSecondaryColorHex') || val('setSecondaryColor') || '#8C6527';
+    const aColor = val('setAccentColorHex') || val('setAccentColor') || '#CBA264';
+    const gStart = val('setGradStartHex') || val('setGradStart') || '#9db3cc';
+    const gEnd   = val('setGradEndHex')   || val('setGradEnd')   || '#edf4fa';
+    const wAngle = val('setWaveAngle') || '135deg';
+    const bgColor = gEnd || '#edf4fa';
+
     const payload = {
-      primaryColor:   val('setPrimaryColorHex')   || val('setPrimaryColor'),
-      secondaryColor: val('setSecondaryColorHex')  || val('setSecondaryColor'),
-      accentColor:    val('setAccentColorHex')     || val('setAccentColor'),
-      bgGradStart:    val('setGradStartHex')       || val('setGradStart'),
-      bgGradEnd:      val('setGradEndHex')         || val('setGradEnd'),
-      bgWaveAngle:    val('setWaveAngle')          || '135deg',
+      primaryColor:    pColor,
+      secondaryColor:  sColor,
+      accentColor:     aColor,
+      backgroundColor: bgColor,
       platformName:    val('setPlatformName'),
       platformSubtitle: val('setPlatformSubtitle'),
       logoUrl:         val('setLogoUrl'),
@@ -1917,23 +1941,24 @@
 
     try {
       await window.KhatwaAPI.admin.updateGeneralSettings(payload);
-      alert('تم حفظ إعدادات ومظهر المنصة وتطبيقها بنجاح! 🎨');
+      
+      const fullBranding = {
+        ...payload,
+        gradStart: gStart,
+        gradEnd: gEnd,
+        waveAngle: wAngle,
+      };
 
-      // Apply changes live to current page immediately
-      const root = document.documentElement;
-      if (payload.primaryColor)   root.style.setProperty('--primary', payload.primaryColor);
-      if (payload.secondaryColor) {
-        root.style.setProperty('--secondary', payload.secondaryColor);
-        root.style.setProperty('--secondary-color', payload.secondaryColor);
-      }
-      if (payload.accentColor) {
-        root.style.setProperty('--accent', payload.accentColor);
-        root.style.setProperty('--accent-color', payload.accentColor);
-      }
-      if (payload.bgGradStart) root.style.setProperty('--bg-grad-start', payload.bgGradStart);
-      if (payload.bgGradEnd)   root.style.setProperty('--bg-grad-end',   payload.bgGradEnd);
-      if (payload.bgWaveAngle) root.style.setProperty('--bg-wave-angle', payload.bgWaveAngle);
+      try {
+        localStorage.setItem('khatwa_branding_cache', JSON.stringify(fullBranding));
+      } catch (_) {}
 
+      // Apply changes live immediately to current page
+      if (window.KhatwaAPI?.applyBrandingToDOM) {
+        window.KhatwaAPI.applyBrandingToDOM(fullBranding);
+      }
+
+      alert('تم حفظ إعدادات ومظهر المنصة وتطبيقها بنجاح على جميع الصفحات! 🎨');
     } catch (err) {
       alert(err.message || 'فشل حفظ الإعدادات');
     } finally {
