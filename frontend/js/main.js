@@ -365,13 +365,25 @@ function updateTaskbarLanguage(lang) {
 
   // 3. Update footer buttons
   const darkModeLabel = taskbar.querySelector('[data-taskbar-dark-label]');
-  if (darkModeLabel) darkModeLabel.textContent = isEn ? 'Dark / Light Mode' : 'الوضع الليلي / النهاري';
+  if (darkModeLabel) {
+    darkModeLabel.textContent = isEn ? 'Dark / Light Mode' : 'الوضع الليلي / النهاري';
+    const darkBtn = darkModeLabel.closest('.khatwa-taskbar-foot-btn') || darkModeLabel.parentElement;
+    if (darkBtn) darkBtn.title = isEn ? 'Toggle Dark Mode' : 'تبديل الوضع الليلي';
+  }
 
   const langLabel = taskbar.querySelector('[data-taskbar-lang-label]');
-  if (langLabel) langLabel.textContent = isEn ? 'العربية' : 'English';
+  if (langLabel) {
+    langLabel.textContent = isEn ? 'العربية' : 'English';
+    const langBtn = langLabel.closest('.khatwa-taskbar-foot-btn') || langLabel.parentElement;
+    if (langBtn) langBtn.title = isEn ? 'Switch Language' : 'تغيير اللغة';
+  }
 
   const logoutLabel = taskbar.querySelector('[data-taskbar-logout-label]');
-  if (logoutLabel) logoutLabel.textContent = isEn ? 'Logout' : 'تسجيل الخروج';
+  if (logoutLabel) {
+    logoutLabel.textContent = isEn ? 'Logout' : 'تسجيل الخروج';
+    const logoutBtn = logoutLabel.closest('.khatwa-taskbar-foot-btn') || logoutLabel.parentElement;
+    if (logoutBtn) logoutBtn.title = isEn ? 'Logout' : 'تسجيل الخروج';
+  }
 
   const pinBtn = document.getElementById('taskbarPinBtn');
   if (pinBtn) pinBtn.title = isEn ? 'Pin / Unpin Sidebar' : 'تثبيت / إلغاء تثبيت القائمة';
