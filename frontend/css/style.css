@@ -2183,13 +2183,37 @@ html[dir="ltr"] .khatwa-taskbar:not(:hover):not(.expanded) .khatwa-taskbar-item:
   color: var(--primary-bright);
 }
 
-/* Page content offset to accommodate taskbar */
+/* Page content offset to accommodate taskbar without overlapping */
 body.has-khatwa-taskbar {
-  padding-inline-end: var(--sidebar-w-collapsed, 70px);
-  transition: padding 0.28s ease;
+  padding-inline-start: var(--sidebar-w-collapsed, 70px);
+  padding-inline-end: 0;
+  transition: padding-inline-start 0.28s cubic-bezier(0.4, 0, 0.2, 1), padding-right 0.28s cubic-bezier(0.4, 0, 0.2, 1), padding-left 0.28s cubic-bezier(0.4, 0, 0.2, 1);
 }
-body.has-khatwa-taskbar.taskbar-pinned {
-  padding-inline-end: var(--sidebar-w, 255px);
+html[dir="rtl"] body.has-khatwa-taskbar {
+  padding-right: var(--sidebar-w-collapsed, 70px);
+  padding-left: 0;
+}
+html[dir="ltr"] body.has-khatwa-taskbar {
+  padding-left: var(--sidebar-w-collapsed, 70px);
+  padding-right: 0;
+}
+
+body.has-khatwa-taskbar.taskbar-pinned,
+body.has-khatwa-taskbar.taskbar-hovered,
+body.has-khatwa-taskbar:has(.khatwa-taskbar:hover) {
+  padding-inline-start: var(--sidebar-w, 255px);
+}
+html[dir="rtl"] body.has-khatwa-taskbar.taskbar-pinned,
+html[dir="rtl"] body.has-khatwa-taskbar.taskbar-hovered,
+html[dir="rtl"] body.has-khatwa-taskbar:has(.khatwa-taskbar:hover) {
+  padding-right: var(--sidebar-w, 255px);
+  padding-left: 0;
+}
+html[dir="ltr"] body.has-khatwa-taskbar.taskbar-pinned,
+html[dir="ltr"] body.has-khatwa-taskbar.taskbar-hovered,
+html[dir="ltr"] body.has-khatwa-taskbar:has(.khatwa-taskbar:hover) {
+  padding-left: var(--sidebar-w, 255px);
+  padding-right: 0;
 }
 
 @media (max-width: 768px) {
@@ -2211,8 +2235,16 @@ body.has-khatwa-taskbar.taskbar-pinned {
     opacity: 1 !important;
     transform: none !important;
   }
-  body.has-khatwa-taskbar {
+  body.has-khatwa-taskbar,
+  html[dir="rtl"] body.has-khatwa-taskbar,
+  html[dir="ltr"] body.has-khatwa-taskbar,
+  body.has-khatwa-taskbar.taskbar-pinned,
+  body.has-khatwa-taskbar.taskbar-hovered,
+  body.has-khatwa-taskbar:has(.khatwa-taskbar:hover) {
+    padding-inline-start: 0 !important;
     padding-inline-end: 0 !important;
+    padding-right: 0 !important;
+    padding-left: 0 !important;
   }
   .khatwa-taskbar-backdrop {
     position: fixed;

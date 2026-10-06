@@ -333,6 +333,13 @@ const TASKBAR_NAV_DEFS = {
     { href: 'request-points.html', icon: '⚡', ar: 'طلب شحن رصيد', en: 'Request Balance' },
     { href: 'request-offline.html', icon: '🏢', ar: 'طلب سنتر / أوفلاين', en: 'Center Request' },
     { href: 'results.html', icon: '📊', ar: 'النتائج والتقارير', en: 'Grades & Results' },
+  ],
+  GUEST: [
+    { href: 'index.html', icon: '🏠', ar: 'الرئيسية', en: 'Home' },
+    { href: 'courses.html', icon: '📚', ar: 'الكورسات والمحاضرات', en: 'Courses' },
+    { href: 'login.html', icon: '🔑', ar: 'تسجيل الدخول', en: 'Login' },
+    { href: 'signup.html', icon: '✨', ar: 'إنشاء حساب جديد', en: 'Sign Up' },
+    { href: 'help.html', icon: '❓', ar: 'الأسئلة الشائعة', en: 'FAQ' },
   ]
 };
 
@@ -380,9 +387,10 @@ function updateTaskbarLanguage(lang) {
 
   const logoutLabel = taskbar.querySelector('[data-taskbar-logout-label]');
   if (logoutLabel) {
-    logoutLabel.textContent = isEn ? 'Logout' : 'تسجيل الخروج';
+    const isGuest = role === 'GUEST';
+    logoutLabel.textContent = isGuest ? (isEn ? 'Login' : 'تسجيل الدخول') : (isEn ? 'Logout' : 'تسجيل الخروج');
     const logoutBtn = logoutLabel.closest('.khatwa-taskbar-foot-btn') || logoutLabel.parentElement;
-    if (logoutBtn) logoutBtn.title = isEn ? 'Logout' : 'تسجيل الخروج';
+    if (logoutBtn) logoutBtn.title = isGuest ? (isEn ? 'Login' : 'تسجيل الدخول') : (isEn ? 'Logout' : 'تسجيل الخروج');
   }
 
   const pinBtn = document.getElementById('taskbarPinBtn');
@@ -391,32 +399,23 @@ function updateTaskbarLanguage(lang) {
 
 /**
  * Initializes the Responsive Collapsible Side Taskbar for all user roles
- * (Admin, Teacher, Student) as requested in PDF Pages 2, 24, 25.
+ * (Admin, Teacher, Student, Guest) across all pages.
  */
 function initCollapsibleTaskbar() {
   if (document.getElementById('khatwaTaskbar')) return;
 
   const currentPath = window.location.pathname.split('/').pop() || 'index.html';
-
-  // Do not show taskbar on bare login/signup/public index unless user is logged in
   const user = window.KhatwaAPI?.getUser?.();
   const isAdminPage = currentPath === 'admin.html';
   const isTeacherPage = currentPath === 'teacher-dashboard.html';
-  const isStudentApp = [
-    'dashboard.html', 'courses.html', 'subject.html', 'lesson.html',
-    'points.html', 'request-points.html', 'request-offline.html',
-    'profile.html', 'results.html', 'notifications.html', 'exam.html', 'homework.html'
-  ].includes(currentPath);
-
-  if (!isAdminPage && !isTeacherPage && !isStudentApp && !user) {
-    return;
-  }
 
   let role = 'STUDENT';
   if (isAdminPage || user?.role === 'ADMIN' || user?.username === 'sameryasser-khatwa') {
     role = 'ADMIN';
   } else if (isTeacherPage || user?.role === 'TEACHER') {
     role = 'TEACHER';
+  } else if (!user) {
+    role = 'GUEST';
   }
 
   // Create Taskbar Container
@@ -433,6 +432,16 @@ function initCollapsibleTaskbar() {
     document.body.classList.add('taskbar-pinned');
   }
   document.body.classList.add('has-khatwa-taskbar');
+
+  // Add hover behavior to dynamically expand body padding so taskbar NEVER overlaps website content
+  taskbar.addEventListener('mouseenter', () => {
+    if (!taskbar.classList.contains('expanded')) {
+      document.body.classList.add('taskbar-hovered');
+    }
+  });
+  taskbar.addEventListener('mouseleave', () => {
+    document.body.classList.remove('taskbar-hovered');
+  });
 
   // Backdrop for mobile
   const backdrop = document.createElement('div');
@@ -453,7 +462,7 @@ function initCollapsibleTaskbar() {
   taskbar.innerHTML = `
     <div>
       <div class="khatwa-taskbar-head">
-        <a href="${role === 'ADMIN' ? 'admin.html' : (role === 'TEACHER' ? 'teacher-dashboard.html' : 'dashboard.html')}" class="khatwa-taskbar-brand">
+        <a href="${role === 'ADMIN' ? 'admin.html' : (role === 'TEACHER' ? 'teacher-dashboard.html' : (role === 'GUEST' ? 'index.html' : 'dashboard.html'))}" class="khatwa-taskbar-brand">
           <img src="${logoSrc}" alt="خطوة" class="khatwa-taskbar-logo" onerror="this.src='logo/logo-khatwa.png'">
           <span class="khatwa-taskbar-title" data-taskbar-brand-title>${brandTitle}</span>
         </a>
@@ -497,10 +506,17 @@ function initCollapsibleTaskbar() {
         <span class="khatwa-taskbar-label" data-taskbar-lang-label>${isEn ? 'العربية' : 'English'}</span>
       </button>
 
-      <a href="#logout" class="khatwa-taskbar-foot-btn" style="color:var(--err);" title="${isEn ? 'Logout' : 'تسجيل الخروج'}">
+      ${role === 'GUEST' ? `
+      <a href="login.html" class="khatwa-taskbar-foot-btn" title="${isEn ? 'Login' : 'تسجيل الدخول'}">
+        <span class="khatwa-taskbar-icon">🔑</span>
+        <span class="khatwa-taskbar-label" data-taskbar-logout-label>${isEn ? 'Login' : 'تسجيل الدخول'}</span>
+      </a>
+      ` : `
+      <a href="#logout" class="khatwa-taskbar-foot-btn" onclick="window.KhatwaAPI && window.KhatwaAPI.auth && window.KhatwaAPI.auth.logout()" style="color:var(--err);" title="${isEn ? 'Logout' : 'تسجيل الخروج'}">
         <span class="khatwa-taskbar-icon">🚪</span>
         <span class="khatwa-taskbar-label" data-taskbar-logout-label>${isEn ? 'Logout' : 'تسجيل الخروج'}</span>
       </a>
+      `}
     </div>
   `;
 
