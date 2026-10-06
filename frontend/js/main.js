@@ -383,6 +383,15 @@ function updateTaskbarLanguage(lang) {
     if (darkBtn) darkBtn.title = isEn ? 'Toggle Dark Mode' : 'تبديل الوضع الليلي';
   }
 
+  // Update any navbar or page dark-mode toggle buttons
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark' || document.body.classList.contains('dark-mode');
+  document.querySelectorAll('[data-dark-toggle]').forEach(btn => {
+    btn.textContent = isDark
+      ? (isEn ? '☀️ Light' : '☀️ المضيء')
+      : (isEn ? '🌙 Dark' : '🌙 الليلي');
+    btn.title = isEn ? 'Toggle Dark Mode' : 'تبديل الوضع الليلي/النهاري';
+  });
+
   const langLabel = taskbar.querySelector('[data-taskbar-lang-label]');
   if (langLabel) {
     langLabel.textContent = isEn ? 'العربية' : 'English';

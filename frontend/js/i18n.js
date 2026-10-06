@@ -1282,7 +1282,365 @@
   "الصف الثاني الثانوي (2 ثانوي)": "Grade 11 (Secondary 2)",
   "الصف الثاني باكلوريا (2 باكلوريا)": "Grade 11 Baccalaureate",
   "الصف الثالث الثانوي (3 ثانوي)": "Grade 12 (Secondary 3)",
-  "الصف الثالث باكلوريا (3 باكلوريا)": "Grade 12 Baccalaureate"
+  "الصف الثالث باكلوريا (3 باكلوريا)": "Grade 12 Baccalaureate",
+
+    // ── Additional Student & Core Translations ─────────────────
+    "مثال: موظف حكومي / مهندس": "e.g. Government Employee / Engineer",
+    "مثال: 50 أو 100 أو 150": "e.g. 50, 100, or 150",
+    "أدخل كود التحويل المرجعي من رسالة الدفع": "Enter reference transfer code from payment receipt",
+    "اسم الطالب": "Student Name",
+    "مثال: موظف / مهندس / طبيب": "e.g. Employee / Engineer / Doctor",
+    "0 ج.م": "0 EGP",
+    "رصيدك: 0 ج.م": "Your Balance: 0 EGP",
+    "الكود": "Code",
+    "الكود:": "Code:",
+    "رصيدك": "Your Balance",
+    "رصيدك:": "Your Balance:",
+    "الامتحان": "Exam",
+    "الامتحان:": "Exam:",
+    "الواجب": "Homework",
+    "الواجب:": "Homework:",
+    "سؤال": "Question",
+    "سؤال:": "Question:",
+    "النوع": "Type",
+    "النوع:": "Type:",
+    "من": "of",
+    "من إجمالي": "out of",
+    "جارٍ إرسال الطلب...": "Submitting request...",
+    "جارٍ تحميل مراجعة إجاباتك...": "Loading your answers review...",
+    "| خطوة": "| Khatwa",
+    "ج.م ·": "EGP ·",
+    "— [كورس": "— [Course",
+    "الآن لحسابك؟": "now to your account?",
+    "طلب حضور سيشن أوفلاين أونلاين | خطوة": "Request Offline Session Attendance Online | Khatwa",
+    "طلب حضور سيشن أوفلاين أونلاين 🏢": "Request Offline Session Attendance Online 🏢",
+    "حضرت سيشن في السنتر أو القاعة وعايز تعيدها أو تحضرها أونلاين؟ اختر المدرس والمحاضرة وسيتم تفعيلها فوراً بحسابك عند موافقة الإدارة.": "Attended an offline session in a center and want to rewatch or attend online? Choose teacher and lecture and it will be activated immediately upon admin approval.",
+    "العودة للرئيسية": "Return to Home",
+    "تفعيل المحاضرة تلقائياً فور الموافقة": "Automatic Lecture Activation Upon Approval",
+    "اختر الصف الدراسي ثم المدرس، وستظهر لك محاضراته المسجلة على المنصة. بعد إرسال الطلب واعتماده من الإدارة،": "Choose academic stage then teacher, and recorded lectures will appear. After sending request and admin approval,",
+    "تُفتح المحاضرة مباشرة لحسابك تلقائياً وبشكل مجاني": "The lecture will be unlocked automatically and for free in your account",
+    "دون الحاجة لأي كود أو تحويل رصيد!": "Without needing any voucher code or balance transfer!",
+    "الاسم بالكامل (Full Name) *": "Full Name *",
+    "الصف الدراسي (Grade) *": "Academic Stage (Grade) *",
+    "رقم هاتف الطالب (Phone) *": "Student Phone Number *",
+    "مكان السيشن / السنتر (Center / Hall) *": "Session Location / Center / Hall *",
+    "👨‍🏫 اسم المدرس (Teacher Name) *": "👨‍🏫 Teacher Name *",
+    "اسم المدرس (Teacher Name)": "Teacher Name",
+    "اختر المدرس من قائمة مدرسي المنصة لعرض محاضراته، أو اختر \"مدرس آخر\" إن لم يكن بالقائمة.": "Choose teacher from list to view lectures, or choose \"Another Teacher\" if not listed.",
+    "🎯 المحاضرة أو الحصة المطلوبة *": "🎯 Requested Lecture or Session *",
+    "-- يرجى اختيار المدرس أولاً لعرض محاضراته --": "-- Please select teacher first to view lectures --",
+    "اختر المحاضرة بالظبط لتفتح لك تلقائياً على المنصة فور موافقة الإدارة.": "Select the exact lecture to unlock automatically upon admin approval.",
+    "تفاصيل إضافية / ميعاد المجموعة (Notes)": "Additional Details / Group Time (Notes)",
+    "صورة إيصال الحضور أو كارنيه السنتر (اختياري لتسريع القبول)": "Receipt or Center ID Photo (Optional to expedite approval)",
+    "اضغط لاختيار صورة الوصل أو الكارنيه": "Click to select receipt or center card photo",
+    "JPG, PNG, WebP (اختياري)": "JPG, PNG, WebP (Optional)",
+    "✕ إزالة": "✕ Remove",
+    "📤 إرسال طلب السيشن الأوفلاين للإدارة": "📤 Submit Offline Session Request to Admin",
+    "سجل طلباتي لحضور سيشنات الأوفلاين": "My Offline Session Requests History",
+    "🔄 تحديث": "🔄 Refresh",
+    "جارٍ تحميل طلباتك...": "Loading your requests...",
+    "اسمك ثلاثي أو رباعي": "Your full triple or quadruple name",
+    "مثال: سنتر الأهرام - قاعة 2": "Example: Al-Ahram Center - Hall 2",
+    "اكتب اسم المدرس يدوياً...": "Enter teacher name manually...",
+    "اكتب عنوان المحاضرة أو الكورس المطلوب يدوياً...": "Enter lecture or course title manually...",
+    "ميعاد الحصة الأوفلاين (مثال: الأحد الساعة 4 عصراً) أو رقم المقعد": "Offline session time (e.g. Sunday 4 PM) or seat number",
+    "لا توجد محاضرات منشورة مسجلة لهذا المعلم بعد": "No published lectures registered for this teacher yet",
+    "✍️ كتابة عنوان المحاضرة يدوياً...": "✍️ Enter lecture title manually...",
+    "تم إرسال طلبك بنجاح! سيتم مراجعته وفتح المحاضرة مباشرة لك في أقرب وقت.": "Your request has been submitted successfully! It will be reviewed and unlocked shortly.",
+    "لم تقدم أي طلبات سيشن أوفلاين بعد": "You have not submitted any offline session requests yet",
+    "عند تقديمك طلباً، ستظهر تفاصيل وحالة الموافقة والتفعيل هنا.": "When you submit a request, details and approval status will appear here.",
+    "▶ مشاهدة المحاضرة الآن": "▶ Watch Lecture Now",
+    "كود التفعيل الخاص بك": "Your Activation Voucher",
+    "📋 نسخ الكود": "📋 Copy Code",
+    "تفعيل الآن ⚡": "Activate Now ⚡",
+    "سبب الرفض": "Rejection Reason",
+    "السنتر": "Center",
+    "· السنتر": "· Center",
+    "فشل تحميل سجل الطلبات": "Failed to load requests log",
+    "تاريخ الطلب": "Request Date",
+    "تحويل فوري بدون رسوم ⚡": "Instant Free Transfer ⚡",
+    "امسح رمز الاستجابة السريعة (QR Code) للدفع المباشر عبر تطبيق إنستاباي": "Scan the QR Code for direct payment via InstaPay app",
+    "حساب إنستاباي للدفع المباشر (InstaPay Account)": "InstaPay Account for Direct Payment",
+    "(بعد إتمام التحويل، يرجى الاحتفاظ بصورة الإيصال ورفعها في النموذج بالأسفل لتأكيد الشحن فورياً).": "(After completing transfer, keep receipt image and upload it in the form below for instant verification).",
+    "📤 أو أرسل إيصال تحويل المحفظة الإلكترونية (فودافون كاش / إنستاباي)": "📤 Or Send E-Wallet Transfer Receipt (Vodafone Cash / InstaPay)",
+    "إذا قمت بتحويل بنكي أو فودافون كاش، ارفع لقطة الشاشة مع رقم المعاملة للمراجعة.": "If you transferred via bank or Vodafone Cash, upload transfer screenshot with transaction number.",
+    "1. صورة إيصال التحويل": "1. Transfer Receipt Photo",
+    "1. صورة إيصال التحويل (Upload Receipt)": "1. Transfer Receipt Photo (Upload Receipt)",
+    "اضغط لاختيار صورة الإيصال أو اسحب الصورة هنا": "Click to select receipt image or drag it here",
+    "يدعم JPG, PNG, WebP (لقطة شاشة التحويل)": "Supports JPG, PNG, WebP (Transfer screenshot)",
+    "2. المبلغ المدفوع (Amount)": "2. Amount Paid (Amount)",
+    "3. كود المعاملة / التحويل (Code)": "3. Transaction / Reference Code (Code)",
+    "يرجى إدخال المبلغ والكود": "Please enter amount and reference code",
+    "تم إرسال طلب الشحن بنجاح! سيتم مراجعته واعتماد الرصيد فوراً. ✅": "Recharge request submitted successfully! It will be verified and credited immediately. ✅",
+    "حدث خطأ أثناء إرسال الطلب": "An error occurred while submitting request",
+    "لا توجد طلبات شحن سابقة.": "No previous recharge requests found.",
+    "فشل جلب الطلبات السابقة.": "Failed to retrieve previous requests.",
+    "تغيير الصورة": "Change Image",
+    "تفاصيل الكورس والمحاضرات | خطوة": "Course & Lectures Details | Khatwa",
+    "الوحدات والمحاضرات الدراسية (الشراء بالدرس)": "Units & Study Lectures (Per-Lesson Purchase)",
+    "جارٍ جلب المحاضرات والأسعار...": "Fetching lectures and prices...",
+    "شراء المحاضرة": "Purchase Lecture",
+    "اختر وسيلة الدفع لإتمام الاشتراك في المحاضرة فورًا.": "Choose payment method to enroll in this lecture immediately.",
+    "رصيدك المتوفر بالمحفظة:": "Available Wallet Balance:",
+    "رصيدك المتوفر بالمحفظة": "Available Wallet Balance",
+    "سعر المحاضرة:": "Lecture Price:",
+    "تأكيد الشراء والاشتراك ✓": "Confirm Purchase & Enroll ✓",
+    "تأكيد الشراء والاشتراك": "Confirm Purchase & Enroll",
+    "لم يتم العثور على الكورس المطلوب": "Requested course was not found",
+    "ربما تم حذفه أو لم يعد متاحًا.": "It may have been deleted or is no longer available.",
+    "العودة لقائمة الكورسات": "Return to Courses List",
+    "مدرس المادة": "Subject Teacher",
+    "المدرس لم يرفع وحدات أو محاضرات في هذا الكورس بعد": "The teacher has not uploaded units or lectures in this course yet",
+    "سيتم رفع المحاضرات والفيديوهات ومواد الشرح قريبًا.": "Lectures, videos, and study material will be uploaded soon.",
+    "الوحدة": "Unit",
+    "لا توجد محاضرات في هذه الوحدة بعد.": "No lectures in this unit yet.",
+    "تم الشراء / مشترك": "Purchased / Enrolled",
+    "مجانية": "Free",
+    "📝 الواجب": "📝 Homework",
+    "🎯 الامتحان": "🎯 Exam",
+    "▶ مشاهدة المحاضرة": "▶ Watch Lecture",
+    "🛒 تفعيل المحاضرة": "🛒 Activate Lecture",
+    "جديد 🔥": "New 🔥",
+    "شراء": "Purchase",
+    "جارٍ معالجة الدفع...": "Processing payment...",
+    "تم شراء المحاضرة بنجاح! 🎉": "Lecture purchased successfully! 🎉",
+    "فشل إتمام الشراء. يرجى التأكد من رصيدك.": "Purchase failed. Please check your wallet balance.",
+    "يرجى تسجيل الدخول للوصول إلى المحاضرة": "Please login to access this lecture",
+    "لم يتم تحديد رقم المحاضرة": "Lecture ID was not specified",
+    "تنبيه نظام خطوة الأكاديمي": "Khatwa Academic System Notice",
+    "يجب تسليم واجب الحصة السابقة أولاً": "Previous lecture homework must be submitted first",
+    "لا يمكنك فتح هذه المحاضرة أو دخول امتحانها قبل إكمال وتسليم واجب:": "You cannot access this lecture or its exam before completing and submitting homework:",
+    "الذهاب لواجب الحصة السابقة وحله الآن ←": "Go to Previous Homework & Solve Now ←",
+    "العودة لقائمة المواد": "Return to Subjects List",
+    "الواجب المنزلي (يجب التسليم لفتح الامتحان والمحاضرة)": "Homework (Must submit to unlock exam & lecture)",
+    "امتحان المحاضرة (يجب اجتيازه بنجاح لفتح فيديو المحاضرة والـ PDF)": "Lecture Exam (Must pass to unlock video & PDF notes)",
+    "تفعيل واشتراك المحاضرة": "Lecture Activation & Enrollment",
+    "اشترك في المحاضرة لمتابعة الشرح والفيديو والمرفقات فوراً:": "Enroll in the lecture to access explanation, video, and attachments immediately:",
+    "اشترك في المحاضرة لمتابعة الشرح والفيديو والمرفقات فوراً": "Enroll in the lecture to access explanation, video, and attachments immediately",
+    "رصيد محفظتك الحالي:": "Your Current Wallet Balance:",
+    "رصيد محفظتك الحالي": "Your Current Wallet Balance",
+    "— رصيدك لا يكفي": "— Insufficient balance",
+    "يجب الاشتراك في الكورس أولاً": "Course enrollment required first",
+    "اشترك في هذا الكورس لتتمكن من متابعة الواجبات، الامتحانات، وفيديوهات المحاضرات.": "Enroll in this course to access homework, exams, and lecture videos.",
+    "تصفح الكورس والاشتراك": "Browse Course & Enroll",
+    "المحاضرة غير متاحة": "Lecture Unavailable",
+    "هذه المحاضرة غير متاحة أو غير موجودة حالياً.": "This lecture is currently unavailable or does not exist.",
+    "بالفعل": "Already",
+    "فشل تفعيل المحاضرة": "Failed to activate lecture",
+    "تسليم الإجابات ومتابعة الخطوة التالية": "Submit Answers & Continue to Next Step",
+    "جارٍ التصحيح والتسجيل...": "Grading and saving result...",
+    "أحسنت! تم الاجتياز بنجاح (النتيجة": "Well done! Passed successfully (Score",
+    "🎉 انتقل للخطوة التالية.": "🎉 Proceed to the next step.",
+    "تم التسليم (النتيجة": "Submitted (Score",
+    "حدث خطأ أثناء تسليم الإجابات": "An error occurred while submitting answers",
+    "تسليم الإجابات والمتابعة": "Submit Answers & Continue",
+    "متصفحك لا يدعم تشغيل هذا الفيديو.": "Your browser does not support this video player.",
+    "فيديو المحاضرة غير متوفر حالياً، يرجى مراجعة المذكرة أدناه.": "Lecture video is currently unavailable, please review the notes below.",
+    "📊 نتائجك في هذه المحاضرة": "📊 Your Results in this Lecture",
+    "📖 محتوى وشرح المحاضرة": "📖 Lecture Content & Explanation",
+    "لم يتم العثور على معرّف الاختبار": "Quiz / Exam ID not found",
+    "عرض الصواب والخطأ والحل النموذجى": "View Right/Wrong & Model Answer",
+    "عرض الصواب والخطأ والحل النموذجي": "View Right/Wrong & Model Answer",
+    "جارٍ تحميل الإجابات والحلول...": "Loading answers and solutions...",
+    "مراجعة إجابات": "Review Answers of",
+    "جاري جلب تفاصيل الإجابات...": "Fetching answers details...",
+    "لا توجد تفاصيل متاحة لهذا الاختبار": "No details available for this quiz",
+    "درجتك": "Your Score",
+    "ملاحظات المعلم": "Teacher Notes",
+    "❌ إجابة خاطئة": "❌ Incorrect Answer",
+    "إجابتك (صحيحة)": "Your Answer (Correct)",
+    "إجابتك (خاطئة)": "Your Answer (Incorrect)",
+    "★ الإجابة النموذجية الصحيحة": "★ Correct Model Answer",
+    "نموذج الإجابة الصحيحة": "Correct Model Answer",
+    "فشل تحميل المراجعة": "Failed to load review",
+    "✓ مبروك، اجتزت الامتحان بنجاح!": "✓ Congratulations, you passed the exam successfully!",
+    "تم تسليم الامتحان مسبقاً": "Exam was already submitted",
+    "درجتك المسجلة هي": "Your recorded grade is",
+    ". تجد أدناه مراجعة كاملة لإجاباتك وحلول الأسئلة النموذجية.": ". Below is a full review of your answers and model solutions.",
+    "امتحان إلكتروني": "Online Exam",
+    "اختبار إلكتروني للتقييم ومتابعة المستوى": "Online quiz for assessment and progress tracking",
+    "امتحان إلكتروني خاص بـ": "Online exam for",
+    "— إعداد": "— Prepared by",
+    "— إعداد:": "— Prepared by:",
+    "جارٍ تصحيح الامتحان...": "Grading the exam...",
+    "أحسنت! حققت نسبة نجاح": "Great job! You achieved a score of",
+    "% وتم حفظ النتيجة في سجلك.": "% and the result was saved to your record.",
+    "حققت": "You scored",
+    ". يمكنك مراجعة المحاضرة وإعادة المحاولة لتحسين درجتك.": ". You can review the lecture and retry to improve your score.",
+    "مراجعة تفصيلية للإجابات (الصواب والخطأ)": "Detailed Answers Review (Correct & Wrong)",
+    "مراجعة تفصيلية للإجابات (الصواب والخطأ": "Detailed Answers Review (Correct & Wrong)",
+    "⏳ في انتظار التصحيح": "⏳ Pending Grading",
+    "⏳ في انتظار التصحيح اليدوي": "⏳ Pending Manual Grading",
+    "✅ إجابة صحيحة": "✅ Correct Answer",
+    "❌ إجابة غير صحيحة": "❌ Incorrect Answer",
+    "لم يتم تحديد إجابة": "No answer selected",
+    "سؤال مقالي يتم تقييمه من قِبل المعلم": "Essay question graded by the teacher",
+    "غير محدد": "Not specified",
+    "✓ تم اجتياز الواجب بنجاح!": "✓ Homework completed successfully!",
+    "تم تسليم الواجب مسبقاً": "Homework was already submitted",
+    "أسئلة. تجد أدناه مراجعة تفصيلية للإجابات الصائبة والخاطئة.": "questions. Below is a detailed review of right and wrong answers.",
+    "واجب دراسي": "Study Homework",
+    "جارٍ تصحيح الواجب...": "Grading homework...",
+    "أسئلة وتم تسجيل درجتك.": "questions and your grade has been recorded.",
+    "مراجعة إجابات الواجب (الصواب والخطأ)": "Homework Answers Review (Correct & Wrong)",
+    "مراجعة إجابات الواجب (الصواب والخطأ": "Homework Answers Review (Correct & Wrong)",
+    "نتائج الطالب:": "Student Results:",
+    "نتائج الطالب": "Student Results",
+    "لا توجد كورسات مشتركة حالياً لمتابعة التقدم.": "No enrolled courses currently to track progress.",
+    "لا توجد امتحانات أو واجبات مكتملة حتى الآن": "No completed exams or homework yet",
+    "عند أدائك للامتحانات ستظهر الدرجات والتقارير هنا مباشرة.": "When you take exams, grades and reports will appear here directly.",
+    "الامتحان / الاختبار": "Exam / Quiz",
+    "مراجعة الإجابات والحلول": "Review Answers & Solutions",
+    "اجتياز بنجاح ✓": "Passed Successfully ✓",
+    "اجتياز بنجاح": "Passed Successfully",
+    "يحتاج إعادة ✕": "Needs Retake ✕",
+    "يحتاج إعادة": "Needs Retake",
+    "جاري جلب تفاصيل الإجابات والحلول النموذجية...": "Fetching answers details and model solutions...",
+    "لم يتم العثور على تفاصيل هذا التسليم": "Submission details not found",
+    "قد يكون هذا الامتحان تم حله مسبقاً قبل تحديث نظام المراجعة.": "This exam may have been taken prior to review system update.",
+    "النتيجة النهائية:": "Final Result:",
+    "النتيجة النهائية": "Final Result",
+    "درجة الطالب:": "Student Score:",
+    "درجة الطالب": "Student Score",
+    "ملاحظات المدرس:": "Teacher Notes:",
+    "ملاحظات المدرس": "Teacher Notes",
+    "لا توجد أسئلة مسجلة في هذا التقرير.": "No questions recorded in this report.",
+    "💡 التوضيح والحل النموذجي": "💡 Explanation & Model Solution",
+    "لم يتم إدخال نص": "No text entered",
+    "نموذج الإجابة الصحيحة (Rubric)": "Grading Rubric / Model Answer",
+    "نموذج الإجابة الصحيحة (Rubric": "Grading Rubric / Model Answer",
+    "ملاحظات المصحح": "Grader Notes",
+    "تعذر جلب تفاصيل هذا الامتحان": "Could not fetch details for this exam",
+    "لا يوجد مدرسون متاحون في هذه المرحلة حالياً": "No teachers available for this grade stage currently",
+    "تصفح كروت المعلمين أو الكورسات المتاحة واشترك لمتابعة دروسك.": "Browse teacher cards or available courses and enroll to follow your lessons.",
+    "تصفح المعلمين المعتمدين": "Browse Certified Teachers",
+    "الأستاذ:": "Instructor:",
+    "الأستاذ": "Instructor",
+    "مشترك بالفعل ✓": "Already Enrolled ✓",
+    "✓ مشترك بالفعل": "✓ Already Enrolled",
+    "✓ مشترك": "✓ Enrolled",
+    "فتح الكورس والمحاضرات ↗": "Open Course & Lectures ↗",
+    "تصفح الكورس ↗": "Browse Course ↗",
+    "عرض المحاضرات ↗": "View Lectures ↗",
+    "المحاضرات ↗": "Lectures ↗",
+    "لا توجد كورسات مطروحة في هذه المرحلة حالياً": "No courses offered for this grade stage currently",
+    "اشتراك مجاني": "Free Enrollment",
+    "اشتراك ＋": "Enroll ＋",
+    "جارٍ جلب المراحل...": "Loading academic stages...",
+    "جارٍ جلب كورسات المعلم...": "Loading teacher courses...",
+    "مدرس معتمد على منصة خطوة التعليمية.": "Certified teacher on Khatwa educational platform.",
+    "حدث خطأ أثناء تحميل بيانات المعلم.": "An error occurred while loading teacher data.",
+    "جميع المراحل": "All Stages",
+    "الكورسات والمحاضرات المتاحة لـ": "Available Courses & Lectures for",
+    "لا توجد كورسات مسجلة لهذا المعلم.": "No registered courses for this teacher.",
+    "لا توجد كورسات منشورة لهذا المعلم في": "No published courses for this teacher in",
+    "يرجى تسجيل الدخول بحساب طالب أولاً للاشتراك في الكورس.": "Please log in with a student account first to enroll in the course.",
+    "غير كافٍ للاشتراك": "is insufficient to enroll",
+    "يرجى شحن رصيد المحفظة أولاً.": "Please recharge your wallet first.",
+    "هل ترغب في الاشتراك بكورس:": "Do you want to enroll in the course:",
+    "مجانياً": "for free",
+    "تم الاشتراك في الكورس بنجاح! ✅ يمكنك الآن متابعة المحاضرات والواجبات.": "Enrolled in course successfully! ✅ You can now access lectures and homework.",
+    "جلسة الدخول": "Login Session",
+    "انتهت صلاحية جلسة تسجيل الدخول. يرجى تسجيل الدخول مرة أخرى.": "Your login session has expired. Please log in again.",
+    "حدث خطأ أثناء الاشتراك": "An error occurred during enrollment",
+    "جارٍ جلب اشتراكات المرحلة...": "Loading stage subscriptions...",
+    "فشل جلب الاشتراكات.": "Failed to load subscriptions.",
+    "أهلًا بعودتك،": "Welcome back,",
+    "لا توجد محاضرات مشتركة حتى الآن": "No enrolled lectures yet",
+    "تصفح الكورسات والمحاضرات المتاحة لمعلميك واشترك للبدء فورًا.": "Browse courses and lectures from your teachers and enroll to start immediately.",
+    "تصفح المحاضرات والكورسات": "Browse Lectures & Courses",
+    "مدرس معتمد ✓": "Certified Teacher ✓",
+    "أنت مشترك في هذا الكورس بالكامل. يمكنك تصفح المحاضرات مباشرة بالضغط على \"تصفح الكورس ↗\".": "You are fully enrolled in this course. You can access lectures directly by clicking \"Browse Course ↗\".",
+    "🏆 الامتحان:": "🏆 Exam:",
+    "🏆 الامتحان": "🏆 Exam",
+    "· القيمة:": "· Amount:",
+    "· القيمة": "· Amount",
+    "▶ دخول للمحاضرة": "▶ Enter Lecture",
+    "لا توجد عمليات شراء مسجلة بعد": "No recorded purchases yet",
+    "شراء حصة": "Purchase Lecture",
+    "شراء:": "Purchase:",
+    "· كود المعاملة:": "· Transaction Code:",
+    "· كود المعاملة": "· Transaction Code",
+    "مثال: FG-7B2A-9K1M": "Example: FG-7B2A-9K1M",
+    "جارٍ التحقق والشحن...": "Verifying and recharging...",
+    "بنجاح إلى رصيد محفظتك! 🎉": "successfully to your wallet! 🎉",
+    "كود الشحن غير صالح أو تم استخدامه من قبل.": "Voucher code is invalid or has already been used.",
+    "لم تقم بطلب شحن رصيد بعد.": "You have not requested a balance recharge yet.",
+    "إرسال أول طلب شحن": "Submit First Recharge Request",
+    "المبلغ المعتمد": "Approved Amount",
+    "لا توجد معاملات سابقة بالمحفظة حتى الآن": "No previous transactions in wallet yet",
+    "ستظهر هنا عمليات شحن الرصيد والخصم عند شراء المحاضرات.": "Balance recharges and lecture purchases will appear here.",
+    "نوع الحركة": "Transaction Type",
+    "البيان والسبب": "Description & Reason",
+    "المدير العام": "General Manager",
+    "بيانات مسؤول المنصة:": "Platform Admin Details:",
+    "بيانات مسؤول المنصة": "Platform Admin Details",
+    "بيانات المدرس:": "Teacher Details:",
+    "بيانات المدرس": "Teacher Details",
+    "بيانات الطالب:": "Student Details:",
+    "بيانات الطالب": "Student Details",
+    "غير مسجل": "Not Registered",
+    "عضو مسجل": "Registered Member",
+    "تم رفض آخر طلب لتعديل البيانات": "Your last data edit request was rejected",
+    "ملاحظة الإدارة:": "Admin Note:",
+    "ملاحظة الإدارة": "Admin Note",
+    "تم رفض الطلب بواسطة إدارة المنصة. يمكنك إرسال طلب جديد.": "Request was rejected by administration. You can submit a new request.",
+    "لا يوجد نشاط سابق مسجل حتى الآن": "No previous activity recorded yet",
+    "ستظهر هنا الامتحانات والواجبات والحصص التي تشاهدها.": "Exams, homework, and watched lectures will appear here.",
+    "تم تحديث البيانات بنجاح 📨": "Data updated successfully 📨",
+    "حدث خطأ أثناء إرسال طلب التعديل": "An error occurred while sending edit request",
+    "لا توجد إشعارات جديدة حالياً": "No new notifications currently",
+    "ستصلك تنبيهات عند نشر حصص جديدة، أو تسجيل نتائجك.": "You will receive alerts when new lectures are published or results are recorded.",
+    "إشعار تلقائي من نظام منصة خطوة": "Automatic notification from Khatwa platform",
+    "الصف الدراسي (حدد مرحلتك الدراسية)": "Academic Grade (Select your stage)",
+    "الصف الدراسي (حدد مرحلتك الدراسية": "Academic Grade (Select your stage)",
+    "حالة وفاة أحد الوالدين (إن وُجدت)": "Deceased Parent Status (If applicable)",
+    "حالة وفاة أحد الوالدين (إن وُجدت": "Deceased Parent Status (If applicable)",
+    "لا يوجد (كلاهما على قيد الحياة)": "None (Both alive)",
+    "لا يوجد (كلاهما على قيد الحياة": "None (Both alive)",
+    "كلمتا المرور غير متطابقتين.": "Passwords do not match.",
+    "اسم المستخدم يجب أن يكون 3 أحرف على الأقل.": "Username must be at least 3 characters.",
+    "جارٍ إنشاء الحساب...": "Creating account...",
+    "موظف": "Staff",
+    "حدث خطأ أثناء إنشاء الحساب. حاول مرة أخرى.": "An error occurred while creating account. Try again.",
+    "· هاتف:": "· Phone:",
+    "· هاتف": "· Phone",
+    "· ولي الأمر:": "· Parent:",
+    "· ولي الأمر": "· Parent",
+    "لا توجد امتحانات مسجلة لهذا الطالب حتى الآن.": "No recorded exams for this student yet.",
+    "النتيجة": "Result",
+    "لا يوجد نشاط مسجل حتى الآن.": "No activity recorded yet.",
+    "📊 الدخول إلى لوحة الإدارة العامة": "📊 Enter General Admin Panel",
+    "📊 الانتقال للوحة الإدارة العامة": "📊 Go to General Admin Panel",
+    "مراجعة الشحن": "Review Recharge",
+    "لوحتي": "My Dashboard",
+    "سيتم نشر الكورسات قريبًا من قِبل المدرسين.": "Courses will be published soon by teachers.",
+    "فشل الاتصال بالخادم. تأكد من تشغيل السيرفر والاتصال بالإنترنت.": "Failed to connect to server. Ensure internet connection and server status.",
+    "انتهت صلاحية جلسة الدخول أو غير مسجل. يرجى تسجيل الدخول مجدداً للمتابعة.": "Session expired or not logged in. Please log in again to continue.",
+    "حجم الملف كبير جداً وتجاوز الحد الأقصى للرفع المباشر عبر السيرفر. يُرجى نسخ رابط الفيديو من Google Drive أو YouTube ولصقه في خانة الرابط لتشغيله بسلاسة وأعلى جودة بدون قيود!": "File size exceeds direct upload limit. Please copy video link from Google Drive or YouTube and paste in the link field for seamless playback!",
+    "حدث خطأ غير متوقع": "An unexpected error occurred",
+    "ملف الـ PDF": "PDF file",
+    "ملف الفيديو": "Video file",
+    "فشل الاتصال بخدمة رفع": "Failed to connect to upload service",
+    "المباشرة": "direct",
+    "تعذر بدء جلسة الرفع المباشر إلى Google Drive على السيرفر": "Could not initiate direct upload session to Google Drive",
+    "رفض Google Drive الرفع (HTTP": "Google Drive rejected upload (HTTP",
+    "انقطع الاتصال أثناء رفع": "Connection interrupted while uploading",
+    ". سيتم إعادة المحاولة تلقائياً...": ". Retrying automatically...",
+    "فشل رفع": "Failed to upload",
+    "محاولات": "attempts",
+    "فشل اكتمال رفع": "Upload could not be completed",
+    ". يرجى المحاولة مرة أخرى.": ". Please try again.",
+    "شحن نقاط": "Points Recharge",
+    "استخدام نقاط": "Use Points",
+    "معاملة": "Transaction",
+    "العربية": "Arabic",
+    "تغيير اللغة": "Change Language",
+    "شريط المهام والتنقل الجانبي": "Taskbar & Navigation Sidebar",
+    "في منصة خطوة وأحتاج إلى دعم فني.": "on Khatwa platform and need technical support.",
+    "في منصة خطوة وأحتاج إلى مساعدة.": "on Khatwa platform and need assistance.",
+    "واتساب": "WhatsApp",
+    "(واتساب)": "(WhatsApp)"
   };
 
   const REVERSE_DICT = {};
@@ -1320,51 +1678,92 @@
   }
 
   function splitSymbols(str) {
-    if (!str || typeof str !== 'string') return { prefix: '', core: '', suffix: '' };
-    const leadMatch = str.match(/^([\s\d\/•✓✕👨‍🏫👑🛡️⭐📊❤️⚡🔥📖🎓✏️📝✨🌐＋👥🎬⏳💎💰🔍📁📂🏢🔒🔓💡📌⚠️✅❌🎯🚀📚🎉🏷️ℹ️👤🔑📱📞🔔💳🕒—()\[\]<>\.-]+)(.*)/s);
-    let prefix = '';
-    let rest = str;
-    if (leadMatch) {
-      prefix = leadMatch[1];
-      rest = leadMatch[2];
+    if (!str || typeof str !== 'string') return { prefix: '', core: '', suffix: '', paren: null };
+    const leadMatch = str.match(/^([\p{Extended_Pictographic}\uFE0F\u200D\s\d/•✓✕＋—[\]<>.:;,!?*~|←→↗↘▶◀▼▲·\-]+)(.*)/u);
+    let prefix = leadMatch ? leadMatch[1] : '';
+    let rest = leadMatch ? leadMatch[2] : str;
+
+    const parenMatch = rest.match(/^(.*?)\s*\(([^)]+)\)([\s:;,!?\-]*)$/);
+    let paren = null;
+    if (parenMatch) {
+      paren = {
+        main: parenMatch[1].trim(),
+        inside: parenMatch[2].trim(),
+        punct: parenMatch[3] ? parenMatch[3].replace(/؟/g, '?').replace(/،/g, ',') : ''
+      };
     }
-    const trailMatch = rest.match(/^(.*?)([\s\*!؟\?…—()\[\]<>:🏢🔒🔓💡📌⚠️✅❌🎯🚀📚🎉🏷️💰ℹ️👤🔑📱📞🔔💳🕒\.-]+)$/s);
-    let suffix = '';
-    let core = rest;
-    if (trailMatch) {
-      core = trailMatch[1];
-      suffix = trailMatch[2];
-    }
-    return { prefix, core: core.trim(), suffix };
+
+    const trailMatch = rest.match(/^(.*?)([\p{Extended_Pictographic}\uFE0F\u200D\s\d/•✓✕＋—[\]<>.:;,!?*~|←→↗↘▶◀▼▲·\-؟،؛]+)$/u);
+    let suffix = trailMatch ? trailMatch[2] : '';
+    let core = trailMatch ? trailMatch[1] : rest;
+    return { prefix, core: core.trim(), suffix, paren };
   }
 
   function translateString(str, lang) {
     if (!str || typeof str !== 'string') return str;
     const trimmed = str.trim();
     if (!trimmed) return str;
+    const normalized = trimmed.replace(/\s+/g, ' ');
 
     if (lang === 'en') {
       if (DICTIONARY[trimmed]) {
         return str.replace(trimmed, DICTIONARY[trimmed]);
       }
+      if (DICTIONARY[normalized]) {
+        return str.replace(trimmed, DICTIONARY[normalized]);
+      }
 
-      const { prefix, core, suffix } = splitSymbols(str);
+      // Specific notification & alert patterns first
+      if (/رصيد محفظتك\s*\(([0-9٠-٩]+)\s*ج\.م\)\s*غير كافٍ للاشتراك\s*\(([0-9٠-٩]+)\s*ج\.م\)\.\s*يرجى شحن رصيد المحفظة أولاً\./.test(str)) {
+        return str.replace(/رصيد محفظتك\s*\(([0-9٠-٩]+)\s*ج\.م\)\s*غير كافٍ للاشتراك\s*\(([0-9٠-٩]+)\s*ج\.م\)\.\s*يرجى شحن رصيد المحفظة أولاً\./g, 'Your wallet balance ($1 EGP) is insufficient to enroll ($2 EGP). Please recharge your wallet first.');
+      }
+      if (/تم شحن\s*([0-9٠-٩]+)\s*ج\.م\s*بنجاح إلى رصيد محفظتك!\s*🎉?/.test(str)) {
+        return str.replace(/تم شحن\s*([0-9٠-٩]+)\s*ج\.م\s*بنجاح إلى رصيد محفظتك!\s*🎉?/g, '$1 EGP has been successfully credited to your wallet! 🎉');
+      }
+      if (/هل تريد تفعيل الكود\s*\((.*?)\)\s*الآن لحسابك\?/.test(str)) {
+        return str.replace(/هل تريد تفعيل الكود\s*\((.*?)\)\s*الآن لحسابك\?/g, 'Do you want to activate the voucher code ($1) now for your account?');
+      }
+      if (/هل ترغب في الاشتراك بكورس:\s*"(.*?)"\s*(.*?)\?/.test(str)) {
+        return str.replace(/هل ترغب في الاشتراك بكورس:\s*"(.*?)"\s*(.*?)\?/g, (m, cTitle, pText) => {
+          const pEn = translateString(pText, 'en');
+          return `Do you want to enroll in course: "${cTitle}" ${pEn}?`;
+        });
+      }
+      if (/درجتك المسجلة هي\s*([0-9٠-٩]+)\s*من\s*([0-9٠-٩]+)/.test(str)) {
+        return str.replace(/درجتك المسجلة هي\s*([0-9٠-٩]+)\s*من\s*([0-9٠-٩]+)(.*)/g, (m, s1, s2, restP) => {
+          return `Your recorded grade is ${s1} of ${s2}${translateString(restP, 'en')}`;
+        });
+      }
+      if (/أحسنت!\s*حققت نسبة نجاح\s*([0-9٠-٩]+)%\s*وتم حفظ النتيجة في سجلك\./.test(str)) {
+        return str.replace(/أحسنت!\s*حققت نسبة نجاح\s*([0-9٠-٩]+)%\s*وتم حفظ النتيجة في سجلك\./g, 'Well done! You achieved a score of $1% and the result was saved to your record.');
+      }
+      if (/رصيدك:\s*([0-9٠-٩]+)\s*ج\.م/.test(str)) {
+        return str.replace(/رصيدك:\s*([0-9٠-٩]+)\s*ج\.م/g, 'Your Balance: $1 EGP');
+      }
+      if (/رصيد المحفظة:\s*([0-9٠-٩]+)\s*ج\.م/.test(str)) {
+        return str.replace(/رصيد المحفظة:\s*([0-9٠-٩]+)\s*ج\.م/g, 'Wallet Balance: $1 EGP');
+      }
+      if (/سعر المحاضرة:\s*([0-9٠-٩]+)\s*ج\.م/.test(str)) {
+        return str.replace(/سعر المحاضرة:\s*([0-9٠-٩]+)\s*ج\.م/g, 'Lecture Price: $1 EGP');
+      }
+
+      // Symbols and Parentheses
+      const { prefix, core, suffix, paren } = splitSymbols(str);
+      if (paren && (DICTIONARY[paren.main] || DICTIONARY[paren.inside])) {
+        const mainEn = DICTIONARY[paren.main] || translateString(paren.main, 'en');
+        const insideEn = DICTIONARY[paren.inside] || translateString(paren.inside, 'en');
+        return prefix + mainEn + ' (' + insideEn + ')' + paren.punct;
+      }
+
       if (core) {
+        const normCore = core.replace(/\s+/g, ' ');
         if (DICTIONARY[core]) {
           const enSuffix = suffix.replace(/؟/g, '?').replace(/،/g, ',').replace(/؛/g, ';');
           return prefix + DICTIONARY[core] + enSuffix;
         }
-
-        const parenMatch = core.match(/^(.*?)\s*\(([^\)]+)\)$/);
-        if (parenMatch) {
-          const mainPart = parenMatch[1].trim();
-          const insideParen = parenMatch[2].trim();
-          if (DICTIONARY[mainPart] || DICTIONARY[insideParen]) {
-            const mainEn = DICTIONARY[mainPart] || mainPart;
-            const insideEn = DICTIONARY[insideParen] || insideParen;
-            const enSuffix = suffix.replace(/؟/g, '?').replace(/،/g, ',').replace(/؛/g, ';');
-            return prefix + mainEn + ' (' + insideEn + ')' + enSuffix;
-          }
+        if (DICTIONARY[normCore]) {
+          const enSuffix = suffix.replace(/؟/g, '?').replace(/،/g, ',').replace(/؛/g, ';');
+          return prefix + DICTIONARY[normCore] + enSuffix;
         }
       }
 
@@ -1377,50 +1776,63 @@
       if (/الحصة\s*([0-9٠-٩]+)/.test(result)) { result = result.replace(/الحصة\s*([0-9٠-٩]+)/g, 'Lecture $1'); matchedRegex = true; }
       if (/كورس\s*([0-9٠-٩]+)/.test(result)) { result = result.replace(/كورس\s*([0-9٠-٩]+)/g, 'Course $1'); matchedRegex = true; }
       if (/الدرس\s*([0-9٠-٩]+)/.test(result)) { result = result.replace(/الدرس\s*([0-9٠-٩]+)/g, 'Lesson $1'); matchedRegex = true; }
+      if (/الوحدة\s*([0-9٠-٩]+)/.test(result)) { result = result.replace(/الوحدة\s*([0-9٠-٩]+)/g, 'Unit $1'); matchedRegex = true; }
+
+      if (/([0-9٠-٩]+)\s*ج\.م/.test(result)) { result = result.replace(/([0-9٠-٩]+)\s*ج\.م/g, '$1 EGP'); matchedRegex = true; }
+      if (/([0-9٠-٩]+)\s*من\s*([0-9٠-٩]+)/.test(result)) { result = result.replace(/([0-9٠-٩]+)\s*من\s*([0-9٠-٩]+)/g, '$1 of $2'); matchedRegex = true; }
+      if (/من إجمالي\s*([0-9٠-٩]+)\s*أسئلة/.test(result)) { result = result.replace(/من إجمالي\s*([0-9٠-٩]+)\s*أسئلة/g, 'out of $1 questions'); matchedRegex = true; }
 
       if (/([0-9٠-٩]+)\s+طالب/.test(result)) { result = result.replace(/([0-9٠-٩]+)\s+طالب/g, '$1 Students'); matchedRegex = true; }
       if (/([0-9٠-٩]+)\s+مدرس/.test(result)) { result = result.replace(/([0-9٠-٩]+)\s+مدرس/g, '$1 Teachers'); matchedRegex = true; }
       if (/([0-9٠-٩]+)\s+كورس/.test(result)) { result = result.replace(/([0-9٠-٩]+)\s+كورس/g, '$1 Courses'); matchedRegex = true; }
       if (/([0-9٠-٩]+)\s+محاضرات?/.test(result)) { result = result.replace(/([0-9٠-٩]+)\s+محاضرات?/g, '$1 Lectures'); matchedRegex = true; }
+      if (/([0-9٠-٩]+)\s+حصص?/.test(result)) { result = result.replace(/([0-9٠-٩]+)\s+حصص?/g, '$1 Lectures'); matchedRegex = true; }
       if (/([0-9٠-٩]+)\s+أسئلة/.test(result)) { result = result.replace(/([0-9٠-٩]+)\s+أسئلة/g, '$1 Questions'); matchedRegex = true; }
       if (/([0-9٠-٩]+)\s+سؤال/.test(result)) { result = result.replace(/([0-9٠-٩]+)\s+سؤال/g, '$1 Questions'); matchedRegex = true; }
-      if (/([0-9٠-٩]+)\s+ج\.م/.test(result)) { result = result.replace(/([0-9٠-٩]+)\s+ج\.م/g, '$1 EGP'); matchedRegex = true; }
+      if (/([0-9٠-٩]+)\s*نقطة/.test(result)) { result = result.replace(/([0-9٠-٩]+)\s*نقطة/g, '$1 Points'); matchedRegex = true; }
 
       if (matchedRegex) {
         result = result.replace(/[٠-٩]/g, d => ARABIC_DIGITS[d] || d);
         return result.replace(/؟/g, '?').replace(/،/g, ',');
       }
 
-      // Safe non-destructive behavior: If no full phrase or pattern match, preserve as-is!
       return str;
     } else {
       if (REVERSE_DICT[trimmed]) {
         return str.replace(trimmed, REVERSE_DICT[trimmed]);
       }
+      if (REVERSE_DICT[normalized]) {
+        return str.replace(trimmed, REVERSE_DICT[normalized]);
+      }
       const { prefix, core, suffix } = splitSymbols(str);
-      if (core && REVERSE_DICT[core]) {
-        const arSuffix = suffix.replace(/\?/g, '؟').replace(/,/g, '،').replace(/;/g, '؛');
-        return prefix + REVERSE_DICT[core] + arSuffix;
+      if (core) {
+        const normCore = core.replace(/\s+/g, ' ');
+        if (REVERSE_DICT[core]) {
+          const arSuffix = suffix.replace(/\?/g, '؟').replace(/,/g, '،').replace(/;/g, '؛');
+          return prefix + REVERSE_DICT[core] + arSuffix;
+        }
+        if (REVERSE_DICT[normCore]) {
+          const arSuffix = suffix.replace(/\?/g, '؟').replace(/,/g, '،').replace(/;/g, '؛');
+          return prefix + REVERSE_DICT[normCore] + arSuffix;
+        }
       }
       return str;
     }
   }
 
+  const ariaMap = new WeakMap();
+
   function translateTree(rootNode, lang) {
     if (!rootNode) return;
     isTranslating = true;
     try {
+      // 1. Inputs & Textareas
       const inputs = rootNode.querySelectorAll ? rootNode.querySelectorAll('input, textarea') : [];
       inputs.forEach(inp => {
         if (inp.placeholder) {
           if (!placeholderMap.has(inp)) placeholderMap.set(inp, inp.placeholder);
           const orig = placeholderMap.get(inp);
           inp.placeholder = lang === 'en' ? translateString(orig, 'en') : orig;
-        }
-        if (inp.title) {
-          if (!titleMap.has(inp)) titleMap.set(inp, inp.title);
-          const orig = titleMap.get(inp);
-          inp.title = lang === 'en' ? translateString(orig, 'en') : orig;
         }
         if (['button', 'submit', 'reset'].includes(inp.type) && inp.value) {
           if (!valueMap.has(inp)) valueMap.set(inp, inp.value);
@@ -1429,6 +1841,27 @@
         }
       });
 
+      // 2. All elements with [title] (buttons, links, badges, etc.)
+      const titled = rootNode.querySelectorAll ? rootNode.querySelectorAll('[title]') : [];
+      titled.forEach(el => {
+        if (!titleMap.has(el)) titleMap.set(el, el.getAttribute('title'));
+        const orig = titleMap.get(el);
+        if (orig) {
+          el.setAttribute('title', lang === 'en' ? translateString(orig, 'en') : orig);
+        }
+      });
+
+      // 3. All elements with [aria-label]
+      const ariaEls = rootNode.querySelectorAll ? rootNode.querySelectorAll('[aria-label]') : [];
+      ariaEls.forEach(el => {
+        if (!ariaMap.has(el)) ariaMap.set(el, el.getAttribute('aria-label'));
+        const orig = ariaMap.get(el);
+        if (orig) {
+          el.setAttribute('aria-label', lang === 'en' ? translateString(orig, 'en') : orig);
+        }
+      });
+
+      // 4. Text Nodes
       const walker = document.createTreeWalker(
         rootNode,
         NodeFilter.SHOW_TEXT,
@@ -1505,6 +1938,26 @@
     }
   }
 
+  // Safe popup wrappers for alert & confirm
+  if (typeof window.alert === 'function' && !window._origAlert) {
+    window._origAlert = window.alert;
+    window.alert = function(msg) {
+      if (getLanguage() === 'en' && typeof msg === 'string') {
+        msg = translateString(msg, 'en');
+      }
+      return window._origAlert.call(window, msg);
+    };
+  }
+  if (typeof window.confirm === 'function' && !window._origConfirm) {
+    window._origConfirm = window.confirm;
+    window.confirm = function(msg) {
+      if (getLanguage() === 'en' && typeof msg === 'string') {
+        msg = translateString(msg, 'en');
+      }
+      return window._origConfirm.call(window, msg);
+    };
+  }
+
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
       applyLanguage(getLanguage());
@@ -1527,7 +1980,7 @@
     }
   }
 
-  window.KhatwaI18n = {
+    window.KhatwaI18n = {
     t: (key, fallback = '') => (getLanguage() === 'en' ? translateString(key, 'en') || fallback || key : key),
     formatDate,
     getLanguage,
