@@ -474,7 +474,7 @@ function initCollapsibleTaskbar() {
   const brandTitle = role === 'ADMIN'
     ? (isEn ? 'Khatwa Admin' : 'إدارة خطوة')
     : (role === 'TEACHER' ? (isEn ? 'Khatwa Studio' : 'استوديو خطوة') : (isEn ? 'Khatwa Platform' : 'منصة خطوة'));
-  const logoSrc = 'logo/logo-khatwa.png';
+  const logoSrc = 'logo/logo-khatwa-transparent.png';
 
   taskbar.innerHTML = `
     <div>

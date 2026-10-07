@@ -264,7 +264,7 @@ p{margin:0;}
 }
 .btn-secondary:active{transform: translateY(0);opacity:.9;}
 .btn-line{
-  background:#FFFFFF;
+  background: var(--bg-card);
   border-color:var(--secondary-border);
   color:var(--secondary);
 }
@@ -732,7 +732,7 @@ html[data-theme="dark"] .lang-switcher-btn:hover {
 .subject-row{
   display:grid;grid-template-columns:1.6fr .9fr .9fr auto;gap:20px;
   align-items:center;padding:20px 16px;border-bottom:1px solid var(--line-soft);
-  background:#FFFFFF;transition:background .15s ease;
+  background: var(--bg-card); transition:background .15s ease;
 }
 .subject-row:hover{background:var(--primary-faint);}
 .subject-row:first-child{border-top:1px solid var(--line-soft);}
@@ -743,7 +743,7 @@ html[data-theme="dark"] .lang-switcher-btn:hover {
 /* Lesson list within subject */
 .lesson-row{
   display:flex;align-items:center;gap:16px;padding:16px;
-  border-bottom:1px solid var(--line-soft);background:#FFFFFF;
+  border-bottom:1px solid var(--line-soft);background: var(--bg-card);
   transition:background .15s ease;
 }
 .lesson-row:hover{background:var(--primary-faint);}
@@ -785,11 +785,37 @@ html[data-theme="dark"] .lang-switcher-btn:hover {
 .lesson-info .meta{color:var(--ink-faint);font-size:.86rem;}
 .lesson-actions{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px;}
 
-.tab-row{display:flex;gap:0;border-bottom:1px solid var(--line-soft);margin-bottom:22px;}
-.tab{padding:12px 0;margin-inline-end:26px;font-size:.9rem;font-weight:700;color:var(--ink-faint);border-bottom:2px solid transparent;cursor:pointer;}
-.tab.active{color:var(--primary);border-color:var(--primary);}
+.tab-row{
+  display:flex;
+  gap:4px;
+  border-bottom:2px solid var(--line-soft);
+  margin-bottom:22px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 0;
+}
+.tab-row::-webkit-scrollbar { display: none; }
+.tab{
+  padding:11px 18px;
+  font-size:.9rem;
+  font-weight:700;
+  color:var(--ink-faint);
+  border-bottom:2.5px solid transparent;
+  margin-bottom:-2px;
+  cursor:pointer;
+  border-radius:10px 10px 0 0;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  background: transparent;
+}
+.tab:hover { color: var(--primary); background: rgba(var(--primary-rgb,184,142,79),0.06); }
+.tab.active{
+  color:var(--primary);
+  border-color:var(--primary);
+  background: rgba(var(--primary-rgb,184,142,79),0.08);
+}
 
-.playlist{border-inline-start:1px solid var(--line-soft);padding:26px 20px;overflow-y:auto;background:#FFFFFF;}
+.playlist{border-inline-start:1px solid var(--line-soft);padding:26px 20px;overflow-y:auto;background:var(--bg-card);}
 .playlist h4{font-size:.88rem;color:var(--ink);margin-bottom:14px;letter-spacing:.02em;font-weight:800;}
 
 /* Exam / homework */
@@ -801,7 +827,7 @@ html[data-theme="dark"] .lang-switcher-btn:hover {
 .q-text{font-size:1.1rem;font-weight:700;margin-bottom:26px;line-height:1.6;color:var(--ink);}
 .opt{
   display:flex;align-items:center;gap:14px;padding:15px 18px;
-  background:#FFFFFF;border:1.5px solid var(--line-soft);border-radius:var(--radius);
+  background:var(--bg-card);border:1.5px solid var(--line-soft);border-radius:var(--radius);
   margin-bottom:12px;cursor:pointer;transition:all .15s ease;
   box-shadow:var(--shadow-sm);
 }
@@ -825,7 +851,7 @@ html[data-theme="dark"] .lang-switcher-btn:hover {
 .balance-block{
   display:flex;justify-content:space-between;align-items:flex-end;
   padding:28px 24px;border:1px solid var(--line-soft);border-radius:var(--radius);
-  background:#FFFFFF;box-shadow:var(--shadow-sm);margin-bottom:34px;flex-wrap:wrap;gap:18px;
+  background:var(--bg-card);box-shadow:var(--shadow-sm);margin-bottom:34px;flex-wrap:wrap;gap:18px;
 }
 .balance-block .amount{font-family:var(--serif);font-size:2.5rem;font-weight:800;color:var(--primary);}
 .balance-block .amount span{font-size:1rem;color:var(--ink-faint);font-weight:600;}
@@ -833,19 +859,19 @@ html[data-theme="dark"] .lang-switcher-btn:hover {
 .upload-box{
   border:2px dashed var(--primary-border);border-radius:var(--radius);
   padding:28px;text-align:center;color:var(--ink-dim);font-size:.88rem;
-  background:#FFFFFF;margin-bottom:12px;
+  background:var(--bg-card);margin-bottom:12px;
 }
 .upload-box b{color:var(--primary);}
 
 /* Tables */
-table.plain{width:100%;border-collapse:collapse;font-size:.88rem;background:#FFFFFF;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-sm);border:1px solid var(--line-soft);}
+table.plain{width:100%;border-collapse:collapse;font-size:.88rem;background:var(--bg-card);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-sm);border:1px solid var(--line-soft);}
 table.plain th{text-align:right;color:var(--ink);font-weight:800;padding:12px 14px;border-bottom:1px solid var(--line-soft);font-size:.8rem;background:var(--primary-faint);}
 table.plain td{padding:14px 14px;border-bottom:1px solid var(--line-soft);color:var(--ink-dim);}
 table.plain tr:last-child td{border-bottom:none;}
 table.plain tr:hover td{background:var(--primary-faint);}
 
 /* Notifications */
-.notif-item{display:flex;gap:14px;padding:18px 16px;border-bottom:1px solid var(--line-soft);position:relative;background:#FFFFFF;transition:background .15s ease;}
+.notif-item{display:flex;gap:14px;padding:18px 16px;border-bottom:1px solid var(--line-soft);position:relative;background:var(--bg-card);transition:background .15s ease;}
 .notif-item:last-child{border-bottom:none;}
 .notif-item.unread{background:var(--primary-faint);}
 .notif-item.unread::before{content:"";position:absolute;inset-inline-start:6px;top:24px;width:7px;height:7px;border-radius:50%;background:var(--primary);}
@@ -854,8 +880,8 @@ table.plain tr:hover td{background:var(--primary-faint);}
 .notif-item time{color:var(--ink-faint);font-size:.78rem;white-space:nowrap;}
 
 /* FAQ / help accordion */
-.faq-item{border-bottom:1px solid var(--line-soft);background:#FFFFFF;}
-.faq-q{width:100%;text-align:right;display:flex;justify-content:space-between;align-items:center;padding:20px 4px;font-weight:700;font-size:.96rem;color:var(--ink);}
+.faq-item{border-bottom:1px solid var(--line-soft);background:var(--bg-card);}
+.faq-q{width:100%;text-align:right;display:flex;justify-content:space-between;align-items:center;padding:18px 4px;font-weight:700;font-size:.96rem;color:var(--ink);cursor:pointer;}
 .faq-q .plus{color:var(--primary);font-size:1.2rem;transition:transform .2s;font-weight:600;}
 .faq-item.open .plus{transform:rotate(45deg);}
 .faq-a{max-height:0;overflow:hidden;transition:max-height .25s ease;color:var(--ink-dim);font-size:.9rem;}
@@ -863,7 +889,7 @@ table.plain tr:hover td{background:var(--primary-faint);}
 .faq-a-inner{padding:0 4px 20px;}
 
 /* Empty / error states */
-.empty-state{text-align:center;padding:70px 20px;border:1px solid var(--line-soft);border-radius:var(--radius);background:#FFFFFF;box-shadow:var(--shadow-sm);}
+.empty-state{text-align:center;padding:70px 20px;border:1px solid var(--line-soft);border-radius:var(--radius);background:var(--bg-card);box-shadow:var(--shadow-sm);}
 .empty-state .em-mark{font-family:var(--serif);font-size:1.8rem;color:var(--primary);margin-bottom:10px;}
 .empty-state h3{font-size:1.1rem;margin-bottom:8px;color:var(--ink);}
 .empty-state p{color:var(--ink-faint);font-size:.88rem;max-width:360px;margin:0 auto 20px;}
@@ -912,70 +938,96 @@ table.plain tr:hover td{background:var(--primary-faint);}
 /* ===========================================================
    Modals (Create Course & Add Lecture Studio)
    =========================================================== */
+/* ── Modal & Popup Theme System — all colors from CSS variables ─────────── */
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(11, 37, 69, 0.55);
-  backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(6px) saturate(130%);
+  -webkit-backdrop-filter: blur(6px) saturate(130%);
   display: none;
   align-items: center;
   justify-content: center;
-  z-index: 100;
+  z-index: 9000;
   padding: 20px;
+  transition: background 0.2s ease;
 }
 .modal-backdrop.show {
   display: flex;
 }
+
+/* Dark mode backdrop — slightly denser overlay */
+:root[data-theme="dark"] .modal-backdrop,
+body.dark-mode .modal-backdrop {
+  background: rgba(0, 0, 0, 0.65);
+}
+
 .modal-window {
-  background: #FFFFFF;
+  /* Uses theme surface color — works in both light & dark mode */
+  background: var(--bg-card);
   border: 1px solid var(--line-soft);
   border-radius: var(--radius-lg);
   width: 100%;
-  max-width: 600px;
+  max-width: 620px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: var(--shadow-lg);
-  animation: modalFadeIn .2s ease-out;
+  box-shadow: var(--shadow-lg), 0 0 0 1px var(--glass-border);
+  animation: modalFadeIn 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+  color: var(--ink);
 }
+
+/* Wide modal variant */
+.modal-window.modal-wide  { max-width: 860px; }
+.modal-window.modal-xl    { max-width: 1100px; }
+
 @keyframes modalFadeIn {
-  from { opacity: 0; transform: translateY(-12px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(-16px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);    }
 }
+
 .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 24px;
+  padding: 18px 24px;
   border-bottom: 1px solid var(--line-soft);
+  background: linear-gradient(135deg, rgba(var(--primary-rgb, 184,142,79), 0.07), transparent);
+  border-top-left-radius: var(--radius-lg);
+  border-top-right-radius: var(--radius-lg);
 }
-.modal-header h3 {
+.modal-header h3, .modal-header h2 {
   font-family: var(--serif);
-  font-size: 1.3rem;
+  font-size: 1.2rem;
   color: var(--ink);
+  margin: 0;
 }
 .modal-close {
   color: var(--ink-faint);
   font-size: 1.4rem;
   line-height: 1;
-  padding: 4px 8px;
-  border-radius: 4px;
+  padding: 6px 10px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: all .15s ease;
+  transition: all 0.15s ease;
+  background: none;
+  border: none;
 }
 .modal-close:hover {
-  color: var(--ink);
-  background: var(--bg);
+  color: var(--err);
+  background: rgba(220, 38, 38, 0.08);
 }
 .modal-body {
-  padding: 24px;
+  padding: 22px 24px;
+  color: var(--ink);
+  background: var(--bg-card);
 }
 .modal-footer {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  padding: 16px 24px;
+  padding: 14px 24px;
   border-top: 1px solid var(--line-soft);
-  background: var(--bg);
+  background: var(--bg-raised);
   border-bottom-left-radius: var(--radius-lg);
   border-bottom-right-radius: var(--radius-lg);
 }
@@ -2039,16 +2091,23 @@ html[dir="ltr"] .khatwa-taskbar-title {
 .khatwa-taskbar-item {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 10px 12px;
+  gap: 12px;
+  padding: 9px 10px;
   border-radius: 12px;
   color: var(--ink-dim);
   text-decoration: none;
   font-weight: 600;
-  font-size: 0.92rem;
+  font-size: 0.91rem;
   transition: all 0.18s ease;
   position: relative;
   white-space: nowrap;
+  /* Collapsed mode: center the icon */
+  justify-content: flex-start;
+}
+/* When collapsed, center icons horizontally */
+.khatwa-taskbar:not(:hover):not(.expanded) .khatwa-taskbar-item {
+  justify-content: center;
+  padding: 8px 6px;
 }
 .khatwa-taskbar-item:hover {
   background: var(--glass-hover-bg);
@@ -2074,17 +2133,34 @@ html[dir="ltr"] .khatwa-taskbar-title {
 }
 
 .khatwa-taskbar-icon {
-  font-size: 1.25rem;
-  width: 26px;
-  height: 26px;
+  font-size: 1.35rem;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  transition: transform 0.2s;
+  transition: transform 0.2s, font-size 0.2s;
+  border-radius: 10px;
+}
+
+/* Collapsed mode: icons are bigger and more tap-friendly */
+.khatwa-taskbar:not(:hover):not(.expanded) .khatwa-taskbar-icon {
+  font-size: 1.5rem;
+  width: 40px;
+  height: 40px;
+  background: var(--glass-btn-bg);
+  border: 1px solid var(--glass-btn-border);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+:root[data-theme="dark"] .khatwa-taskbar:not(:hover):not(.expanded) .khatwa-taskbar-icon {
+  background: var(--glass-btn-bg);
+  border-color: var(--glass-btn-border);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.25);
 }
 .khatwa-taskbar-item:hover .khatwa-taskbar-icon {
-  transform: scale(1.15);
+  transform: scale(1.12);
 }
 
 .khatwa-taskbar-label {
