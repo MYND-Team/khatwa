@@ -1976,13 +1976,38 @@
   function switchMainView(viewId, btn) {
     document.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'none');
     document.querySelectorAll('.tab-row .tab').forEach(b => b.classList.remove('active'));
-    document.getElementById(viewId).style.display = 'block';
-    btn.classList.add('active');
+    const panel = document.getElementById(viewId);
+    if (panel) panel.style.display = 'block';
+
+    // If called from sidebar (no btn), find and activate the matching tab button
+    if (btn) {
+      btn.classList.add('active');
+    } else {
+      // Find the tab button that targets this viewId and mark it active
+      document.querySelectorAll('.tab-row .tab').forEach(b => {
+        const onclickAttr = b.getAttribute('onclick') || '';
+        if (onclickAttr.includes(`'${viewId}'`)) b.classList.add('active');
+      });
+    }
+
+    // Also sync taskbar active state
+    const taskbar = document.getElementById('khatwaTaskbar');
+    if (taskbar) {
+      taskbar.querySelectorAll('.khatwa-taskbar-item').forEach(el => {
+        el.classList.toggle('active', el.getAttribute('data-target-id') === viewId);
+      });
+    }
 
     if (viewId === 'view-students') loadStageStudents();
     if (viewId === 'view-revenue') loadStageRevenue();
     if (viewId === 'view-courses') loadStageCourses();
+    if (viewId === 'view-calendar') loadCalendarView();
   }
+
+  // ── Expose key functions on window so the sidebar taskbar can call them ──────
+  window.switchMainView = switchMainView;
+  window.switchStage = switchStage;
+  window.loadCalendarView = loadCalendarView;
 
   // ─── Teacher Preview Modal (Requirement 5) ────────────────────────────────
   async function openTeacherPreview(lessonId) {

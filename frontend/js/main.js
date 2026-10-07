@@ -324,10 +324,10 @@ const TASKBAR_NAV_DEFS = {
     { id: 'tabSecurity', icon: '🛡️', ar: 'الأمان والنظام', en: 'Security', action: "switchAdminTab && switchAdminTab('tabSecurity')" },
   ],
   TEACHER: [
-    { href: 'teacher-dashboard.html', id: 'view-courses', icon: '📊', ar: 'الكورسات والمحاضرات', en: 'Studio & Courses', action: "window.switchMainView && window.switchMainView('view-courses')" },
-    { href: 'teacher-dashboard.html#students', id: 'view-students', icon: '👨‍🎓', ar: 'طلاب المرحلة', en: 'Students', action: "window.switchMainView && window.switchMainView('view-students')" },
-    { href: 'teacher-dashboard.html#revenue', id: 'view-revenue', icon: '💵', ar: 'الرصيد والأرباح', en: 'Earnings & Wallet', action: "window.switchMainView && window.switchMainView('view-revenue')" },
-    { href: 'teacher-dashboard.html#calendar', id: 'view-calendar', icon: '📅', ar: 'تقويم المحاضرات', en: 'Schedule Calendar', action: "window.switchMainView && window.switchMainView('view-calendar'); window.loadCalendarView && window.loadCalendarView();" },
+    { href: 'teacher-dashboard.html', id: 'view-courses', icon: '📊', ar: 'الكورسات والمحاضرات', en: 'Studio & Courses', action: "if(window.switchMainView){window.switchMainView('view-courses');}" },
+    { href: 'teacher-dashboard.html', id: 'view-students', icon: '👨‍🎓', ar: 'طلاب المرحلة', en: 'Students', action: "if(window.switchMainView){window.switchMainView('view-students');}" },
+    { href: 'teacher-dashboard.html', id: 'view-revenue', icon: '💵', ar: 'الرصيد والأرباح', en: 'Earnings & Wallet', action: "if(window.switchMainView){window.switchMainView('view-revenue');}" },
+    { href: 'teacher-dashboard.html', id: 'view-calendar', icon: '📅', ar: 'تقويم المحاضرات', en: 'Schedule Calendar', action: "if(window.switchMainView){window.switchMainView('view-calendar');}" },
     { href: 'courses.html', icon: '🔍', ar: 'تصفح المنصة كطالب', en: 'Browse Platform' },
   ],
   STUDENT: [
@@ -493,12 +493,26 @@ function initCollapsibleTaskbar() {
           let isActive = false;
           if (role === 'ADMIN') {
             isActive = item.id === 'tabStudents';
+          } else if (role === 'TEACHER') {
+            isActive = item.id === 'view-courses'; // default active view
           } else if (item.href) {
             isActive = currentPath === item.href.split('#')[0];
           }
 
           const label = isEn ? item.en : item.ar;
-          const actionAttr = item.action ? `onclick="${item.action}"` : '';
+          // For items with an action: use a smarter onclick that prevents page reload if already on the right page
+          let actionAttr = '';
+          if (item.action) {
+            const targetHref = item.href || '';
+            const targetPage = targetHref.split('#')[0];
+            if (targetPage && targetPage !== '' && targetPage !== currentPath) {
+              // Different page: navigate then the action will run on load
+              actionAttr = `onclick="window.location.href='${targetHref}'"`;
+            } else {
+              // Same page or no href: run action and prevent default
+              actionAttr = `onclick="event.preventDefault();${item.action}"`;
+            }
+          }
           const hrefAttr = item.href ? `href="${item.href}"` : 'href="javascript:void(0)"';
 
           return `
