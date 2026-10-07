@@ -136,7 +136,7 @@ function initTransparentLogos() {
     const src = img.getAttribute('src');
     if (src && (src.includes('logo-khatwa.png') || src.includes('logo-khatwa.jpeg') || src.includes('logo-khatwa-transparent.png'))) {
       img.src = 'logo/logo-khatwa-transparent.png';
-      img.onerror = function() { this.src = 'logo/logo-khatwa-transparent.png'; };
+      img.onerror = null;
     }
   });
 }
@@ -480,7 +480,7 @@ function initCollapsibleTaskbar() {
     <div>
       <div class="khatwa-taskbar-head">
         <a href="${role === 'ADMIN' ? 'admin.html' : (role === 'TEACHER' ? 'teacher-dashboard.html' : (role === 'GUEST' ? 'index.html' : 'dashboard.html'))}" class="khatwa-taskbar-brand">
-          <img src="${logoSrc}" alt="خطوة" class="khatwa-taskbar-logo" onerror="this.src='logo/logo-khatwa-transparent.png'">
+          <img src="${logoSrc}" alt="خطوة" class="khatwa-taskbar-logo">
           <span class="khatwa-taskbar-title" data-taskbar-brand-title>${brandTitle}</span>
         </a>
         <button type="button" class="khatwa-taskbar-pin-btn" id="taskbarPinBtn" title="${isEn ? 'Pin / Unpin Sidebar' : 'تثبيت / إلغاء تثبيت القائمة'}">
