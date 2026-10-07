@@ -1991,7 +1991,7 @@ body.dark-mode .khatwa-taskbar {
 /* Expand smoothly on hover or when pinned open */
 .khatwa-taskbar:hover,
 .khatwa-taskbar.expanded {
-  width: var(--sidebar-w, 290px);
+  width: var(--sidebar-w, 320px);
   box-shadow: 0 16px 45px rgba(0, 0, 0, 0.12);
 }
 :root[data-theme="dark"] .khatwa-taskbar:hover,
@@ -2095,7 +2095,7 @@ body.dark-mode .khatwa-taskbar {
   color: var(--ink-dim);
   text-decoration: none;
   font-weight: 600;
-  font-size: 0.91rem;
+  font-size: 0.875rem;
   transition: all 0.18s ease;
   position: relative;
   white-space: nowrap;
@@ -2171,8 +2171,6 @@ body.dark-mode .khatwa-taskbar {
   transform: translateX(8px);
   transition: opacity 0.2s ease, transform 0.2s ease;
   flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
   min-width: 0;
 }
@@ -2246,7 +2244,7 @@ html[dir="ltr"] .khatwa-taskbar:not(:hover):not(.expanded) .khatwa-taskbar-item:
   padding: 8px 12px;
   border-radius: 10px;
   color: var(--ink-dim);
-  font-size: 0.88rem;
+  font-size: 0.845rem;
   font-weight: 600;
   cursor: pointer;
   background: none;
@@ -2254,6 +2252,7 @@ html[dir="ltr"] .khatwa-taskbar:not(:hover):not(.expanded) .khatwa-taskbar-item:
   width: 100%;
   transition: all 0.15s;
   white-space: nowrap;
+  text-decoration: none;
 }
 .khatwa-taskbar-foot-btn:hover {
   background: var(--glass-hover-bg);
