@@ -1959,7 +1959,7 @@ html[dir="ltr"] .khatwa-whatsapp-float:hover .khatwa-whatsapp-label {
   top: 0;
   bottom: 0;
   z-index: 950;
-  width: var(--sidebar-w-collapsed, 70px);
+  width: var(--sidebar-w-collapsed, 78px);
   background: var(--glass-bg);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   backdrop-filter: blur(20px) saturate(180%);
@@ -2018,8 +2018,8 @@ body.dark-mode .khatwa-taskbar {
   color: var(--ink);
 }
 .khatwa-taskbar-logo {
-  width: 40px;
-  height: 40px;
+  width: 52px;
+  height: 52px;
   border-radius: 0 !important;
   object-fit: contain;
   flex-shrink: 0;
@@ -2272,16 +2272,16 @@ html[dir="ltr"] .khatwa-taskbar:not(:hover):not(.expanded) .khatwa-taskbar-item:
 
 /* Page content offset to accommodate taskbar without overlapping */
 body.has-khatwa-taskbar {
-  padding-inline-start: var(--sidebar-w-collapsed, 70px);
+  padding-inline-start: var(--sidebar-w-collapsed, 78px);
   padding-inline-end: 0;
   transition: padding-inline-start 0.28s cubic-bezier(0.4, 0, 0.2, 1), padding-right 0.28s cubic-bezier(0.4, 0, 0.2, 1), padding-left 0.28s cubic-bezier(0.4, 0, 0.2, 1);
 }
 html[dir="rtl"] body.has-khatwa-taskbar {
-  padding-right: var(--sidebar-w-collapsed, 70px);
+  padding-right: var(--sidebar-w-collapsed, 78px);
   padding-left: 0;
 }
 html[dir="ltr"] body.has-khatwa-taskbar {
-  padding-left: var(--sidebar-w-collapsed, 70px);
+  padding-left: var(--sidebar-w-collapsed, 78px);
   padding-right: 0;
 }
 
