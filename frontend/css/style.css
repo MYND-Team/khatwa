@@ -319,12 +319,21 @@ p{margin:0;}
   max-height:52px;
   aspect-ratio:auto;
   object-fit:contain;
-  border-radius:12px;
+  border-radius:0;
   border:none;
-  background:transparent;
-  padding:2px;
-  box-shadow:none;
+  background:transparent !important;
+  padding:0;
+  box-shadow:none !important;
   transition:transform .2s ease;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.10));
+}
+/* Global: no white box on any logo image */
+img[src*="logo-khatwa"] {
+  background: transparent !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  border: none !important;
+  padding: 0 !important;
 }
 .brand-mark{
   width:36px;
@@ -2011,17 +2020,19 @@ body.dark-mode .khatwa-taskbar {
 .khatwa-taskbar-logo {
   width: 40px;
   height: 40px;
-  border-radius: 10px;
+  border-radius: 0 !important;
   object-fit: contain;
   flex-shrink: 0;
   transition: transform 0.2s;
-  background: transparent;
-  border: none;
-  padding: 2px;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  box-shadow: none !important;
 }
 :root[data-theme="dark"] .khatwa-taskbar-logo {
-  background: transparent;
-  border: none;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 .khatwa-taskbar:hover .khatwa-taskbar-logo {
   transform: scale(1.05);

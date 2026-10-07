@@ -21,7 +21,7 @@ const DEFAULT_SETTINGS = {
   id: 'default',
   platformName: 'خطوة',
   platformSubtitle: 'منصة التعليم الذكية',
-  logoUrl: 'logo/logo-khatwa.png',
+  logoUrl: 'logo/logo-khatwa-transparent.png',
   primaryColor: '#B88E4F',
   secondaryColor: '#8C6527',
   accentColor: '#CBA264',

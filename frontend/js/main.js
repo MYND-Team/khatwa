@@ -132,11 +132,11 @@ document.addEventListener('DOMContentLoaded', () => {
  * Ensures brand logos use transparent background version as requested in PDF Page 2
  */
 function initTransparentLogos() {
-  document.querySelectorAll('img.brand-logo, .brand img, #platformLogoPreview img, .modal-head img').forEach(img => {
+  document.querySelectorAll('img.brand-logo, .brand img, #platformLogoPreview img, .modal-head img, .khatwa-taskbar-logo').forEach(img => {
     const src = img.getAttribute('src');
     if (src && (src.includes('logo-khatwa.png') || src.includes('logo-khatwa.jpeg') || src.includes('logo-khatwa-transparent.png'))) {
-      img.src = 'logo/logo-khatwa.png';
-      img.onerror = function() { this.src = 'logo/logo-khatwa.png'; };
+      img.src = 'logo/logo-khatwa-transparent.png';
+      img.onerror = function() { this.src = 'logo/logo-khatwa-transparent.png'; };
     }
   });
 }
@@ -480,7 +480,7 @@ function initCollapsibleTaskbar() {
     <div>
       <div class="khatwa-taskbar-head">
         <a href="${role === 'ADMIN' ? 'admin.html' : (role === 'TEACHER' ? 'teacher-dashboard.html' : (role === 'GUEST' ? 'index.html' : 'dashboard.html'))}" class="khatwa-taskbar-brand">
-          <img src="${logoSrc}" alt="خطوة" class="khatwa-taskbar-logo" onerror="this.src='logo/logo-khatwa.png'">
+          <img src="${logoSrc}" alt="خطوة" class="khatwa-taskbar-logo" onerror="this.src='logo/logo-khatwa-transparent.png'">
           <span class="khatwa-taskbar-title" data-taskbar-brand-title>${brandTitle}</span>
         </a>
         <button type="button" class="khatwa-taskbar-pin-btn" id="taskbarPinBtn" title="${isEn ? 'Pin / Unpin Sidebar' : 'تثبيت / إلغاء تثبيت القائمة'}">

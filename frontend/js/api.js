@@ -187,8 +187,11 @@
     }
 
     // Logo with automatic preference for clean transparent background
-    const effectiveLogo = logoUrl || 'logo/logo-khatwa-transparent.png';
-    document.querySelectorAll('.brand-logo').forEach((el) => {
+    let effectiveLogo = logoUrl || 'logo/logo-khatwa-transparent.png';
+    if (effectiveLogo.includes('logo-khatwa.png') || effectiveLogo.includes('logo-khatwa.jpeg')) {
+      effectiveLogo = 'logo/logo-khatwa-transparent.png';
+    }
+    document.querySelectorAll('.brand-logo, .khatwa-taskbar-logo').forEach((el) => {
       if (!el.getAttribute('src') || el.getAttribute('src').includes('logo-khatwa')) {
         el.setAttribute('src', effectiveLogo);
       }
