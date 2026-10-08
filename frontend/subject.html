@@ -222,11 +222,13 @@
 
         const lessons = (ch.lessons || []).filter(l => !l.scheduledPublishAt || new Date(l.scheduledPublishAt) <= new Date());
         if (lessons.length === 0) {
-          html += `<div style="color:var(--ink-dim);font-size:0.85rem;padding:8px 0;">لا توجد محاضرات في هذه الوحدة بعد.</div>`;
+          html += `<div style="grid-column:1/-1;color:var(--ink-dim);font-size:0.88rem;padding:16px 0;">لا توجد محاضرات في هذه الوحدة بعد.</div>`;
         } else {
+          html += `<div class="lecture-grid">`;
           lessons.forEach((l) => {
-            html += renderLessonRow(l);
+            html += renderLectureCard(l);
           });
+          html += `</div>`;
         }
 
         html += `</div></div>`;
@@ -234,9 +236,9 @@
     } else if (currentCourse.lessons && currentCourse.lessons.length > 0) {
       const directLessons = (currentCourse.lessons || []).filter(l => !l.scheduledPublishAt || new Date(l.scheduledPublishAt) <= new Date());
       if (directLessons.length > 0) {
-        html += `<div class="unit-box"><div class="unit-lessons">`;
+        html += `<div class="unit-box"><div class="lecture-grid">`;
         directLessons.forEach((l) => {
-          html += renderLessonRow(l);
+          html += renderLectureCard(l);
         });
         html += `</div></div>`;
       }
@@ -245,7 +247,7 @@
     container.innerHTML = html;
   }
 
-  function renderLessonRow(lesson) {
+  function renderLectureCard(lesson) {
     if (lesson.scheduledPublishAt && new Date(lesson.scheduledPublishAt) > new Date()) {
       return '';
     }
@@ -254,79 +256,118 @@
     const priceEGP = Number(lesson.price) || 0;
     const isFree = priceEGP === 0;
 
-    // Client Note (Page 9): New badge that disappears after 1 day from release
+    // Client Requirement (PDF Page 9): "جديد" badge for recently released lectures, auto-hidden after 1 day (24h)
     const createdTime = lesson.createdAt ? new Date(lesson.createdAt).getTime() : (lesson.scheduledPublishAt ? new Date(lesson.scheduledPublishAt).getTime() : 0);
     const isNew = createdTime > 0 && (Date.now() - createdTime) < (24 * 60 * 60 * 1000);
 
-    let priceBadge = '';
+    const teacherName = currentCourse?.teacherProfile?.displayName || currentCourse?.teacherName || 'مدرس المادة';
+    const teacherInitial = teacherName.trim().charAt(0) || 'م';
+    const teacherPhoto = currentCourse?.teacherProfile?.photoUrl || currentCourse?.teacherPhoto || '';
+    const coverUrl = lesson.coverImage || currentCourse?.coverImage || '';
+
+    const durationMin = lesson.durationMinutes || 200;
+
+    // Center lock/play icon based on accessibility (Visual spec PDF Page 9)
+    const lockIconHtml = (!isSubscribed && !isFree)
+      ? `
+        <div class="lecture-lock-disc" title="محاضرة مغلقة - تتطلب اشتراك">
+          <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+        </div>
+      `
+      : `
+        <div class="lecture-lock-disc" style="background:rgba(16,185,129,0.7);border-color:rgba(255,255,255,0.7);" title="محاضرة مفتوحة للمشاهدة">
+          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        </div>
+      `;
+
+    // New badge
+    const newBadgeHtml = isNew ? `<span class="lecture-new-badge">جديد</span>` : '';
+
+    // Status pill
+    let statusPillHtml = '';
     if (isSubscribed) {
-      priceBadge = '<span class="tag tag-ok">✓ تم الشراء / مشترك</span>';
+      statusPillHtml = `<span class="lecture-status-pill tag-ok" style="background:rgba(16,185,129,0.9);color:#fff;">✓ مشترك</span>`;
     } else if (isFree) {
-      priceBadge = '<span class="tag tag-ok">مجانية</span>';
-    } else {
-      priceBadge = `<span class="tag tag-warn" style="font-weight:700;">💵 ${priceEGP} ج.م</span>`;
+      statusPillHtml = `<span class="lecture-status-pill tag-ok" style="background:rgba(14,165,233,0.9);color:#fff;">مجانية</span>`;
     }
 
+    // Poster cover
+    const posterHtml = coverUrl
+      ? `<img src="${escapeHtml(coverUrl)}" alt="${escapeHtml(lesson.title)}" onerror="this.onerror=null;this.parentElement.innerHTML=\`<div class='lecture-card-poster-fallback'><div class='lecture-card-poster-pattern'></div><span style='font-size:2.4rem;opacity:0.9;'>🎬</span><span style='font-size:0.82rem;font-weight:700;margin-top:6px;opacity:0.8;'>\${escapeHtml(currentCourse?.subject || 'خطوة')}</span></div>\`;">`
+      : `
+        <div class="lecture-card-poster-fallback">
+          <div class="lecture-card-poster-pattern"></div>
+          <span style="font-size:2.4rem;opacity:0.9;'>🎬</span>
+          <span style="font-size:0.82rem;font-weight:700;margin-top:6px;opacity:0.8;">${escapeHtml(currentCourse?.subject || 'منصة خطوة')}</span>
+        </div>
+      `;
+
+    // Grades badges if already graded
     let gradesHtml = '';
     if (lesson.assignmentGrade) {
-      gradesHtml += `<span class="tag" style="background:rgba(16,185,129,0.12);color:#059669;border:1px solid rgba(16,185,129,0.3);font-size:0.76rem;font-weight:700;">📝 الواجب: ${lesson.assignmentGrade.scorePercent}%</span>`;
+      gradesHtml += `<span class="tag" style="background:rgba(16,185,129,0.12);color:#059669;font-size:0.72rem;font-weight:700;padding:2px 6px;">📝 واجب: ${lesson.assignmentGrade.scorePercent}%</span>`;
     }
     if (lesson.examGrade) {
-      gradesHtml += `<span class="tag" style="background:rgba(99,102,241,0.12);color:#4f46e5;border:1px solid rgba(99,102,241,0.3);font-size:0.76rem;font-weight:700;">🎯 الامتحان: ${lesson.examGrade.scorePercent}%</span>`;
+      gradesHtml += `<span class="tag" style="background:rgba(99,102,241,0.12);color:#4f46e5;font-size:0.72rem;font-weight:700;padding:2px 6px;">🎯 امتحان: ${lesson.examGrade.scorePercent}%</span>`;
     }
 
-    let actionBtn = '';
-    if (isSubscribed || isFree) {
-      actionBtn = `
-        <a href="lesson.html?lessonId=${lesson.id}" class="btn btn-primary btn-sm">
-          ▶ مشاهدة المحاضرة
-        </a>
-      `;
+    // Card click & button action
+    const cardActionAttr = (isSubscribed || isFree)
+      ? `onclick="window.location.href='lesson.html?lessonId=${lesson.id}'"`
+      : `onclick='openPurchaseModal(${JSON.stringify(lesson)})'`;
+
+    // Price display
+    let priceText = '';
+    let priceClass = '';
+    if (isSubscribed) {
+      priceText = 'تم الشراء';
+      priceClass = 'free';
+    } else if (isFree) {
+      priceText = 'مجانية';
+      priceClass = 'free';
     } else {
-      actionBtn = `
-        <button class="btn btn-primary btn-sm" onclick='openPurchaseModal(${JSON.stringify(lesson)})'>
-          🛒 تفعيل المحاضرة (${priceEGP > 0 ? priceEGP + ' ج.م' : 'مجاناً'})
-        </button>
-      `;
+      priceText = `${priceEGP} ج.م`;
     }
-
-    // Client Note (Page 9): Lock icon when locked, and details under lecture
-    const statusIcon = (isSubscribed || isFree)
-      ? '<span style="font-size:1.4rem;" title="محاضرة متاحة للتشغيل">🎬</span>'
-      : '<span style="font-size:1.35rem;filter:drop-shadow(0 2px 4px rgba(239,68,68,0.3));" title="محاضرة مقفولة - تتطلب اشتراك">🔒</span>';
-
-    const newBadgeHtml = isNew
-      ? '<span class="tag" style="background:linear-gradient(135deg, #ef4444 0%, #f97316 100%);color:#fff;font-weight:800;font-size:0.72rem;padding:2px 8px;border-radius:12px;box-shadow:0 2px 6px rgba(239,68,68,0.35);margin-inline-start:6px;">جديد 🔥</span>'
-      : '';
-
-    const publishDateStr = lesson.createdAt ? new Date(lesson.createdAt).toLocaleDateString('ar-EG') : '';
 
     return `
-      <div class="lesson-row-card" style="${!isSubscribed && !isFree ? 'border-inline-start:3px solid #f59e0b;' : 'border-inline-start:3px solid #22c55e;'}">
-        <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:240px;">
-          ${statusIcon}
-          <div>
-            <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;">
-              <b style="font-size:0.96rem;">${escapeHtml(lesson.title)}</b>
-              ${newBadgeHtml}
+      <div class="lecture-card" ${cardActionAttr}>
+        <div class="lecture-card-poster">
+          ${posterHtml}
+          ${lockIconHtml}
+          ${newBadgeHtml}
+          ${statusPillHtml}
+        </div>
+
+        <div class="lecture-card-body">
+          <h4 class="lecture-card-title" title="${escapeHtml(lesson.title)}">${escapeHtml(lesson.title)}</h4>
+
+          <div class="lecture-card-teacher">
+            <div class="lecture-card-teacher-avatar">
+              ${teacherPhoto ? `<img src="${escapeHtml(teacherPhoto)}" alt="${escapeHtml(teacherName)}">` : `<span>${escapeHtml(teacherInitial)}</span>`}
             </div>
-            <div style="font-size:0.8rem;color:var(--ink-dim);margin-top:2px;">
-              ${escapeHtml(lesson.description || 'محاضرة وشرح تفصيلي للمنهج')}
-            </div>
-            <div style="display:flex;align-items:center;gap:10px;font-size:0.74rem;color:var(--ink-dim);margin-top:4px;flex-wrap:wrap;">
-              ${lesson.durationMinutes ? `<span>⏱️ المدة: ${lesson.durationMinutes} دقيقة</span>` : ''}
-              ${lesson.pdfUrl ? `<span>📄 ملزمة مرفقة</span>` : ''}
-              ${publishDateStr ? `<span>📅 نُشرت: ${publishDateStr}</span>` : ''}
-            </div>
+            <span class="lecture-card-teacher-name">${escapeHtml(teacherName)}</span>
+          </div>
+
+          <div class="lecture-card-meta">
+            <span class="lecture-card-meta-item">⏱️ ${durationMin} دقيقة</span>
+            ${lesson.pdfUrl ? `<span class="lecture-card-meta-item">📄 ملزمة</span>` : ''}
+            ${gradesHtml}
           </div>
         </div>
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-          ${gradesHtml}
-          ${priceBadge}
-          ${actionBtn}
+
+        <div class="lecture-card-footer" onclick="event.stopPropagation();">
+          <div class="lecture-card-price ${priceClass}">${priceText}</div>
+          ${(isSubscribed || isFree)
+            ? `<a href="lesson.html?lessonId=${lesson.id}" class="lecture-card-btn primary">شرح المحاضرة ▶</a>`
+            : `<button type="button" class="lecture-card-btn" onclick='openPurchaseModal(${JSON.stringify(lesson)})'>شرح المحاضرة</button>`
+          }
         </div>
       </div>
     `;
+  }
+
+  function renderLessonRow(lesson) {
+    return renderLectureCard(lesson);
   }
 
   function openPurchaseModal(lesson) {

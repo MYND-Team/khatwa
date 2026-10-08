@@ -2630,3 +2630,325 @@ html[dir="ltr"] body.has-khatwa-taskbar:has(.khatwa-taskbar:hover) {
   .khatwa-deco-blob-3 { width: 200px; height: 200px; }
 }
 
+/* ══════════════════════════════════════════════════════════════════════════
+   LECTURE CARDS DESIGN SYSTEM (Visual Spec from Website PDF Pages 9 & 18)
+   ══════════════════════════════════════════════════════════════════════════ */
+.lecture-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 22px;
+  margin-top: 16px;
+  margin-bottom: 24px;
+}
+
+.lecture-card {
+  background: var(--bg-card);
+  border: 1px solid var(--line-soft);
+  border-radius: 20px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.28s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.2s ease;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+  position: relative;
+  cursor: pointer;
+}
+
+:root[data-theme="dark"] .lecture-card {
+  background: #182232;
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.lecture-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.12);
+  border-color: var(--primary-line, #38bdf8);
+}
+
+:root[data-theme="dark"] .lecture-card:hover {
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
+  border-color: rgba(56, 189, 248, 0.4);
+}
+
+.lecture-card-poster {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lecture-card-poster img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.45s ease;
+}
+
+.lecture-card:hover .lecture-card-poster img {
+  transform: scale(1.05);
+}
+
+.lecture-card-poster-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1e293b 0%, #334155 50%, #0f172a 100%);
+  color: #fff;
+  position: relative;
+}
+
+.lecture-card-poster-pattern {
+  position: absolute;
+  inset: 0;
+  opacity: 0.15;
+  background-image: radial-gradient(circle at 2px 2px, white 1px, transparent 0);
+  background-size: 16px 16px;
+}
+
+/* Center Lock / Status Overlay Icon */
+.lecture-lock-disc {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+  transition: all 0.25s ease;
+  z-index: 2;
+}
+
+.lecture-card:hover .lecture-lock-disc {
+  transform: translate(-50%, -50%) scale(1.1);
+  background: rgba(15, 23, 42, 0.7);
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+.lecture-lock-disc svg {
+  width: 22px;
+  height: 22px;
+  fill: currentColor;
+}
+
+/* "جديد" (New) Badge — top right/left */
+.lecture-new-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: linear-gradient(135deg, #7c3aed 0%, #6366f1 100%);
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 8px;
+  box-shadow: 0 3px 10px rgba(124, 58, 237, 0.45);
+  letter-spacing: 0.5px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+html[dir="rtl"] .lecture-new-badge {
+  right: auto;
+  left: 12px;
+}
+
+/* Status / Stage Pill on Card Top */
+.lecture-status-pill {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 3;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  backdrop-filter: blur(4px);
+}
+
+html[dir="rtl"] .lecture-status-pill {
+  right: 12px;
+  left: auto;
+}
+
+/* Card Body */
+.lecture-card-body {
+  padding: 16px 18px 12px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.lecture-card-title {
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.45;
+  margin: 0 0 10px 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 2.85em;
+}
+
+.lecture-card-teacher {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.lecture-card-teacher-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--bg-raised);
+  border: 1px solid var(--line-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--primary);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.lecture-card-teacher-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.lecture-card-teacher-name {
+  font-size: 0.82rem;
+  color: var(--ink-dim);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lecture-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.78rem;
+  color: var(--ink-dim);
+  margin-top: auto;
+  padding-top: 6px;
+}
+
+.lecture-card-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Card Bottom / Footer */
+.lecture-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  border-top: 1px solid var(--line-soft);
+  background: var(--bg-raised);
+  gap: 10px;
+}
+
+.lecture-card-price {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.lecture-card-price.free {
+  color: #10b981;
+}
+
+.lecture-card-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: rgba(148, 163, 184, 0.16);
+  color: var(--ink);
+  font-weight: 700;
+  font-size: 0.84rem;
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+}
+
+:root[data-theme="dark"] .lecture-card-btn {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f1f5f9;
+}
+
+.lecture-card:hover .lecture-card-btn,
+.lecture-card-btn:hover {
+  background: var(--primary);
+  color: #ffffff;
+  border-color: var(--primary);
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+}
+
+.lecture-card-btn.primary {
+  background: var(--primary);
+  color: #ffffff;
+}
+
+.lecture-card-btn.primary:hover {
+  background: var(--primary-deep, #0284c7);
+}
+
+/* Teacher quick pill button for adding lecture */
+.btn-pill-add-lecture {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 20px;
+  border-radius: 999px;
+  background: rgba(56, 189, 248, 0.12);
+  color: var(--primary);
+  border: 1.5px solid var(--primary);
+  font-weight: 700;
+  font-size: 0.92rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-pill-add-lecture:hover {
+  background: var(--primary);
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(14, 165, 233, 0.25);
+}
+
+
