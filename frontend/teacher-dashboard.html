@@ -1225,7 +1225,7 @@
                   <div class="chapter-box">
                     <div class="chapter-head">
                       <div>
-                        <b style="color:var(--primary);font-size:1.05rem;">📁 الوحدة / الفصل ${idx + 1}: ${escapeHtml(ch.title)}</b>
+                        <b class="chapter-title-badge">📁 الوحدة / الفصل ${idx + 1}: ${escapeHtml(ch.title)}</b>
                         ${ch.description ? `<p style="margin:2px 0 0;font-size:.82rem;color:var(--ink-dim);">${escapeHtml(ch.description)}</p>` : ''}
                       </div>
                       <button class="btn btn-pill-add-lecture btn-sm" onclick="openAddLessonModal('${ch.id}')">＋ إضافة محاضرة</button>
