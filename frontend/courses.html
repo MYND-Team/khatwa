@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
@@ -76,33 +76,40 @@
 
     <!-- Category Tabs -->
     <div class="tab-row" style="margin-top:16px;">
-      <button class="tab active" id="tabTeachersBtn" onclick="switchTab('panel-teachers', this)">👨‍🏫 نخبة مدرسي المنصة</button>
+      <button class="tab active" id="tabCatalogBtn" onclick="switchTab('panel-catalog', this)">🌐 جميع الكورسات المتاحة</button>
       <button class="tab" id="tabEnrolledBtn" onclick="switchTab('panel-enrolled', this)">📚 كورساتي المشترك بها (<span id="enrolledCountBadge">0</span>)</button>
-      <button class="tab" id="tabCatalogBtn" onclick="switchTab('panel-catalog', this)">🔍 جميع الكورسات المتاحة</button>
+      <button class="tab" id="tabTeachersBtn" onclick="switchTab('panel-teachers', this)">👨‍🏫 نخبة مدرسي المنصة</button>
     </div>
 
-    <!-- Hidden stage container for compatibility -->
-    <div id="stageFolderTabs" style="display:none;"></div>
-    <button id="btnCustomizeStages" style="display:none;"></button>
+    <!-- Academic Stage Filter Tabs -->
+    <div class="stage-folder-tabs" id="stageFolderTabs" style="margin:16px 0 20px;">
+      <button class="stage-folder-tab active" data-stage="" onclick="filterByStage('', this)">🌐 جميع المراحل</button>
+      <button class="stage-folder-tab" data-stage="PREPARATORY" onclick="filterByStage('PREPARATORY', this)">3 إعدادي</button>
+      <button class="stage-folder-tab" data-stage="SECONDARY_1" onclick="filterByStage('SECONDARY_1', this)">1 ثانوي</button>
+      <button class="stage-folder-tab" data-stage="SECONDARY_2" onclick="filterByStage('SECONDARY_2', this)">2 ثانوي</button>
+      <button class="stage-folder-tab" data-stage="BACCALAUREATE_2" onclick="filterByStage('BACCALAUREATE_2', this)">2 باكلوريا</button>
+      <button class="stage-folder-tab" data-stage="SECONDARY_3" onclick="filterByStage('SECONDARY_3', this)">3 ثانوي</button>
+      <button class="stage-folder-tab" data-stage="BACCALAUREATE_3" onclick="filterByStage('BACCALAUREATE_3', this)">3 باكلوريا</button>
+    </div>
 
-    <!-- Panel 1: Featured Teachers Cards (Visual Reference Style) -->
-    <div class="tab-panel" id="panel-teachers">
-      <div class="teacher-ref-grid" id="teachersGrid">
-        <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--ink-dim);">جارٍ جلب نخبة المدرسين...</div>
+    <!-- Panel 1: All Available Courses Catalog (Active by default) -->
+    <div class="tab-panel" id="panel-catalog">
+      <div class="lecture-grid" id="allCoursesGrid">
+        <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--ink-dim);">جارٍ تحميل الكورسات المتاحة...</div>
       </div>
     </div>
 
-    <!-- Panel 2: My Enrolled Courses (Folder Cards) -->
+    <!-- Panel 2: My Enrolled Courses -->
     <div class="tab-panel" id="panel-enrolled" style="display:none;">
-      <div class="catalog-grid" id="enrolledCoursesGrid">
+      <div class="lecture-grid" id="enrolledCoursesGrid">
         <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--ink-dim);">جارٍ تحميل كورساتك...</div>
       </div>
     </div>
 
-    <!-- Panel 3: All Available Courses Catalog -->
-    <div class="tab-panel" id="panel-catalog" style="display:none;">
-      <div class="catalog-grid" id="allCoursesGrid">
-        <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--ink-dim);">جارٍ تحميل الكورسات المتاحة...</div>
+    <!-- Panel 3: Featured Teachers Cards -->
+    <div class="tab-panel" id="panel-teachers" style="display:none;">
+      <div class="teacher-ref-grid" id="teachersGrid">
+        <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--ink-dim);">جارٍ جلب نخبة المدرسين...</div>
       </div>
     </div>
   </main>
@@ -110,7 +117,7 @@
 
 <!-- Modal: Teacher Full Profile & Course List -->
 <div class="modal-overlay" id="teacherProfileModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:999;align-items:center;justify-content:center;">
-  <div style="background:var(--bg-card);border:1px solid var(--line);border-radius:24px;max-width:680px;width:95%;padding:28px;max-height:90vh;overflow-y:auto;">
+  <div style="background:var(--bg-card);border:1px solid var(--line);border-radius:24px;max-width:880px;width:95%;padding:28px;max-height:90vh;overflow-y:auto;">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;">
       <div style="display:flex;gap:16px;align-items:center;">
         <div class="teacher-ref-photo-frame" style="width:90px;height:95px;margin:0;border-radius:14px;" id="modalTeacherPhoto">
@@ -131,7 +138,7 @@
     <div id="modalTeacherStagesBar" style="display:none;"></div>
 
     <h3 style="margin:16px 0 14px;" id="modalCoursesHeading">📚 الكورسات والمحاضرات المتاحة:</h3>
-    <div id="modalTeacherCoursesList" style="display:flex;flex-direction:column;gap:12px;"></div>
+    <div id="modalTeacherCoursesList" class="lecture-grid" style="margin-top:14px;"></div>
   </div>
 </div>
 
@@ -192,6 +199,19 @@
     } else {
       currentStageFilter = '';
     }
+    syncStageTabButtons();
+  }
+
+  function syncStageTabButtons() {
+    const tabs = document.querySelectorAll('#stageFolderTabs .stage-folder-tab');
+    tabs.forEach(tab => {
+      const stage = tab.getAttribute('data-stage') || '';
+      if (stage === currentStageFilter) {
+        tab.classList.add('active');
+      } else {
+        tab.classList.remove('active');
+      }
+    });
   }
 
   function openCustomizeStagesModal() {}
@@ -342,56 +362,108 @@
     renderEnrolledCourses();
   }
 
+  function renderCourseCard(c, isEnrolledOverride) {
+    const isEnrolled = isEnrolledOverride !== undefined
+      ? Boolean(isEnrolledOverride)
+      : enrolledCoursesList.some(e => (e.courseId === c.id || e.id === c.id || e.course?.id === c.id));
+
+    const teacher = c.teacherProfile || activeModalTeacher || {};
+    const teacherName = teacher.displayName || c.teacherName || 'أستاذ المادة';
+    const teacherInitial = teacherName.trim().charAt(0) || 'أ';
+    const teacherPhoto = teacher.avatarUrl || teacher.photoUrl || '';
+    const price = Number(c.price) || 0;
+    const isFree = price === 0;
+
+    const createdTime = c.createdAt ? new Date(c.createdAt).getTime() : 0;
+    const isNew = createdTime > 0 ? (Date.now() - createdTime) < (3 * 24 * 60 * 60 * 1000) : false;
+
+    const stageName = STAGE_NAMES[c.academicStage] || c.academicStage || '';
+
+    const coverUrl = c.imageUrl || '';
+    const posterHtml = coverUrl
+      ? `<img src="${escapeHtml(coverUrl)}" alt="${escapeHtml(c.title)}" onerror="this.onerror=null;this.parentElement.innerHTML='<div class=\\'lecture-card-poster-fallback\\'><div class=\\'lecture-card-poster-pattern\\'></div><span style=\\'font-size:2.4rem;opacity:0.9;\\'>📖</span><span style=\\'font-size:0.82rem;font-weight:700;margin-top:6px;opacity:0.8;\\'>${escapeHtml(c.subject || 'خطوة')}</span></div>';">`
+      : `<div class="lecture-card-poster-fallback">
+           <div class="lecture-card-poster-pattern"></div>
+           <span style="font-size:2.4rem;opacity:0.9;">📖</span>
+           <span style="font-size:0.82rem;font-weight:700;margin-top:6px;opacity:0.8;">${escapeHtml(c.subject || 'خطوة')}</span>
+         </div>`;
+
+    const lockIconHtml = (!isEnrolled && !isFree)
+      ? `
+        <div class="lecture-lock-disc" title="كورس مغلق - يتطلب اشتراك">
+          <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+        </div>
+      `
+      : `
+        <div class="lecture-lock-disc" style="background:rgba(16,185,129,0.7);border-color:rgba(255,255,255,0.7);" title="كورس متاح">
+          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        </div>
+      `;
+
+    const newBadgeHtml = isNew ? `<span class="lecture-new-badge">جديد</span>` : '';
+
+    const statusPillHtml = isEnrolled
+      ? `<span class="lecture-status-pill tag-ok" style="background:rgba(16,185,129,0.9);color:#fff;">✓ مشترك</span>`
+      : (stageName ? `<span class="lecture-status-pill tag-stage" style="background:rgba(15,23,42,0.75);color:#fff;border:1px solid rgba(255,255,255,0.2);">${escapeHtml(stageName)}</span>` : '');
+
+    const teacherAvatarHtml = teacherPhoto
+      ? `<img src="${escapeHtml(teacherPhoto)}" alt="${escapeHtml(teacherName)}">`
+      : `<span>${escapeHtml(teacherInitial)}</span>`;
+
+    const priceText = isEnrolled ? 'مشترك بالفعل' : (isFree ? 'مجاني' : `${price} ج.م`);
+    const priceClass = (isEnrolled || isFree) ? 'free' : '';
+
+    const buttonHtml = isEnrolled
+      ? `<a href="subject.html?courseId=${c.id}" class="lecture-card-btn primary">دخول الكورس ↗</a>`
+      : `<a href="subject.html?courseId=${c.id}" class="lecture-card-btn">عرض الكورس ↗</a>`;
+
+    return `
+      <div class="lecture-card" onclick="window.location.href='subject.html?courseId=${c.id}'">
+        <div class="lecture-card-poster">
+          ${posterHtml}
+          ${lockIconHtml}
+          ${newBadgeHtml}
+          ${statusPillHtml}
+        </div>
+        <div class="lecture-card-body">
+          <h4 class="lecture-card-title" title="${escapeHtml(c.title)}">${escapeHtml(c.title)}</h4>
+          <div class="lecture-card-teacher">
+            <div class="lecture-card-teacher-avatar">
+              ${teacherAvatarHtml}
+            </div>
+            <span class="lecture-card-teacher-name">${escapeHtml(teacherName)}</span>
+          </div>
+          <div class="lecture-card-meta">
+            <span class="lecture-card-meta-item">📚 ${escapeHtml(c.subject || 'المادة')}</span>
+            ${c._count?.chapters ? `<span class="lecture-card-meta-item">· ${c._count.chapters} فصول</span>` : ''}
+            ${stageName ? `<span class="lecture-card-meta-item">· ${escapeHtml(stageName)}</span>` : ''}
+          </div>
+        </div>
+        <div class="lecture-card-footer" onclick="event.stopPropagation();">
+          <div class="lecture-card-price ${priceClass}">${priceText}</div>
+          ${buttonHtml}
+        </div>
+      </div>
+    `;
+  }
+
   function renderEnrolledCourses() {
     const grid = document.getElementById('enrolledCoursesGrid');
-    const list = (enrolledCoursesList || []).filter(e => !!(e.course || e));
+    const list = (enrolledCoursesList || []).map(e => e.course || e).filter(Boolean);
 
     if (list.length === 0) {
       grid.innerHTML = `
         <div style="grid-column:1/-1;text-align:center;padding:50px;background:var(--bg-card);border-radius:18px;border:1px solid var(--line-soft);">
           <div style="font-size:3rem;margin-bottom:10px;">📚</div>
           <h3>${enrolledCoursesList.length === 0 ? 'لم تشترك في أي كورس بعد' : 'لا توجد كورسات مشتركة'}</h3>
-          <p style="color:var(--ink-dim);margin:6px 0 16px;">تصفح كروت المعلمين أو الكورسات المتاحة واشترك لمتابعة دروسك.</p>
-          <button class="btn btn-primary btn-sm" onclick="switchTab('panel-teachers', document.getElementById('tabTeachersBtn'))">تصفح المعلمين المعتمدين</button>
+          <p style="color:var(--ink-dim);margin:6px 0 16px;">تصفح الكورسات المتاحة واشترك لمتابعة دروسك ومحاضراتك.</p>
+          <button class="btn btn-primary btn-sm" onclick="switchTab('panel-catalog', document.getElementById('tabCatalogBtn'))">تصفح جميع الكورسات</button>
         </div>
       `;
       return;
     }
 
-    grid.innerHTML = list.map(e => {
-      const c = e.course || e;
-      const teacher = c.teacherProfile || {};
-      const teacherName = teacher.displayName || 'أستاذ المادة';
-      const teacherImg = teacher.avatarUrl
-        ? `<img src="${teacher.avatarUrl}" class="sub-avatar-img" alt="${escapeHtml(teacherName)}">`
-        : `<div class="sub-avatar-placeholder">${escapeHtml(teacherName.charAt(0))}</div>`;
-      const courseImg = c.imageUrl
-        ? `<img src="${c.imageUrl}" class="sub-course-thumb" alt="${escapeHtml(c.title)}">`
-        : '';
-      const stageName = STAGE_NAMES[c.academicStage] || c.academicStage || '';
-
-      return `
-        <div class="folder-card" onclick="window.location.href='subject.html?courseId=${c.id || e.courseId}'">
-          <div class="folder-card-header">
-            ${teacherImg}
-            <div style="flex:1;">
-              <div style="display:flex;align-items:center;gap:8px;justify-content:space-between;">
-                <h4 style="margin:0 0 2px;font-size:1.05rem;">${escapeHtml(c.title || 'كورس')}</h4>
-                ${courseImg}
-              </div>
-              <span style="font-size:0.84rem;color:var(--ink-dim);">
-                الأستاذ: <b>${escapeHtml(teacherName)}</b> · <b style="color:var(--primary);">${escapeHtml(c.subject || '')}</b>
-                ${stageName ? ` · <span class="tag tag-stage">${escapeHtml(stageName)}</span>` : ''}
-              </span>
-            </div>
-          </div>
-          <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line-soft);padding-top:12px;margin-top:10px;">
-            <span class="tag tag-ok">مشترك بالفعل ✓</span>
-            <span style="font-size:0.85rem;color:var(--primary);font-weight:700;">فتح الكورس والمحاضرات ↗</span>
-          </div>
-        </div>
-      `;
-    }).join('');
+    grid.innerHTML = list.map(c => renderCourseCard(c, true)).join('');
   }
 
   async function loadAllCourses() {
@@ -410,8 +482,7 @@
     if (currentUser && currentUser.role === 'STUDENT') {
       if (currentStageFilter && currentStageFilter !== 'ALL_SELECTED') {
         list = list.filter(c => c.academicStage === currentStageFilter);
-      } else {
-        // Strict isolation: only courses that belong to the student's selected stages
+      } else if (studentSelectedStages.length > 0) {
         list = list.filter(c => studentSelectedStages.includes(c.academicStage));
       }
     } else {
@@ -425,38 +496,7 @@
       return;
     }
 
-    grid.innerHTML = list.map(c => {
-      const teacher = c.teacherProfile || {};
-      const isEnrolled = enrolledCoursesList.some(e => (e.courseId === c.id || e.id === c.id || e.course?.id === c.id));
-      const stageName = STAGE_NAMES[c.academicStage] || c.academicStage || '';
-
-      const priceBadge = (c.price > 0)
-        ? `<span style="font-weight:700;color:#22c55e;">💵 ${c.price} ج.م</span>`
-        : '<span style="font-weight:700;color:var(--primary);">اشتراك مجاني</span>';
-
-      return `
-        <div class="card" style="padding:20px;border-radius:18px;">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
-            <span class="tag tag-stage">${escapeHtml(stageName)}</span>
-            ${priceBadge}
-          </div>
-          <h3 style="margin:0 0 6px;">${escapeHtml(c.title)}</h3>
-          <p style="font-size:0.85rem;color:var(--ink-dim);margin:0 0 14px;">${escapeHtml(c.description || 'كورس شامل ومكثف مع أستاذ المادة')}</p>
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
-            <span style="font-size:1.3rem;">👨‍🏫</span>
-            <span style="font-size:0.9rem;font-weight:600;">${escapeHtml(teacher.displayName || 'أستاذ المادة')} (${escapeHtml(teacher.subject || c.subject)})</span>
-          </div>
-          <div style="border-top:1px solid var(--line-soft);padding-top:14px;display:flex;gap:8px;">
-            <button class="btn btn-line btn-sm" style="flex:1;" onclick="window.location.href='subject.html?courseId=${c.id}'">عرض المحاضرات ↗</button>
-            ${isEnrolled ? `
-              <span class="tag tag-ok" style="align-self:center;">✓ مشترك</span>
-            ` : `
-              <button class="btn btn-primary btn-sm" onclick="enrollInCourse('${c.id}', '${escapeHtml(c.title)}', ${c.price || 0})">اشتراك ＋</button>
-            `}
-          </div>
-        </div>
-      `;
-    }).join('');
+    grid.innerHTML = list.map(c => renderCourseCard(c)).join('');
   }
 
   let activeModalTeacher = null;
@@ -530,7 +570,7 @@
 
     if (courses.length === 0) {
       listEl.innerHTML = `
-        <div style="text-align:center;padding:24px;background:var(--bg);border-radius:14px;border:1px solid var(--line-soft);">
+        <div style="grid-column:1/-1;text-align:center;padding:24px;background:var(--bg);border-radius:14px;border:1px solid var(--line-soft);">
           <p style="color:var(--ink-dim);margin:0;">لا توجد كورسات منشورة لهذا المعلم في (${stageTitle}).</p>
         </div>
       `;
@@ -538,39 +578,10 @@
     }
 
     listEl.innerHTML = courses.map(c => {
-      const isEnrolled = enrolledCoursesList.some(e => (e.courseId === c.id || e.id === c.id || e.course?.id === c.id));
-      const priceBadge = (c.price > 0)
-        ? `<b style="color:#22c55e;">💵 ${c.price} ج.م</b>`
-        : '<b style="color:var(--primary);">اشتراك مجاني</b>';
-      const thumb = c.imageUrl
-        ? `<img src="${c.imageUrl}" class="sub-course-thumb" alt="${escapeHtml(c.title)}">`
-        : `<div class="sub-course-thumb" style="display:flex;align-items:center;justify-content:center;font-size:1.4rem;">📖</div>`;
-
-      return `
-        <div style="display:flex;justify-content:space-between;align-items:center;background:var(--bg-raised);padding:14px 18px;border-radius:16px;border:1px solid var(--line-soft);box-shadow:var(--shadow-sm);flex-wrap:wrap;gap:12px;">
-          <div style="display:flex;align-items:center;gap:14px;">
-            ${thumb}
-            <div>
-              <h4 style="margin:0 0 4px;font-size:1.02rem;">${escapeHtml(c.title)}</h4>
-              <div style="font-size:0.83rem;color:var(--ink-dim);display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-                <span>${escapeHtml(c.subject || '')}</span>
-                <span>·</span>
-                ${priceBadge}
-                <span>·</span>
-                <span class="tag tag-stage">${escapeHtml(STAGE_NAMES[c.academicStage] || c.academicStage)}</span>
-              </div>
-            </div>
-          </div>
-          <div style="display:flex;align-items:center;gap:8px;">
-            <a href="subject.html?courseId=${c.id}" class="btn btn-line btn-sm">المحاضرات ↗</a>
-            ${isEnrolled ? `
-              <span class="tag tag-ok">✓ مشترك بالفعل</span>
-            ` : `
-              <button class="btn btn-primary btn-sm" onclick="enrollInCourse('${c.id}', '${escapeHtml(c.title)}', ${c.price || 0})">اشتراك ＋</button>
-            `}
-          </div>
-        </div>
-      `;
+      if (!c.teacherProfile && activeModalTeacher) {
+        c.teacherProfile = activeModalTeacher;
+      }
+      return renderCourseCard(c);
     }).join('');
   }
 

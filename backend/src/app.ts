@@ -67,15 +67,7 @@ app.use(express.urlencoded({ extended: true, limit: '100mb' }));
 app.use(cookieParser());
 app.use(morgan(env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
-// ─── Static Frontend Serving ──────────────────────────────────────────────────
-if (resolvedFrontendPath) {
-  app.use(
-    express.static(resolvedFrontendPath, {
-      extensions: ['html', 'htm'],
-      index: 'index.html',
-    })
-  );
-}
+// ─── Rate limiting ────────────────────────────────────────────────────────────
 
 // ─── Rate limiting ────────────────────────────────────────────────────────────
 
@@ -126,7 +118,7 @@ app.get('/settings/branding', BrandingController.getSettings);
 
 // ─── Public course/teacher discovery (no auth needed) ────────────────────────
 
-app.get('/courses', asyncHandler(async (req, res) => {
+app.get(['/courses', '/api/courses'], asyncHandler(async (req, res) => {
   const { stage, search } = req.query as Record<string, string>;
   const where: any = { isPublished: true };
   if (stage) where.academicStage = stage;
@@ -150,7 +142,7 @@ app.get('/courses', asyncHandler(async (req, res) => {
   res.status(200).json({ success: true, data: courses });
 }));
 
-app.get('/teachers', asyncHandler(async (req, res) => {
+app.get(['/teachers', '/api/teachers'], asyncHandler(async (req, res) => {
   const { stage } = req.query as Record<string, string>;
   const courseWhere: any = { isPublished: true };
   if (stage) courseWhere.academicStage = stage;
@@ -200,7 +192,7 @@ app.get('/teachers', asyncHandler(async (req, res) => {
   res.status(200).json({ success: true, data: teachers });
 }));
 
-app.get('/teachers/:id', asyncHandler(async (req, res) => {
+app.get(['/teachers/:id', '/api/teachers/:id'], asyncHandler(async (req, res) => {
   const { stage } = req.query as Record<string, string>;
   const courseWhere: any = { isPublished: true };
   if (stage) courseWhere.academicStage = stage;
@@ -255,6 +247,16 @@ app.use('/api/point-requests', pointRequestsRouter);
 app.get('/api/health', (_req, res) => {
   res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 });
+
+// ─── Static Frontend Serving (Fallback after API endpoints) ──────────────────
+if (resolvedFrontendPath) {
+  app.use(
+    express.static(resolvedFrontendPath, {
+      extensions: ['html', 'htm'],
+      index: 'index.html',
+    })
+  );
+}
 
 // ─── 404 handler ─────────────────────────────────────────────────────────────
 

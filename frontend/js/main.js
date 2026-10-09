@@ -490,39 +490,39 @@ function initCollapsibleTaskbar() {
 
       <nav class="khatwa-taskbar-nav">
         ${navItems.map(item => {
-          let isActive = false;
-          if (role === 'ADMIN') {
-            isActive = item.id === 'tabStudents';
-          } else if (role === 'TEACHER') {
-            isActive = item.id === 'view-courses'; // default active view
-          } else if (item.href) {
-            isActive = currentPath === item.href.split('#')[0];
-          }
+    let isActive = false;
+    if (role === 'ADMIN') {
+      isActive = item.id === 'tabStudents';
+    } else if (role === 'TEACHER') {
+      isActive = item.id === 'view-courses'; // default active view
+    } else if (item.href) {
+      isActive = currentPath === item.href.split('#')[0];
+    }
 
-          const label = isEn ? item.en : item.ar;
-          // For items with an action: use a smarter onclick that prevents page reload if already on the right page
-          let actionAttr = '';
-          if (item.action) {
-            const targetHref = item.href || '';
-            const targetPage = targetHref.split('#')[0];
-            if (targetPage && targetPage !== '' && targetPage !== currentPath) {
-              // Different page: navigate then the action will run on load
-              actionAttr = `onclick="window.location.href='${targetHref}'"`;
-            } else {
-              // Same page or no href: run action and prevent default
-              actionAttr = `onclick="event.preventDefault();${item.action}"`;
-            }
-          }
-          const hrefAttr = item.href ? `href="${item.href}"` : 'href="javascript:void(0)"';
+    const label = isEn ? item.en : item.ar;
+    // For items with an action: use a smarter onclick that prevents page reload if already on the right page
+    let actionAttr = '';
+    if (item.action) {
+      const targetHref = item.href || '';
+      const targetPage = targetHref.split('#')[0];
+      if (targetPage && targetPage !== '' && targetPage !== currentPath) {
+        // Different page: navigate then the action will run on load
+        actionAttr = `onclick="window.location.href='${targetHref}'"`;
+      } else {
+        // Same page or no href: run action and prevent default
+        actionAttr = `onclick="event.preventDefault();${item.action}"`;
+      }
+    }
+    const hrefAttr = item.href ? `href="${item.href}"` : 'href="javascript:void(0)"';
 
-          return `
+    return `
             <a ${hrefAttr} ${actionAttr} class="khatwa-taskbar-item ${isActive ? 'active' : ''}" data-target-id="${item.id || ''}" data-tooltip="${label}">
               <span class="khatwa-taskbar-icon">${item.icon}</span>
               <span class="khatwa-taskbar-label">${label}</span>
               ${item.badge ? `<span class="khatwa-taskbar-badge">${item.badge}</span>` : ''}
             </a>
           `;
-        }).join('')}
+  }).join('')}
       </nav>
     </div>
 
