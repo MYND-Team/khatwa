@@ -1289,13 +1289,24 @@
                               </div>
                             </div>
 
-                            <div class="lecture-card-footer" onclick="event.stopPropagation();">
-                              <div class="lecture-card-price ${l.price === 0 ? 'free' : ''}">
-                                ${l.price > 0 ? l.price + ' ج.م' : 'مجانية'}
+                            <div class="lecture-card-footer" onclick="event.stopPropagation();" style="flex-direction:column;align-items:stretch;gap:12px;padding:12px;">
+                              <div style="display:flex;justify-content:space-between;align-items:center;width:100%;">
+                                <div class="lecture-card-price ${l.price === 0 ? 'free' : ''}">
+                                  ${l.price > 0 ? l.price + ' ج.م' : 'مجانية'}
+                                </div>
                               </div>
-                              <button type="button" class="lecture-card-btn" onclick="openLessonFullDetailsModal('${l.id}')">
-                                شرح المحاضرة
-                              </button>
+                              <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+                                <button type="button" class="btn btn-sm" style="padding:4px 10px;font-size:.8rem;background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;border-radius:8px;font-weight:700;display:inline-flex;align-items:center;gap:4px;" onclick="openLessonFullDetailsModal('${l.id}')">📊 بيانات المحاضرة والطلاب</button>
+                                ${isDraft ? `<button type="button" class="btn btn-sm" style="padding:3px 10px;font-size:.8rem;background:#16a34a;color:#fff;border-radius:8px;font-weight:700;" onclick="quickPublishLesson('${l.id}')">🚀 نشر للطلاب</button>` : `<button type="button" class="btn btn-line btn-sm" style="padding:3px 10px;font-size:.8rem;color:#6b7280;border-color:rgba(107,114,128,0.4);" onclick="quickHideLesson('${l.id}')">👁️ إخفاء عن الطلاب</button>`}
+                                <button type="button" class="btn btn-line btn-sm" style="padding:3px 10px;font-size:.8rem;color:var(--primary);" onclick="openEditLessonModal('${l.id}')">✏️ تعديل السعر والبيانات</button>
+                                <button type="button" class="btn btn-text btn-sm" onclick="openQuizBuilderForLesson('${l.id}', 'assignment')">📝 الواجب</button>
+                                ${l.assignmentQuizId ? `<button type="button" class="btn btn-line btn-sm" style="padding:3px 8px;font-size:.78rem;color:#f59e0b;border-color:rgba(245,158,11,0.4);" onclick="openQuizGradingModal('${l.assignmentQuizId}', 'تصحيح الواجب - ${escapeHtml(l.title)}')">📊 تصحيح الواجب</button>` : ''}
+                                <button type="button" class="btn btn-text btn-sm" onclick="openQuizBuilderForLesson('${l.id}', 'exam')">🏆 الامتحان</button>
+                                ${l.examQuizId ? `<button type="button" class="btn btn-line btn-sm" style="padding:3px 8px;font-size:.78rem;color:#10b981;border-color:rgba(16,185,129,0.4);" onclick="openQuizGradingModal('${l.examQuizId}', 'تصحيح الامتحان - ${escapeHtml(l.title)}')">📊 تصحيح الامتحان</button>` : ''}
+                                <button type="button" class="btn btn-line btn-sm" style="padding:3px 10px;font-size:.8rem;" onclick="openTeacherPreview('${l.id}')">👁 معاينة المحاضرة</button>
+                                <button type="button" class="btn btn-line btn-sm" style="padding:3px 10px;font-size:.8rem;color:#f59e0b;border-color:rgba(245,158,11,0.5);" data-lesson-id="${l.id}" data-lesson-title="${escapeHtml(l.title)}" data-action="schedule-lesson">📅 ${l.scheduledPublishAt ? formatScheduleLabel(l.scheduledPublishAt) : 'جدولة النشر'}</button>
+                                <button type="button" class="btn btn-sm" style="padding:3px 10px;font-size:.8rem;background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.4);border-radius:8px;" data-lesson-id="${l.id}" data-lesson-title="${escapeHtml(l.title)}" data-action="delete-lesson">🗑 حذف</button>
+                              </div>
                             </div>
                           </div>
                           `;
