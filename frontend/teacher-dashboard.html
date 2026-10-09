@@ -1248,7 +1248,7 @@
                           const durationMin = l.durationMinutes || 200;
                           const teacherName = currentTeacherProfile?.displayName || user?.name || user?.username || 'أستاذ المادة';
                           const teacherInitial = teacherName.trim().charAt(0) || 'أ';
-                          const teacherPhoto = currentTeacherProfile?.photoUrl || '';
+                          const teacherPhoto = currentTeacherProfile?.avatarUrl || '';
 
                           const statusPill = isDraft
                             ? '<span class="lecture-status-pill tag" style="background:rgba(107,114,128,0.85);color:#fff;">مسودة</span>'

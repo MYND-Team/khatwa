@@ -381,7 +381,7 @@
 
     const coverUrl = c.imageUrl || '';
     const posterHtml = coverUrl
-      ? `<img src="${escapeHtml(coverUrl)}" alt="${escapeHtml(c.title)}" onerror="this.onerror=null;this.parentElement.innerHTML='<div class=\\'lecture-card-poster-fallback\\'><div class=\\'lecture-card-poster-pattern\\'></div><span style=\\'font-size:2.4rem;opacity:0.9;\\'>📖</span><span style=\\'font-size:0.82rem;font-weight:700;margin-top:6px;opacity:0.8;\\'>${escapeHtml(c.subject || 'خطوة')}</span></div>';">`
+      ? `<img src="${escapeHtml(coverUrl)}" alt="${escapeHtml(c.title)}" class="course-cover-img" data-subject="${escapeHtml(c.subject || 'خطوة')}">`
       : `<div class="lecture-card-poster-fallback">
            <div class="lecture-card-poster-pattern"></div>
            <span style="font-size:2.4rem;opacity:0.9;">📖</span>
@@ -628,6 +628,39 @@
       alert(err.message || 'حدث خطأ أثناء الاشتراك');
     }
   }
+
+  document.addEventListener('error', function(e) {
+    if (e.target && e.target.tagName === 'IMG' && e.target.classList.contains('course-cover-img')) {
+      const img = e.target;
+      const parent = img.parentElement;
+      if (!parent) return;
+      const subject = img.getAttribute('data-subject') || 'خطوة';
+      
+      const fallbackDiv = document.createElement('div');
+      fallbackDiv.className = 'lecture-card-poster-fallback';
+      
+      const patternDiv = document.createElement('div');
+      patternDiv.className = 'lecture-card-poster-pattern';
+      
+      const iconSpan = document.createElement('span');
+      iconSpan.style.fontSize = '2.4rem';
+      iconSpan.style.opacity = '0.9';
+      iconSpan.textContent = '📖';
+      
+      const subjectSpan = document.createElement('span');
+      subjectSpan.style.fontSize = '0.82rem';
+      subjectSpan.style.fontWeight = '700';
+      subjectSpan.style.marginTop = '6px';
+      subjectSpan.style.opacity = '0.8';
+      subjectSpan.textContent = subject;
+      
+      fallbackDiv.appendChild(patternDiv);
+      fallbackDiv.appendChild(iconSpan);
+      fallbackDiv.appendChild(subjectSpan);
+      
+      parent.replaceChild(fallbackDiv, img);
+    }
+  }, true);
 </script>
 </body>
 </html>
