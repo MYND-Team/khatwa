@@ -333,7 +333,7 @@ const TASKBAR_NAV_DEFS = {
   STUDENT: [
     { href: 'dashboard.html', icon: '🏠', ar: 'الرئيسية', en: 'Home' },
     { href: 'profile.html', icon: '👤', ar: 'الملف الشخصي', en: 'Profile' },
-    { href: 'courses.html', icon: '📚', ar: 'محاضراتي والكورسات', en: 'My Courses' },
+    { href: 'courses.html', icon: '📚', ar: 'محاضراتي وكورساتي', en: 'My Courses' },
     { href: 'points.html', icon: '💳', ar: 'المحفظة والرصيد', en: 'Wallet & Balance' },
     { href: 'request-points.html', icon: '⚡', ar: 'طلب شحن رصيد', en: 'Request Balance' },
     { href: 'request-offline.html', icon: '🏢', ar: 'طلب سنتر / أوفلاين', en: 'Center Request' },

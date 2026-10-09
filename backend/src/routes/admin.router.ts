@@ -629,6 +629,64 @@ router.get(
   })
 );
 
+router.get(
+  '/teachers/:id/courses',
+  asyncHandler(async (req, res) => {
+    const teacherId = req.params.id;
+    const courses = await prisma.course.findMany({
+      where: {
+        OR: [
+          { teacherProfileId: teacherId },
+          { teacherProfile: { userId: teacherId } },
+        ],
+      },
+      include: {
+        teacherProfile: {
+          select: { id: true, displayName: true, avatarUrl: true, subject: true, bio: true },
+        },
+        chapters: {
+          orderBy: { orderIndex: 'asc' },
+          include: {
+            lessons: {
+              orderBy: { orderIndex: 'asc' },
+            },
+          },
+        },
+        _count: { select: { chapters: true, lessons: true, lessonSubscriptions: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    res.status(200).json({ success: true, data: courses });
+  })
+);
+
+router.get(
+  '/courses/:id',
+  asyncHandler(async (req, res) => {
+    const course = await prisma.course.findUnique({
+      where: { id: req.params.id },
+      include: {
+        teacherProfile: {
+          select: { id: true, displayName: true, avatarUrl: true, subject: true, bio: true, user: { select: { username: true } } },
+        },
+        chapters: {
+          orderBy: { orderIndex: 'asc' },
+          include: {
+            lessons: {
+              orderBy: { orderIndex: 'asc' },
+            },
+          },
+        },
+      },
+    });
+    if (!course) {
+      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Course not found' } });
+      return;
+    }
+    res.status(200).json({ success: true, data: course });
+  })
+);
+
 // ─── Platform Analytics ──────────────────────────────────────────────────────
 
 router.get(

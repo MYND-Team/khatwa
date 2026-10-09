@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
@@ -141,52 +141,26 @@
   </aside>
 
   <main class="main">
-    <div class="breadcrumb">لوحة التحكم / اشتراكاتي</div>
+    <div class="breadcrumb">الرئيسية / معلمو المنصة</div>
     <div class="page-head">
       <div>
-        <h1 id="welcomeHeading">أهلًا بعودتك</h1>
-        <p class="page-sub">المحاضرات والكورسات التي قمت بالاشتراك بها ومتابعة تقدمك الدراسي.</p>
+        <h1 id="welcomeHeading">نخبة مدرسي المنصة</h1>
+        <p class="page-sub">اختر معلّميك واشترك معهم لمتابعة كورساتهم وحصصهم في صفحة "محاضراتي وكورساتي".</p>
       </div>
       <div>
-        <a href="courses.html" class="btn btn-primary btn-sm">🔍 تصفح وشراء محاضرات جديدة</a>
+        <a href="courses.html" class="btn btn-line btn-sm">📚 الذهاب لمحاضراتي وكورساتي</a>
       </div>
     </div>
 
-    <!-- Dynamic Stats Row -->
-    <div class="stat-row">
-      <div class="stat-cell"><b id="statWallet">0 ج.م</b><span>رصيد المحفظة</span></div>
-      <div class="stat-cell"><b id="statAvgScore">0%</b><span>متوسط الدرجات</span></div>
-      <div class="stat-cell"><b id="statSubscriptions">0</b><span>محاضرة مشترك بها</span></div>
-      <div class="stat-cell"><b id="statPassedQuizzes">0</b><span>امتحان مجتاز</span></div>
-    </div>
-
-    <!-- My Subscriptions with Stage Tabs -->
-    <div class="block">
-      <div class="block-head">
-        <h3>📚 اشتراكاتي ومحاضراتي المدفوعة (My Subscriptions)</h3>
-        <span style="font-size:0.85rem;color:var(--ink-dim);" id="subTotalCountBadge">0 محاضرة</span>
-      </div>
-
-      <!-- Hidden stage container for compatibility -->
-      <div id="stageTabsBar" style="display:none;"></div>
-
-      <div id="subscriptionsContainer">
-        <div style="text-align:center;padding:40px;color:var(--ink-dim);">جارٍ جلب اشتراكاتك...</div>
+    <!-- Teacher Cards Grid: Teacher Photo + Name only + Subscribe Button -->
+    <div class="block" style="background:transparent;border:none;padding:0;box-shadow:none;">
+      <div id="homeTeachersGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:22px;margin-top:10px;">
+        <div style="grid-column:1/-1;text-align:center;padding:50px;color:var(--ink-dim);">جارٍ جلب معلّمي المنصة...</div>
       </div>
     </div>
 
-    <!-- Recent Payment Transactions -->
-    <div class="block">
-      <div class="block-head">
-        <h3>💳 آخر المعاملات وعمليات الشراء</h3>
-        <a href="points.html">عرض سجل المحفظة</a>
-      </div>
-      <div class="row-list" id="dashboardPaymentsList">
-        <!-- Rendered dynamically -->
-      </div>
-    </div>
     <!-- Technical Support Section for Student -->
-    <div class="support-card-section">
+    <div class="support-card-section" style="margin-top:36px;">
       <div style="display:flex;align-items:center;gap:16px;">
         <div class="support-badge-icon">
           <svg viewBox="0 0 32 32" style="width:28px;height:28px;fill:#fff;">
@@ -196,7 +170,7 @@
         <div>
           <h3 style="margin:0 0 4px;font-size:1.12rem;color:var(--ink);">قسم الدعم الفني وخدمة الطلاب</h3>
           <p style="margin:0;font-size:0.86rem;color:var(--ink-dim);line-height:1.5;">
-            تواجهك مشكلة في تشغيل المحاضرة، شحن المحفظة، أو فتح الامتحانات؟ فريق الدعم متواجد لمساعدتك عبر واتساب:<br>
+            تواجهك مشكلة في تفعيل الاشتراك، شحن المحفظة، أو تشغيل الحصص؟ فريق الدعم متواجد لمساعدتك عبر واتساب:<br>
             <b dir="ltr" style="color:#25d366;font-size:0.95rem;">01111343693</b>
           </p>
         </div>
@@ -217,31 +191,12 @@
 <script src="js/api.js"></script>
 <script src="js/main.js"></script>
 <script>
-  let currentStageFilter = '';
+  let subscribedTeacherIds = new Set();
+  let allTeachersList = [];
 
-  const STAGE_NAMES = {
-    PREPARATORY: 'الصف الثالث الإعدادي (3 إعدادي)',
-    SECONDARY_1: 'الصف الأول الثانوي (1 ثانوي)',
-    SECONDARY_2: 'الصف الثاني الثانوي (2 ثانوي)',
-    BACCALAUREATE_2: 'الصف الثاني باكلوريا (2 باكلوريا)',
-    SECONDARY_3: 'الصف الثالث الثانوي (3 ثانوي)',
-    BACCALAUREATE_3: 'الصف الثالث باكلوريا (3 باكلوريا)',
-  };
-
-  async function selectStageTab(stage, tabBtn) {
-    currentStageFilter = stage;
-    document.querySelectorAll('.stage-filter-tab').forEach(b => b.classList.remove('active'));
-    if (tabBtn) tabBtn.classList.add('active');
-
-    const container = document.getElementById('subscriptionsContainer');
-    container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--ink-dim);">جارٍ جلب اشتراكات المرحلة...</div>';
-
-    try {
-      const subscriptions = await window.KhatwaAPI.student.getSubscriptions(currentStageFilter);
-      renderSubscriptionsTree(subscriptions);
-    } catch (e) {
-      container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--err);">فشل جلب الاشتراكات.</div>';
-    }
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
   async function renderDashboard() {
@@ -252,204 +207,123 @@
     }
 
     const studentName = user.name || user.username || 'طالب خطوة';
-    document.getElementById('welcomeHeading').textContent = `أهلًا بعودتك، ${studentName}`;
-    document.getElementById('navName').textContent = studentName;
-    document.getElementById('navAvatar').textContent = studentName.charAt(0);
+    const welcomeEl = document.getElementById('welcomeHeading');
+    if (welcomeEl) welcomeEl.textContent = `أهلًا ${studentName}، اختر معلّميك`;
+    const navNameEl = document.getElementById('navName');
+    if (navNameEl) navNameEl.textContent = studentName;
+    const navAvatarEl = document.getElementById('navAvatar');
+    if (navAvatarEl) navAvatarEl.textContent = studentName.charAt(0);
 
-    // Initial binding from local user session
-    if (typeof user.walletBalance === 'number') {
-      document.getElementById('statWallet').textContent = `${user.walletBalance} ج.م`;
-    }
+    const grid = document.getElementById('homeTeachersGrid');
 
-    currentStageFilter = '';
-
-    // Fetch Stats & Subscriptions
     try {
-      const [stats, subscriptions, payments] = await Promise.all([
-        window.KhatwaAPI.student.getStats().catch(() => null),
-        window.KhatwaAPI.student.getSubscriptions(currentStageFilter).catch(() => []),
-        window.KhatwaAPI.student.getPaymentsHistory().catch(() => []),
+      const [teachers, subs] = await Promise.all([
+        window.KhatwaAPI.public.getTeachers().catch(() => []),
+        window.KhatwaAPI.student.getSubscribedTeachers().catch(() => []),
       ]);
 
-      if (stats) {
-        document.getElementById('statWallet').textContent = `${stats.walletBalance ?? user.walletBalance ?? 0} ج.م`;
-        const avgScoreEl = document.getElementById('statAvgScore');
-        if (avgScoreEl) avgScoreEl.textContent = stats.averageScore || '0%';
-        document.getElementById('statSubscriptions').textContent = stats.completedLectures || stats.subsCount || (Array.isArray(stats.enrolledCourses) ? stats.enrolledCourses.length : (stats.enrolledCourses || 0));
-        document.getElementById('statPassedQuizzes').textContent = stats.passedQuizzes || stats.totalExams || 0;
+      allTeachersList = teachers || [];
+      subscribedTeacherIds = new Set((subs || []).map(t => t.id || t.userId));
 
-        if (typeof stats.walletBalance === 'number') {
-          window.KhatwaAPI.setUser({
-            ...user,
-            walletBalance: stats.walletBalance,
-          });
-        }
-      }
-
-      renderSubscriptionsTree(subscriptions);
-      renderRecentPayments(payments);
+      renderTeachersGrid();
     } catch (e) {
-      console.warn('Dashboard fetch error:', e);
+      console.error('Failed to load teachers for student home:', e);
+      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--err);">فشل تحميل المدرسين، يرجى إعادة المحاولة.</div>';
     }
   }
 
-  function renderSubscriptionsTree(teacherGroups) {
-    const container = document.getElementById('subscriptionsContainer');
-    if (!teacherGroups || teacherGroups.length === 0) {
-      container.innerHTML = `
-        <div class="empty-state" style="padding:40px;text-align:center;">
-          <div style="font-size:3rem;margin-bottom:12px;">📂</div>
-          <h3 style="margin:0 0 6px;">لا توجد محاضرات مشتركة حتى الآن</h3>
-          <p style="color:var(--ink-dim);margin:0 0 16px;">تصفح الكورسات والمحاضرات المتاحة لمعلميك واشترك للبدء فورًا.</p>
-          <a href="courses.html" class="btn btn-primary btn-sm">تصفح المحاضرات والكورسات</a>
-        </div>
-      `;
-      document.getElementById('subTotalCountBadge').textContent = '0 محاضرة';
-      return;
-    }
+  function renderTeachersGrid() {
+    const grid = document.getElementById('homeTeachersGrid');
+    if (!grid) return;
 
-    let totalLessonsCount = 0;
-    let html = '';
-
-    for (const group of teacherGroups) {
-      const teacherName = group.teacher?.displayName || 'المدرس';
-      const teacherSubject = group.teacher?.subject || 'المادة الدراسية';
-      const teacherAvatar = group.teacher?.avatarUrl
-        ? `<img src="${group.teacher.avatarUrl}" class="sub-avatar-img" alt="${escapeHtml(teacherName)}">`
-        : `<div class="sub-avatar-placeholder">${escapeHtml(teacherName.charAt(0))}</div>`;
-
-      html += `
-        <div class="sub-teacher-group">
-          <div class="sub-teacher-head">
-            <div style="display:flex;align-items:center;gap:14px;">
-              ${teacherAvatar}
-              <div>
-                <b style="font-size:1.1rem;display:block;">الأستاذ: ${escapeHtml(teacherName)}</b>
-                <span style="font-size:0.84rem;color:var(--ink-dim);">${escapeHtml(teacherSubject)}</span>
-              </div>
-            </div>
-            <span class="tag tag-ok">مدرس معتمد ✓</span>
-          </div>
-      `;
-
-      for (const course of group.courses) {
-        const courseThumb = course.imageUrl
-          ? `<img src="${course.imageUrl}" class="sub-course-thumb" alt="${escapeHtml(course.title)}">`
-          : `<div class="sub-course-thumb" style="display:flex;align-items:center;justify-content:center;font-size:1.4rem;">📖</div>`;
-
-        html += `
-          <div class="sub-course-title" style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--bg);border-radius:12px;margin:12px 0 8px;">
-            ${courseThumb}
-            <div style="flex:1;">
-              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-                <b style="font-size:1rem;">${escapeHtml(course.title)}</b>
-                <span style="font-size:0.84rem;color:var(--ink-dim);">(${escapeHtml(course.subject || '')})</span>
-                ${course.academicStage ? `<span class="tag tag-stage" style="font-size:0.75rem;">${escapeHtml(STAGE_NAMES[course.academicStage] || course.academicStage)}</span>` : ''}
-              </div>
-            </div>
-            <a href="subject.html?courseId=${course.id}" class="btn btn-line btn-sm" style="padding:5px 12px;font-size:0.82rem;">تصفح الكورس ↗</a>
-          </div>
-          <div class="sub-lessons-list">
-        `;
-
-        if (!course.lessons || course.lessons.length === 0) {
-          html += `
-            <div style="padding:12px 18px;color:var(--ink-dim);font-size:0.85rem;background:var(--bg-raised);border-radius:10px;border:1px solid var(--line-soft);margin-bottom:8px;">
-              ✓ أنت مشترك في هذا الكورس بالكامل. يمكنك تصفح المحاضرات مباشرة بالضغط على "تصفح الكورس ↗".
-            </div>
-          `;
-        } else {
-          for (const lesson of course.lessons) {
-            totalLessonsCount++;
-            const priceLabel = lesson.pricePaid > 0 ? `${lesson.pricePaid} ج.م` : 'مجانية';
-
-            // Build grade badges
-            let gradeHtml = '';
-            if (lesson.examGrade) {
-              const pct = Math.round(lesson.examGrade.scorePercent || 0);
-              const color = pct >= 85 ? '#22c55e' : pct >= 60 ? '#f59e0b' : '#ef4444';
-              gradeHtml += `<span style="background:${color}22;color:${color};font-size:0.78rem;font-weight:700;padding:3px 9px;border-radius:8px;margin-inline-start:6px;">🏆 الامتحان: ${pct}% (${lesson.examGrade.totalCorrect}/${lesson.examGrade.totalQuestions})</span>`;
-            }
-            if (lesson.assignmentGrade) {
-              const pct = Math.round(lesson.assignmentGrade.scorePercent || 0);
-              const color = pct >= 85 ? '#22c55e' : pct >= 60 ? '#f59e0b' : '#ef4444';
-              gradeHtml += `<span style="background:${color}22;color:${color};font-size:0.78rem;font-weight:700;padding:3px 9px;border-radius:8px;margin-inline-start:6px;">📝 الواجب: ${pct}% (${lesson.assignmentGrade.totalCorrect}/${lesson.assignmentGrade.totalQuestions})</span>`;
-            }
-
-            html += `
-              <div class="sub-lesson-card">
-                <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-                  <span style="background:rgba(34,197,94,0.15);color:#22c55e;font-size:0.85rem;font-weight:700;padding:4px 8px;border-radius:8px;">✓ مدفوع</span>
-                  <div>
-                    <b style="font-size:0.92rem;display:block;">${escapeHtml(lesson.title)}</b>
-                    <span style="font-size:0.8rem;color:var(--ink-dim);">
-                      ${lesson.hasVideo ? '🎬 فيديو محاضرة' : ''} ${lesson.hasPdf ? '· 📄 مذكرة PDF' : ''} · القيمة: ${priceLabel}
-                    </span>
-                    ${gradeHtml ? `<div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:4px;">${gradeHtml}</div>` : ''}
-                  </div>
-                </div>
-                <div>
-                  <a href="lesson.html?lessonId=${lesson.lessonId}" class="btn btn-primary btn-sm" style="padding:6px 14px;font-size:0.85rem;">
-                    ▶ دخول للمحاضرة
-                  </a>
-                </div>
-              </div>
-            `;
-          }
-        }
-
-        html += `</div>`;
-      }
-
-      html += `</div>`;
-    }
-
-    container.innerHTML = html;
-    document.getElementById('subTotalCountBadge').textContent = `${totalLessonsCount} محاضرة`;
-  }
-
-  function renderRecentPayments(payments) {
-    const list = document.getElementById('dashboardPaymentsList');
-    if (!payments || payments.length === 0) {
-      list.innerHTML = `
-        <div class="row-item">
-          <div class="ri-main">
-            <div class="ri-text">
-              <span style="color:var(--ink-dim);">لا توجد عمليات شراء مسجلة بعد</span>
-            </div>
-          </div>
-          <div class="ri-side">
-            <a href="courses.html" class="btn btn-line btn-sm">شراء حصة</a>
-          </div>
+    if (!allTeachersList || allTeachersList.length === 0) {
+      grid.innerHTML = `
+        <div style="grid-column:1/-1;text-align:center;padding:60px 20px;background:var(--bg-card);border:1px solid var(--line-soft);border-radius:20px;">
+          <div style="font-size:3rem;margin-bottom:12px;">👨‍🏫</div>
+          <h3 style="margin:0 0 6px;">لا يوجد معلمون مسجلون حالياً</h3>
+          <p style="color:var(--ink-dim);margin:0;">سيتم إضافة نخبة مدرسي المنصة قريباً.</p>
         </div>
       `;
       return;
     }
 
-    list.innerHTML = payments.slice(0, 5).map((p) => {
-      const dateStr = p.createdAt ? new Date(p.createdAt).toLocaleDateString('ar-EG', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
-      const amountStr = `${p.amount || p.pricePaid || 0} ج.م`;
+    grid.innerHTML = allTeachersList.map(t => {
+      const teacherId = t.id || t.userId;
+      const name = t.displayName || t.name || t.username || 'أستاذ المادة';
+      const initial = name.charAt(0) || '👨‍🏫';
+      const isSubscribed = subscribedTeacherIds.has(teacherId) || subscribedTeacherIds.has(t.userId) || subscribedTeacherIds.has(t.id);
+
+      const avatarHtml = t.avatarUrl
+        ? `<img src="${escapeHtml(t.avatarUrl)}" alt="${escapeHtml(name)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.parentElement.innerHTML='<span style=\\'font-size:2rem;color:var(--primary);\\'>${escapeHtml(initial)}</span>'">`
+        : `<span style="font-size:2.2rem;font-weight:700;color:var(--primary);">${escapeHtml(initial)}</span>`;
+
+      const btnHtml = isSubscribed
+        ? `<button type="button" class="btn btn-sm sub-btn is-subscribed" id="subBtn-${teacherId}" onclick="handleTeacherSubClick('${teacherId}', this)" style="width:100%;border-radius:12px;background:rgba(16,185,129,0.14);color:#10b981;border:1px solid rgba(16,185,129,0.35);font-weight:700;padding:9px 16px;cursor:pointer;transition:all 0.2s ease;">
+             ✓ مشترك
+           </button>`
+        : `<button type="button" class="btn btn-primary btn-sm sub-btn" id="subBtn-${teacherId}" onclick="handleTeacherSubClick('${teacherId}', this)" style="width:100%;border-radius:12px;font-weight:700;padding:9px 16px;box-shadow:0 4px 14px rgba(184,142,79,0.25);cursor:pointer;transition:all 0.2s ease;">
+             اشتراك
+           </button>`;
 
       return `
-        <div class="row-item">
-          <div class="ri-main">
-            <span style="font-size:1.3rem;margin-left:10px;">💳</span>
-            <div class="ri-text">
-              <b>شراء: ${escapeHtml(p.lesson?.title || 'محاضرة')} — ${escapeHtml(p.teacherProfile?.displayName || 'المدرس')}</b>
-              <span>${escapeHtml(p.course?.title || '')} · ${dateStr} · كود المعاملة: ${p.transactionNumber}</span>
-            </div>
+        <div class="teacher-simple-card" style="background:var(--bg-card);border:1px solid var(--line-soft);border-radius:20px;padding:26px 20px 20px;text-align:center;display:flex;flex-direction:column;align-items:center;transition:transform 0.2s ease,box-shadow 0.2s ease;box-shadow:0 4px 18px rgba(0,0,0,0.04);">
+          <div class="teacher-photo-wrap" style="width:112px;height:112px;border-radius:50%;overflow:hidden;border:3px solid var(--primary);box-shadow:0 8px 20px rgba(184,142,79,0.22);margin-bottom:18px;background:var(--bg-raised);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            ${avatarHtml}
           </div>
-          <div class="ri-side">
-            <span class="tag tag-ok">${amountStr}</span>
+          <h3 class="teacher-card-name" style="margin:0 0 18px;font-size:1.14rem;font-weight:700;color:var(--ink);line-height:1.4;min-height:32px;display:flex;align-items:center;justify-content:center;">
+            ${escapeHtml(name)}
+          </h3>
+          <div style="width:100%;margin-top:auto;">
+            ${btnHtml}
           </div>
         </div>
       `;
     }).join('');
   }
 
-  function escapeHtml(str) {
-    if (!str) return '';
-    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  async function handleTeacherSubClick(teacherId, btn) {
+    const isCurrentlySubscribed = subscribedTeacherIds.has(teacherId);
+
+    if (!isCurrentlySubscribed) {
+      // Subscribe
+      btn.disabled = true;
+      btn.textContent = 'جارٍ الاشتراك...';
+      try {
+        await window.KhatwaAPI.student.subscribeTeacher(teacherId);
+        subscribedTeacherIds.add(teacherId);
+        btn.disabled = false;
+        btn.className = 'btn btn-sm sub-btn is-subscribed';
+        btn.style.background = 'rgba(16,185,129,0.14)';
+        btn.style.color = '#10b981';
+        btn.style.border = '1px solid rgba(16,185,129,0.35)';
+        btn.style.boxShadow = 'none';
+        btn.innerHTML = '✓ مشترك';
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = 'اشتراك';
+        alert(err.message || 'فشل إتمام الاشتراك، يرجى المحاولة لاحقاً');
+      }
+    } else {
+      // Toggle off / unsubscribe confirmation
+      if (confirm('هل ترغب في إلغاء متابعة هذا المدرس؟')) {
+        btn.disabled = true;
+        btn.textContent = 'جارٍ الإلغاء...';
+        try {
+          await window.KhatwaAPI.student.unsubscribeTeacher(teacherId);
+          subscribedTeacherIds.delete(teacherId);
+          btn.disabled = false;
+          btn.className = 'btn btn-primary btn-sm sub-btn';
+          btn.style.background = '';
+          btn.style.color = '';
+          btn.style.border = '';
+          btn.style.boxShadow = '0 4px 14px rgba(184,142,79,0.25)';
+          btn.textContent = 'اشتراك';
+        } catch (err) {
+          btn.disabled = false;
+          btn.innerHTML = '✓ مشترك';
+        }
+      }
+    }
   }
 
   document.getElementById('logoutBtn')?.addEventListener('click', (e) => {

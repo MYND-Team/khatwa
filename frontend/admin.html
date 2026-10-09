@@ -641,74 +641,6 @@
     </div>
   </div>
 
-  <!-- Ultra-Modern Key Metrics Grid -->
-  <div class="modern-stats-grid">
-    <!-- Students -->
-    <div class="modern-stat-card" style="--card-accent: #38bdf8; --icon-bg: rgba(56, 189, 248, 0.12); --icon-border: rgba(56, 189, 248, 0.25); --icon-shadow: rgba(56, 189, 248, 0.2);">
-      <div class="stat-card-top">
-        <div class="stat-icon-wrapper">🎓</div>
-        <span class="stat-badge-pill">نشط</span>
-      </div>
-      <div>
-        <div class="stat-label">إجمالي الطلاب المسجلين</div>
-        <div class="stat-value" id="statTotalStudents" style="color:#38bdf8;">0</div>
-        <div class="stat-sub"><span>👥</span> حسابات بقاعدة البيانات</div>
-      </div>
-    </div>
-
-    <!-- Teachers -->
-    <div class="modern-stat-card" style="--card-accent: #2dd4bf; --icon-bg: rgba(45, 212, 191, 0.12); --icon-border: rgba(45, 212, 191, 0.25); --icon-shadow: rgba(45, 212, 191, 0.2);">
-      <div class="stat-card-top">
-        <div class="stat-icon-wrapper">👨‍🏫</div>
-        <span class="stat-badge-pill">معتمد</span>
-      </div>
-      <div>
-        <div class="stat-label">إجمالي المدرسين</div>
-        <div class="stat-value" id="statTotalTeachers" style="color:#2dd4bf;">0</div>
-        <div class="stat-sub"><span>📚</span> الكادر الأكاديمي</div>
-      </div>
-    </div>
-
-    <!-- Courses & Lessons -->
-    <div class="modern-stat-card" style="--card-accent: #a855f7; --icon-bg: rgba(168, 85, 247, 0.12); --icon-border: rgba(168, 85, 247, 0.25); --icon-shadow: rgba(168, 85, 247, 0.2);">
-      <div class="stat-card-top">
-        <div class="stat-icon-wrapper">📚</div>
-        <span class="stat-badge-pill">محتوى</span>
-      </div>
-      <div>
-        <div class="stat-label">إجمالي الكورسات والحصص</div>
-        <div class="stat-value" id="statTotalLessons" style="color:#c084fc;">0</div>
-        <div class="stat-sub"><span>🎬</span> محاضرات ومحتوى تعليمي</div>
-      </div>
-    </div>
-
-    <!-- Pending Point Requests -->
-    <div class="modern-stat-card" style="--card-accent: #f59e0b; --icon-bg: rgba(245, 158, 11, 0.12); --icon-border: rgba(245, 158, 11, 0.25); --icon-shadow: rgba(245, 158, 11, 0.2);">
-      <div class="stat-card-top">
-        <div class="stat-icon-wrapper">⏳</div>
-        <span class="stat-badge-pill" style="color:var(--gold-light);display:flex;align-items:center;gap:4px;"><span class="pulse-dot"></span> مباشر</span>
-      </div>
-      <div>
-        <div class="stat-label">طلبات شحن معلقة</div>
-        <div class="stat-value" id="statPendingRequests" style="color:#fbbf24;">0</div>
-        <div class="stat-sub"><span>💳</span> إيصالات بانتظار الاعتماد</div>
-      </div>
-    </div>
-
-    <!-- Total Recharged Wallet (EGP) -->
-    <div class="modern-stat-card" style="--card-accent: #10b981; --icon-bg: rgba(16, 185, 129, 0.12); --icon-border: rgba(16, 185, 129, 0.25); --icon-shadow: rgba(16, 185, 129, 0.2);">
-      <div class="stat-card-top">
-        <div class="stat-icon-wrapper">💵</div>
-        <span class="stat-badge-pill">رصيد</span>
-      </div>
-      <div>
-        <div class="stat-label">إجمالي الرصيد المشحون</div>
-        <div class="stat-value" id="statTotalPoints" style="color:#34d399;">0 ج.م</div>
-        <div class="stat-sub"><span>💰</span> إجمالي رصيد المحافظ المعتمد</div>
-      </div>
-    </div>
-  </div>
-
   <!-- Admin Main Navigation Tabs -->
   <div class="admin-nav-tabs">
     <button class="admin-nav-tab active" data-target="tabStudents" onclick="switchAdminTab('tabStudents', this)">
@@ -1729,6 +1661,66 @@
   </div>
 </div>
 
+<!-- Modal: View Teacher Courses & Lectures (Same student card style) -->
+<div class="modal-overlay" id="adminTeacherCoursesModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:9999;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:var(--bg-card);border:1px solid var(--line);border-radius:20px;max-width:940px;width:100%;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,0.5);">
+    
+    <!-- Modal Header -->
+    <div style="padding:18px 24px;border-bottom:1px solid var(--line-soft);display:flex;align-items:center;justify-content:space-between;background:var(--bg-raised);">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div id="adminModalTeacherAvatar" style="width:46px;height:46px;border-radius:50%;background:rgba(184,142,79,0.15);border:1px solid var(--primary);display:flex;align-items:center;justify-content:center;font-size:1.4rem;overflow:hidden;flex-shrink:0;">
+          👨‍🏫
+        </div>
+        <div>
+          <h3 id="adminModalTeacherName" style="margin:0;font-size:1.15rem;color:var(--ink);">اسم المدرس</h3>
+          <span id="adminModalTeacherSubject" style="font-size:0.84rem;color:var(--ink-dim);">مادة المدرس</span>
+        </div>
+      </div>
+      <button type="button" class="btn btn-text" onclick="closeAdminTeacherCoursesModal()" style="font-size:1.5rem;line-height:1;padding:4px 8px;color:var(--ink-dim);" title="إغلاق">✕</button>
+    </div>
+
+    <!-- Modal Body (Scrollable) -->
+    <div style="padding:22px;overflow-y:auto;flex:1;">
+      
+      <!-- View 1: Teacher's Courses (exact student lecture-card style) -->
+      <div id="adminTeacherCoursesView">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:8px;">
+          <h4 style="margin:0;font-size:1.05rem;color:var(--primary);display:flex;align-items:center;gap:8px;">
+            <span>📚 الكورسات والمناهج المسجلة للمدرس</span>
+          </h4>
+          <span id="adminTeacherCoursesCount" style="font-size:0.85rem;color:var(--ink-dim);font-weight:700;">0 كورس</span>
+        </div>
+        <div id="adminTeacherCoursesGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:20px;">
+          <!-- Rendered lecture-cards -->
+        </div>
+      </div>
+
+      <!-- View 2: Selected Course's Lectures -->
+      <div id="adminCourseLecturesView" style="display:none;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;gap:10px;flex-wrap:wrap;">
+          <button type="button" class="btn btn-line btn-sm" onclick="backToAdminTeacherCoursesView()" style="font-weight:700;display:inline-flex;align-items:center;gap:6px;">
+            <span>← العودة لقائمة الكورسات</span>
+          </button>
+          <div style="text-align:left;">
+            <h4 id="adminSelectedCourseTitle" style="margin:0;font-size:1.1rem;color:var(--primary);">محاضرات الكورس</h4>
+            <span id="adminSelectedCourseStage" class="tag" style="margin-top:4px;">المرحلة</span>
+          </div>
+        </div>
+
+        <div id="adminCourseLecturesList">
+          <!-- Rendered units / lectures -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Modal Footer -->
+    <div style="padding:14px 24px;border-top:1px solid var(--line-soft);display:flex;justify-content:flex-end;background:var(--bg-raised);">
+      <button type="button" class="btn btn-line btn-sm" onclick="closeAdminTeacherCoursesModal()">إغلاق النافذة</button>
+    </div>
+
+  </div>
+</div>
 
 <script src="js/i18n.js?v=1.0.2"></script>
 <script src="js/api.js?v=1.0.2"></script>
@@ -2484,11 +2476,15 @@
     try {
       const data = await window.KhatwaAPI.admin.getAnalytics();
       if (data) {
-        document.getElementById('statTotalStudents').textContent = data.totalStudents || 0;
-        document.getElementById('statTotalTeachers').textContent = data.totalTeachers || 0;
-        document.getElementById('statTotalLessons').textContent = data.totalLessons || 0;
-        document.getElementById('statTotalPoints').textContent = ((data.totalWalletCredited || 0).toLocaleString()) + ' ج.م';
-        document.getElementById('statPendingRequests').textContent = data.pendingPointRequests || 0;
+        const setTxt = (id, val) => {
+          const el = document.getElementById(id);
+          if (el) el.textContent = val;
+        };
+        setTxt('statTotalStudents', data.totalStudents || 0);
+        setTxt('statTotalTeachers', data.totalTeachers || 0);
+        setTxt('statTotalLessons', data.totalLessons || 0);
+        setTxt('statTotalPoints', ((data.totalWalletCredited || 0).toLocaleString()) + ' ج.م');
+        setTxt('statPendingRequests', data.pendingPointRequests || 0);
       }
     } catch (e) {
       console.error('Failed to load analytics:', e);
@@ -2634,7 +2630,11 @@
             </td>
             <td>${profile.subject || 'عام'}</td>
             <td><span class="tag">${profile.academicStages || 'الكل'}</span></td>
-            <td><b>${coursesCount}</b> كورس</td>
+            <td>
+              <button type="button" class="btn btn-line btn-sm" style="font-weight:700;font-size:0.82rem;color:var(--primary);border-color:rgba(184,142,79,0.4);" onclick="adminViewTeacherCourses('${t.id}')" title="عرض كورسات ومحاضرات المدرس">
+                📚 ${coursesCount} كورس ↗
+              </button>
+            </td>
             <td>
               <div style="display:flex;align-items:center;gap:6px;">
                 ${commissionLabel}
@@ -2646,7 +2646,10 @@
             <td>${statusBadge}</td>
             <td>
               <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
-                <button class="btn btn-line btn-sm" style="color:var(--primary);border-color:rgba(184,142,79,0.4);font-size:0.8rem;padding:4px 8px;font-weight:700;" onclick="openAdminEditTeacherModal('${t.id}')">
+                <button class="btn btn-line btn-sm" style="color:var(--primary);border-color:rgba(184,142,79,0.4);font-size:0.8rem;padding:4px 8px;font-weight:700;" onclick="adminViewTeacherCourses('${t.id}')" title="عرض كورسات ومحاضرات المدرس بنفس مظهر الطالب">
+                  📚 الكورسات والمحاضرات
+                </button>
+                <button class="btn btn-line btn-sm" style="color:var(--ink-dim);border-color:var(--line-soft);font-size:0.8rem;padding:4px 8px;font-weight:700;" onclick="openAdminEditTeacherModal('${t.id}')">
                   ⚙️ تعديل البروفيل
                 </button>
                 ${settleBtn}
@@ -2666,6 +2669,222 @@
     } catch (e) {
       console.error('Failed to load teachers:', e);
     }
+  }
+
+  // ─── Admin View Teacher Courses & Lectures Modal ────────────────────────────
+  let _currentAdminTeacher = null;
+  let _currentAdminTeacherCourses = [];
+
+  async function adminViewTeacherCourses(teacherId) {
+    const modal = document.getElementById('adminTeacherCoursesModal');
+    if (!modal) return;
+
+    modal.style.display = 'flex';
+    document.getElementById('adminTeacherCoursesView').style.display = 'block';
+    document.getElementById('adminCourseLecturesView').style.display = 'none';
+
+    const teacher = cachedTeachersMap.get(teacherId) || allTeachers.find(t => t.id === teacherId);
+    _currentAdminTeacher = teacher;
+    const profile = teacher?.teacherProfile || {};
+    const tName = profile.displayName || teacher?.username || 'المدرس';
+
+    document.getElementById('adminModalTeacherName').textContent = tName;
+    document.getElementById('adminModalTeacherSubject').textContent = profile.subject || 'المحتوى الأكاديمي';
+
+    const avatarBox = document.getElementById('adminModalTeacherAvatar');
+    if (avatarBox) {
+      if (profile.avatarUrl) {
+        avatarBox.innerHTML = `<img src="${profile.avatarUrl}" style="width:100%;height:100%;object-fit:cover;">`;
+      } else {
+        avatarBox.innerHTML = '👨‍🏫';
+      }
+    }
+
+    const grid = document.getElementById('adminTeacherCoursesGrid');
+    const countEl = document.getElementById('adminTeacherCoursesCount');
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--ink-dim);">جارٍ تحميل كورسات المدرس ومحاضراته...</div>';
+
+    try {
+      let courses = await window.KhatwaAPI.admin.getTeacherCourses(teacherId).catch(() => null);
+      if (!courses || courses.length === 0) {
+        if (profile.courses && profile.courses.length > 0) {
+          courses = profile.courses;
+        } else if (profile.id) {
+          const publicTeacher = await window.KhatwaAPI.public.getTeacher(profile.id).catch(() => null);
+          if (publicTeacher?.courses) courses = publicTeacher.courses;
+        }
+      }
+
+      _currentAdminTeacherCourses = courses || [];
+      if (countEl) countEl.textContent = `${_currentAdminTeacherCourses.length} كورس`;
+
+      if (_currentAdminTeacherCourses.length === 0) {
+        grid.innerHTML = `
+          <div style="grid-column:1/-1;text-align:center;padding:36px;color:var(--ink-dim);background:var(--bg-raised);border-radius:16px;">
+            <div style="font-size:2.2rem;margin-bottom:8px;">📚</div>
+            <b style="font-size:1.05rem;color:var(--ink);">لا توجد كورسات مسجلة أو منشورة لهذا المدرس بعد.</b>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = _currentAdminTeacherCourses.map(c => renderAdminCourseCard(c, profile)).join('');
+    } catch (e) {
+      console.error('Failed to load teacher courses for admin:', e);
+      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:24px;color:var(--err);">حدث خطأ أثناء تحميل كورسات المدرس.</div>';
+    }
+  }
+
+  function renderAdminCourseCard(c, teacher) {
+    const stageLabel = STAGE_LABELS[c.academicStage] || c.academicStage || 'عام';
+    const priceVal = Number(c.price || 0);
+    const priceText = priceVal > 0 ? `${priceVal} ج.م` : 'مجاني';
+    const priceClass = priceVal === 0 ? 'free' : '';
+    const chaptersCount = c._count?.chapters ?? (c.chapters?.length || 0);
+    const lessonsCount = c._count?.lessons ?? 0;
+
+    return `
+      <div class="lecture-card" style="cursor:pointer;" onclick="adminShowCourseLectures('${c.id}')">
+        <div class="lecture-card-poster">
+          ${c.imageUrl ? `<img src="${c.imageUrl}" alt="${escapeHtml(c.title)}" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'lecture-card-poster-fallback\\'><span class=\\'lecture-card-poster-pattern\\'></span><span style=\\'font-size:2rem;z-index:2;\\'>📚</span></div>';">` : `
+            <div class="lecture-card-poster-fallback">
+              <span class="lecture-card-poster-pattern"></span>
+              <span style="font-size:2rem;z-index:2;">📚</span>
+            </div>
+          `}
+        </div>
+        <div class="lecture-card-body">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;">
+            <span class="tag" style="font-size:0.75rem;">${escapeHtml(stageLabel)}</span>
+            <span style="font-size:0.75rem;color:var(--ink-dim);">${escapeHtml(c.subject || '')}</span>
+          </div>
+          <h4 class="lecture-card-title" title="${escapeHtml(c.title)}">${escapeHtml(c.title)}</h4>
+          <div class="lecture-card-meta" style="margin-top:6px;font-size:0.8rem;color:var(--ink-dim);display:flex;gap:12px;">
+            <span>📑 ${chaptersCount} وحدة</span>
+            ${lessonsCount ? `<span>🎬 ${lessonsCount} محاضرة</span>` : ''}
+          </div>
+        </div>
+        <div class="lecture-card-footer" onclick="event.stopPropagation(); adminShowCourseLectures('${c.id}')">
+          <div class="lecture-card-price ${priceClass}">${priceText}</div>
+          <button type="button" class="btn btn-primary btn-sm" style="padding:4px 12px;font-size:0.82rem;border-radius:8px;">
+            عرض المحاضرات ↗
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  async function adminShowCourseLectures(courseId) {
+    const course = _currentAdminTeacherCourses.find(c => c.id === courseId);
+    if (!course) return;
+
+    document.getElementById('adminTeacherCoursesView').style.display = 'none';
+    document.getElementById('adminCourseLecturesView').style.display = 'block';
+
+    document.getElementById('adminSelectedCourseTitle').textContent = `محاضرات كورس: ${course.title}`;
+    const stageLabel = STAGE_LABELS[course.academicStage] || course.academicStage || 'عام';
+    document.getElementById('adminSelectedCourseStage').textContent = stageLabel;
+
+    const listEl = document.getElementById('adminCourseLecturesList');
+    listEl.innerHTML = '<div style="text-align:center;padding:24px;color:var(--ink-dim);">جارٍ جلب وحدات ومحاضرات الكورس...</div>';
+
+    try {
+      let fullCourse = course;
+      const fetched = await window.KhatwaAPI.admin.getCourse(courseId).catch(() => null);
+      if (fetched) fullCourse = fetched;
+
+      const chapters = fullCourse.chapters || [];
+      if (chapters.length === 0 && (!fullCourse.lessons || fullCourse.lessons.length === 0)) {
+        listEl.innerHTML = `
+          <div style="text-align:center;padding:36px;color:var(--ink-dim);background:var(--bg-raised);border-radius:14px;">
+            <div style="font-size:2rem;margin-bottom:8px;">🎬</div>
+            لا توجد محاضرات أو وحدات مضافة في هذا الكورس بعد.
+          </div>
+        `;
+        return;
+      }
+
+      let html = '';
+      if (chapters.length > 0) {
+        chapters.forEach((ch, chIdx) => {
+          const lessons = ch.lessons || [];
+          html += `
+            <div style="background:var(--bg-raised);border:1px solid var(--line-soft);border-radius:14px;padding:16px;margin-bottom:14px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;border-bottom:1px solid var(--line-soft);padding-bottom:8px;">
+                <b style="color:var(--primary);font-size:0.95rem;">الوحدة ${chIdx + 1}: ${escapeHtml(ch.title)}</b>
+                <span class="tag" style="font-size:0.75rem;">${lessons.length} محاضرة</span>
+              </div>
+          `;
+
+          if (lessons.length === 0) {
+            html += `<p style="font-size:0.84rem;color:var(--ink-dim);margin:0;">لا توجد محاضرات في هذه الوحدة بعد.</p>`;
+          } else {
+            html += `<div style="display:flex;flex-direction:column;gap:8px;">`;
+            lessons.forEach((l, lIdx) => {
+              const priceVal = Number(l.price || 0);
+              const priceTag = priceVal > 0 ? `<b style="color:var(--primary);font-size:0.84rem;">${priceVal} ج.م</b>` : `<span style="color:#22c55e;font-size:0.82rem;font-weight:700;">مجانية</span>`;
+              html += `
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--bg-card);border:1px solid var(--line-soft);border-radius:10px;padding:10px 14px;flex-wrap:wrap;">
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <span style="font-size:1.2rem;">🎬</span>
+                    <div>
+                      <div style="font-weight:700;font-size:0.88rem;color:var(--ink);">${escapeHtml(l.title)}</div>
+                      <span style="font-size:0.76rem;color:var(--ink-dim);">ترتيب المحاضرة: #${l.orderIndex !== undefined ? l.orderIndex : (lIdx + 1)} · ${priceTag}</span>
+                    </div>
+                  </div>
+                  <div style="display:flex;gap:8px;align-items:center;">
+                    <a href="lesson.html?lessonId=${l.id}" target="_blank" class="btn btn-line btn-sm" style="font-size:0.78rem;padding:4px 10px;border-radius:8px;">
+                      معاينة المحاضرة ▶
+                    </a>
+                  </div>
+                </div>
+              `;
+            });
+            html += `</div>`;
+          }
+
+          html += `</div>`;
+        });
+      } else if (fullCourse.lessons && fullCourse.lessons.length > 0) {
+        html += `<div style="display:flex;flex-direction:column;gap:8px;">`;
+        fullCourse.lessons.forEach((l, lIdx) => {
+          const priceVal = Number(l.price || 0);
+          const priceTag = priceVal > 0 ? `<b style="color:var(--primary);font-size:0.84rem;">${priceVal} ج.م</b>` : `<span style="color:#22c55e;font-size:0.82rem;font-weight:700;">مجانية</span>`;
+          html += `
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--bg-raised);border:1px solid var(--line-soft);border-radius:10px;padding:10px 14px;flex-wrap:wrap;">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <span style="font-size:1.2rem;">🎬</span>
+                <div>
+                  <div style="font-weight:700;font-size:0.88rem;color:var(--ink);">${escapeHtml(l.title)}</div>
+                  <span style="font-size:0.76rem;color:var(--ink-dim);">ترتيب المحاضرة: #${l.orderIndex !== undefined ? l.orderIndex : (lIdx + 1)} · ${priceTag}</span>
+                </div>
+              </div>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <a href="lesson.html?lessonId=${l.id}" target="_blank" class="btn btn-line btn-sm" style="font-size:0.78rem;padding:4px 10px;border-radius:8px;">
+                  معاينة المحاضرة ▶
+                </a>
+              </div>
+            </div>
+          `;
+        });
+        html += `</div>`;
+      }
+
+      listEl.innerHTML = html;
+    } catch (e) {
+      console.error('Failed to load course lectures:', e);
+      listEl.innerHTML = '<div style="text-align:center;padding:24px;color:var(--err);">تعذر جلب تفاصيل محاضرات هذا الكورس.</div>';
+    }
+  }
+
+  function backToAdminTeacherCoursesView() {
+    document.getElementById('adminTeacherCoursesView').style.display = 'block';
+    document.getElementById('adminCourseLecturesView').style.display = 'none';
+  }
+
+  function closeAdminTeacherCoursesModal() {
+    const modal = document.getElementById('adminTeacherCoursesModal');
+    if (modal) modal.style.display = 'none';
   }
 
   // ─── Custom Commission Modal ────────────────────────────────────────────────

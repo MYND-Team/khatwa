@@ -1501,4 +1501,155 @@ router.post(
   })
 );
 
+// ─── Subscribed Teachers (Teacher Subscriptions) ──────────────────────────────
+
+router.get(
+  '/subscribed-teachers',
+  asyncHandler(async (req, res) => {
+    const studentId = req.user!.sub;
+
+    const teacherNotes = await prisma.studentNote.findMany({
+      where: {
+        studentId,
+        authorId: studentId,
+        content: { startsWith: 'SUB_TEACHER:' },
+      },
+    });
+
+    const teacherIds = teacherNotes.map((n: { content: string }) => n.content.replace('SUB_TEACHER:', '').trim()).filter(Boolean);
+
+    if (teacherIds.length === 0) {
+      res.status(200).json({ success: true, data: [] });
+      return;
+    }
+
+    const teachers = await prisma.teacherProfile.findMany({
+      where: {
+        OR: [
+          { id: { in: teacherIds } },
+          { userId: { in: teacherIds } },
+        ],
+        user: { isActive: true },
+      },
+      select: {
+        id: true,
+        userId: true,
+        displayName: true,
+        avatarUrl: true,
+        subject: true,
+        bio: true,
+        rating: true,
+        courses: {
+          where: { isPublished: true },
+          select: {
+            id: true,
+            title: true,
+            subject: true,
+            academicStage: true,
+            imageUrl: true,
+            price: true,
+            pointCost: true,
+            _count: { select: { chapters: true, lessons: true } },
+            chapters: {
+              orderBy: { orderIndex: 'asc' },
+              select: {
+                id: true,
+                title: true,
+                lessons: {
+                  where: {
+                    isPublished: true,
+                    OR: [
+                      { scheduledPublishAt: null },
+                      { scheduledPublishAt: { lte: new Date() } },
+                    ],
+                  },
+                  orderBy: { orderIndex: 'asc' },
+                  select: {
+                    id: true,
+                    title: true,
+                    price: true,
+                    pointCost: true,
+                    orderIndex: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    res.status(200).json({ success: true, data: teachers });
+  })
+);
+
+router.post(
+  '/subscribe-teacher/:teacherId',
+  asyncHandler(async (req, res) => {
+    const studentId = req.user!.sub;
+    const { teacherId } = req.params;
+
+    if (!teacherId) {
+      res.status(400).json({ success: false, error: { message: 'معرف المدرس مطلوب' } });
+      return;
+    }
+
+    // Verify teacher exists
+    const teacher = await prisma.teacherProfile.findFirst({
+      where: {
+        OR: [{ id: teacherId }, { userId: teacherId }],
+      },
+    });
+
+    const normalizedTeacherId = teacher ? teacher.id : teacherId;
+
+    const existing = await prisma.studentNote.findFirst({
+      where: {
+        studentId,
+        authorId: studentId,
+        content: `SUB_TEACHER:${normalizedTeacherId}`,
+      },
+    });
+
+    if (!existing) {
+      await prisma.studentNote.create({
+        data: {
+          studentId,
+          authorId: studentId,
+          content: `SUB_TEACHER:${normalizedTeacherId}`,
+        },
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'تم الاشتراك مع المدرس بنجاح',
+      data: { teacherId: normalizedTeacherId },
+    });
+  })
+);
+
+router.delete(
+  '/subscribe-teacher/:teacherId',
+  asyncHandler(async (req, res) => {
+    const studentId = req.user!.sub;
+    const { teacherId } = req.params;
+
+    await prisma.studentNote.deleteMany({
+      where: {
+        studentId,
+        authorId: studentId,
+        content: { in: [`SUB_TEACHER:${teacherId}`, `SUB_TEACHER:${teacherId}`] },
+      },
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'تم إلغاء الاشتراك بنجاح',
+      data: { teacherId },
+    });
+  })
+);
+
 export default router;
+

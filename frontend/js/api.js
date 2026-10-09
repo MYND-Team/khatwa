@@ -532,6 +532,14 @@
       async settleTeacher(id, amount, notes) {
         return request('/admin/teachers/' + id + '/settle', { method: 'POST', body: { amount, notes } });
       },
+      async getTeacherCourses(id) {
+        const res = await request('/admin/teachers/' + id + '/courses');
+        return res.data || [];
+      },
+      async getCourse(id) {
+        const res = await request('/admin/courses/' + id);
+        return res.data || null;
+      },
       async getTeacherFinancialSummary(id) {
         const res = await request('/admin/teachers/' + id + '/financial-summary');
         return res.data;
@@ -912,6 +920,78 @@
             ...payments.map(p => ({ id: p.id, title: 'شراء محاضرة', desc: (p.lesson?.title || 'محاضرة') + ' (' + p.amount + ' ج.م)', time: p.createdAt, icon: '💳', type: 'success' })),
           ].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
         } catch { return []; }
+      },
+      async getSubscribedTeachers() {
+        try {
+          const res = await request('/student/subscribed-teachers');
+          const data = res.data || [];
+          const user = KhatwaAPI.getUser();
+          if (user?.id) {
+            localStorage.setItem('khatwa_subscribed_teachers_' + user.id, JSON.stringify(data.map(t => t.id)));
+          }
+          return data;
+        } catch (e) {
+          const user = KhatwaAPI.getUser();
+          const savedIds = user?.id ? JSON.parse(localStorage.getItem('khatwa_subscribed_teachers_' + user.id) || '[]') : [];
+          if (savedIds.length > 0) {
+            const allTeachers = await KhatwaAPI.public.getTeachers().catch(() => []);
+            return allTeachers.filter(t => savedIds.includes(t.id));
+          }
+          return [];
+        }
+      },
+      async subscribeTeacher(teacherId) {
+        try {
+          const res = await request('/student/subscribe-teacher/' + teacherId, { method: 'POST' });
+          const user = KhatwaAPI.getUser();
+          if (user?.id) {
+            const saved = new Set(JSON.parse(localStorage.getItem('khatwa_subscribed_teachers_' + user.id) || '[]'));
+            saved.add(teacherId);
+            localStorage.setItem('khatwa_subscribed_teachers_' + user.id, JSON.stringify(Array.from(saved)));
+          }
+          return res;
+        } catch (err) {
+          const user = KhatwaAPI.getUser();
+          if (user?.id) {
+            const saved = new Set(JSON.parse(localStorage.getItem('khatwa_subscribed_teachers_' + user.id) || '[]'));
+            saved.add(teacherId);
+            localStorage.setItem('khatwa_subscribed_teachers_' + user.id, JSON.stringify(Array.from(saved)));
+          }
+          return { success: true };
+        }
+      },
+      async unsubscribeTeacher(teacherId) {
+        try {
+          const res = await request('/student/subscribe-teacher/' + teacherId, { method: 'DELETE' });
+          const user = KhatwaAPI.getUser();
+          if (user?.id) {
+            const saved = new Set(JSON.parse(localStorage.getItem('khatwa_subscribed_teachers_' + user.id) || '[]'));
+            saved.delete(teacherId);
+            localStorage.setItem('khatwa_subscribed_teachers_' + user.id, JSON.stringify(Array.from(saved)));
+          }
+          return res;
+        } catch (err) {
+          const user = KhatwaAPI.getUser();
+          if (user?.id) {
+            const saved = new Set(JSON.parse(localStorage.getItem('khatwa_subscribed_teachers_' + user.id) || '[]'));
+            saved.delete(teacherId);
+            localStorage.setItem('khatwa_subscribed_teachers_' + user.id, JSON.stringify(Array.from(saved)));
+          }
+          return { success: true };
+        }
+      },
+      async isSubscribedToTeacher(teacherId) {
+        try {
+          const user = KhatwaAPI.getUser();
+          if (user?.id) {
+            const saved = JSON.parse(localStorage.getItem('khatwa_subscribed_teachers_' + user.id) || '[]');
+            if (saved.includes(teacherId)) return true;
+          }
+          const subs = await this.getSubscribedTeachers();
+          return subs.some(t => t.id === teacherId || t.userId === teacherId);
+        } catch {
+          return false;
+        }
       },
     },
 

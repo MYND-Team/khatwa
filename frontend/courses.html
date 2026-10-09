@@ -63,54 +63,20 @@
   </aside>
 
   <main class="main">
-    <div class="breadcrumb">الكورسات والمواد</div>
+    <div class="breadcrumb">محاضراتي وكورساتي</div>
     <div class="page-head">
       <div>
-        <h1>المعلمون والكورسات الدراسية</h1>
-        <p class="page-sub" style="margin:4px 0 0;">اختر أستاذ المادة وتصفح الفصول والمحاضرات الدراسية المعتمدة.</p>
+        <h1>محاضراتي وكورساتي الدراسية</h1>
+        <p class="page-sub" style="margin:4px 0 0;">كورسات ومحاضرات المدرسين المشترك معهم، مجمّعة حسب كل مدرس.</p>
       </div>
       <div id="studentPointsBadgeWrap">
         <span class="points-tag" id="studentPointsTag">رصيد المحفظة: 0 ج.م</span>
       </div>
     </div>
 
-    <!-- Category Tabs -->
-    <div class="tab-row" style="margin-top:16px;">
-      <button class="tab active" id="tabCatalogBtn" onclick="switchTab('panel-catalog', this)">🌐 جميع الكورسات المتاحة</button>
-      <button class="tab" id="tabEnrolledBtn" onclick="switchTab('panel-enrolled', this)">📚 كورساتي المشترك بها (<span id="enrolledCountBadge">0</span>)</button>
-      <button class="tab" id="tabTeachersBtn" onclick="switchTab('panel-teachers', this)">👨‍🏫 نخبة مدرسي المنصة</button>
-    </div>
-
-    <!-- Academic Stage Filter Tabs -->
-    <div class="stage-folder-tabs" id="stageFolderTabs" style="margin:16px 0 20px;">
-      <button class="stage-folder-tab active" data-stage="" onclick="filterByStage('', this)">🌐 جميع المراحل</button>
-      <button class="stage-folder-tab" data-stage="PREPARATORY" onclick="filterByStage('PREPARATORY', this)">3 إعدادي</button>
-      <button class="stage-folder-tab" data-stage="SECONDARY_1" onclick="filterByStage('SECONDARY_1', this)">1 ثانوي</button>
-      <button class="stage-folder-tab" data-stage="SECONDARY_2" onclick="filterByStage('SECONDARY_2', this)">2 ثانوي</button>
-      <button class="stage-folder-tab" data-stage="BACCALAUREATE_2" onclick="filterByStage('BACCALAUREATE_2', this)">2 باكلوريا</button>
-      <button class="stage-folder-tab" data-stage="SECONDARY_3" onclick="filterByStage('SECONDARY_3', this)">3 ثانوي</button>
-      <button class="stage-folder-tab" data-stage="BACCALAUREATE_3" onclick="filterByStage('BACCALAUREATE_3', this)">3 باكلوريا</button>
-    </div>
-
-    <!-- Panel 1: All Available Courses Catalog (Active by default) -->
-    <div class="tab-panel" id="panel-catalog">
-      <div class="lecture-grid" id="allCoursesGrid">
-        <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--ink-dim);">جارٍ تحميل الكورسات المتاحة...</div>
-      </div>
-    </div>
-
-    <!-- Panel 2: My Enrolled Courses -->
-    <div class="tab-panel" id="panel-enrolled" style="display:none;">
-      <div class="lecture-grid" id="enrolledCoursesGrid">
-        <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--ink-dim);">جارٍ تحميل كورساتك...</div>
-      </div>
-    </div>
-
-    <!-- Panel 3: Featured Teachers Cards -->
-    <div class="tab-panel" id="panel-teachers" style="display:none;">
-      <div class="teacher-ref-grid" id="teachersGrid">
-        <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--ink-dim);">جارٍ جلب نخبة المدرسين...</div>
-      </div>
+    <!-- Main Container: Subscribed Teachers & Courses -->
+    <div id="subscribedTeachersCoursesContainer" style="margin-top:20px;">
+      <div style="text-align:center;padding:50px;color:var(--ink-dim);">جارٍ تحميل كورسات معلميك المشترك معهم...</div>
     </div>
   </main>
 </div>
@@ -176,47 +142,9 @@
     return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
-  function getTeacherStages(teacher) {
-    const stages = new Set();
-    if (teacher.academicStages) {
-      teacher.academicStages.split(',').map(s => s.trim()).filter(Boolean).forEach(s => stages.add(s));
-    }
-    if (Array.isArray(teacher.workspaces)) {
-      teacher.workspaces.forEach(w => { if (w.stage) stages.add(w.stage); });
-    }
-    if (Array.isArray(teacher.courses)) {
-      teacher.courses.forEach(c => { if (c.academicStage) stages.add(c.academicStage); });
-    }
-    return Array.from(stages);
-  }
-
-  function initStages(userData) {
-    currentUser = userData || window.KhatwaAPI.getUser();
-    if (currentUser && currentUser.role === 'STUDENT') {
-      const rawStages = currentUser.studentProfile?.academicStages || currentUser.studentProfile?.academicStage || currentUser.academicStages || currentUser.academicStage || '';
-      studentSelectedStages = rawStages ? rawStages.split(',').map(s => s.trim()).filter(s => STAGE_NAMES[s]) : [];
-      currentStageFilter = studentSelectedStages[0] || '';
-    } else {
-      currentStageFilter = '';
-    }
-    syncStageTabButtons();
-  }
-
-  function syncStageTabButtons() {
-    const tabs = document.querySelectorAll('#stageFolderTabs .stage-folder-tab');
-    tabs.forEach(tab => {
-      const stage = tab.getAttribute('data-stage') || '';
-      if (stage === currentStageFilter) {
-        tab.classList.add('active');
-      } else {
-        tab.classList.remove('active');
-      }
-    });
-  }
-
-  function openCustomizeStagesModal() {}
-  function closeCustomizeStagesModal() {}
-  function saveCustomizedStages() {}
+  let currentUser = null;
+  let enrolledCoursesList = [];
+  let subscribedTeachersList = [];
 
   document.addEventListener('DOMContentLoaded', async () => {
     const user = window.KhatwaAPI.getUser();
@@ -227,139 +155,90 @@
     }
     window.KhatwaAPI.syncNav();
 
-    // Fetch up-to-date user profile from server to get studentProfile/academicStage
-    let richUser = user;
-    if (user && user.role === 'STUDENT') {
-      try {
-        const meData = await window.KhatwaAPI.auth.me();
-        if (meData && meData.studentProfile) {
-          richUser = { ...user, studentProfile: meData.studentProfile };
-          window.KhatwaAPI.setUser(richUser);
-        }
-      } catch (_) { /* use cached user */ }
-    }
-
-    initStages(richUser);
     await loadData();
   });
 
   async function loadData() {
-    await Promise.all([
-      loadTeachers(),
-      loadEnrolledCourses(),
-      loadAllCourses()
-    ]);
-  }
-
-
-  function switchTab(panelId, tabBtn) {
-    document.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'none');
-    document.querySelectorAll('.tab-row .tab').forEach(b => b.classList.remove('active'));
-    document.getElementById(panelId).style.display = 'block';
-    tabBtn.classList.add('active');
-  }
-
-  function filterByStage(stage, tabBtn) {
-    currentStageFilter = stage;
-    document.querySelectorAll('#stageFolderTabs .stage-folder-tab').forEach(b => b.classList.remove('active'));
-    if (tabBtn) tabBtn.classList.add('active');
-    renderTeachers();
-    renderAllCourses();
-    renderEnrolledCourses();
-  }
-
-  async function loadTeachers() {
+    const container = document.getElementById('subscribedTeachersCoursesContainer');
     try {
-      allTeachersList = await window.KhatwaAPI.public.getTeachers();
+      const user = window.KhatwaAPI.getUser();
+      if (!user) {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      const [teachers, enrolled] = await Promise.all([
+        window.KhatwaAPI.student.getSubscribedTeachers().catch(() => []),
+        window.KhatwaAPI.student.getEnrolledCourses().catch(() => []),
+      ]);
+
+      subscribedTeachersList = teachers || [];
+      enrolledCoursesList = enrolled || [];
+
+      renderSubscribedTeachersCourses();
     } catch (e) {
-      allTeachersList = [];
+      console.error('Error loading subscribed courses:', e);
+      if (container) {
+        container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--err);">حدث خطأ أثناء تحميل الكورسات. يرجى إعادة المحاولة.</div>';
+      }
     }
-    renderTeachers();
   }
 
-  function renderTeachers() {
-    const grid = document.getElementById('teachersGrid');
-    let list = allTeachersList;
+  function renderSubscribedTeachersCourses() {
+    const container = document.getElementById('subscribedTeachersCoursesContainer');
+    if (!container) return;
 
-    if (currentUser && currentUser.role === 'STUDENT') {
-      if (currentStageFilter && currentStageFilter !== 'ALL_SELECTED') {
-        list = list.filter(t => getTeacherStages(t).includes(currentStageFilter));
-      } else {
-        // Strict isolation: only teachers who teach student's selected stages
-        list = list.filter(t => {
-          const stages = getTeacherStages(t);
-          return stages.some(s => studentSelectedStages.includes(s));
-        });
-      }
-    } else {
-      if (currentStageFilter) {
-        list = list.filter(t => getTeacherStages(t).includes(currentStageFilter));
-      }
-    }
-
-    if (list.length === 0) {
-      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--ink-dim);">لا يوجد مدرسون متاحون في هذه المرحلة حالياً</div>';
+    if (!subscribedTeachersList || subscribedTeachersList.length === 0) {
+      container.innerHTML = `
+        <div style="text-align:center;padding:60px 20px;background:var(--bg-card);border:1px solid var(--line-soft);border-radius:22px;margin:20px 0;">
+          <div style="font-size:3.2rem;margin-bottom:12px;">👨‍🏫</div>
+          <h3 style="margin:0 0 8px;">لم تقم بالاشتراك مع أي مدرس بعد</h3>
+          <p style="color:var(--ink-dim);margin:0 0 20px;">تصفح معلمي المنصة في الصفحة الرئيسية واشترك معهم لتظهر لك كافة كورساتهم وحصصهم هنا.</p>
+          <a href="dashboard.html" class="btn btn-primary btn-sm" style="padding:10px 24px;border-radius:12px;font-weight:700;">🏠 الذهاب إلى الرئيسية للاشتراك مع المدرسين</a>
+        </div>
+      `;
       return;
     }
 
-    grid.innerHTML = list.map(t => {
-      const name = t.displayName || t.user?.username || 'معلم المادة';
-      const subject = t.subject || 'المادة الدراسية';
-      const avatar = t.avatarUrl ? `<img src="${t.avatarUrl}" alt="${escapeHtml(name)}">` : `<span class="teacher-ref-photo-placeholder">👨‍🏫</span>`;
-      const stages = getTeacherStages(t);
+    container.innerHTML = subscribedTeachersList.map(teacher => {
+      const teacherName = teacher.displayName || teacher.name || 'أستاذ المادة';
+      const teacherSubject = teacher.subject || 'المادة الدراسية';
+      const initial = teacherName.charAt(0) || '👨‍🏫';
+      const avatarHtml = teacher.avatarUrl
+        ? `<img src="${escapeHtml(teacher.avatarUrl)}" alt="${escapeHtml(teacherName)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.parentElement.innerHTML='<span style=\\'font-size:1.4rem;color:var(--primary);\\'>${escapeHtml(initial)}</span>'">`
+        : `<span style="font-size:1.4rem;font-weight:700;color:var(--primary);">${escapeHtml(initial)}</span>`;
 
-      let stagesHtml = '';
-      if (currentStageFilter) {
-        // Single stage selected: 1 styled rectangle
-        stagesHtml = `
-          <div class="teacher-single-stage-badge">
-            ${escapeHtml(STAGE_NAMES[currentStageFilter] || currentStageFilter)}
-          </div>
-        `;
-      } else {
-        // All stages selected: rectangles side-by-side representing the academic stages taught
-        stagesHtml = `
-          <div class="teacher-stages-row">
-            ${stages.map(s => `
-              <div class="teacher-stage-badge" title="${escapeHtml(STAGE_NAMES[s] || s)}">
-                ${escapeHtml(STAGE_NAMES[s] || s)}
-              </div>
-            `).join('')}
-          </div>
-        `;
-      }
+      const courses = (teacher.courses || []).map(c => ({
+        ...c,
+        teacherProfile: teacher
+      }));
+
+      const coursesGridHtml = courses.length > 0
+        ? `<div class="lecture-grid" style="margin-top:16px;">
+             ${courses.map(c => renderCourseCard(c)).join('')}
+           </div>`
+        : `<div style="text-align:center;padding:26px;color:var(--ink-dim);background:var(--bg-raised);border-radius:14px;border:1px solid var(--line-soft);margin-top:16px;">
+             لا توجد كورسات مضافة لهذا المدرس حالياً.
+           </div>`;
 
       return `
-        <div class="teacher-ref-card" onclick="openTeacherModal('${t.id}')">
-          <div class="teacher-ref-stars-top">★★★★</div>
-          <div class="teacher-ref-photo-frame">
-            ${avatar}
+        <div class="teacher-courses-group" style="background:var(--bg-card);border:1px solid var(--line-soft);border-radius:22px;padding:26px;margin-bottom:28px;box-shadow:0 4px 18px rgba(0,0,0,0.03);">
+          <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line-soft);padding-bottom:16px;flex-wrap:wrap;gap:12px;">
+            <div style="display:flex;align-items:center;gap:16px;">
+              <div style="width:60px;height:60px;border-radius:50%;overflow:hidden;border:2.5px solid var(--primary);background:var(--bg-raised);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(184,142,79,0.2);flex-shrink:0;">
+                ${avatarHtml}
+              </div>
+              <div>
+                <h3 style="margin:0 0 4px;font-size:1.24rem;color:var(--ink);">${escapeHtml(teacherName)}</h3>
+                <span style="font-size:0.88rem;color:var(--ink-dim);">${escapeHtml(teacherSubject)}</span>
+              </div>
+            </div>
+            <span class="tag tag-ok" style="font-weight:700;">مدرس مشترك معه ✓</span>
           </div>
-          <div class="teacher-ref-name">${escapeHtml(name)}</div>
-          <div class="teacher-ref-subject">${escapeHtml(subject)}</div>
-          ${stagesHtml}
-          <div class="teacher-ref-stars-bottom">★★★★★</div>
+          ${coursesGridHtml}
         </div>
       `;
     }).join('');
-  }
-
-  async function loadEnrolledCourses() {
-    const user = window.KhatwaAPI.getUser();
-    const token = window.KhatwaAPI.getToken();
-    if (!user || !token || user.role !== 'STUDENT') {
-      enrolledCoursesList = [];
-      document.getElementById('enrolledCountBadge').textContent = '0';
-      renderEnrolledCourses();
-      return;
-    }
-    try {
-      enrolledCoursesList = await window.KhatwaAPI.student.getEnrolledCourses();
-    } catch (e) {
-      enrolledCoursesList = [];
-    }
-    document.getElementById('enrolledCountBadge').textContent = enrolledCoursesList.length;
-    renderEnrolledCourses();
   }
 
   function renderCourseCard(c, isEnrolledOverride) {
@@ -390,7 +269,7 @@
 
     const lockIconHtml = (!isEnrolled && !isFree)
       ? `
-        <div class="lecture-lock-disc" title="كورس مغلق - يتطلب اشتراك">
+        <div class="lecture-lock-disc" title="كورس مغلق - يتطلب دفع">
           <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
         </div>
       `
@@ -410,7 +289,7 @@
       ? `<img src="${escapeHtml(teacherPhoto)}" alt="${escapeHtml(teacherName)}">`
       : `<span>${escapeHtml(teacherInitial)}</span>`;
 
-    const priceText = isEnrolled ? 'مشترك بالفعل' : (isFree ? 'مجاني' : `${price} ج.م`);
+    const priceText = isEnrolled ? 'مشترك بالفعل' : (isFree ? '' : `${price} ج.م`);
     const priceClass = (isEnrolled || isFree) ? 'free' : '';
 
     const buttonHtml = isEnrolled
@@ -445,58 +324,6 @@
         </div>
       </div>
     `;
-  }
-
-  function renderEnrolledCourses() {
-    const grid = document.getElementById('enrolledCoursesGrid');
-    const list = (enrolledCoursesList || []).map(e => e.course || e).filter(Boolean);
-
-    if (list.length === 0) {
-      grid.innerHTML = `
-        <div style="grid-column:1/-1;text-align:center;padding:50px;background:var(--bg-card);border-radius:18px;border:1px solid var(--line-soft);">
-          <div style="font-size:3rem;margin-bottom:10px;">📚</div>
-          <h3>${enrolledCoursesList.length === 0 ? 'لم تشترك في أي كورس بعد' : 'لا توجد كورسات مشتركة'}</h3>
-          <p style="color:var(--ink-dim);margin:6px 0 16px;">تصفح الكورسات المتاحة واشترك لمتابعة دروسك ومحاضراتك.</p>
-          <button class="btn btn-primary btn-sm" onclick="switchTab('panel-catalog', document.getElementById('tabCatalogBtn'))">تصفح جميع الكورسات</button>
-        </div>
-      `;
-      return;
-    }
-
-    grid.innerHTML = list.map(c => renderCourseCard(c, true)).join('');
-  }
-
-  async function loadAllCourses() {
-    try {
-      allCoursesList = await window.KhatwaAPI.public.getCourses();
-    } catch (e) {
-      allCoursesList = [];
-    }
-    renderAllCourses();
-  }
-
-  function renderAllCourses() {
-    const grid = document.getElementById('allCoursesGrid');
-    let list = allCoursesList;
-
-    if (currentUser && currentUser.role === 'STUDENT') {
-      if (currentStageFilter && currentStageFilter !== 'ALL_SELECTED') {
-        list = list.filter(c => c.academicStage === currentStageFilter);
-      } else if (studentSelectedStages.length > 0) {
-        list = list.filter(c => studentSelectedStages.includes(c.academicStage));
-      }
-    } else {
-      if (currentStageFilter) {
-        list = list.filter(c => c.academicStage === currentStageFilter);
-      }
-    }
-
-    if (list.length === 0) {
-      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--ink-dim);">لا توجد كورسات مطروحة في هذه المرحلة حالياً</div>';
-      return;
-    }
-
-    grid.innerHTML = list.map(c => renderCourseCard(c)).join('');
   }
 
   let activeModalTeacher = null;
@@ -604,7 +431,7 @@
       return;
     }
 
-    if (!confirm(`هل ترغب في الاشتراك بكورس: "${title}" مقابل ${price > 0 ? price + ' ج.م' : 'مجانياً'}؟`)) return;
+    if (!confirm(`هل ترغب في الاشتراك بكورس: "${title}"${price > 0 ? ' مقابل ' + price + ' ج.م' : ''}؟`)) return;
 
     try {
       await window.KhatwaAPI.student.enrollCourse(courseId);

@@ -109,39 +109,8 @@
     </div>
   </div>
 
-  <!-- Stage-Scoped Analytics Stat Cards -->
-  <div id="analyticsCards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:24px;">
-    <div class="card" style="padding:16px;text-align:center;border-radius:16px;background:linear-gradient(135deg,rgba(16,185,129,0.08),rgba(16,185,129,0.02));border:1px solid rgba(16,185,129,0.3);">
-      <div style="font-size:1.6rem;font-weight:700;color:#10b981;" id="statTeacherWallet">—</div>
-      <div style="font-size:0.82rem;color:var(--ink-dim);margin-top:2px;font-weight:600;">💰 رصيد محفظتك المجمّع</div>
-    </div>
-    <div class="card" style="padding:16px;text-align:center;border-radius:16px;">
-      <div style="font-size:1.6rem;font-weight:700;color:var(--primary);" id="statStudents">—</div>
-      <div style="font-size:0.82rem;color:var(--ink-dim);margin-top:2px;">طلاب المرحلة</div>
-    </div>
-    <div class="card" style="padding:16px;text-align:center;border-radius:16px;">
-      <div style="font-size:1.6rem;font-weight:700;color:var(--primary);" id="statSubscriptions">—</div>
-      <div style="font-size:0.82rem;color:var(--ink-dim);margin-top:2px;">اشتراكات المحاضرات</div>
-    </div>
-    <div class="card" style="padding:16px;text-align:center;border-radius:16px;">
-      <div style="font-size:1.6rem;font-weight:700;color:#22c55e;" id="statRevenue">—</div>
-      <div style="font-size:0.82rem;color:var(--ink-dim);margin-top:2px;">إيراد المرحلة (ج.م)</div>
-    </div>
-    <!-- Commission % Card -->
-    <div class="card" style="padding:16px;text-align:center;border-radius:16px;background:linear-gradient(135deg,rgba(99,102,241,0.1),rgba(99,102,241,0.03));border:1px solid rgba(99,102,241,0.25);">
-      <div style="font-size:1.6rem;font-weight:700;color:#6366f1;" id="statCommission">—</div>
-      <div style="font-size:0.82rem;color:var(--ink-dim);margin-top:2px;font-weight:600;">📊 نسبة أرباحك المعتمدة</div>
-      <div style="font-size:0.72rem;color:var(--ink-dim);margin-top:2px;" id="commissionNote">من مبيعات الحصص</div>
-    </div>
-  </div>
-
   <!-- Navigation View Tabs -->
-  <div class="tab-row" style="margin-bottom:20px;">
-    <button class="tab active" onclick="switchMainView('view-courses', this)">📚 كورسات وفصول المرحلة</button>
-    <button class="tab" onclick="switchMainView('view-students', this)">👨‍🎓 طلاب المرحلة واشتراكاتهم</button>
-    <button class="tab" onclick="switchMainView('view-revenue', this)">💵 سجل إيرادات المرحلة</button>
-    <button class="tab" onclick="switchMainView('view-calendar', this); loadCalendarView()">📅 تقويم المحاضرات</button>
-  </div>
+
 
   <!-- View 4: Calendar / Scheduled Lessons -->
   <div class="tab-panel" id="view-calendar" style="display:none;">
@@ -2019,22 +1988,10 @@
 
   function switchMainView(viewId, btn) {
     document.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'none');
-    document.querySelectorAll('.tab-row .tab').forEach(b => b.classList.remove('active'));
     const panel = document.getElementById(viewId);
     if (panel) panel.style.display = 'block';
 
-    // If called from sidebar (no btn), find and activate the matching tab button
-    if (btn) {
-      btn.classList.add('active');
-    } else {
-      // Find the tab button that targets this viewId and mark it active
-      document.querySelectorAll('.tab-row .tab').forEach(b => {
-        const onclickAttr = b.getAttribute('onclick') || '';
-        if (onclickAttr.includes(`'${viewId}'`)) b.classList.add('active');
-      });
-    }
-
-    // Also sync taskbar active state
+    // Sync taskbar active state (navigation is via sidebar)
     const taskbar = document.getElementById('khatwaTaskbar');
     if (taskbar) {
       taskbar.querySelectorAll('.khatwa-taskbar-item').forEach(el => {

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
@@ -84,13 +84,29 @@
     <!-- Live Stat Row -->
     <div class="stat-row">
       <div class="stat-cell"><b id="statWallet">0 ج.م</b><span>رصيد المحفظة</span></div>
+      <div class="stat-cell"><b id="statPoints">0 نقطة</b><span>رصيد النقاط</span></div>
       <div class="stat-cell"><b id="statCompleted">0</b><span>حصة مكتملة</span></div>
+      <div class="stat-cell"><b id="statPassedExams">0</b><span>امتحان مجتاز</span></div>
       <div class="stat-cell"><b id="statAvgScore">—</b><span>متوسط الامتحانات</span></div>
     </div>
 
-    <!-- User Details Section -->
+    <!-- 1. Subscribed Teachers Section (Only Photo + Name) -->
+    <div class="block">
+      <div class="block-head">
+        <div>
+          <h3 style="margin:0 0 4px;">👨‍🏫 المدرسون المشترك معهم</h3>
+          <p style="margin:0;font-size:0.86rem;color:var(--ink-dim);">المعلمون الذين تتابعهم. اضغط على أي كرت لاستعراض كورساته ومحاضراته.</p>
+        </div>
+        <span class="tag tag-ok" id="subTeachersCountBadge">0 مدرس</span>
+      </div>
+      <div id="profileSubscribedTeachersGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:18px;margin-top:16px;">
+        <div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--ink-dim);">جارٍ جلب المدرسين المشترك معهم...</div>
+      </div>
+    </div>
+
+    <!-- 2. Personal & Account Details Section -->
     <div class="editorial-row" style="padding-top:0;border-top:none;">
-      <div class="label"><h2 style="font-size:1.1rem;">بيانات الحساب</h2></div>
+      <div class="label"><h2 style="font-size:1.1rem;">بيانات الحساب الشخصية</h2></div>
       <div class="body">
         <div class="row-list" style="border-top:1px solid var(--line-soft);" id="profileDetailsList">
           <div class="row-item">
@@ -126,7 +142,38 @@
       </div>
     </div>
 
-    <!-- Recent Activity Block -->
+    <!-- 3. Financial Info & Payments Section -->
+    <div class="block">
+      <div class="block-head">
+        <div>
+          <h3 style="margin:0 0 4px;">💳 السجل المالي والمدفوعات</h3>
+          <p style="margin:0;font-size:0.86rem;color:var(--ink-dim);">رصيد محفظتك، شحنات النقاط، وآخر عمليات شراء المحاضرات.</p>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <a href="request-points.html" class="btn btn-primary btn-sm">⚡ طلب شحن رصيد</a>
+          <a href="points.html" class="btn btn-line btn-sm">عرض سجل المحفظة</a>
+        </div>
+      </div>
+      <div class="row-list" id="profilePaymentsList">
+        <div style="text-align:center;padding:24px;color:var(--ink-dim);">جارٍ تحميل السجل المالي...</div>
+      </div>
+    </div>
+
+    <!-- 4. Academic Grades & Exam Scores Section -->
+    <div class="block">
+      <div class="block-head">
+        <div>
+          <h3 style="margin:0 0 4px;">📊 النتائج وسجل الدرجات والامتحانات</h3>
+          <p style="margin:0;font-size:0.86rem;color:var(--ink-dim);">سجل درجاتك في كويزات وامتحانات الحصص الدراسية.</p>
+        </div>
+        <a href="results.html" class="btn btn-line btn-sm">عرض صفحة النتائج الكاملة ↗</a>
+      </div>
+      <div class="row-list" id="profileGradesList">
+        <div style="text-align:center;padding:24px;color:var(--ink-dim);">جارٍ تحميل سجل الدرجات...</div>
+      </div>
+    </div>
+
+    <!-- 5. Recent Activity Block -->
     <div class="block">
       <div class="block-head">
         <h3>سجل النشاط الأخير</h3>
@@ -202,6 +249,43 @@
       </div>
     </form>
   </div>
+<!-- Modal: Subscribed Teacher Courses & Lectures -->
+<div class="modal-overlay" id="profileTeacherCoursesModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:var(--bg-card);border:1px solid var(--line);border-radius:24px;max-width:880px;width:95%;padding:28px;max-height:90vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;">
+      <div style="display:flex;gap:16px;align-items:center;">
+        <div style="width:72px;height:72px;border-radius:50%;overflow:hidden;border:2.5px solid var(--primary);background:var(--bg-raised);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(184,142,79,0.25);" id="profileModalTeacherAvatar">
+          <span style="font-size:2rem;">👨‍🏫</span>
+        </div>
+        <div>
+          <h2 style="margin:0 0 4px;font-size:1.35rem;" id="profileModalTeacherName">اسم المدرس</h2>
+          <span style="color:var(--ink-dim);font-size:0.92rem;" id="profileModalTeacherSubject">المادة</span>
+        </div>
+      </div>
+      <button class="btn btn-line btn-sm" onclick="closeProfileTeacherModal()">✕ إغلاق</button>
+    </div>
+
+    <!-- View 1: Teacher's Courses -->
+    <div id="profileTeacherCoursesView">
+      <h3 style="margin:0 0 16px;font-size:1.1rem;display:flex;align-items:center;gap:8px;">
+        <span>📚 كورسات وفصول المعلم:</span>
+      </h3>
+      <div class="lecture-grid" id="profileModalCoursesList">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+    <!-- View 2: Selected Course's Lectures -->
+    <div id="profileCourseLecturesView" style="display:none;margin-top:10px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--line-soft);">
+        <button class="btn btn-line btn-sm" onclick="backToTeacherCoursesView()">← العودة لكورسات المدرس</button>
+        <h4 id="profileSelectedCourseTitle" style="margin:0;font-size:1.1rem;color:var(--primary);">عنوان الكورس</h4>
+      </div>
+      <div id="profileModalLecturesList">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Toast notification -->
@@ -217,17 +301,24 @@
     setTimeout(() => toast.classList.remove('show'), 3200);
   }
 
+  let subscribedTeachersMap = new Map();
+  let currentModalTeacher = null;
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
   async function loadProfile() {
     let user = window.KhatwaAPI.getUser();
     if (!user) {
-      // Redirect to login if unauthenticated
       window.location.href = 'login.html';
       return;
     }
 
-    // Try fetching fresh data from backend
     try {
-      user = await window.KhatwaAPI.student.getProfile();
+      const freshUser = await window.KhatwaAPI.student.getProfile();
+      if (freshUser) user = freshUser;
     } catch (e) {
       console.warn('Could not refresh profile from server:', e.message);
     }
@@ -291,15 +382,302 @@
       }
     } catch (_) {}
 
-    // Load dynamic student stats
-    const stats = (await window.KhatwaAPI.student.getStats()) || {};
-    document.getElementById('statWallet').textContent = `${stats.walletBalance ?? user.walletBalance ?? 0} ج.م`;
-    document.getElementById('statCompleted').textContent = stats.completedLectures || 0;
-    document.getElementById('statAvgScore').textContent = stats.averageScore || '—';
+    // Load consolidated data in parallel
+    try {
+      const [stats, payments, subs, activities] = await Promise.all([
+        window.KhatwaAPI.student.getStats().catch(() => ({})),
+        window.KhatwaAPI.student.getPaymentsHistory().catch(() => []),
+        window.KhatwaAPI.student.getSubscribedTeachers().catch(() => []),
+        window.KhatwaAPI.student.getActivities().catch(() => []),
+      ]);
 
-    // Load recent activity
-    const activities = (await window.KhatwaAPI.student.getActivities()) || [];
+      // 1. Stats Row
+      const walletVal = stats.walletBalance ?? user.walletBalance ?? 0;
+      const pointsVal = stats.pointsBalance ?? user.pointsBalance ?? 0;
+      document.getElementById('statWallet').textContent = `${walletVal} ج.م`;
+      document.getElementById('statPoints').textContent = `${pointsVal} نقطة`;
+      document.getElementById('statCompleted').textContent = stats.completedLectures || 0;
+      document.getElementById('statPassedExams').textContent = stats.passedQuizzes || (stats.quizAttempts?.length || 0);
+      document.getElementById('statAvgScore').textContent = stats.averageScore || '—';
+
+      // 2. Subscribed Teachers Section
+      renderSubscribedTeachers(subs || []);
+
+      // 3. Financial Info & Payments List
+      renderFinancialHistory(payments || []);
+
+      // 4. Grades & Exam Scores List
+      renderGradesHistory(stats.quizAttempts || []);
+
+      // 5. Recent Activity List
+      renderActivityList(activities || []);
+    } catch (err) {
+      console.warn('Error loading consolidated profile sections:', err);
+    }
+
+    window.KhatwaAPI.syncNav();
+  }
+
+  function renderSubscribedTeachers(teachers) {
+    const grid = document.getElementById('profileSubscribedTeachersGrid');
+    const badge = document.getElementById('subTeachersCountBadge');
+    if (badge) badge.textContent = `${teachers.length} مدرس`;
+
+    subscribedTeachersMap.clear();
+    teachers.forEach(t => subscribedTeachersMap.set(t.id || t.userId, t));
+
+    if (teachers.length === 0) {
+      grid.innerHTML = `
+        <div style="grid-column:1/-1;text-align:center;padding:36px 16px;background:var(--bg-raised);border:1px solid var(--line-soft);border-radius:16px;">
+          <div style="font-size:2.2rem;margin-bottom:8px;">👨‍🏫</div>
+          <p style="margin:0 0 10px;font-weight:600;color:var(--ink);">لم تشترك مع أي مدرس بعد</p>
+          <a href="dashboard.html" class="btn btn-primary btn-sm">تصفح المعلمين والاشتراك من الرئيسية</a>
+        </div>
+      `;
+      return;
+    }
+
+    grid.innerHTML = teachers.map(t => {
+      const teacherId = t.id || t.userId;
+      const name = t.displayName || t.name || t.username || 'أستاذ المادة';
+      const initial = name.charAt(0) || '👨‍🏫';
+      const avatarHtml = t.avatarUrl
+        ? `<img src="${escapeHtml(t.avatarUrl)}" alt="${escapeHtml(name)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.parentElement.innerHTML='<span style=\\'font-size:1.6rem;color:var(--primary);\\'>${escapeHtml(initial)}</span>'">`
+        : `<span style="font-size:1.6rem;font-weight:700;color:var(--primary);">${escapeHtml(initial)}</span>`;
+
+      return `
+        <div class="profile-teacher-card" onclick="openProfileTeacherModal('${teacherId}')" style="background:var(--bg-raised);border:1px solid var(--line-soft);border-radius:18px;padding:20px 14px;text-align:center;cursor:pointer;transition:transform 0.2s,border-color 0.2s,box-shadow 0.2s;display:flex;flex-direction:column;align-items:center;">
+          <div style="width:84px;height:84px;border-radius:50%;overflow:hidden;border:2.5px solid var(--primary);box-shadow:0 6px 16px rgba(184,142,79,0.22);margin-bottom:12px;background:var(--bg);display:flex;align-items:center;justify-content:center;">
+            ${avatarHtml}
+          </div>
+          <h4 style="margin:0;font-size:1.05rem;font-weight:700;color:var(--ink);">${escapeHtml(name)}</h4>
+          <span style="font-size:0.78rem;color:var(--primary);margin-top:6px;font-weight:600;">عرض الكورسات والمحاضرات ↗</span>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function openProfileTeacherModal(teacherId) {
+    const teacher = subscribedTeachersMap.get(teacherId);
+    if (!teacher) return;
+    currentModalTeacher = teacher;
+
+    const modal = document.getElementById('profileTeacherCoursesModal');
+    const avatarBox = document.getElementById('profileModalTeacherAvatar');
+    const nameEl = document.getElementById('profileModalTeacherName');
+    const subEl = document.getElementById('profileModalTeacherSubject');
+    const coursesList = document.getElementById('profileModalCoursesList');
+
+    const teacherName = teacher.displayName || teacher.name || 'أستاذ المادة';
+    nameEl.textContent = teacherName;
+    subEl.textContent = teacher.subject || 'المناهج والكورسات';
+
+    if (teacher.avatarUrl) {
+      avatarBox.innerHTML = `<img src="${escapeHtml(teacher.avatarUrl)}" alt="${escapeHtml(teacherName)}" style="width:100%;height:100%;object-fit:cover;">`;
+    } else {
+      avatarBox.innerHTML = `<span style="font-size:1.8rem;color:var(--primary);">${escapeHtml(teacherName.charAt(0))}</span>`;
+    }
+
+    document.getElementById('profileTeacherCoursesView').style.display = 'block';
+    document.getElementById('profileCourseLecturesView').style.display = 'none';
+
+    const courses = teacher.courses || [];
+    if (courses.length === 0) {
+      coursesList.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--ink-dim);">لا توجد كورسات مضافة لهذا المعلم حالياً.</div>';
+    } else {
+      coursesList.innerHTML = courses.map(c => {
+        const cover = c.imageUrl
+          ? `<img src="${escapeHtml(c.imageUrl)}" style="width:100%;height:140px;object-fit:cover;border-radius:12px;margin-bottom:10px;">`
+          : `<div style="height:120px;border-radius:12px;background:var(--bg-raised);display:flex;align-items:center;justify-content:center;font-size:2rem;margin-bottom:10px;">📖</div>`;
+
+        const priceText = Number(c.price) > 0 ? `${c.price} ج.م` : '';
+
+        return `
+          <div class="card" style="padding:16px;border-radius:16px;cursor:pointer;background:var(--bg-raised);transition:transform 0.2s;" onclick="showProfileCourseLectures('${c.id}')">
+            ${cover}
+            <h4 style="margin:0 0 6px;font-size:1rem;color:var(--ink);">${escapeHtml(c.title)}</h4>
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.84rem;color:var(--ink-dim);margin-top:8px;">
+              <span>${escapeHtml(c.subject || '')}</span>
+              ${priceText ? `<b style="color:var(--primary);">${priceText}</b>` : '<span style="color:#22c55e;">متاح</span>'}
+            </div>
+            <button class="btn btn-primary btn-sm" style="width:100%;margin-top:12px;border-radius:10px;" onclick="event.stopPropagation(); showProfileCourseLectures('${c.id}')">
+              عرض محاضرات الكورس ↗
+            </button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    modal.style.display = 'flex';
+  }
+
+  async function showProfileCourseLectures(courseId) {
+    if (!currentModalTeacher) return;
+    const courses = currentModalTeacher.courses || [];
+    const course = courses.find(c => c.id === courseId);
+    if (!course) return;
+
+    document.getElementById('profileTeacherCoursesView').style.display = 'none';
+    document.getElementById('profileCourseLecturesView').style.display = 'block';
+    document.getElementById('profileSelectedCourseTitle').textContent = `محاضرات كورس: ${course.title}`;
+
+    const listEl = document.getElementById('profileModalLecturesList');
+    listEl.innerHTML = '<div style="text-align:center;padding:24px;color:var(--ink-dim);">جارٍ جلب محاضرات الكورس...</div>';
+
+    try {
+      // Fetch full course detail to get lessons
+      const fullCourse = await window.KhatwaAPI.student.getCourse(courseId).catch(() => null) || course;
+      let allLessons = [];
+      if (fullCourse.chapters) {
+        fullCourse.chapters.forEach(ch => {
+          (ch.lessons || []).forEach(l => allLessons.push({ ...l, chapterTitle: ch.title }));
+        });
+      }
+      if (allLessons.length === 0 && fullCourse.lessons) {
+        allLessons = fullCourse.lessons;
+      }
+
+      if (allLessons.length === 0) {
+        listEl.innerHTML = `
+          <div style="text-align:center;padding:30px;color:var(--ink-dim);background:var(--bg-raised);border-radius:14px;">
+            لا توجد محاضرات منشورة في هذا الكورس بعد.
+            <div style="margin-top:12px;">
+              <a href="subject.html?courseId=${courseId}" class="btn btn-line btn-sm">تصفح صفحة الكورس</a>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      listEl.innerHTML = `
+        <div style="margin-bottom:14px;display:flex;justify-content:flex-end;">
+          <a href="subject.html?courseId=${courseId}" class="btn btn-primary btn-sm">دخول صفحة الكورس بالكامل ↗</a>
+        </div>
+        <div class="row-list">
+          ${allLessons.map(l => {
+            const priceLabel = Number(l.price) > 0 ? `${l.price} ج.م` : 'مجانية';
+            return `
+              <div class="row-item" style="padding:12px 14px;">
+                <div class="ri-main">
+                  <span style="font-size:1.3rem;margin-left:10px;">🎬</span>
+                  <div class="ri-text">
+                    <b>${escapeHtml(l.title)}</b>
+                    <span>${escapeHtml(l.chapterTitle || '')} · السعر: ${priceLabel}</span>
+                  </div>
+                </div>
+                <div class="ri-side">
+                  <a href="lesson.html?lessonId=${l.id || l.lessonId}" class="btn btn-line btn-sm" style="padding:4px 12px;font-size:0.82rem;">
+                    مشاهدة المحاضرة ▶
+                  </a>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    } catch (e) {
+      listEl.innerHTML = `
+        <div style="text-align:center;padding:24px;">
+          <a href="subject.html?courseId=${courseId}" class="btn btn-primary btn-sm">فتح صفحة الكورس والمحاضرات ↗</a>
+        </div>
+      `;
+    }
+  }
+
+  function backToTeacherCoursesView() {
+    document.getElementById('profileTeacherCoursesView').style.display = 'block';
+    document.getElementById('profileCourseLecturesView').style.display = 'none';
+  }
+
+  function closeProfileTeacherModal() {
+    document.getElementById('profileTeacherCoursesModal').style.display = 'none';
+  }
+
+  function renderFinancialHistory(payments) {
+    const list = document.getElementById('profilePaymentsList');
+    if (!list) return;
+
+    if (!payments || payments.length === 0) {
+      list.innerHTML = `
+        <div class="row-item" style="padding:18px;">
+          <div class="ri-main">
+            <span style="color:var(--ink-dim);">لا توجد عمليات شراء مسجلة بعد في حسابك</span>
+          </div>
+          <div class="ri-side">
+            <a href="request-points.html" class="btn btn-primary btn-sm">شحن الرصيد</a>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    list.innerHTML = payments.slice(0, 6).map(p => {
+      const dateStr = p.createdAt ? new Date(p.createdAt).toLocaleDateString('ar-EG', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+      const amountStr = `${p.amount || p.pricePaid || 0} ج.م`;
+
+      return `
+        <div class="row-item">
+          <div class="ri-main">
+            <span style="font-size:1.3rem;margin-left:10px;">💳</span>
+            <div class="ri-text">
+              <b>${escapeHtml(p.lesson?.title || 'محاضرة')} — ${escapeHtml(p.teacherProfile?.displayName || 'المدرس')}</b>
+              <span>${escapeHtml(p.course?.title || '')} · ${dateStr} · كود: ${p.transactionNumber || '—'}</span>
+            </div>
+          </div>
+          <div class="ri-side">
+            <span class="tag tag-ok" style="font-weight:700;">${amountStr}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function renderGradesHistory(attempts) {
+    const list = document.getElementById('profileGradesList');
+    if (!list) return;
+
+    if (!attempts || attempts.length === 0) {
+      list.innerHTML = `
+        <div class="row-item" style="padding:18px;">
+          <div class="ri-main">
+            <span style="color:var(--ink-dim);">لم تقم بإجراء أي امتحانات أو كويزات حتى الآن</span>
+          </div>
+          <div class="ri-side">
+            <a href="courses.html" class="btn btn-line btn-sm">بدء المذاكرة</a>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    list.innerHTML = attempts.slice(0, 6).map(a => {
+      const score = Math.round(a.scorePercent || 0);
+      const isPass = a.passed || score >= 60;
+      const tagClass = isPass ? 'tag-ok' : 'tag-err';
+      const dateStr = a.completedAt || a.createdAt ? new Date(a.completedAt || a.createdAt).toLocaleDateString('ar-EG', { month: 'short', day: 'numeric' }) : '';
+
+      return `
+        <div class="row-item">
+          <div class="ri-main">
+            <span style="font-size:1.3rem;margin-left:10px;">📝</span>
+            <div class="ri-text">
+              <b>${escapeHtml(a.quizTitle || a.quiz?.title || 'امتحان')}</b>
+              <span>${dateStr} · ${a.totalCorrect ?? '—'} إجابة صحيحة من ${a.totalQuestions ?? '—'}</span>
+            </div>
+          </div>
+          <div class="ri-side" style="display:flex;align-items:center;gap:10px;">
+            <b style="font-size:1.05rem;color:${isPass ? '#22c55e' : '#ef4444'};">${score}%</b>
+            <span class="tag ${tagClass}">${isPass ? 'ناجح ✓' : 'راسب ✕'}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function renderActivityList(activities) {
     const actList = document.getElementById('activityList');
+    if (!actList) return;
+
     if (!activities || activities.length === 0) {
       actList.innerHTML = `
         <div class="empty-state" style="padding:28px 16px;text-align:center;color:var(--ink-dim);">
@@ -308,24 +686,24 @@
           <span style="font-size:.82rem;color:var(--ink-faint);">ستظهر هنا الامتحانات والواجبات والحصص التي تشاهدها.</span>
         </div>
       `;
-    } else {
-      actList.innerHTML = activities.slice(0, 8).map(a => {
-        const timeStr = a.timestamp ? new Date(a.timestamp).toLocaleDateString('ar-EG', { month: 'short', day: 'numeric' }) : '';
-        return `
-          <div class="row-item">
-            <div class="ri-main">
-              <div class="ri-text">
-                <b>${a.text}</b>
-                <span>${timeStr}</span>
-              </div>
-            </div>
-            <span class="tag tag-${a.tag === 'err' ? 'warn' : 'ok'}">${a.tag === 'ok' ? '✓' : a.tag}</span>
-          </div>
-        `;
-      }).join('');
+      return;
     }
 
-    window.KhatwaAPI.syncNav();
+    actList.innerHTML = activities.slice(0, 8).map(a => {
+      const timeStr = a.time || a.timestamp ? new Date(a.time || a.timestamp).toLocaleDateString('ar-EG', { month: 'short', day: 'numeric' }) : '';
+      return `
+        <div class="row-item">
+          <div class="ri-main">
+            <span style="font-size:1.2rem;margin-left:8px;">${a.icon || '📌'}</span>
+            <div class="ri-text">
+              <b>${escapeHtml(a.title || a.text || 'نشاط')}</b>
+              <span>${escapeHtml(a.desc || '')} · ${timeStr}</span>
+            </div>
+          </div>
+          <span class="tag tag-${a.type === 'warn' || a.tag === 'err' ? 'warn' : 'ok'}">${a.tag === 'ok' ? '✓' : (a.type || '✓')}</span>
+        </div>
+      `;
+    }).join('');
   }
 
   // Modal interactions
