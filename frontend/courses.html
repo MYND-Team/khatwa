@@ -116,6 +116,7 @@
   let allTeachersList = [];
   let allCoursesList = [];
   let enrolledCoursesList = [];
+  let subscribedTeachersList = [];
   let currentUser = null;
   let studentSelectedStages = [];
 
@@ -141,10 +142,6 @@
     if (!str) return '';
     return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
-
-  let currentUser = null;
-  let enrolledCoursesList = [];
-  let subscribedTeachersList = [];
 
   document.addEventListener('DOMContentLoaded', async () => {
     const user = window.KhatwaAPI.getUser();
