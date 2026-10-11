@@ -2694,6 +2694,13 @@
     const progressPct = document.getElementById('uploadProgressPct');
     const progressStatus = document.getElementById('uploadProgressStatus');
 
+    if (!chapterId) {
+      alert('يرجى تحديد الكورس أو الوحدة التابع لها هذه المحاضرة أولاً');
+      btn.disabled = false;
+      btn.textContent = 'حفظ المحاضرة ✓';
+      return;
+    }
+
     try {
       const pdfUrlInput = (document.getElementById('lessonPdfUrlInput')?.value || '').trim();
       let pdfUrl = null;
@@ -2705,18 +2712,38 @@
         pdfUrl = cleanPdf;
       }
 
-      const lesson = await window.KhatwaAPI.teacher.createLesson(chapterId, {
-        title,
-        price,
-        pointCost,
-        description,
-        videoUrl,
-        pdfUrl,
-        isPublished,
-        scheduledPublishAt,
-        hasAssignment,
-        hasExam,
-      });
+      let lesson;
+      try {
+        lesson = await window.KhatwaAPI.teacher.createLesson(chapterId, {
+          title,
+          price,
+          pointCost,
+          description,
+          videoUrl,
+          pdfUrl,
+          isPublished,
+          scheduledPublishAt,
+          hasAssignment,
+          hasExam,
+        });
+      } catch (createErr) {
+        if (createErr.status === 404 || createErr.message?.includes('Chapter not found')) {
+          lesson = await window.KhatwaAPI.teacher.createCourseLesson(chapterId, {
+            title,
+            price,
+            pointCost,
+            description,
+            videoUrl,
+            pdfUrl,
+            isPublished,
+            scheduledPublishAt,
+            hasAssignment,
+            hasExam,
+          });
+        } else {
+          throw createErr;
+        }
+      }
 
       // ─── 1. Create and populate Assignment if enabled ───
       if (hasAssignment && lesson?.id) {

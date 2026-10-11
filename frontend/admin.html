@@ -92,8 +92,24 @@
     position: relative;
     overflow: hidden;
   }
+  .voucher-card.voucher-theme-platform {
+    background: linear-gradient(135deg, var(--primary-deep, #8C6527) 0%, var(--primary, #B88E4F) 60%, var(--primary-light, #CBA264) 100%) !important;
+    border: 2px dashed rgba(255, 255, 255, 0.6) !important;
+    color: #ffffff !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .voucher-card.voucher-theme-platform .voucher-code-box {
+    background: rgba(0, 0, 0, 0.45) !important;
+    border: 1px solid rgba(255, 255, 255, 0.5) !important;
+    color: #fef08a !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
   .voucher-card.voucher-theme-navy {
-    background: linear-gradient(135deg, rgba(11, 37, 69, 0.95) 0%, rgba(19, 64, 116, 0.9) 100%);
+    background: linear-gradient(135deg, rgba(11, 37, 69, 0.95) 0%, rgba(19, 64, 116, 0.9) 100%) !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
   .voucher-card.voucher-theme-bw {
     background: #ffffff !important;
@@ -127,6 +143,14 @@
     letter-spacing: 2px;
     background: rgba(0, 0, 0, 0.45);
     padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(245, 158, 11, 0.6);
+    color: #fde68a;
+    text-align: center;
+    user-select: all;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
   }
 
   @media print {
@@ -135,6 +159,8 @@
     }
     #printVouchersModal, #printableVouchersArea, #printableVouchersArea * {
       visibility: visible !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
     }
     #printVouchersModal {
       position: absolute !important;
@@ -142,7 +168,7 @@
       top: 0 !important;
       width: 100% !important;
       height: auto !important;
-      background: #fff !important;
+      background: transparent !important;
       display: block !important;
       padding: 0 !important;
       margin: 0 !important;
@@ -163,7 +189,7 @@
     .voucher-grid {
       display: grid !important;
       grid-template-columns: repeat(2, 1fr) !important;
-      gap: 12px !important;
+      gap: 14px !important;
     }
     .voucher-card {
       break-inside: avoid !important;
@@ -172,15 +198,6 @@
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
     }
-  }
-    border-radius: 8px;
-    border: 1px solid rgba(245, 158, 11, 0.6);
-    color: #fde68a;
-    text-align: center;
-    user-select: all;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
   }
 
   /* Admin Navigation Tabs Styling */
@@ -230,46 +247,6 @@
     background: rgba(245, 158, 11, 0.3);
     color: #fde68a;
     border: 1px solid rgba(245, 158, 11, 0.5);
-  }
-
-  @media print {
-    body * {
-      visibility: hidden !important;
-    }
-    #printVouchersModal, #printVouchersModal * {
-      visibility: visible !important;
-    }
-    #printVouchersModal {
-      position: absolute !important;
-      left: 0 !important;
-      top: 0 !important;
-      width: 100% !important;
-      background: #fff !important;
-      color: #000 !important;
-      display: block !important;
-    }
-    .print-hide {
-      display: none !important;
-    }
-    .print-grid {
-      display: grid !important;
-      grid-template-columns: repeat(2, 1fr) !important;
-      gap: 16px !important;
-      padding: 16px !important;
-    }
-    .print-voucher-item {
-      border: 2px dashed #333 !important;
-      border-radius: 10px !important;
-      padding: 14px !important;
-      background: #fff !important;
-      color: #111 !important;
-      page-break-inside: avoid !important;
-    }
-    .print-voucher-item .voucher-code-box {
-      background: #f1f5f9 !important;
-      color: #0f172a !important;
-      border: 1.5px solid #64748b !important;
-    }
   }
 
   /* ─── Commission Modal ───────────────────────────────────────────── */
@@ -594,6 +571,46 @@
     70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(245, 158, 11, 0); }
     100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
   }
+
+  @media (max-width: 768px) {
+    .modern-stats-grid {
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .modern-stat-card {
+      padding: 14px 16px;
+      border-radius: 14px;
+    }
+    .modern-stat-card .stat-value {
+      font-size: 1.65rem;
+    }
+    .page-head {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 14px;
+    }
+  }
+  @media (max-width: 480px) {
+    .modern-stats-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .modern-stat-card {
+      padding: 12px 14px;
+    }
+    .modern-stat-card .stat-value {
+      font-size: 1.35rem;
+    }
+    .modern-stat-card .stat-label {
+      font-size: 0.78rem;
+    }
+  }
+  @media (max-width: 340px) {
+    .modern-stats-grid {
+      grid-template-columns: 1fr;
+    }
+  }
 </style>
 </head>
 <body>
@@ -641,47 +658,85 @@
     </div>
   </div>
 
-  <!-- Admin Main Navigation Tabs -->
-  <div class="admin-nav-tabs">
-    <button class="admin-nav-tab active" data-target="tabStudents" onclick="switchAdminTab('tabStudents', this)">
-      <span>🎓 إدارة ومتابعة الطلاب</span>
-      <span class="tab-count-badge" id="tabBadgeStudents">0</span>
-    </button>
-    <button class="admin-nav-tab" data-target="tabTeachers" onclick="switchAdminTab('tabTeachers', this)">
-      <span>👨‍🏫 إدارة المدرسين</span>
-      <span class="tab-count-badge" id="tabBadgeTeachers">0</span>
-    </button>
-    <button class="admin-nav-tab" data-target="tabSubscriptions" onclick="switchAdminTab('tabSubscriptions', this)">
-      <span>🔑 مراقبة اشتراكات الطلاب</span>
-      <span class="tab-count-badge" id="tabBadgeSubscriptions">0</span>
-    </button>
-    <button class="admin-nav-tab" data-target="tabPayments" onclick="switchAdminTab('tabPayments', this)">
-      <span>💳 السجل المالي والمدفوعات</span>
-    </button>
-    <button class="admin-nav-tab" data-target="tabStages" onclick="switchAdminTab('tabStages', this)">
-      <span>🏫 المراحل الأكاديمية</span>
-    </button>
-    <button class="admin-nav-tab" data-target="tabAppearance" onclick="switchAdminTab('tabAppearance', this)">
-      <span>🎨 مظهر وهوية المنصة</span>
-    </button>
-    <button class="admin-nav-tab" data-target="tabAccessCodes" onclick="switchAdminTab('tabAccessCodes', this)">
-      <span>🎟️ كروت وأكواد الشحن</span>
-      <span class="tab-count-badge" id="tabBadgeAccessCodes">0</span>
-    </button>
-    <button class="admin-nav-tab" data-target="tabPointRequests" onclick="switchAdminTab('tabPointRequests', this)">
-      <span>💳 مراجعة طلبات الشحن</span>
-    </button>
-    <button class="admin-nav-tab" data-target="tabOfflineRequests" onclick="switchAdminTab('tabOfflineRequests', this)">
-      <span>🏢 طلبات سيشنات الأوفلاين</span>
-      <span class="tab-count-badge" id="tabBadgeOfflineRequests" style="background:#f59e0b;color:#fff;display:none;">0</span>
-    </button>
-    <button class="admin-nav-tab" data-target="tabProfileRequests" onclick="switchAdminTab('tabProfileRequests', this)">
-      <span>📋 طلبات تعديل بيانات الطلاب</span>
-      <span class="tab-count-badge" id="tabBadgeProfileRequests" style="background:#ef4444;color:#fff;">0</span>
-    </button>
-    <button class="admin-nav-tab" data-target="tabSecurity" onclick="switchAdminTab('tabSecurity', this)">
-      <span>🛡️ سجلات الأمان والنظام</span>
-    </button>
+  <!-- Ultra-Modern Key Metrics Grid -->
+  <div class="modern-stats-grid">
+    <!-- Students -->
+    <div class="modern-stat-card" style="--card-accent: #38bdf8; --icon-bg: rgba(56, 189, 248, 0.12); --icon-border: rgba(56, 189, 248, 0.25); --icon-shadow: rgba(56, 189, 248, 0.2);">
+      <div class="stat-card-top">
+        <div class="stat-icon-wrapper">🎓</div>
+        <span class="stat-badge-pill">نشط</span>
+      </div>
+      <div>
+        <div class="stat-label">إجمالي الطلاب المسجلين</div>
+        <div class="stat-value" id="statTotalStudents" style="color:#38bdf8;">0</div>
+        <div class="stat-sub"><span>👥</span> حسابات بقاعدة البيانات</div>
+      </div>
+    </div>
+
+    <!-- Teachers -->
+    <div class="modern-stat-card" style="--card-accent: #2dd4bf; --icon-bg: rgba(45, 212, 191, 0.12); --icon-border: rgba(45, 212, 191, 0.25); --icon-shadow: rgba(45, 212, 191, 0.2);">
+      <div class="stat-card-top">
+        <div class="stat-icon-wrapper">👨‍🏫</div>
+        <span class="stat-badge-pill">معتمد</span>
+      </div>
+      <div>
+        <div class="stat-label">إجمالي المدرسين</div>
+        <div class="stat-value" id="statTotalTeachers" style="color:#2dd4bf;">0</div>
+        <div class="stat-sub"><span>📚</span> الكادر الأكاديمي</div>
+      </div>
+    </div>
+
+    <!-- Courses & Lessons -->
+    <div class="modern-stat-card" style="--card-accent: #a855f7; --icon-bg: rgba(168, 85, 247, 0.12); --icon-border: rgba(168, 85, 247, 0.25); --icon-shadow: rgba(168, 85, 247, 0.2);">
+      <div class="stat-card-top">
+        <div class="stat-icon-wrapper">📚</div>
+        <span class="stat-badge-pill">محتوى</span>
+      </div>
+      <div>
+        <div class="stat-label">إجمالي الكورسات والحصص</div>
+        <div class="stat-value" id="statTotalLessons" style="color:#c084fc;">0</div>
+        <div class="stat-sub"><span>🎬</span> محاضرات ومحتوى تعليمي</div>
+      </div>
+    </div>
+
+    <!-- Pending Point Requests -->
+    <div class="modern-stat-card" style="--card-accent: #f59e0b; --icon-bg: rgba(245, 158, 11, 0.12); --icon-border: rgba(245, 158, 11, 0.25); --icon-shadow: rgba(245, 158, 11, 0.2);">
+      <div class="stat-card-top">
+        <div class="stat-icon-wrapper">⏳</div>
+        <span class="stat-badge-pill" style="color:var(--gold-light);display:flex;align-items:center;gap:4px;"><span class="pulse-dot"></span> مباشر</span>
+      </div>
+      <div>
+        <div class="stat-label">طلبات شحن معلقة</div>
+        <div class="stat-value" id="statPendingRequests" style="color:#fbbf24;">0</div>
+        <div class="stat-sub"><span>💳</span> إيصالات بانتظار الاعتماد</div>
+      </div>
+    </div>
+
+    <!-- Total Recharged Wallet (EGP) -->
+    <div class="modern-stat-card" style="--card-accent: #10b981; --icon-bg: rgba(16, 185, 129, 0.12); --icon-border: rgba(16, 185, 129, 0.25); --icon-shadow: rgba(16, 185, 129, 0.2);">
+      <div class="stat-card-top">
+        <div class="stat-icon-wrapper">💵</div>
+        <span class="stat-badge-pill">رصيد</span>
+      </div>
+      <div>
+        <div class="stat-label">إجمالي الرصيد المشحون</div>
+        <div class="stat-value" id="statTotalPoints" style="color:#34d399;">0 ج.م</div>
+        <div class="stat-sub"><span>💰</span> إجمالي رصيد المحافظ المعتمد</div>
+      </div>
+    </div>
+
+    <!-- Total Subscriptions -->
+    <div class="modern-stat-card" style="--card-accent: #6366f1; --icon-bg: rgba(99, 102, 241, 0.12); --icon-border: rgba(99, 102, 241, 0.25); --icon-shadow: rgba(99, 102, 241, 0.2);">
+      <div class="stat-card-top">
+        <div class="stat-icon-wrapper">🔑</div>
+        <span class="stat-badge-pill">نشط</span>
+      </div>
+      <div>
+        <div class="stat-label">الاشتراكات المفعلة</div>
+        <div class="stat-value" id="statTotalSubscriptions" style="color:#818cf8;">0</div>
+        <div class="stat-sub"><span>🎟️</span> اشتراكات الطلاب بالحصص</div>
+      </div>
+    </div>
   </div>
 
   <!-- Tab 1: Students Directory -->
@@ -1037,7 +1092,7 @@
           <div style="display:flex;gap:16px;flex-wrap:wrap;">
             <label style="display:flex;align-items:center;gap:8px;font-size:0.88rem;cursor:pointer;font-weight:700;">
               <input type="radio" name="voucherPrintTheme" value="platform" checked onchange="toggleVoucherPrintTheme(this.value)">
-              <span>🌟 ستايل المنصة الفاخر (تدرج ملون + ألوان الهوية)</span>
+              <span>🎨 ألوان المنصة الرسمية الملونة (ألوان الهوية والتدرج الحالية)</span>
             </label>
             <label style="display:flex;align-items:center;gap:8px;font-size:0.88rem;cursor:pointer;font-weight:600;">
               <input type="radio" name="voucherPrintTheme" value="bw" onchange="toggleVoucherPrintTheme(this.value)">
@@ -1566,7 +1621,7 @@
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
         <select id="voucherPrintStyleSelect" onchange="changeVoucherPrintStyle(this.value)" class="form-control" style="font-size:0.82rem;padding:6px 10px;border-radius:8px;background:rgba(255,255,255,0.18);color:#fff;border:1px solid rgba(255,255,255,0.3);font-weight:700;cursor:pointer;">
-          <option value="platform" style="color:#000;">🎨 ألوان المنصة الفاخرة (ذهبي)</option>
+          <option value="platform" style="color:#000;">🎨 ألوان المنصة الرسمية الملونة (ألوان الهوية)</option>
           <option value="bw" style="color:#000;">🖨️ طباعة اقتصادية (أبيض وأسود)</option>
           <option value="navy" style="color:#000;">🌊 أزرق كحلي ملكي</option>
         </select>
@@ -1767,11 +1822,19 @@
 
   function switchAdminTab(tabId, tabBtn) {
     document.querySelectorAll('.admin-tab-content').forEach(el => el.style.display = 'none');
-    document.querySelectorAll('.admin-nav-tabs .admin-nav-tab').forEach(b => b.classList.remove('active'));
     
     const target = document.getElementById(tabId);
     if (target) {
       target.style.display = 'block';
+    }
+    
+    // Sync active state in Khatwa Taskbar on the right
+    const taskbar = document.getElementById('khatwaTaskbar');
+    if (taskbar) {
+      taskbar.querySelectorAll('.khatwa-taskbar-item').forEach(b => {
+        const isMatch = b.dataset.targetId === tabId || b.getAttribute('data-target-id') === tabId;
+        b.classList.toggle('active', isMatch);
+      });
     }
     
     if (tabBtn) {
@@ -2484,6 +2547,7 @@
         setTxt('statTotalTeachers', data.totalTeachers || 0);
         setTxt('statTotalLessons', data.totalLessons || 0);
         setTxt('statTotalPoints', ((data.totalWalletCredited || 0).toLocaleString()) + ' ج.م');
+        setTxt('statTotalSubscriptions', data.totalSubscriptions || 0);
         setTxt('statPendingRequests', data.pendingPointRequests || 0);
       }
     } catch (e) {
@@ -3418,7 +3482,7 @@
               <button class="btn btn-text btn-sm" onclick="copyCodeToClipboard('${c.code || c.id}')" title="نسخ الكود" style="padding:2px 6px;font-size:0.85rem;">📋</button>
             </div>
           </td>
-          <td><b style="color:var(--gold-light);font-size:1.05rem;">+${c.points}</b> 💎 نقطة</td>
+          <td><b style="color:var(--gold-light);font-size:1.05rem;">+${c.points}</b> 💵 جنيه</td>
           <td>${statusBadge}</td>
           <td style="font-size:0.85rem;color:var(--ink-dim);">${creatorName}</td>
           <td>${studentName}</td>
@@ -3471,7 +3535,7 @@
     const expiryHours = parseInt(document.getElementById('accessCodeExpiryHours').value, 10) || undefined;
 
     if (!points || points < 1) {
-      alert('يرجى تحديد عدد نقاط صحيح للكارت');
+      alert('يرجى تحديد قيمة رصيد صحيحة بالجنيه للكارت');
       return;
     }
     if (!count || count < 1 || count > 50) {
@@ -3522,7 +3586,7 @@
         </div>
 
         <div style="margin:10px 0;text-align:center;">
-          <div style="font-size:0.8rem;color:rgba(255,255,255,0.75);margin-bottom:2px;">قيمة الرصيد التعليمي</div>
+          <div style="font-size:0.8rem;color:rgba(255,255,255,0.75);margin-bottom:2px;">قيمة الرصيد التعليمي (جنيه)</div>
           <div style="font-size:1.55rem;font-weight:900;color:#fcd34d;">+${item.points} جنيه 💰</div>
         </div>
 

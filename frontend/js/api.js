@@ -650,6 +650,8 @@
       async updateChapter(id, data) { const res = await request('/teacher/chapters/' + id, { method: 'PATCH', body: data }); return res.data; },
       async deleteChapter(id) { return request('/teacher/chapters/' + id, { method: 'DELETE' }); },
       async createLesson(chapterId, data) { const res = await request('/teacher/chapters/' + chapterId + '/lessons', { method: 'POST', body: data }); return res.data; },
+      async createCourseLesson(courseId, data) { const res = await request('/teacher/courses/' + courseId + '/lessons', { method: 'POST', body: data }); return res.data; },
+      async getCourseLessons(courseId) { const res = await request('/teacher/courses/' + courseId + '/lessons'); return res.data || []; },
       async updateLesson(id, data) { const res = await request('/teacher/lessons/' + id, { method: 'PATCH', body: data }); return res.data; },
       async deleteLesson(id) { return request('/teacher/lessons/' + id, { method: 'DELETE' }); },
       async scheduleLesson(id, scheduledPublishAt) { const res = await request('/teacher/lessons/' + id + '/schedule', { method: 'PATCH', body: { scheduledPublishAt } }); return res.data; },
@@ -795,11 +797,31 @@
       },
 
       async uploadPdf(lessonId, file, onProgress = null) {
-        return this._directDriveUpload(lessonId, file, 'pdf', onProgress);
+        try {
+          return await this._directDriveUpload(lessonId, file, 'pdf', onProgress);
+        } catch (driveErr) {
+          console.warn('Direct Drive upload fallback to server:', driveErr.message);
+          const formData = new FormData();
+          formData.append('pdf', file);
+          return await request('/teacher/lessons/' + lessonId + '/pdf', {
+            method: 'POST',
+            body: formData,
+          });
+        }
       },
 
       async uploadVideo(lessonId, file, onProgress = null) {
-        return this._directDriveUpload(lessonId, file, 'video', onProgress);
+        try {
+          return await this._directDriveUpload(lessonId, file, 'video', onProgress);
+        } catch (driveErr) {
+          console.warn('Direct Drive upload fallback to server:', driveErr.message);
+          const formData = new FormData();
+          formData.append('video', file);
+          return await request('/teacher/lessons/' + lessonId + '/video', {
+            method: 'POST',
+            body: formData,
+          });
+        }
       },
 
       async createQuiz(data) { const res = await request('/teacher/quizzes', { method: 'POST', body: data }); return res.data; },

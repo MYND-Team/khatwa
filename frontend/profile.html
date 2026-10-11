@@ -446,12 +446,12 @@
         : `<span style="font-size:1.6rem;font-weight:700;color:var(--primary);">${escapeHtml(initial)}</span>`;
 
       return `
-        <div class="profile-teacher-card" onclick="openProfileTeacherModal('${teacherId}')" style="background:var(--bg-raised);border:1px solid var(--line-soft);border-radius:18px;padding:20px 14px;text-align:center;cursor:pointer;transition:transform 0.2s,border-color 0.2s,box-shadow 0.2s;display:flex;flex-direction:column;align-items:center;">
+        <div class="profile-teacher-card" onclick="window.location.href='courses.html?teacherId=${encodeURIComponent(teacherId)}'" style="background:var(--bg-raised);border:1px solid var(--line-soft);border-radius:18px;padding:20px 14px;text-align:center;cursor:pointer;transition:transform 0.2s,border-color 0.2s,box-shadow 0.2s;display:flex;flex-direction:column;align-items:center;">
           <div style="width:84px;height:84px;border-radius:50%;overflow:hidden;border:2.5px solid var(--primary);box-shadow:0 6px 16px rgba(184,142,79,0.22);margin-bottom:12px;background:var(--bg);display:flex;align-items:center;justify-content:center;">
             ${avatarHtml}
           </div>
           <h4 style="margin:0;font-size:1.05rem;font-weight:700;color:var(--ink);">${escapeHtml(name)}</h4>
-          <span style="font-size:0.78rem;color:var(--primary);margin-top:6px;font-weight:600;">عرض الكورسات والمحاضرات ↗</span>
+          <span style="font-size:0.78rem;color:var(--primary);margin-top:6px;font-weight:600;">الذهاب للكورسات والمحاضرات ↗</span>
         </div>
       `;
     }).join('');

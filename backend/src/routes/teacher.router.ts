@@ -893,6 +893,158 @@ router.post(
   })
 );
 
+router.get(
+  '/courses/:courseId/lessons',
+  asyncHandler(async (req, res) => {
+    const teacherProfile = await prisma.teacherProfile.findUnique({ where: { userId: req.user!.sub } });
+    if (!teacherProfile) {
+      res.status(403).json({ success: false, error: { code: 'FORBIDDEN', message: 'Not authorized' } });
+      return;
+    }
+
+    const course = await prisma.course.findFirst({
+      where: { id: req.params.courseId, teacherProfileId: teacherProfile.id },
+    });
+    if (!course) {
+      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Course not found' } });
+      return;
+    }
+
+    const lessons = await prisma.lesson.findMany({
+      where: { courseId: course.id, teacherProfileId: teacherProfile.id },
+      orderBy: { orderIndex: 'asc' },
+      include: {
+        assignmentQuiz: { include: { questions: { orderBy: { orderIndex: 'asc' } } } },
+        examQuiz: { include: { questions: { orderBy: { orderIndex: 'asc' } } } },
+      },
+    });
+
+    res.status(200).json({ success: true, data: lessons });
+  })
+);
+
+router.post(
+  '/courses/:courseId/lessons',
+  asyncHandler(async (req, res) => {
+    const {
+      title,
+      description,
+      price,
+      pointCost,
+      orderIndex,
+      videoUrl,
+      pdfUrl,
+      pdfFileName,
+      isPublished,
+      scheduledPublishAt,
+      hasAssignment,
+      hasExam,
+    } = req.body;
+
+    if (!title) {
+      res.status(400).json({ success: false, error: { code: 'MISSING_FIELDS', message: 'title is required' } });
+      return;
+    }
+
+    const teacherProfile = await prisma.teacherProfile.findUnique({ where: { userId: req.user!.sub } });
+    if (!teacherProfile) {
+      res.status(403).json({ success: false, error: { code: 'FORBIDDEN', message: 'Teacher profile not found' } });
+      return;
+    }
+
+    const course = await prisma.course.findFirst({
+      where: { id: req.params.courseId, teacherProfileId: teacherProfile.id },
+      include: { chapters: { orderBy: { orderIndex: 'asc' } } },
+    });
+    if (!course) {
+      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Course not found' } });
+      return;
+    }
+
+    // Ensure at least one chapter exists for this course
+    let chapter = course.chapters[0];
+    if (!chapter) {
+      chapter = await prisma.chapter.create({
+        data: {
+          courseId: course.id,
+          title: 'المحاضرات العامة',
+          description: `المحاضرات التابعة لكورس ${course.title}`,
+          orderIndex: 0,
+        },
+      });
+    }
+
+    const maxOrder = await prisma.lesson.aggregate({
+      where: { courseId: course.id },
+      _max: { orderIndex: true },
+    });
+    const nextOrder = (maxOrder._max.orderIndex ?? -1) + 1;
+
+    let parsedScheduledDate: Date | null = null;
+    if (scheduledPublishAt !== undefined && scheduledPublishAt !== null && scheduledPublishAt !== '') {
+      const d = new Date(scheduledPublishAt);
+      if (isNaN(d.getTime())) {
+        res.status(400).json({ success: false, error: { code: 'INVALID_DATE', message: 'scheduledPublishAt must be a valid date' } });
+        return;
+      }
+      parsedScheduledDate = d;
+    }
+
+    const lesson = await prisma.$transaction(async (tx) => {
+      let assignmentQuizId: string | null = null;
+      if (hasAssignment) {
+        const assignmentQuiz = await tx.quiz.create({
+          data: {
+            title: `واجب المحاضرة - ${title}`,
+            type: 'HOMEWORK',
+          },
+        });
+        assignmentQuizId = assignmentQuiz.id;
+      }
+
+      let examQuizId: string | null = null;
+      if (hasExam) {
+        const examQuiz = await tx.quiz.create({
+          data: {
+            title: `امتحان المحاضرة - ${title}`,
+            type: 'EXAM',
+          },
+        });
+        examQuizId = examQuiz.id;
+      }
+
+      const finalIsPublished = isPublished !== undefined ? Boolean(isPublished) : true;
+
+      return tx.lesson.create({
+        data: {
+          teacherProfileId: teacherProfile.id,
+          courseId: course.id,
+          chapterId: chapter.id,
+          academicStage: course.academicStage,
+          title,
+          description: description || null,
+          price: price !== undefined ? parseFloat(price) : 0.0,
+          pointCost: pointCost !== undefined ? parseInt(pointCost) : 0,
+          orderIndex: orderIndex !== undefined ? parseInt(orderIndex) : nextOrder,
+          videoUrl: videoUrl || null,
+          pdfUrl: pdfUrl || null,
+          pdfFileName: pdfFileName || null,
+          isPublished: finalIsPublished,
+          scheduledPublishAt: parsedScheduledDate,
+          assignmentQuizId,
+          examQuizId,
+        },
+        include: {
+          assignmentQuiz: true,
+          examQuiz: true,
+        },
+      });
+    });
+
+    res.status(201).json({ success: true, data: lesson });
+  })
+);
+
 // ─── Get Scheduled Lessons (Calendar View) ────────────────────────────────────
 // NOTE: Must be registered BEFORE router.get('/lessons/:id') so Express does not
 // match the literal string "scheduled" as a lesson ID.
@@ -975,7 +1127,7 @@ router.post(
         teacherId: req.user!.sub,
         lessonId: lesson.id,
       });
-      pdfUrl = `drive:${result.fileId}`;
+      pdfUrl = result.fileId.startsWith('local:') ? result.fileId : (result.isGoogleDrive ? `drive:${result.fileId}` : result.fileId);
       pdfFileName = result.fileName;
     } catch {
       const b64 = req.file.buffer.toString('base64');
