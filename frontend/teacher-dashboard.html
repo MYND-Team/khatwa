@@ -418,6 +418,7 @@
     
     <form id="addLessonForm" onsubmit="submitAddLesson(event)">
       <input type="hidden" id="lessonChapterId">
+      <input type="hidden" id="lessonModalCourseId">
 
       <!-- القسم 1: البيانات الأساسية والتسعير -->
       <div style="background:var(--bg-raised);padding:14px 16px;border-radius:14px;border:1px solid var(--line-soft);margin-bottom:14px;">
@@ -1411,12 +1412,12 @@
     if (!course) return;
     const chapters = course.chapters || [];
     if (chapters.length > 0) {
-      openAddLessonModal(chapters[0].id);
+      openAddLessonModal(chapters[0].id, courseId);
     } else {
       try {
         const newCh = await window.KhatwaAPI.teacher.createChapter(courseId, { title: 'محاضرات وشروحات الكورس' });
         await loadStageCourses();
-        openAddLessonModal(newCh.id);
+        openAddLessonModal(newCh.id, courseId);
       } catch (err) {
         alert(err.message || 'حدث خطأ أثناء تهيئة المحاضرة للكورس');
       }
@@ -2587,9 +2588,11 @@
     toggleInlineExamBuilder(false);
   }
 
-  function openAddLessonModal(chapterId) {
+  function openAddLessonModal(chapterId, courseId = null) {
     const chIdEl = document.getElementById('lessonChapterId');
     if (chIdEl) chIdEl.value = chapterId;
+    const courseIdEl = document.getElementById('lessonModalCourseId');
+    if (courseIdEl) courseIdEl.value = courseId || '';
     const titleEl = document.getElementById('lessonTitleInput');
     if (titleEl) titleEl.value = '';
     const priceEl = document.getElementById('lessonPriceInput');
@@ -2727,8 +2730,9 @@
           hasExam,
         });
       } catch (createErr) {
-        if (createErr.status === 404 || createErr.message?.includes('Chapter not found')) {
-          lesson = await window.KhatwaAPI.teacher.createCourseLesson(chapterId, {
+        const fallbackCourseId = document.getElementById('lessonModalCourseId')?.value || '';
+        if ((createErr.status === 404 || createErr.message?.includes('Chapter not found')) && fallbackCourseId) {
+          lesson = await window.KhatwaAPI.teacher.createCourseLesson(fallbackCourseId, {
             title,
             price,
             pointCost,
