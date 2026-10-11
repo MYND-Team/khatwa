@@ -99,7 +99,7 @@
         </div>
         <span class="tag tag-ok" id="subTeachersCountBadge">0 مدرس</span>
       </div>
-      <div id="profileSubscribedTeachersGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:18px;margin-top:16px;">
+      <div id="profileSubscribedTeachersGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:22px;margin-top:18px;">
         <div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--ink-dim);">جارٍ جلب المدرسين المشترك معهم...</div>
       </div>
     </div>
@@ -441,17 +441,38 @@
       const teacherId = t.id || t.userId;
       const name = t.displayName || t.name || t.username || 'أستاذ المادة';
       const initial = name.charAt(0) || '👨‍🏫';
-      const avatarHtml = t.avatarUrl
-        ? `<img src="${escapeHtml(t.avatarUrl)}" alt="${escapeHtml(name)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.parentElement.innerHTML='<span style=\\'font-size:1.6rem;color:var(--primary);\\'>${escapeHtml(initial)}</span>'">`
-        : `<span style="font-size:1.6rem;font-weight:700;color:var(--primary);">${escapeHtml(initial)}</span>`;
+      const subject = t.subject || 'المادة الدراسية';
+      const coursesCount = t.courses?.length || 0;
+
+      const posterImg = t.avatarUrl
+        ? `<img src="${escapeHtml(t.avatarUrl)}" alt="${escapeHtml(name)}" onerror="this.parentElement.innerHTML='<div class=&quot;teacher-card-poster-fallback&quot;><span style=&quot;font-size:3.5rem;&quot;>👨‍🏫</span><span style=&quot;font-weight:700;margin-top:8px;&quot;>${escapeHtml(subject)}</span></div>'">`
+        : `<div class="teacher-card-poster-fallback"><span style="font-size:3.5rem;">👨‍🏫</span><span style="font-weight:700;margin-top:8px;">${escapeHtml(subject)}</span></div>`;
+
+      const miniAvatar = t.avatarUrl
+        ? `<img src="${escapeHtml(t.avatarUrl)}" alt="${escapeHtml(name)}">`
+        : `<span>${escapeHtml(initial)}</span>`;
 
       return `
-        <div class="profile-teacher-card" onclick="window.location.href='courses.html?teacherId=${encodeURIComponent(teacherId)}'" style="background:var(--bg-raised);border:1px solid var(--line-soft);border-radius:18px;padding:20px 14px;text-align:center;cursor:pointer;transition:transform 0.2s,border-color 0.2s,box-shadow 0.2s;display:flex;flex-direction:column;align-items:center;">
-          <div style="width:84px;height:84px;border-radius:50%;overflow:hidden;border:2.5px solid var(--primary);box-shadow:0 6px 16px rgba(184,142,79,0.22);margin-bottom:12px;background:var(--bg);display:flex;align-items:center;justify-content:center;">
-            ${avatarHtml}
+        <div class="khatwa-pdf-teacher-card" onclick="window.location.href='courses.html?teacherId=${encodeURIComponent(teacherId)}'" title="اضغط لعرض كورسات وحصص ${escapeHtml(name)}">
+          <div class="teacher-card-poster-wrap">
+            ${posterImg}
+            <div class="teacher-card-fav-btn" title="معلم مشترك معه">
+              <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+            </div>
           </div>
-          <h4 style="margin:0;font-size:1.05rem;font-weight:700;color:var(--ink);">${escapeHtml(name)}</h4>
-          <span style="font-size:0.78rem;color:var(--primary);margin-top:6px;font-weight:600;">الذهاب للكورسات والمحاضرات ↗</span>
+          <div class="teacher-card-info-box">
+            <h3 class="teacher-card-main-title">${escapeHtml(name)}</h3>
+            <div class="teacher-card-subline">
+              <div class="teacher-card-mini-avatar">
+                ${miniAvatar}
+              </div>
+              <span class="teacher-card-subject-tag">${escapeHtml(subject)}</span>
+            </div>
+            <div class="teacher-card-footer-meta">
+              <span>📚 ${coursesCount} كورس</span>
+              <span style="color:#10b981;font-weight:700;">✓ مشترك ↗</span>
+            </div>
+          </div>
         </div>
       `;
     }).join('');

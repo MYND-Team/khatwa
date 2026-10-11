@@ -292,42 +292,46 @@
       const teacherId = t.id || t.userId;
       const name = t.displayName || t.name || t.username || 'أستاذ المادة';
       const initial = name.charAt(0) || '👨‍🏫';
+      const subject = t.subject || 'المادة الدراسية';
+      const coursesCount = t.courses?.length || 0;
       const isSubscribed = subscribedTeacherIds.has(teacherId) || subscribedTeacherIds.has(t.userId) || subscribedTeacherIds.has(t.id);
 
-      const avatarHtml = t.avatarUrl
-        ? `<img src="${escapeHtml(t.avatarUrl)}" alt="${escapeHtml(name)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.parentElement.innerHTML='<span style=\\'font-size:2rem;color:var(--primary);\\'>${escapeHtml(initial)}</span>'">`
-        : `<span style="font-size:2.2rem;font-weight:700;color:var(--primary);">${escapeHtml(initial)}</span>`;
+      const posterImg = t.avatarUrl
+        ? `<img src="${escapeHtml(t.avatarUrl)}" alt="${escapeHtml(name)}" onerror="this.parentElement.innerHTML='<div class=&quot;teacher-card-poster-fallback&quot;><span style=&quot;font-size:3.5rem;&quot;>👨‍🏫</span><span style=&quot;font-weight:700;margin-top:8px;&quot;>${escapeHtml(subject)}</span></div>'">`
+        : `<div class="teacher-card-poster-fallback"><span style="font-size:3.5rem;">👨‍🏫</span><span style="font-weight:700;margin-top:8px;">${escapeHtml(subject)}</span></div>`;
 
-      const btnHtml = isSubscribed
-        ? `<button type="button" class="btn btn-sm sub-btn is-subscribed" id="subBtn-${teacherId}" onclick="event.stopPropagation(); handleTeacherSubClick('${teacherId}', this)" style="width:100%;border-radius:12px;background:rgba(16,185,129,0.14);color:#10b981;border:1px solid rgba(16,185,129,0.35);font-weight:700;padding:9px 16px;cursor:pointer;transition:all 0.2s ease;">
-             ✓ مشترك
-           </button>`
-        : `<button type="button" class="btn btn-primary btn-sm sub-btn" id="subBtn-${teacherId}" onclick="event.stopPropagation(); handleTeacherSubClick('${teacherId}', this)" style="width:100%;border-radius:12px;font-weight:700;padding:9px 16px;box-shadow:0 4px 14px rgba(184,142,79,0.25);cursor:pointer;transition:all 0.2s ease;">
-             اشتراك
-           </button>`;
+      const miniAvatar = t.avatarUrl
+        ? `<img src="${escapeHtml(t.avatarUrl)}" alt="${escapeHtml(name)}">`
+        : `<span>${escapeHtml(initial)}</span>`;
 
       return `
-        <div class="teacher-simple-card" onclick="handleTeacherCardClick('${teacherId}')" title="اضغط لعرض كورسات ومحاضرات هذا المعلم" style="background:var(--bg-card);border:1px solid var(--line-soft);border-radius:20px;padding:26px 20px 20px;text-align:center;display:flex;flex-direction:column;align-items:center;transition:transform 0.2s ease,box-shadow 0.2s ease;box-shadow:0 4px 18px rgba(0,0,0,0.04);cursor:pointer;">
-          <div class="teacher-photo-wrap" style="width:112px;height:112px;border-radius:50%;overflow:hidden;border:3px solid var(--primary);box-shadow:0 8px 20px rgba(184,142,79,0.22);margin-bottom:18px;background:var(--bg-raised);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-            ${avatarHtml}
+        <div class="khatwa-pdf-teacher-card" onclick="handleTeacherCardClick('${teacherId}')" title="اضغط لعرض كورسات وحصص ${escapeHtml(name)}">
+          <div class="teacher-card-poster-wrap">
+            ${posterImg}
+            <div class="teacher-card-fav-btn" title="معلم متميز">
+              <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+            </div>
           </div>
-          <h3 class="teacher-card-name" style="margin:0 0 18px;font-size:1.14rem;font-weight:700;color:var(--ink);line-height:1.4;min-height:32px;display:flex;align-items:center;justify-content:center;">
-            ${escapeHtml(name)}
-          </h3>
-          <div style="width:100%;margin-top:auto;">
-            ${btnHtml}
+          <div class="teacher-card-info-box">
+            <h3 class="teacher-card-main-title">${escapeHtml(name)}</h3>
+            <div class="teacher-card-subline">
+              <div class="teacher-card-mini-avatar">
+                ${miniAvatar}
+              </div>
+              <span class="teacher-card-subject-tag">${escapeHtml(subject)}</span>
+            </div>
+            <div class="teacher-card-footer-meta">
+              <span>📚 ${coursesCount} كورس</span>
+              <span>${isSubscribed ? '<span style="color:#10b981;font-weight:700;">✓ مشترك</span>' : '<span style="color:var(--primary);font-weight:700;">عرض الكورسات ↗</span>'}</span>
+            </div>
           </div>
         </div>
       `;
     }).join('');
   }
 
-  async function handleTeacherCardClick(teacherId) {
-    if (subscribedTeacherIds.has(teacherId)) {
-      window.location.href = `courses.html?teacherId=${encodeURIComponent(teacherId)}`;
-    } else {
-      await openTeacherProfileModal(teacherId);
-    }
+  function handleTeacherCardClick(teacherId) {
+    window.location.href = `courses.html?teacherId=${encodeURIComponent(teacherId)}`;
   }
 
   async function openTeacherProfileModal(teacherId) {

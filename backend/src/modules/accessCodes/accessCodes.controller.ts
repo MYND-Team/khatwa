@@ -24,7 +24,7 @@ const idParamSchema = z.object({
 
 const listAccessCodesSchema = z.object({
   query: z.object({
-    status: z.enum(['ACTIVE', 'REDEEMED', 'REVOKED', 'EXPIRED']).optional(),
+    status: z.enum(['ACTIVE', 'REDEEMED', 'REVOKED', 'EXPIRED', 'ALL']).optional(),
   }),
 });
 

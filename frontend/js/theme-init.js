@@ -16,7 +16,18 @@
     // 2. Custom Branding Palette & Ambient Lighting Pre-render State
     const cached = localStorage.getItem('khatwa_branding_cache');
     if (cached) {
-      const d = JSON.parse(cached);
+      let d = JSON.parse(cached);
+      if (d && (d.primaryColor === '#B88E4F' || d.primaryColor === '#b88e4f')) {
+        d.primaryColor = '#0E4B5B';
+        d.secondaryColor = '#08323D';
+        d.accentColor = '#1D788F';
+        d.backgroundColor = '#EDF4FA';
+        try { localStorage.setItem('khatwa_branding_cache', JSON.stringify(d)); } catch (_) {}
+      }
+      if (d && d.logoUrl && (d.logoUrl.startsWith('data:image/') || d.logoUrl.includes('khatwa-logo.png'))) {
+        d.logoUrl = 'logo/logo-khatwa-transparent.png';
+        try { localStorage.setItem('khatwa_branding_cache', JSON.stringify(d)); } catch (_) {}
+      }
       const r = document.documentElement;
 
       if (d.primaryColor) {

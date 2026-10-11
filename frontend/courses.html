@@ -183,6 +183,17 @@
         subscribedTeachersList = teachers || [];
         enrolledCoursesList = enrolled || [];
 
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlTeacherId = urlParams.get('teacherId');
+        if (urlTeacherId && !subscribedTeachersList.some(t => (t.id === urlTeacherId || t.userId === urlTeacherId))) {
+          try {
+            const extraTeacher = await window.KhatwaAPI.public.getTeacherDetail(urlTeacherId);
+            if (extraTeacher) {
+              subscribedTeachersList.unshift(extraTeacher);
+            }
+          } catch (_) {}
+        }
+
         renderSubscribedTeachersCourses();
       } catch (e) {
         console.error('Error loading subscribed courses:', e);
@@ -209,6 +220,7 @@
       }
 
       container.innerHTML = subscribedTeachersList.map(teacher => {
+        const teacherId = teacher.id || teacher.userId;
         const teacherName = teacher.displayName || teacher.name || 'أستاذ المادة';
         const teacherSubject = teacher.subject || 'المادة الدراسية';
         const initial = teacherName.charAt(0) || '👨‍🏫';

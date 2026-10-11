@@ -246,10 +246,11 @@ export async function regenerateAccessCode(codeId: string, actorId: string) {
 
 // ─── List access codes (STAFF / ADMIN) ───────────────────────────────────────
 
-export async function listAccessCodes(filter?: { status?: AccessCodeStatus; createdById?: string }) {
+export async function listAccessCodes(filter?: { status?: AccessCodeStatus | 'ALL'; createdById?: string }) {
+  const isSpecificStatus = filter?.status && filter.status !== 'ALL';
   const codes = await prisma.accessCode.findMany({
     where: {
-      ...(filter?.status ? { status: filter.status } : {}),
+      ...(isSpecificStatus ? { status: filter.status as AccessCodeStatus } : {}),
       ...(filter?.createdById ? { createdById: filter.createdById } : {}),
     },
     select: {

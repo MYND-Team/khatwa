@@ -17,47 +17,47 @@
   --glass-btn-bg:        rgba(255, 255, 255, 0.35);
   --glass-btn-border:    rgba(255, 255, 255, 0.55);
   --glass-btn-hover:     rgba(255, 255, 255, 0.52);
-  --glass-active-bg:     rgba(184, 142, 79, 0.22);
-  --glass-active-border: rgba(184, 142, 79, 0.55);
+  --glass-active-bg:     rgba(14, 75, 91, 0.22);
+  --glass-active-border: rgba(14, 75, 91, 0.55);
   --glass-hover-bg:      rgba(255, 255, 255, 0.40);
 
-  /* Header tokens (kept for compat) */
-  --header-text: #1e293b;
-  --header-link-hover: #8C6527;
+  /* Header tokens */
+  --header-text: #0f172a;
+  --header-link-hover: #0E4B5B;
   --taskbar-border: rgba(255, 255, 255, 0.35);
 
-  /* Brand Warm Golden Beige Palette (Matched directly to the official Khatwa logo) */
-  --primary-deep: #8C6527;
-  --primary: #B88E4F;
-  --primary-rgb: 184, 142, 79;
-  --primary-hover: #9E7432;
-  --primary-light: #CBA264;
-  --primary-bright: #DDB97F;
-  --primary-faint: #FAF6EE;
-  --primary-border: #E5D3B3;
+  /* Brand Official Deep Teal & Cyan Palette (Matched directly to official Khatwa logo) */
+  --primary-deep: #08323D;
+  --primary: #0E4B5B;
+  --primary-rgb: 14, 75, 91;
+  --primary-hover: #135F73;
+  --primary-light: #1D788F;
+  --primary-bright: #2596B2;
+  --primary-faint: #F0F7FA;
+  --primary-border: #9ec5d0;
 
   /* Secondary & Accent Theme Customization Variables */
-  --secondary: #8C6527;
+  --secondary: #115263;
   --secondary-color: var(--secondary);
-  --secondary-hover: #73511e;
-  --secondary-faint: rgba(140, 101, 39, 0.08);
-  --secondary-border: rgba(140, 101, 39, 0.24);
+  --secondary-hover: #0d414f;
+  --secondary-faint: rgba(17, 82, 99, 0.08);
+  --secondary-border: rgba(17, 82, 99, 0.24);
 
-  --accent: #CBA264;
+  --accent: #1D788F;
   --accent-color: var(--accent);
-  --accent-hover: #b88e4f;
-  --accent-faint: rgba(203, 162, 100, 0.12);
-  --accent-border: rgba(203, 162, 100, 0.35);
+  --accent-hover: #0E4B5B;
+  --accent-faint: rgba(29, 120, 143, 0.12);
+  --accent-border: rgba(29, 120, 143, 0.35);
 
   /* Background Wave Gradient Engine */
-  --bg-grad-start: #9db3cc;
-  --bg-grad-mid: #c7d8e8;
+  --bg-grad-start: #8ea4bc;
+  --bg-grad-mid: #b8cbdb;
   --bg-grad-end: #edf4fa;
   --bg-wave-angle: 135deg;
-  --bg-gradient: linear-gradient(var(--bg-wave-angle, 135deg), var(--bg-grad-start, #9db3cc) 0%, var(--bg-grad-mid, #c7d8e8) 50%, var(--bg-grad-end, #edf4fa) 100%);
-  --bg-shapes-color1: rgba(184, 142, 79, 0.16);
-  --bg-shapes-color2: rgba(56, 189, 248, 0.14);
-  --bg-shapes-color3: rgba(140, 101, 39, 0.1);
+  --bg-gradient: linear-gradient(var(--bg-wave-angle, 135deg), var(--bg-grad-start, #8ea4bc) 0%, var(--bg-grad-mid, #b8cbdb) 50%, var(--bg-grad-end, #edf4fa) 100%);
+  --bg-shapes-color1: rgba(14, 75, 91, 0.14);
+  --bg-shapes-color2: rgba(29, 120, 143, 0.12);
+  --bg-shapes-color3: rgba(8, 50, 61, 0.10);
   --bg-shapes-display: block;
 
   /* ═══════════════════════════════════════════════════════
@@ -90,8 +90,8 @@
   --card-glass-bg: rgba(255, 255, 255, 0.92);
   --card-glass-border: rgba(255, 255, 255, 0.7);
   --panel: #FFFFFF;
-  --panel-alt: #F5EFE6;
-  --line: rgba(184, 142, 79, 0.18);
+  --panel-alt: #F0F6FA;
+  --line: rgba(14, 75, 91, 0.18);
   --line-soft: rgba(0, 0, 0, 0.08);
 
   /* Typography / Inks (Warm Deep Espresso & Coffee) */
@@ -3141,3 +3141,301 @@ body.dark-mode .lecture-card-btn,
   color: #fca5a5 !important;
   border-color: rgba(239, 68, 68, 0.38);
 }
+
+/* ===========================================================
+   Khatwa Teacher Card — Exactly Matching PDF (Page 2 & Page 4)
+   =========================================================== */
+.khatwa-pdf-teacher-card {
+  background: var(--bg-card, #ffffff);
+  border: 1.5px solid var(--line-soft, rgba(14, 75, 91, 0.12));
+  border-radius: 20px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.28s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.28s;
+  position: relative;
+  text-align: right;
+  text-decoration: none;
+  color: inherit;
+}
+.khatwa-pdf-teacher-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 16px 36px rgba(14, 75, 91, 0.18);
+  border-color: var(--primary, #0E4B5B);
+}
+.khatwa-pdf-teacher-card .teacher-card-poster-wrap {
+  width: 100%;
+  height: 220px;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.khatwa-pdf-teacher-card .teacher-card-poster-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.35s ease;
+}
+.khatwa-pdf-teacher-card:hover .teacher-card-poster-wrap img {
+  transform: scale(1.04);
+}
+.khatwa-pdf-teacher-card .teacher-card-poster-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(14, 75, 91, 0.08) 0%, rgba(29, 120, 143, 0.18) 100%);
+  color: var(--primary, #0E4B5B);
+}
+.khatwa-pdf-teacher-card .teacher-card-fav-btn {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.14);
+  z-index: 2;
+  transition: transform 0.2s;
+}
+.khatwa-pdf-teacher-card .teacher-card-fav-btn svg {
+  width: 18px;
+  height: 18px;
+  fill: #3b82f6;
+}
+.khatwa-pdf-teacher-card:hover .teacher-card-fav-btn {
+  transform: scale(1.1);
+}
+.khatwa-pdf-teacher-card .teacher-card-info-box {
+  padding: 16px 18px 18px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+.khatwa-pdf-teacher-card .teacher-card-main-title {
+  margin: 0 0 10px;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--ink, #0f172a);
+  line-height: 1.35;
+}
+.khatwa-pdf-teacher-card .teacher-card-subline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.khatwa-pdf-teacher-card .teacher-card-mini-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--bg-raised, #ffffff);
+  border: 1.5px solid var(--primary, #0E4B5B);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-weight: 800;
+  font-size: 0.85rem;
+  color: var(--primary, #0E4B5B);
+}
+.khatwa-pdf-teacher-card .teacher-card-mini-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.khatwa-pdf-teacher-card .teacher-card-subject-tag {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--primary, #0E4B5B);
+}
+.khatwa-pdf-teacher-card .teacher-card-footer-meta {
+  margin-top: auto;
+  border-top: 1px solid var(--line-soft, rgba(0,0,0,0.06));
+  padding-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.84rem;
+  color: var(--ink-dim, #64748b);
+  font-weight: 600;
+}
+
+/* ===========================================================
+   Collapsible Right Taskbar (تاسك بار اليمين القابل للطي)
+   Matches PDF Page 24 & 25 (Applies across Student, Teacher, Admin)
+   =========================================================== */
+.khatwa-right-taskbar {
+  position: fixed;
+  top: 72px;
+  right: 0;
+  bottom: 0;
+  width: 64px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-left: 1.5px solid var(--line-soft, rgba(0,0,0,0.08));
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.05);
+  z-index: 850;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 8px;
+  transition: width 0.32s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.32s ease, background 0.32s ease;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.khatwa-right-taskbar::-webkit-scrollbar {
+  display: none;
+}
+.khatwa-right-taskbar:hover {
+  width: 255px;
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: -8px 0 32px rgba(14, 75, 91, 0.15);
+}
+:root[data-theme="dark"] .khatwa-right-taskbar {
+  background: rgba(15, 23, 42, 0.92);
+  border-left-color: rgba(255, 255, 255, 0.08);
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.3);
+}
+:root[data-theme="dark"] .khatwa-right-taskbar:hover {
+  background: rgba(15, 23, 42, 0.98);
+  box-shadow: -8px 0 36px rgba(0, 0, 0, 0.5);
+}
+
+.khatwa-right-taskbar .taskbar-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+.khatwa-right-taskbar .khatwa-taskbar-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  color: var(--ink-dim, #64748b);
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: 1px solid transparent;
+  width: 100%;
+}
+.khatwa-right-taskbar .khatwa-taskbar-item:hover {
+  background: rgba(14, 75, 91, 0.08);
+  color: var(--primary, #0E4B5B);
+  transform: translateX(-2px);
+}
+:root[data-theme="dark"] .khatwa-right-taskbar .khatwa-taskbar-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--primary-light, #1D788F);
+}
+.khatwa-right-taskbar .khatwa-taskbar-item.active {
+  background: linear-gradient(135deg, var(--primary, #0E4B5B) 0%, var(--primary-light, #1D788F) 100%);
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(14, 75, 91, 0.3);
+}
+.khatwa-right-taskbar .khatwa-taskbar-item.taskbar-logout {
+  color: #ef4444;
+  margin-top: auto;
+}
+.khatwa-right-taskbar .khatwa-taskbar-item.taskbar-logout:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+}
+.khatwa-right-taskbar .taskbar-icon {
+  font-size: 1.25rem;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.khatwa-right-taskbar .taskbar-label {
+  opacity: 0;
+  transform: translateX(10px);
+  transition: opacity 0.24s ease, transform 0.24s ease;
+  pointer-events: none;
+  flex-grow: 1;
+}
+.khatwa-right-taskbar:hover .taskbar-label {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: all;
+}
+.khatwa-right-taskbar .taskbar-badge {
+  opacity: 0;
+  transition: opacity 0.24s ease;
+  background: rgba(255, 255, 255, 0.25);
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 0.74rem;
+}
+.khatwa-right-taskbar:hover .taskbar-badge {
+  opacity: 1;
+}
+
+/* Mobile responsive right taskbar */
+@media (max-width: 768px) {
+  .khatwa-right-taskbar {
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100% !important;
+    height: 60px;
+    flex-direction: row;
+    padding: 6px 12px;
+    border-left: none;
+    border-top: 1.5px solid var(--line-soft, rgba(0,0,0,0.08));
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+    justify-content: space-around;
+    overflow-x: auto;
+  }
+  .khatwa-right-taskbar .taskbar-group {
+    flex-direction: row;
+    justify-content: space-around;
+    width: 100%;
+  }
+  .khatwa-right-taskbar .khatwa-taskbar-item {
+    flex-direction: column;
+    padding: 4px 6px;
+    gap: 2px;
+    font-size: 0.72rem;
+    width: auto;
+    border-radius: 8px;
+  }
+  .khatwa-right-taskbar .taskbar-icon {
+    font-size: 1.15rem;
+    width: 24px;
+    height: 24px;
+  }
+  .khatwa-right-taskbar .taskbar-label {
+    opacity: 1;
+    transform: none;
+    font-size: 0.7rem;
+    pointer-events: all;
+  }
+  .khatwa-right-taskbar .taskbar-badge {
+    display: none;
+  }
+}
+

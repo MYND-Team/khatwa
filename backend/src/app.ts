@@ -248,6 +248,71 @@ app.get('/api/health', (_req, res) => {
   res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// ─── Static Uploads Serving & PDF Stream Route ────────────────────────────────
+const uploadsDir = path.resolve(process.cwd(), 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+app.use('/uploads', express.static(uploadsDir));
+
+app.get(['/lessons/:id/pdf', '/api/lessons/:id/pdf', '/student/lessons/:id/pdf', '/teacher/lessons/:id/pdf-view'], asyncHandler(async (req, res) => {
+  const lesson = await prisma.lesson.findUnique({
+    where: { id: req.params.id },
+    select: { id: true, pdfUrl: true, pdfFileName: true, title: true }
+  });
+  if (!lesson || !lesson.pdfUrl) {
+    res.status(404).send('لم يتم العثور على مذكرة الـ PDF لهذه المحاضرة');
+    return;
+  }
+
+  let pdfTarget = lesson.pdfUrl.trim();
+  const fileName = lesson.pdfFileName || `${lesson.title || 'lesson'}.pdf`;
+
+  if (pdfTarget.startsWith('drive:')) {
+    const driveId = pdfTarget.replace(/^drive:/, '');
+    res.redirect(`https://drive.google.com/file/d/${driveId}/view`);
+    return;
+  }
+
+  if (pdfTarget.startsWith('local:')) {
+    const relPath = pdfTarget.replace(/^local:/, '').replace(/^\/+/, '');
+    const absPath = path.resolve(process.cwd(), relPath);
+    if (fs.existsSync(absPath)) {
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(fileName)}"`);
+      fs.createReadStream(absPath).pipe(res);
+      return;
+    }
+  }
+
+  if (pdfTarget.startsWith('/uploads') || pdfTarget.startsWith('uploads/')) {
+    const relPath = pdfTarget.replace(/^\/+/, '');
+    const absPath = path.resolve(process.cwd(), relPath);
+    if (fs.existsSync(absPath)) {
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(fileName)}"`);
+      fs.createReadStream(absPath).pipe(res);
+      return;
+    }
+  }
+
+  if (pdfTarget.startsWith('data:application/pdf;base64,')) {
+    const b64Data = pdfTarget.replace('data:application/pdf;base64,', '');
+    const pdfBuf = Buffer.from(b64Data, 'base64');
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(fileName)}"`);
+    res.send(pdfBuf);
+    return;
+  }
+
+  if (pdfTarget.startsWith('http://') || pdfTarget.startsWith('https://')) {
+    res.redirect(pdfTarget);
+    return;
+  }
+
+  res.status(404).send('مسار المذكرة غير صالح');
+}));
+
 // ─── Static Frontend Serving (Fallback after API endpoints) ──────────────────
 if (resolvedFrontendPath) {
   app.use(

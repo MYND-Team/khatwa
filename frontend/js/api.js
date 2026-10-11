@@ -6,12 +6,13 @@
 
 (function (window) {
   const isDirectFile = window.location.protocol === 'file:';
-  const isLocalStaticPort = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') &&
-                            window.location.port !== '3000' && window.location.port !== '';
+  const isStaticDevPort = window.location.port !== '3000' && window.location.port !== '';
+  const currentHost = (window.location.protocol === 'file:' || !window.location.hostname) ? 'localhost' : window.location.hostname;
+  const currentProto = (window.location.protocol === 'https:') ? 'https:' : 'http:';
 
   const DEFAULT_API_BASE = window.__KHATWA_API_BASE__ ||
                            localStorage.getItem('khatwa_api_base') ||
-                           ((isDirectFile || isLocalStaticPort) ? 'http://localhost:3000' : window.location.origin);
+                           (isDirectFile ? 'http://localhost:3000' : (isStaticDevPort ? `${currentProto}//${currentHost}:3000` : window.location.origin));
 
   const STORAGE_KEYS = {
     ACCESS_TOKEN: 'khatwa_access_token',
@@ -188,26 +189,45 @@
 
     // Logo with automatic preference for clean transparent background
     let effectiveLogo = logoUrl || 'logo/logo-khatwa-transparent.png';
-    if (effectiveLogo.includes('logo-khatwa.png') || effectiveLogo.includes('logo-khatwa.jpeg')) {
+    if (!effectiveLogo || effectiveLogo.startsWith('data:image/') || effectiveLogo.includes('logo-khatwa.png') || effectiveLogo.includes('logo-khatwa.jpeg')) {
       effectiveLogo = 'logo/logo-khatwa-transparent.png';
     }
     document.querySelectorAll('.brand-logo, .khatwa-taskbar-logo').forEach((el) => {
-      if (!el.getAttribute('src') || el.getAttribute('src').includes('logo-khatwa')) {
+      if (!el.getAttribute('src') || el.getAttribute('src').includes('logo-khatwa') || el.getAttribute('src').startsWith('data:image/')) {
         el.setAttribute('src', effectiveLogo);
       }
     });
+
+    // Dynamically update favicon across all pages
+    const favIcons = document.querySelectorAll('link[rel*="icon"]');
+    if (favIcons.length > 0) {
+      favIcons.forEach((fav) => fav.setAttribute('href', effectiveLogo));
+    }
   }
 
   // Apply cached branding IMMEDIATELY (before API call) — eliminates color flash
   try {
     const cached = localStorage.getItem(BRANDING_CACHE_KEY);
-    if (cached) applyBrandingToDOM(JSON.parse(cached));
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      if (parsed.logoUrl && parsed.logoUrl.startsWith('data:image/')) {
+        parsed.logoUrl = 'logo/logo-khatwa-transparent.png';
+        localStorage.setItem(BRANDING_CACHE_KEY, JSON.stringify(parsed));
+      }
+      applyBrandingToDOM(parsed);
+    }
   } catch (_) {}
 
   // Cross-tab real-time branding synchronization
   window.addEventListener('storage', (e) => {
     if (e.key === BRANDING_CACHE_KEY && e.newValue) {
-      try { applyBrandingToDOM(JSON.parse(e.newValue)); } catch (_) {}
+      try {
+        const parsed = JSON.parse(e.newValue);
+        if (parsed.logoUrl && parsed.logoUrl.startsWith('data:image/')) {
+          parsed.logoUrl = 'logo/logo-khatwa-transparent.png';
+        }
+        applyBrandingToDOM(parsed);
+      } catch (_) {}
     }
   });
 
@@ -215,6 +235,9 @@
     try {
       const res = await fetch(DEFAULT_API_BASE + '/settings/branding').then((r) => r.json()).catch(() => null);
       if (res && res.success && res.data) {
+        if (res.data.logoUrl && res.data.logoUrl.startsWith('data:image/')) {
+          res.data.logoUrl = 'logo/logo-khatwa-transparent.png';
+        }
         applyBrandingToDOM(res.data);
         // Cache for next page load (eliminates flash)
         try { localStorage.setItem(BRANDING_CACHE_KEY, JSON.stringify(res.data)); } catch (_) {}

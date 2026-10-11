@@ -79,8 +79,8 @@
     gap: 16px;
   }
   .voucher-card {
-    background: linear-gradient(135deg, var(--primary-deep, #8C6527) 0%, var(--primary, #B88E4F) 100%);
-    border: 2px dashed rgba(245, 158, 11, 0.45);
+    background: linear-gradient(135deg, var(--primary-deep, #08323D) 0%, var(--primary, #0E4B5B) 100%);
+    border: 2px dashed rgba(29, 120, 143, 0.5);
     border-radius: 14px;
     padding: 16px 18px;
     color: #fff;
@@ -93,7 +93,7 @@
     overflow: hidden;
   }
   .voucher-card.voucher-theme-platform {
-    background: linear-gradient(135deg, var(--primary-deep, #8C6527) 0%, var(--primary, #B88E4F) 60%, var(--primary-light, #CBA264) 100%) !important;
+    background: linear-gradient(135deg, var(--primary-deep, #08323D) 0%, var(--primary, #0E4B5B) 60%, var(--primary-light, #1D788F) 100%) !important;
     border: 2px dashed rgba(255, 255, 255, 0.6) !important;
     color: #ffffff !important;
     -webkit-print-color-adjust: exact !important;
@@ -231,22 +231,23 @@
     transform: translateY(-1px);
   }
   .admin-nav-tab.active {
-    background: linear-gradient(135deg, var(--primary-deep, #8C6527) 0%, var(--primary, #B88E4F) 100%);
+    background: linear-gradient(135deg, var(--primary-deep, #08323D) 0%, var(--primary, #0E4B5B) 100%);
     color: #ffffff;
-    border-color: var(--primary-light, #CBA264);
-    box-shadow: 0 4px 15px rgba(140, 101, 39, 0.35);
+    border-color: var(--primary-light, #1D788F);
+    box-shadow: 0 4px 15px rgba(14, 75, 91, 0.35);
   }
   .admin-nav-tab .tab-count-badge {
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(14, 75, 91, 0.1);
+    color: var(--primary, #0E4B5B);
     padding: 2px 8px;
     border-radius: 999px;
     font-size: 0.78rem;
-    color: inherit;
+    font-weight: 700;
   }
   .admin-nav-tab.active .tab-count-badge {
-    background: rgba(245, 158, 11, 0.3);
-    color: #fde68a;
-    border: 1px solid rgba(245, 158, 11, 0.5);
+    background: rgba(255, 255, 255, 0.22);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.35);
   }
 
   /* ─── Commission Modal ───────────────────────────────────────────── */
@@ -737,6 +738,50 @@
         <div class="stat-sub"><span>🎟️</span> اشتراكات الطلاب بالحصص</div>
       </div>
     </div>
+  </div>
+
+  <!-- Top Admin Navigation Tabs (شريط تبويبات الأقسام لإدارة المنصة) -->
+  <div class="admin-nav-tabs" id="adminTopNavTabs">
+    <button type="button" class="admin-nav-tab active" data-tab="tabStudents" onclick="switchAdminTab('tabStudents', this)">
+      <span>🎓 الطلاب</span>
+      <span class="tab-count-badge" id="tabBadgeStudents">0</span>
+    </button>
+    <button type="button" class="admin-nav-tab" data-tab="tabTeachers" onclick="switchAdminTab('tabTeachers', this)">
+      <span>👨‍🏫 المدرسين</span>
+      <span class="tab-count-badge" id="tabBadgeTeachers">0</span>
+    </button>
+    <button type="button" class="admin-nav-tab" data-tab="tabSubscriptions" onclick="switchAdminTab('tabSubscriptions', this)">
+      <span>🔑 الاشتراكات</span>
+      <span class="tab-count-badge" id="tabBadgeSubscriptions">0</span>
+    </button>
+    <button type="button" class="admin-nav-tab" data-tab="tabPayments" onclick="switchAdminTab('tabPayments', this)">
+      <span>💳 السجل المالي</span>
+    </button>
+    <button type="button" class="admin-nav-tab" data-tab="tabStages" onclick="switchAdminTab('tabStages', this)">
+      <span>🏫 المراحل الدراسية</span>
+    </button>
+    <button type="button" class="admin-nav-tab" data-tab="tabAppearance" onclick="switchAdminTab('tabAppearance', this)">
+      <span>🎨 المظهر والألوان</span>
+    </button>
+    <button type="button" class="admin-nav-tab" data-tab="tabAccessCodes" onclick="switchAdminTab('tabAccessCodes', this)">
+      <span>🎟️ أكواد وكروت الشحن</span>
+      <span class="tab-count-badge" id="tabBadgeAccessCodes">0</span>
+    </button>
+    <button type="button" class="admin-nav-tab" data-tab="tabPointRequests" onclick="switchAdminTab('tabPointRequests', this)">
+      <span>💰 طلبات الشحن</span>
+      <span class="tab-count-badge" id="tabBadgePointRequests">0</span>
+    </button>
+    <button type="button" class="admin-nav-tab" data-tab="tabOfflineRequests" onclick="switchAdminTab('tabOfflineRequests', this)">
+      <span>🏢 طلبات الأوفلاين</span>
+      <span class="tab-count-badge" id="tabBadgeOfflineRequests">0</span>
+    </button>
+    <button type="button" class="admin-nav-tab" data-tab="tabProfileRequests" onclick="switchAdminTab('tabProfileRequests', this)">
+      <span>📋 طلبات تعديل البيانات</span>
+      <span class="tab-count-badge" id="tabBadgeProfileRequests">0</span>
+    </button>
+    <button type="button" class="admin-nav-tab" data-tab="tabSecurity" onclick="switchAdminTab('tabSecurity', this)">
+      <span>🛡️ الأمان والنظام</span>
+    </button>
   </div>
 
   <!-- Tab 1: Students Directory -->
@@ -1828,6 +1873,12 @@
       target.style.display = 'block';
     }
     
+    // Sync active state in top admin-nav-tabs
+    document.querySelectorAll('.admin-nav-tab').forEach(b => {
+      const isMatch = (tabBtn && b === tabBtn) || b.getAttribute('data-tab') === tabId;
+      b.classList.toggle('active', isMatch);
+    });
+
     // Sync active state in Khatwa Taskbar on the right
     const taskbar = document.getElementById('khatwaTaskbar');
     if (taskbar) {
@@ -1836,11 +1887,13 @@
         b.classList.toggle('active', isMatch);
       });
     }
-    
-    if (tabBtn) {
-      tabBtn.classList.add('active');
-    }
 
+    if (tabId === 'tabStudents') {
+      const stage = document.getElementById('studentStageFilter')?.value || '';
+      const q = document.getElementById('studentSearchInput')?.value.trim() || '';
+      loadStudents(stage, q);
+    }
+    if (tabId === 'tabTeachers') loadTeachers();
     if (tabId === 'tabAccessCodes') loadAccessCodes();
     if (tabId === 'tabSubscriptions') loadAdminSubscriptions();
     if (tabId === 'tabPayments') loadAdminPayments();
@@ -1853,20 +1906,21 @@
   }
 
   async function refreshAdminData() {
-    await Promise.all([
-      loadAnalytics(),
-      loadStudents(),
-      loadTeachers(),
-      loadAdminSubscriptions(),
-      loadAdminPayments(),
-      loadAdminStages(),
-      loadAppearanceSettings(),
-      loadAccessCodes(),
-      loadPointRequests(),
-      loadAdminOfflineRequests(),
-      loadAdminProfileRequests(),
-      loadVideoLogs(),
-    ]);
+    const tasks = [
+      { name: 'Analytics', fn: loadAnalytics },
+      { name: 'Students', fn: () => loadStudents() },
+      { name: 'Teachers', fn: loadTeachers },
+      { name: 'Subscriptions', fn: loadAdminSubscriptions },
+      { name: 'Payments', fn: loadAdminPayments },
+      { name: 'Stages', fn: loadAdminStages },
+      { name: 'Appearance', fn: loadAppearanceSettings },
+      { name: 'AccessCodes', fn: loadAccessCodes },
+      { name: 'PointRequests', fn: loadPointRequests },
+      { name: 'OfflineRequests', fn: loadAdminOfflineRequests },
+      { name: 'ProfileRequests', fn: loadAdminProfileRequests },
+      { name: 'VideoLogs', fn: loadVideoLogs },
+    ];
+    await Promise.allSettled(tasks.map(t => t.fn().catch(err => console.warn(`Error loading admin ${t.name}:`, err))));
   }
 
   // ─── Appearance & Theming ──────────────────────────────────────────────────

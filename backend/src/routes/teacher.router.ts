@@ -25,11 +25,34 @@ router.use(requireTeacher);
 // Multer for file uploads (kept in memory)
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 100 * 1024 * 1024 } });
 
+/** Helper to resolve or auto-provision teacherProfile for TEACHER/ADMIN */
+async function getTeacherProfile(userId: string) {
+  let profile = await prisma.teacherProfile.findUnique({ where: { userId } });
+  if (!profile) {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (user && (user.role === 'TEACHER' || user.role === 'ADMIN')) {
+      profile = await prisma.teacherProfile.upsert({
+        where: { userId },
+        create: {
+          userId,
+          displayName: (user as any).displayName || user.username || 'معلم خطوة',
+          subject: 'عام',
+          bio: 'معلم ومسؤول على منصة خطوة التعليمية',
+          commissionPct: 80,
+        },
+        update: {},
+      });
+    }
+  }
+  return profile;
+}
+
 // ─── Profile ──────────────────────────────────────────────────────────────────
 
 router.get(
   '/profile',
   asyncHandler(async (req, res) => {
+    await getTeacherProfile(req.user!.sub);
     const profile = await prisma.teacherProfile.findUnique({
       where: { userId: req.user!.sub },
       include: {
@@ -209,7 +232,7 @@ router.get(
   asyncHandler(async (req, res) => {
     const stage = req.params.stage;
     const isAll = stage === 'ALL';
-    const teacherProfile = await prisma.teacherProfile.findUnique({ where: { userId: req.user!.sub } });
+    const teacherProfile = await getTeacherProfile(req.user!.sub);
     if (!teacherProfile) {
       res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Teacher profile not found' } });
       return;
@@ -495,7 +518,7 @@ router.post(
     const resolvedAccessType = accessType === 'LIMITED' ? 'LIMITED' : 'PERMANENT';
     const resolvedDays = resolvedAccessType === 'LIMITED' && accessDurationDays ? parseInt(accessDurationDays) : null;
 
-    const teacherProfile = await prisma.teacherProfile.findUnique({ where: { userId: req.user!.sub } });
+    const teacherProfile = await getTeacherProfile(req.user!.sub);
     if (!teacherProfile) {
       res.status(403).json({ success: false, error: { code: 'FORBIDDEN', message: 'Teacher profile not found' } });
       return;
@@ -1127,8 +1150,15 @@ router.post(
         teacherId: req.user!.sub,
         lessonId: lesson.id,
       });
-      pdfUrl = result.fileId.startsWith('local:') ? result.fileId : (result.isGoogleDrive ? `drive:${result.fileId}` : result.fileId);
-      pdfFileName = result.fileName;
+      if (result.fileId.startsWith('local:')) {
+        const cleanRel = result.fileId.replace(/^local:/, '').replace(/^\/+/, '');
+        pdfUrl = `/${cleanRel}`;
+      } else if (result.isGoogleDrive) {
+        pdfUrl = `https://drive.google.com/file/d/${result.fileId}/view`;
+      } else {
+        pdfUrl = result.fileId;
+      }
+      pdfFileName = result.fileName || req.file.originalname;
     } catch {
       const b64 = req.file.buffer.toString('base64');
       pdfUrl = `data:${req.file.mimetype};base64,${b64}`;
