@@ -188,14 +188,9 @@
     }
 
     // Logo with automatic preference for clean transparent background
-    let effectiveLogo = logoUrl || 'logo/logo-khatwa-transparent.png';
-    if (!effectiveLogo || effectiveLogo.startsWith('data:image/') || effectiveLogo.includes('logo-khatwa.png') || effectiveLogo.includes('logo-khatwa.jpeg')) {
-      effectiveLogo = 'logo/logo-khatwa-transparent.png';
-    }
+    const effectiveLogo = 'logo/logo-khatwa-transparent.png?v=2';
     document.querySelectorAll('.brand-logo, .khatwa-taskbar-logo').forEach((el) => {
-      if (!el.getAttribute('src') || el.getAttribute('src').includes('logo-khatwa') || el.getAttribute('src').startsWith('data:image/')) {
-        el.setAttribute('src', effectiveLogo);
-      }
+      el.setAttribute('src', effectiveLogo);
     });
 
     // Dynamically update favicon across all pages

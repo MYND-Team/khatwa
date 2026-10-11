@@ -24,8 +24,8 @@
         d.backgroundColor = '#EDF4FA';
         try { localStorage.setItem('khatwa_branding_cache', JSON.stringify(d)); } catch (_) {}
       }
-      if (d && d.logoUrl && (d.logoUrl.startsWith('data:image/') || d.logoUrl.includes('khatwa-logo.png'))) {
-        d.logoUrl = 'logo/logo-khatwa-transparent.png';
+      if (d) {
+        d.logoUrl = 'logo/logo-khatwa-transparent.png?v=2';
         try { localStorage.setItem('khatwa_branding_cache', JSON.stringify(d)); } catch (_) {}
       }
       const r = document.documentElement;

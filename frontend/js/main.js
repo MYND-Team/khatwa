@@ -134,8 +134,8 @@ document.addEventListener('DOMContentLoaded', () => {
 function initTransparentLogos() {
   document.querySelectorAll('img.brand-logo, .brand img, #platformLogoPreview img, .modal-head img, .khatwa-taskbar-logo').forEach(img => {
     const src = img.getAttribute('src');
-    if (src && (src.includes('logo-khatwa.png') || src.includes('logo-khatwa.jpeg') || src.includes('logo-khatwa-transparent.png'))) {
-      img.src = 'logo/logo-khatwa-transparent.png';
+    if (src && (src.includes('logo') || src.includes('baig'))) {
+      img.src = 'logo/logo-khatwa-transparent.png?v=2';
       img.onerror = null;
     }
   });
@@ -474,7 +474,7 @@ function initCollapsibleTaskbar() {
   const brandTitle = role === 'ADMIN'
     ? (isEn ? 'Khatwa Admin' : 'إدارة خطوة')
     : (role === 'TEACHER' ? (isEn ? 'Khatwa Studio' : 'استوديو خطوة') : (isEn ? 'Khatwa Platform' : 'منصة خطوة'));
-  const logoSrc = 'logo/logo-khatwa-transparent.png';
+  const logoSrc = 'logo/logo-khatwa-transparent.png?v=2';
 
   taskbar.innerHTML = `
     <div>
