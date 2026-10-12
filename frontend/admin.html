@@ -20,30 +20,56 @@
     font-weight: 700;
     letter-spacing: 0.5px;
   }
+  .admin-main-wrapper {
+    width: 100%;
+    max-width: 100%;
+    padding: 24px 36px 80px;
+    box-sizing: border-box;
+    margin: 0;
+  }
+  @media (max-width: 768px) {
+    .admin-main-wrapper {
+      padding: 16px 12px 80px;
+    }
+  }
   .table-container {
     width: 100%;
     overflow-x: auto;
     background: var(--bg-card);
     border: 1px solid var(--line-soft);
-    border-radius: var(--radius);
+    border-radius: 18px;
     margin-top: 16px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+    min-height: calc(100vh - 380px);
   }
   .data-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 0.9rem;
+    font-size: 0.94rem;
     text-align: right;
   }
   .data-table th {
     background: var(--bg-raised);
-    padding: 12px 16px;
-    font-weight: 600;
+    padding: 15px 18px;
+    font-weight: 700;
     color: var(--ink-dim);
-    border-bottom: 1px solid var(--line);
+    border-bottom: 2px solid var(--line-soft);
     white-space: nowrap;
+    position: sticky;
+    top: 0;
+    z-index: 5;
   }
   .data-table td {
-    padding: 14px 16px;
+    padding: 15px 18px;
+    border-bottom: 1px solid var(--line-soft);
+    vertical-align: middle;
+  }
+  .data-table tbody tr {
+    transition: background-color 0.15s ease;
+  }
+  .data-table tbody tr:hover {
+    background-color: rgba(14, 75, 91, 0.04);
+  }
     border-bottom: 1px solid var(--line-soft);
     color: var(--ink);
     vertical-align: middle;
@@ -642,7 +668,7 @@
   </div>
 </nav>
 
-<div class="container" style="padding-top:32px;padding-bottom:60px;">
+<div class="admin-main-wrapper">
 
   <!-- Executive Header -->
   <div class="page-head">
@@ -753,34 +779,6 @@
     <button type="button" class="admin-nav-tab" data-tab="tabSubscriptions" onclick="switchAdminTab('tabSubscriptions', this)">
       <span>🔑 الاشتراكات</span>
       <span class="tab-count-badge" id="tabBadgeSubscriptions">0</span>
-    </button>
-    <button type="button" class="admin-nav-tab" data-tab="tabPayments" onclick="switchAdminTab('tabPayments', this)">
-      <span>💳 السجل المالي</span>
-    </button>
-    <button type="button" class="admin-nav-tab" data-tab="tabStages" onclick="switchAdminTab('tabStages', this)">
-      <span>🏫 المراحل الدراسية</span>
-    </button>
-    <button type="button" class="admin-nav-tab" data-tab="tabAppearance" onclick="switchAdminTab('tabAppearance', this)">
-      <span>🎨 المظهر والألوان</span>
-    </button>
-    <button type="button" class="admin-nav-tab" data-tab="tabAccessCodes" onclick="switchAdminTab('tabAccessCodes', this)">
-      <span>🎟️ أكواد وكروت الشحن</span>
-      <span class="tab-count-badge" id="tabBadgeAccessCodes">0</span>
-    </button>
-    <button type="button" class="admin-nav-tab" data-tab="tabPointRequests" onclick="switchAdminTab('tabPointRequests', this)">
-      <span>💰 طلبات الشحن</span>
-      <span class="tab-count-badge" id="tabBadgePointRequests">0</span>
-    </button>
-    <button type="button" class="admin-nav-tab" data-tab="tabOfflineRequests" onclick="switchAdminTab('tabOfflineRequests', this)">
-      <span>🏢 طلبات الأوفلاين</span>
-      <span class="tab-count-badge" id="tabBadgeOfflineRequests">0</span>
-    </button>
-    <button type="button" class="admin-nav-tab" data-tab="tabProfileRequests" onclick="switchAdminTab('tabProfileRequests', this)">
-      <span>📋 طلبات تعديل البيانات</span>
-      <span class="tab-count-badge" id="tabBadgeProfileRequests">0</span>
-    </button>
-    <button type="button" class="admin-nav-tab" data-tab="tabSecurity" onclick="switchAdminTab('tabSecurity', this)">
-      <span>🛡️ الأمان والنظام</span>
     </button>
   </div>
 
@@ -913,6 +911,8 @@
     </div>
   </div>
 
+  <!-- Hidden container for removed admin modules -->
+  <div style="display:none !important;" aria-hidden="true">
   <!-- Tab: Traceable Payments Ledger & Financial Settlements (Requirement 6) -->
   <div id="tabPayments" class="admin-tab-content" style="display:none;">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:14px;">
@@ -1406,7 +1406,7 @@
       </div>
     </div>
   </div>
-
+  </div>
 </div>
 
 <!-- Modal: Add New Teacher (Admin-only) -->
@@ -1911,14 +1911,6 @@
       { name: 'Students', fn: () => loadStudents() },
       { name: 'Teachers', fn: loadTeachers },
       { name: 'Subscriptions', fn: loadAdminSubscriptions },
-      { name: 'Payments', fn: loadAdminPayments },
-      { name: 'Stages', fn: loadAdminStages },
-      { name: 'Appearance', fn: loadAppearanceSettings },
-      { name: 'AccessCodes', fn: loadAccessCodes },
-      { name: 'PointRequests', fn: loadPointRequests },
-      { name: 'OfflineRequests', fn: loadAdminOfflineRequests },
-      { name: 'ProfileRequests', fn: loadAdminProfileRequests },
-      { name: 'VideoLogs', fn: loadVideoLogs },
     ];
     await Promise.allSettled(tasks.map(t => t.fn().catch(err => console.warn(`Error loading admin ${t.name}:`, err))));
   }
