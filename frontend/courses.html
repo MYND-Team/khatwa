@@ -182,6 +182,7 @@
 
         subscribedTeachersList = teachers || [];
         enrolledCoursesList = enrolled || [];
+        window.actualSubscribedTeacherIds = new Set((teachers || []).map(t => t.id || t.userId));
 
         const urlParams = new URLSearchParams(window.location.search);
         const urlTeacherId = urlParams.get('teacherId');
@@ -219,11 +220,14 @@
         return;
       }
 
+      const subsSet = window.actualSubscribedTeacherIds || new Set();
+
       container.innerHTML = subscribedTeachersList.map(teacher => {
         const teacherId = teacher.id || teacher.userId;
         const teacherName = teacher.displayName || teacher.name || 'أستاذ المادة';
         const teacherSubject = teacher.subject || 'المادة الدراسية';
         const initial = teacherName.charAt(0) || '👨‍🏫';
+        const isSubscribed = subsSet.has(teacherId) || subsSet.has(teacher.id) || subsSet.has(teacher.userId);
         const avatarHtml = teacher.avatarUrl
           ? `<img src="${escapeHtml(teacher.avatarUrl)}" alt="${escapeHtml(teacherName)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.parentElement.innerHTML='<span style=\\'font-size:1.4rem;color:var(--primary);\\'>${escapeHtml(initial)}</span>'">`
           : `<span style="font-size:1.4rem;font-weight:700;color:var(--primary);">${escapeHtml(initial)}</span>`;
@@ -253,7 +257,11 @@
                 <span style="font-size:0.88rem;color:var(--ink-dim);">${escapeHtml(teacherSubject)}</span>
               </div>
             </div>
-            <span class="tag tag-ok" style="font-weight:700;">مدرس مشترك معه ✓</span>
+            <div id="sub-status-${teacherId}">
+              ${isSubscribed 
+                ? '<span class="tag tag-ok" style="font-weight:700;">مدرس مشترك معه ✓</span>' 
+                : `<button class="btn btn-primary btn-sm" onclick="subscribeFromCoursesPage('${teacherId}', this)" style="border-radius:12px;font-weight:700;padding:8px 18px;">＋ اشتراك مع المعلم</button>`}
+            </div>
           </div>
           ${coursesGridHtml}
         </div>
@@ -270,6 +278,28 @@
             targetEl.style.boxShadow = '0 8px 32px rgba(184, 142, 79, 0.35)';
           }, 150);
         }
+      }
+    }
+
+    async function subscribeFromCoursesPage(teacherId, btn) {
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'جارٍ الاشتراك...';
+      }
+      try {
+        await window.KhatwaAPI.student.subscribeTeacher(teacherId);
+        if (!window.actualSubscribedTeacherIds) window.actualSubscribedTeacherIds = new Set();
+        window.actualSubscribedTeacherIds.add(teacherId);
+        const container = document.getElementById(`sub-status-${teacherId}`);
+        if (container) {
+          container.innerHTML = '<span class="tag tag-ok" style="font-weight:700;">مدرس مشترك معه ✓</span>';
+        }
+      } catch (err) {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = '＋ اشتراك مع المعلم';
+        }
+        alert(err.message || 'فشل إتمام الاشتراك');
       }
     }
 

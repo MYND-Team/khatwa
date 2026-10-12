@@ -3274,6 +3274,180 @@ body.dark-mode .lecture-card-btn,
   font-weight: 600;
 }
 
+/* Subscribed / Active states for Teacher Cards */
+.khatwa-pdf-teacher-card.is-subscribed-card {
+  border-color: rgba(16, 185, 129, 0.4);
+}
+.khatwa-pdf-teacher-card .teacher-card-fav-btn.is-subscribed-heart svg {
+  fill: #10b981;
+}
+
+/* Responsive Teacher Grid */
+.teachers-grid-responsive {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+  margin-top: 14px;
+}
+
+/* Teacher Card Action Buttons */
+.khatwa-pdf-teacher-card .teacher-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.khatwa-pdf-teacher-card .teacher-card-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid transparent;
+  user-select: none;
+  font-family: inherit;
+}
+
+.khatwa-pdf-teacher-card .teacher-card-sub-btn-primary {
+  background: linear-gradient(135deg, var(--primary, #0E4B5B) 0%, #176579 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(14, 75, 91, 0.2);
+}
+.khatwa-pdf-teacher-card .teacher-card-sub-btn-primary:hover {
+  background: linear-gradient(135deg, #11586a 0%, #1f7d95 100%);
+  box-shadow: 0 6px 16px rgba(14, 75, 91, 0.3);
+  transform: translateY(-1.5px);
+}
+
+.khatwa-pdf-teacher-card .teacher-card-sub-btn-active {
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+  border-color: rgba(16, 185, 129, 0.35);
+  box-shadow: none;
+}
+.khatwa-pdf-teacher-card .teacher-card-sub-btn-active:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.35);
+}
+
+.khatwa-pdf-teacher-card .teacher-card-courses-btn {
+  flex: 0 0 auto;
+  background: var(--bg-raised, #f8fafc);
+  color: var(--ink, #0f172a);
+  border-color: var(--line-soft, #e2e8f0);
+}
+.khatwa-pdf-teacher-card .teacher-card-courses-btn:hover {
+  background: var(--bg-card, #ffffff);
+  border-color: var(--primary, #0E4B5B);
+  color: var(--primary, #0E4B5B);
+  transform: translateY(-1.5px);
+}
+
+.teacher-badge-subscribed {
+  color: #10b981;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.teacher-badge-explore {
+  color: var(--primary, #0E4B5B);
+  font-weight: 700;
+}
+
+/* Mobile Responsive Rules for Teacher Grid and Cards */
+@media (max-width: 768px) {
+  .teachers-grid-responsive {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  .khatwa-pdf-teacher-card {
+    border-radius: 16px;
+  }
+  .khatwa-pdf-teacher-card .teacher-card-poster-wrap {
+    height: 140px;
+  }
+  .khatwa-pdf-teacher-card .teacher-card-info-box {
+    padding: 10px 10px 12px;
+  }
+  .khatwa-pdf-teacher-card .teacher-card-main-title {
+    font-size: 0.95rem;
+    margin-bottom: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .khatwa-pdf-teacher-card .teacher-card-subline {
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+  .khatwa-pdf-teacher-card .teacher-card-mini-avatar {
+    width: 24px;
+    height: 24px;
+    font-size: 0.72rem;
+  }
+  .khatwa-pdf-teacher-card .teacher-card-subject-tag {
+    font-size: 0.78rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .khatwa-pdf-teacher-card .teacher-card-footer-meta {
+    padding-top: 8px;
+    font-size: 0.74rem;
+  }
+  .khatwa-pdf-teacher-card .teacher-card-actions {
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .khatwa-pdf-teacher-card .teacher-card-btn {
+    width: 100%;
+    padding: 7px 6px;
+    font-size: 0.78rem;
+    min-height: 34px;
+    border-radius: 9px;
+  }
+}
+
+@media (max-width: 440px) {
+  .teachers-grid-responsive {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  .khatwa-pdf-teacher-card .teacher-card-poster-wrap {
+    height: 125px;
+  }
+  .khatwa-pdf-teacher-card .teacher-card-info-box {
+    padding: 8px 8px 10px;
+  }
+  .khatwa-pdf-teacher-card .teacher-card-main-title {
+    font-size: 0.88rem;
+  }
+  .khatwa-pdf-teacher-card .teacher-card-footer-meta {
+    font-size: 0.7rem;
+  }
+  .khatwa-pdf-teacher-card .teacher-card-btn {
+    font-size: 0.75rem;
+    padding: 6px 4px;
+  }
+}
+
+@media (max-width: 320px) {
+  .teachers-grid-responsive {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
 /* ===========================================================
    Collapsible Right Taskbar (تاسك بار اليمين القابل للطي)
    Matches PDF Page 24 & 25 (Applies across Student, Teacher, Admin)

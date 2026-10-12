@@ -152,9 +152,9 @@
       </div>
     </div>
 
-    <!-- Teacher Cards Grid: Teacher Photo + Name only + Subscribe Button -->
+    <!-- Teacher Cards Grid: Teacher Photo + Name + Subject + Subscribe & Courses Buttons -->
     <div class="block" style="background:transparent;border:none;padding:0;box-shadow:none;">
-      <div id="homeTeachersGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:22px;margin-top:10px;">
+      <div id="homeTeachersGrid" class="teachers-grid-responsive">
         <div style="grid-column:1/-1;text-align:center;padding:50px;color:var(--ink-dim);">جارٍ جلب معلّمي المنصة...</div>
       </div>
     </div>
@@ -297,18 +297,18 @@
       const isSubscribed = subscribedTeacherIds.has(teacherId) || subscribedTeacherIds.has(t.userId) || subscribedTeacherIds.has(t.id);
 
       const posterImg = t.avatarUrl
-        ? `<img src="${escapeHtml(t.avatarUrl)}" alt="${escapeHtml(name)}" onerror="this.parentElement.innerHTML='<div class=&quot;teacher-card-poster-fallback&quot;><span style=&quot;font-size:3.5rem;&quot;>👨‍🏫</span><span style=&quot;font-weight:700;margin-top:8px;&quot;>${escapeHtml(subject)}</span></div>'">`
-        : `<div class="teacher-card-poster-fallback"><span style="font-size:3.5rem;">👨‍🏫</span><span style="font-weight:700;margin-top:8px;">${escapeHtml(subject)}</span></div>`;
+        ? `<img src="${escapeHtml(t.avatarUrl)}" alt="${escapeHtml(name)}" onerror="this.parentElement.innerHTML='<div class=&quot;teacher-card-poster-fallback&quot;><span style=&quot;font-size:3rem;&quot;>👨‍🏫</span><span style=&quot;font-weight:700;margin-top:6px;&quot;>${escapeHtml(subject)}</span></div>'">`
+        : `<div class="teacher-card-poster-fallback"><span style="font-size:3rem;">👨‍🏫</span><span style="font-weight:700;margin-top:6px;">${escapeHtml(subject)}</span></div>`;
 
       const miniAvatar = t.avatarUrl
         ? `<img src="${escapeHtml(t.avatarUrl)}" alt="${escapeHtml(name)}">`
         : `<span>${escapeHtml(initial)}</span>`;
 
       return `
-        <div class="khatwa-pdf-teacher-card" onclick="handleTeacherCardClick('${teacherId}')" title="اضغط لعرض كورسات وحصص ${escapeHtml(name)}">
+        <div class="khatwa-pdf-teacher-card ${isSubscribed ? 'is-subscribed-card' : ''}" onclick="handleTeacherCardClick('${teacherId}')" title="اضغط لعرض كورسات وحصص ${escapeHtml(name)}">
           <div class="teacher-card-poster-wrap">
             ${posterImg}
-            <div class="teacher-card-fav-btn" title="معلم متميز">
+            <div class="teacher-card-fav-btn ${isSubscribed ? 'is-subscribed-heart' : ''}" title="${isSubscribed ? 'مشترك مع المعلم ✓' : 'معلم متميز'}">
               <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
             </div>
           </div>
@@ -322,7 +322,23 @@
             </div>
             <div class="teacher-card-footer-meta">
               <span>📚 ${coursesCount} كورس</span>
-              <span>${isSubscribed ? '<span style="color:#10b981;font-weight:700;">✓ مشترك</span>' : '<span style="color:var(--primary);font-weight:700;">عرض الكورسات ↗</span>'}</span>
+              ${isSubscribed ? '<span class="teacher-badge-subscribed">✓ مشترك معك</span>' : '<span class="teacher-badge-explore">متاح للاشتراك</span>'}
+            </div>
+            <div class="teacher-card-actions">
+              <button type="button"
+                class="teacher-card-btn ${isSubscribed ? 'teacher-card-sub-btn-active' : 'teacher-card-sub-btn-primary'}"
+                onclick="handleTeacherSubClick(event, '${teacherId}')"
+                data-teacher-sub="${teacherId}"
+                title="${isSubscribed ? 'مشترك بالفعل (اضغط لإلغاء المتابعة)' : 'اضغط للاشتراك مع المعلم'}">
+                <span class="sub-btn-icon">${isSubscribed ? '✓' : '＋'}</span>
+                <span class="sub-btn-text">${isSubscribed ? 'مشترك' : 'اشتراك'}</span>
+              </button>
+              <button type="button"
+                class="teacher-card-btn teacher-card-courses-btn"
+                onclick="handleTeacherCoursesClick(event, '${teacherId}')"
+                title="عرض كورسات وحصص المعلم">
+                <span>الكورسات ↗</span>
+              </button>
             </div>
           </div>
         </div>
@@ -421,49 +437,85 @@
     if (modal) modal.style.display = 'none';
   }
 
-  async function handleTeacherSubClick(teacherId, btn) {
-    const isCurrentlySubscribed = subscribedTeacherIds.has(teacherId);
+  function showToast(msg) {
+    let toast = document.getElementById('appToast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'appToast';
+      toast.className = 'toast';
+      document.body.appendChild(toast);
+    }
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3200);
+  }
+
+  async function handleTeacherSubClick(event, teacherId) {
+    if (event) {
+      event.stopPropagation();
+      event.preventDefault();
+    }
+    const btn = event?.currentTarget || document.querySelector(`[data-teacher-sub="${teacherId}"]`);
+    const isCurrentlySubscribed = subscribedTeacherIds.has(teacherId) ||
+      allTeachersList.some(t => (t.id === teacherId || t.userId === teacherId) && (subscribedTeacherIds.has(t.id) || subscribedTeacherIds.has(t.userId)));
 
     if (!isCurrentlySubscribed) {
       // Subscribe
-      btn.disabled = true;
-      btn.textContent = 'جارٍ الاشتراك...';
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span>⏳ جارٍ الاشتراك...</span>';
+      }
       try {
         await window.KhatwaAPI.student.subscribeTeacher(teacherId);
         subscribedTeacherIds.add(teacherId);
-        btn.disabled = false;
-        btn.className = 'btn btn-sm sub-btn is-subscribed';
-        btn.style.background = 'rgba(16,185,129,0.14)';
-        btn.style.color = '#10b981';
-        btn.style.border = '1px solid rgba(16,185,129,0.35)';
-        btn.style.boxShadow = 'none';
-        btn.innerHTML = '✓ مشترك';
+        const tObj = allTeachersList.find(t => t.id === teacherId || t.userId === teacherId);
+        if (tObj) {
+          if (tObj.id) subscribedTeacherIds.add(tObj.id);
+          if (tObj.userId) subscribedTeacherIds.add(tObj.userId);
+        }
+        renderTeachersGrid();
+        showToast('✓ تم الاشتراك مع المعلم بنجاح! ستظهر كورساته في صفحتك.');
       } catch (err) {
-        btn.disabled = false;
-        btn.textContent = 'اشتراك';
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<span class="sub-btn-icon">＋</span><span class="sub-btn-text">اشتراك</span>';
+        }
         alert(err.message || 'فشل إتمام الاشتراك، يرجى المحاولة لاحقاً');
       }
     } else {
       // Toggle off / unsubscribe confirmation
       if (confirm('هل ترغب في إلغاء متابعة هذا المدرس؟')) {
-        btn.disabled = true;
-        btn.textContent = 'جارٍ الإلغاء...';
+        if (btn) {
+          btn.disabled = true;
+          btn.innerHTML = '<span>⏳ جارٍ الإلغاء...</span>';
+        }
         try {
           await window.KhatwaAPI.student.unsubscribeTeacher(teacherId);
           subscribedTeacherIds.delete(teacherId);
-          btn.disabled = false;
-          btn.className = 'btn btn-primary btn-sm sub-btn';
-          btn.style.background = '';
-          btn.style.color = '';
-          btn.style.border = '';
-          btn.style.boxShadow = '0 4px 14px rgba(184,142,79,0.25)';
-          btn.textContent = 'اشتراك';
+          const tObj = allTeachersList.find(t => t.id === teacherId || t.userId === teacherId);
+          if (tObj) {
+            if (tObj.id) subscribedTeacherIds.delete(tObj.id);
+            if (tObj.userId) subscribedTeacherIds.delete(tObj.userId);
+          }
+          renderTeachersGrid();
+          showToast('تم إلغاء متابعة المعلم.');
         } catch (err) {
-          btn.disabled = false;
-          btn.innerHTML = '✓ مشترك';
+          if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<span class="sub-btn-icon">✓</span><span class="sub-btn-text">مشترك</span>';
+          }
+          alert(err.message || 'فشل إلغاء الاشتراك، يرجى المحاولة لاحقاً');
         }
       }
     }
+  }
+
+  function handleTeacherCoursesClick(event, teacherId) {
+    if (event) {
+      event.stopPropagation();
+      event.preventDefault();
+    }
+    window.location.href = `courses.html?teacherId=${encodeURIComponent(teacherId)}`;
   }
 
   document.getElementById('logoutBtn')?.addEventListener('click', (e) => {
@@ -476,5 +528,7 @@
     renderDashboard();
   });
 </script>
+
+<div class="toast" id="appToast"></div>
 </body>
 </html>
