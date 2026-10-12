@@ -248,6 +248,9 @@
     }
 
     const studentName = user.name || user.username || 'طالب خطوة';
+    const studentStage = user.studentProfile?.academicStage || user.academicStage || user.grade || localStorage.getItem('khatwa_active_stage') || '';
+    window.currentStudentStage = studentStage;
+
     const welcomeEl = document.getElementById('welcomeHeading');
     if (welcomeEl) welcomeEl.textContent = `أهلًا ${studentName}، اختر معلّميك`;
     const navNameEl = document.getElementById('navName');
@@ -259,7 +262,7 @@
 
     try {
       const [teachers, subs] = await Promise.all([
-        window.KhatwaAPI.public.getTeachers().catch(() => []),
+        window.KhatwaAPI.public.getTeachers(studentStage).catch(() => []),
         window.KhatwaAPI.student.getSubscribedTeachers().catch(() => []),
       ]);
 
@@ -277,23 +280,33 @@
     const grid = document.getElementById('homeTeachersGrid');
     if (!grid) return;
 
-    if (!allTeachersList || allTeachersList.length === 0) {
+    const studentStage = window.currentStudentStage || '';
+    const filteredTeachers = (allTeachersList || []).filter(t => {
+      if (!studentStage) return true;
+      const teachesStage = t.academicStages && t.academicStages.includes(studentStage);
+      const hasMatchingCourse = (t.courses || []).some(c => c.academicStage === studentStage || c.academicStage === 'ALL');
+      const hasMatchingWorkspace = (t.workspaces || []).some(w => w.stage === studentStage);
+      return teachesStage || hasMatchingCourse || hasMatchingWorkspace;
+    });
+
+    if (!filteredTeachers || filteredTeachers.length === 0) {
       grid.innerHTML = `
         <div style="grid-column:1/-1;text-align:center;padding:60px 20px;background:var(--bg-card);border:1px solid var(--line-soft);border-radius:20px;">
           <div style="font-size:3rem;margin-bottom:12px;">👨‍🏫</div>
-          <h3 style="margin:0 0 6px;">لا يوجد معلمون مسجلون حالياً</h3>
-          <p style="color:var(--ink-dim);margin:0;">سيتم إضافة نخبة مدرسي المنصة قريباً.</p>
+          <h3 style="margin:0 0 6px;">لا يوجد معلمون مسجلون لمرحلتك الدراسية حالياً</h3>
+          <p style="color:var(--ink-dim);margin:0;">سيتم إضافة نخبة مدرسي مرحلتك الدراسية قريباً.</p>
         </div>
       `;
       return;
     }
 
-    grid.innerHTML = allTeachersList.map(t => {
+    grid.innerHTML = filteredTeachers.map(t => {
       const teacherId = t.id || t.userId;
       const name = t.displayName || t.name || t.username || 'أستاذ المادة';
       const initial = name.charAt(0) || '👨‍🏫';
       const subject = t.subject || 'المادة الدراسية';
-      const coursesCount = t.courses?.length || 0;
+      const matchingCourses = (t.courses || []).filter(c => !studentStage || c.academicStage === studentStage || c.academicStage === 'ALL');
+      const coursesCount = matchingCourses.length;
       const isSubscribed = subscribedTeacherIds.has(teacherId) || subscribedTeacherIds.has(t.userId) || subscribedTeacherIds.has(t.id);
 
       const posterImg = t.avatarUrl
@@ -405,9 +418,13 @@
 
     try {
       let courses = teacher.courses || [];
+      const studentStage = window.currentStudentStage || '';
       if (!courses || courses.length === 0) {
-        const publicTeacher = await window.KhatwaAPI.public.getTeacher(teacher.id || teacher.userId).catch(() => null);
+        const publicTeacher = await window.KhatwaAPI.public.getTeacher(teacher.id || teacher.userId, studentStage).catch(() => null);
         if (publicTeacher?.courses) courses = publicTeacher.courses;
+      }
+      if (studentStage) {
+        courses = courses.filter(c => !c.academicStage || c.academicStage === studentStage || c.academicStage === 'ALL');
       }
 
       if (!courses || courses.length === 0) {

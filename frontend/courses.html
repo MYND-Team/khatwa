@@ -221,8 +221,30 @@
       }
 
       const subsSet = window.actualSubscribedTeacherIds || new Set();
+      const user = window.KhatwaAPI.getUser();
+      const studentStage = user?.studentProfile?.academicStage || user?.academicStage || user?.grade || localStorage.getItem('khatwa_active_stage') || '';
 
-      container.innerHTML = subscribedTeachersList.map(teacher => {
+      const relevantTeachers = subscribedTeachersList.filter(teacher => {
+        if (!studentStage) return true;
+        const teachesStage = teacher.academicStages && teacher.academicStages.includes(studentStage);
+        const hasMatchingCourse = (teacher.courses || []).some(c => c.academicStage === studentStage || c.academicStage === 'ALL');
+        const hasMatchingWorkspace = (teacher.workspaces || []).some(w => w.stage === studentStage);
+        return teachesStage || hasMatchingCourse || hasMatchingWorkspace;
+      });
+
+      if (relevantTeachers.length === 0) {
+        container.innerHTML = `
+        <div style="text-align:center;padding:60px 20px;background:var(--bg-card);border:1px solid var(--line-soft);border-radius:22px;margin:20px 0;">
+          <div style="font-size:3.2rem;margin-bottom:12px;">👨‍🏫</div>
+          <h3 style="margin:0 0 8px;">لا توجد كورسات لمرحلتك الدراسية حالياً</h3>
+          <p style="color:var(--ink-dim);margin:0 0 20px;">تصفح معلمي المنصة في الصفحة الرئيسية واشترك مع معلمي مرحلتك الدراسية لتظهر حصصهم هنا.</p>
+          <a href="dashboard.html" class="btn btn-primary btn-sm" style="padding:10px 24px;border-radius:12px;font-weight:700;">🏠 الذهاب إلى الرئيسية للاشتراك مع المدرسين</a>
+        </div>
+      `;
+        return;
+      }
+
+      container.innerHTML = relevantTeachers.map(teacher => {
         const teacherId = teacher.id || teacher.userId;
         const teacherName = teacher.displayName || teacher.name || 'أستاذ المادة';
         const teacherSubject = teacher.subject || 'المادة الدراسية';
@@ -232,17 +254,19 @@
           ? `<img src="${escapeHtml(teacher.avatarUrl)}" alt="${escapeHtml(teacherName)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.parentElement.innerHTML='<span style=\\'font-size:1.4rem;color:var(--primary);\\'>${escapeHtml(initial)}</span>'">`
           : `<span style="font-size:1.4rem;font-weight:700;color:var(--primary);">${escapeHtml(initial)}</span>`;
 
-        const courses = (teacher.courses || []).map(c => ({
-          ...c,
-          teacherProfile: teacher
-        }));
+        const courses = (teacher.courses || [])
+          .filter(c => !studentStage || c.academicStage === studentStage || c.academicStage === 'ALL')
+          .map(c => ({
+            ...c,
+            teacherProfile: teacher
+          }));
 
         const coursesGridHtml = courses.length > 0
           ? `<div class="lecture-grid" style="margin-top:16px;">
              ${courses.map(c => renderCourseCard(c)).join('')}
            </div>`
           : `<div style="text-align:center;padding:26px;color:var(--ink-dim);background:var(--bg-raised);border-radius:14px;border:1px solid var(--line-soft);margin-top:16px;">
-             لا توجد كورسات مضافة لهذا المدرس حالياً.
+             لا توجد كورسات مضافة لهذا المدرس في مرحلتك الدراسية حالياً.
            </div>`;
 
         return `
@@ -453,8 +477,11 @@
       }
 
       let courses = activeModalTeacher.courses;
-      if (stage) {
-        courses = courses.filter(c => c.academicStage === stage);
+      const currentUser = window.KhatwaAPI.getUser();
+      const studentStage = currentUser?.studentProfile?.academicStage || currentUser?.academicStage || currentUser?.grade || localStorage.getItem('khatwa_active_stage') || null;
+      const targetStage = stage || studentStage;
+      if (targetStage) {
+        courses = courses.filter(c => c.academicStage === targetStage || c.academicStage === 'ALL');
       }
 
       if (courses.length === 0) {

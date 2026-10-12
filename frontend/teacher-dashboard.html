@@ -45,6 +45,27 @@
     border-radius: 16px;
     padding: 12px 18px;
     margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  @media (max-width: 768px) {
+    .workspace-selector-bar {
+      flex-direction: column;
+      align-items: stretch;
+      padding: 12px;
+    }
+    .stage-folder-tabs {
+      overflow-x: auto;
+      white-space: nowrap;
+      -webkit-overflow-scrolling: touch;
+      display: flex;
+      gap: 6px;
+      padding-bottom: 4px;
+      width: 100%;
+    }
+    .stage-folder-tab {
+      flex-shrink: 0;
+    }
   }
 </style>
 </head>
@@ -1116,6 +1137,11 @@
       const elStudents = document.getElementById('statStudents');
       if (elStudents) elStudents.textContent = overviewData.uniqueStudents || 0;
 
+      if (document.getElementById('currentStageTitle')) {
+        const studentBadge = overviewData.uniqueStudents !== undefined ? ` <span class="tag" style="background:rgba(14,75,91,0.12);color:var(--primary);font-size:0.85rem;font-weight:700;margin-right:8px;border:1px solid rgba(14,75,91,0.25);">👥 ${overviewData.uniqueStudents} طالب مسجل بالمرحلة</span>` : '';
+        document.getElementById('currentStageTitle').innerHTML = `📁 كورسات ${stageTitles[currentStage] || ''}${studentBadge}`;
+      }
+
       const elSubs = document.getElementById('statSubscriptions');
       if (elSubs) elSubs.textContent = overviewData.totalSubscriptions || 0;
 
@@ -1182,6 +1208,7 @@
                 <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap;">
                   <h2 style="margin:0;font-size:1.3rem;">${escapeHtml(c.title)}</h2>
                   <span class="tag tag-ok">${escapeHtml(c.subject)}</span>
+                  <span class="tag" style="background:rgba(59,130,246,0.12);color:#2563eb;border:1px solid rgba(59,130,246,0.3);font-weight:700;">👥 ${c._count?.lessonSubscriptions || 0} اشتراك بالكورس</span>
                   ${c.price > 0 ? `<span class="tag" style="background:rgba(34,197,94,0.12);color:#16a34a;border:1px solid rgba(34,197,94,0.35);font-weight:700;">💵 سعر الكورس بالكامل: ${c.price} ج.م</span>` : ''}
                 </div>
                 <span class="meta">${stageTitles[c.academicStage]} · ${chapters.length} فصول / وحدات</span>
@@ -1221,7 +1248,7 @@
                           const newBadgeHtml = isNew ? '<span class="lecture-new-badge">جديد</span>' : '';
 
                           const coverUrl = l.coverImage || c.coverImage || '';
-                          const durationMin = l.durationMinutes || 200;
+                          const durationMin = (l.durationMinutes && Number(l.durationMinutes) > 0) ? Number(l.durationMinutes) : null;
                           const teacherName = currentTeacherProfile?.displayName || user?.name || user?.username || 'أستاذ المادة';
                           const teacherInitial = teacherName.trim().charAt(0) || 'أ';
                           const teacherPhoto = currentTeacherProfile?.avatarUrl || '';
@@ -1258,7 +1285,8 @@
                               </div>
 
                               <div class="lecture-card-meta">
-                                <span class="lecture-card-meta-item">⏱️ ${durationMin} دقيقة</span>
+                                <span class="lecture-card-meta-item" style="color:var(--primary);font-weight:700;background:rgba(217,119,6,0.08);padding:2px 8px;border-radius:6px;">👥 ${l._count?.subscriptions || 0} مشترك</span>
+                                ${durationMin ? `<span class="lecture-card-meta-item">⏱️ ${durationMin} دقيقة</span>` : ((l.videoUrl || l.driveFileId) ? `<span class="lecture-card-meta-item">🎬 فيديو المحاضرة</span>` : '')}
                                 ${l.pdfUrl ? '<span class="lecture-card-meta-item">📄 PDF</span>' : ''}
                                 ${l.assignmentQuizId ? '<span class="lecture-card-meta-item">📝 واجب</span>' : ''}
                                 ${l.examQuizId ? '<span class="lecture-card-meta-item">🏆 امتحان</span>' : ''}

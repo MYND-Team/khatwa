@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
@@ -265,7 +265,7 @@
     const teacherPhoto = currentCourse?.teacherProfile?.photoUrl || currentCourse?.teacherPhoto || '';
     const coverUrl = lesson.coverImage || currentCourse?.coverImage || '';
 
-    const durationMin = lesson.durationMinutes || 200;
+    const durationMin = (lesson.durationMinutes && Number(lesson.durationMinutes) > 0) ? Number(lesson.durationMinutes) : null;
 
     // Center lock/play icon based on accessibility (Visual spec PDF Page 9)
     const lockIconHtml = (!isSubscribed && !isFree)
@@ -349,7 +349,7 @@
           </div>
 
           <div class="lecture-card-meta">
-            <span class="lecture-card-meta-item">⏱️ ${durationMin} دقيقة</span>
+            ${durationMin ? `<span class="lecture-card-meta-item">⏱️ ${durationMin} دقيقة</span>` : ((lesson.videoUrl || lesson.driveFileId) ? `<span class="lecture-card-meta-item">🎬 فيديو المحاضرة</span>` : '')}
             ${lesson.pdfUrl ? `<span class="lecture-card-meta-item">📄 ملزمة</span>` : ''}
             ${gradesHtml}
           </div>
