@@ -1007,6 +1007,7 @@
   let currentEditingLessonId = null;
   const cachedLessonsMap = new Map();
   const cachedCoursesMap = new Map();
+  let currentTeacherProfile = null;
 
   const stageTitles = {
     PREPARATORY: 'الصف الثالث الإعدادي (3 إعدادي)',
@@ -1154,6 +1155,10 @@
   async function loadStageCourses() {
     const container = document.getElementById('stageCoursesList');
     try {
+      const user = window.KhatwaAPI.getUser() || {};
+      if (!currentTeacherProfile) {
+        currentTeacherProfile = await window.KhatwaAPI.teacher.getProfile().catch(() => null);
+      }
       const courses = await window.KhatwaAPI.teacher.getWorkspaceCourses(currentStage);
       if (!courses || courses.length === 0) {
         container.innerHTML = `
@@ -1297,7 +1302,8 @@
         `;
       }).join('');
     } catch (e) {
-      container.innerHTML = '<div style="color:var(--err);">فشل تحميل الكورسات.</div>';
+      console.error('loadStageCourses failed:', e);
+      container.innerHTML = `<div style="color:var(--err);">فشل تحميل الكورسات. ${escapeHtml(e?.message || '')}</div>`;
     }
   }
 
