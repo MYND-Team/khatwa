@@ -6,6 +6,7 @@ import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 import path from 'path';
 import fs from 'fs';
+import os from 'os';
 
 import { env } from './config/env';
 import { errorHandler } from './utils/errors';
@@ -249,11 +250,23 @@ app.get('/api/health', (_req, res) => {
 });
 
 // ─── Static Uploads Serving & PDF Stream Route ────────────────────────────────
-const uploadsDir = path.resolve(process.cwd(), 'uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
+const uploadsDir = (process.env.VERCEL || process.env.NODE_ENV === 'production')
+  ? path.join(os.tmpdir(), 'khatwa-uploads')
+  : path.resolve(process.cwd(), 'uploads');
+
+try {
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
+} catch {
+  // Ignored if directory creation fails on read-only environments (e.g., Vercel / AWS Lambda)
 }
+
 app.use('/uploads', express.static(uploadsDir));
+const localUploadsDir = path.resolve(process.cwd(), 'uploads');
+if (fs.existsSync(localUploadsDir) && localUploadsDir !== uploadsDir) {
+  app.use('/uploads', express.static(localUploadsDir));
+}
 
 app.get(['/lessons/:id/pdf', '/api/lessons/:id/pdf', '/student/lessons/:id/pdf', '/teacher/lessons/:id/pdf-view'], asyncHandler(async (req, res) => {
   const lesson = await prisma.lesson.findUnique({
@@ -283,6 +296,13 @@ app.get(['/lessons/:id/pdf', '/api/lessons/:id/pdf', '/student/lessons/:id/pdf',
       fs.createReadStream(absPath).pipe(res);
       return;
     }
+    const tmpPath = path.resolve(uploadsDir, relPath.replace(/^uploads\/?/, ''));
+    if (fs.existsSync(tmpPath)) {
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(fileName)}"`);
+      fs.createReadStream(tmpPath).pipe(res);
+      return;
+    }
   }
 
   if (pdfTarget.startsWith('/uploads') || pdfTarget.startsWith('uploads/')) {
@@ -292,6 +312,13 @@ app.get(['/lessons/:id/pdf', '/api/lessons/:id/pdf', '/student/lessons/:id/pdf',
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(fileName)}"`);
       fs.createReadStream(absPath).pipe(res);
+      return;
+    }
+    const tmpPath = path.resolve(uploadsDir, relPath.replace(/^uploads\/?/, ''));
+    if (fs.existsSync(tmpPath)) {
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(fileName)}"`);
+      fs.createReadStream(tmpPath).pipe(res);
       return;
     }
   }

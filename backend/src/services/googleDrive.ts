@@ -3,6 +3,7 @@ import * as googleapisModule from 'googleapis';
 import { Readable } from 'stream';
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 import { env } from '../config/env';
 import * as GoogleDriveAuth from './googleDriveAuth';
 
@@ -10,7 +11,9 @@ const google: typeof _google = _google || (googleapisModule as any).google || (g
 
 let _driveClient: ReturnType<typeof google.drive> | null = null;
 
-const UPLOADS_DIR = path.resolve(process.cwd(), 'uploads', 'videos');
+const UPLOADS_DIR = (process.env.VERCEL || process.env.NODE_ENV === 'production')
+  ? path.join(os.tmpdir(), 'khatwa-uploads', 'videos')
+  : path.resolve(process.cwd(), 'uploads', 'videos');
 
 /**
  * Service Account fallback credential loader.
@@ -418,8 +421,12 @@ export async function uploadVideo(input: {
 
   // Local fallback directory: uploads/videos/teacher-{id}/lesson-{id}/
   const targetDir = path.join(UPLOADS_DIR, `teacher-${input.teacherId}`, `lesson-${input.lessonId}`);
-  if (!fs.existsSync(targetDir)) {
-    fs.mkdirSync(targetDir, { recursive: true });
+  try {
+    if (!fs.existsSync(targetDir)) {
+      fs.mkdirSync(targetDir, { recursive: true });
+    }
+  } catch (err: any) {
+    console.warn('⚠️ Could not create local video fallback directory:', err?.message || err);
   }
 
   const safeName = `${Date.now()}-${input.filename.replace(/[^a-zA-Z0-9_.-]/g, '_')}`;
