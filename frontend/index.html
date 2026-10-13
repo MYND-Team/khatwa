@@ -171,15 +171,18 @@
           nl.innerHTML = '<li><a href="admin.html" class="active">📊 لوحة الإدارة</a></li>';
         });
 
-        // 2. Top Nav CTA: show only Admin user line and Dashboard button
+        // 2. Top Nav CTA: show Dark Mode, Lang, Admin user line and Dashboard button
         if (navCta) {
           navCta.innerHTML = `
+            <button class="dark-mode-toggle-btn" data-dark-toggle onclick="toggleDarkMode()" title="تبديل الوضع الليلي/النهاري">🌙 الليلي</button>
+            <button class="lang-switcher-btn" onclick="window.KhatwaI18n.toggleLanguage()">🌐 English</button>
             <div class="user-line" style="cursor:default;">
               <span class="avatar">👑</span>
               <span><span class="name">${user.name || user.username}</span><span class="role" style="color:var(--gold-light);font-weight:700;">مدير عام المنصة</span></span>
             </div>
             <a href="admin.html" class="btn btn-primary btn-sm">📊 لوحة الإدارة</a>
           `;
+          if (typeof initDarkMode === 'function') initDarkMode();
         }
 
         // 3. Hero actions: remove student register and show only Admin Dashboard CTA
@@ -205,12 +208,15 @@
           const dest = role === 'TEACHER' ? 'teacher-dashboard.html' : (role === 'STAFF' ? 'admin-points.html' : 'dashboard.html');
           const label = role === 'TEACHER' ? 'استوديو المعلم' : (role === 'STAFF' ? 'مراجعة الشحن' : 'لوحتي');
           navCta.innerHTML = `
+            <button class="dark-mode-toggle-btn" data-dark-toggle onclick="toggleDarkMode()" title="تبديل الوضع الليلي/النهاري">🌙 الليلي</button>
+            <button class="lang-switcher-btn" onclick="window.KhatwaI18n.toggleLanguage()">🌐 English</button>
             <a href="${dest}" class="user-line">
               <span class="avatar">${(user.name || user.username || 'م').charAt(0)}</span>
               <span><span class="name">${user.name || user.username}</span><span class="role">${role === 'TEACHER' ? 'مدرس' : role === 'STAFF' ? 'مشرف' : 'طالب'}</span></span>
             </a>
             <a href="${dest}" class="btn btn-primary btn-sm">${label}</a>
           `;
+          if (typeof initDarkMode === 'function') initDarkMode();
         }
       }
     }

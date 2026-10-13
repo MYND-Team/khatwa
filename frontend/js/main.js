@@ -9,22 +9,39 @@ document.addEventListener('DOMContentLoaded', () => {
   // ─── Mobile nav toggle ─────────────────────────────────────────────────────
   const toggle = document.querySelector('.nav-toggle');
   const links = document.querySelector('.nav-links');
+
+  let navBackdrop = document.querySelector('.nav-backdrop');
+  if (!navBackdrop && links) {
+    navBackdrop = document.createElement('div');
+    navBackdrop.className = 'nav-backdrop';
+    document.body.appendChild(navBackdrop);
+  }
+
+  function closeMobileNav() {
+    if (links) links.classList.remove('open');
+    if (navBackdrop) navBackdrop.classList.remove('show');
+  }
+
   if (toggle && links) {
     toggle.addEventListener('click', (e) => {
       e.stopPropagation();
-      links.classList.toggle('open');
+      const willOpen = !links.classList.contains('open');
+      links.classList.toggle('open', willOpen);
+      if (navBackdrop) navBackdrop.classList.toggle('show', willOpen);
     });
+
+    if (navBackdrop) {
+      navBackdrop.addEventListener('click', closeMobileNav);
+    }
 
     document.addEventListener('click', (e) => {
       if (links.classList.contains('open') && !links.contains(e.target) && !toggle.contains(e.target)) {
-        links.classList.remove('open');
+        closeMobileNav();
       }
     });
 
     links.querySelectorAll('a').forEach(a => {
-      a.addEventListener('click', () => {
-        links.classList.remove('open');
-      });
+      a.addEventListener('click', closeMobileNav);
     });
   }
 
@@ -294,9 +311,9 @@ function initDarkMode() {
   // Update button text and attach click listener if not already in HTML
   const isEn = window.KhatwaI18n?.getLanguage() === 'en';
   document.querySelectorAll('[data-dark-toggle]').forEach(btn => {
-    btn.textContent = isDark
-      ? (isEn ? '☀️ Light' : '☀️ المضيء')
-      : (isEn ? '🌙 Dark' : '🌙 الليلي');
+    const icon = isDark ? '☀️' : '🌙';
+    const label = isDark ? (isEn ? ' Light' : ' المضيء') : (isEn ? ' Dark' : ' الليلي');
+    btn.innerHTML = `<span class="theme-icon">${icon}</span><span class="btn-label">${label}</span>`;
     if (!btn.hasAttribute('onclick') && !btn._hasDarkListener) {
       btn._hasDarkListener = true;
       btn.addEventListener('click', toggleDarkMode);
@@ -320,7 +337,9 @@ function toggleDarkMode() {
 
   document.querySelectorAll('[data-dark-toggle]').forEach(btn => {
     const isEn = window.KhatwaI18n?.getLanguage() === 'en';
-    btn.textContent = newDark ? (isEn ? '☀️ Light' : '☀️ المضيء') : (isEn ? '🌙 Dark' : '🌙 الليلي');
+    const icon = newDark ? '☀️' : '🌙';
+    const label = newDark ? (isEn ? ' Light' : ' المضيء') : (isEn ? ' Dark' : ' الليلي');
+    btn.innerHTML = `<span class="theme-icon">${icon}</span><span class="btn-label">${label}</span>`;
   });
 }
 
@@ -597,6 +616,16 @@ function initCollapsibleTaskbar() {
       backdrop.classList.toggle('show');
     });
   }
+
+  // Auto-close mobile taskbar on item selection
+  taskbar.querySelectorAll('.khatwa-taskbar-item, .khatwa-taskbar-foot-btn, a').forEach(el => {
+    el.addEventListener('click', () => {
+      if (window.innerWidth <= 768) {
+        taskbar.classList.remove('mobile-open');
+        backdrop.classList.remove('show');
+      }
+    });
+  });
 
   // Keep admin active item synced when clicking tabs
   if (role === 'ADMIN') {

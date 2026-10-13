@@ -1914,7 +1914,8 @@
     }
 
     document.querySelectorAll('.lang-switcher-btn').forEach(btn => {
-      btn.innerHTML = lang === 'ar' ? '🌐 English' : '🌐 العربية';
+      const label = lang === 'ar' ? ' English' : ' العربية';
+      btn.innerHTML = `<span class="lang-icon">🌐</span><span class="btn-label">${label}</span>`;
     });
 
     try {
