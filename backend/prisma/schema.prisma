@@ -442,6 +442,7 @@ model Lesson {
   scheduledPublishAt DateTime?
 
   // Content URLs / Files
+  imageUrl         String?
   videoUrl         String?
   driveFileId      String? // Drive fileId — NOT a public link
   driveFileName    String?

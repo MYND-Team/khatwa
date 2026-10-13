@@ -14,6 +14,7 @@ export async function createLesson(input: {
   price?: number;
   pointCost?: number;
   orderIndex?: number;
+  imageUrl?: string | null;
   isPublished?: boolean;
 }) {
   return prisma.lesson.create({
@@ -24,6 +25,7 @@ export async function createLesson(input: {
       academicStage: input.academicStage || 'SECONDARY_1',
       title: input.title,
       description: input.description,
+      imageUrl: input.imageUrl || null,
       price: input.price ?? 0.0,
       pointCost: input.pointCost ?? 0,
       orderIndex: input.orderIndex ?? 0,

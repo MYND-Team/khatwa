@@ -46,13 +46,28 @@ export async function createAccessCode(input: CreateAccessCodeInput) {
     expiresAt = new Date(Date.now() + input.expiresInHours * 3600 * 1000);
   }
 
+  let validCreatorId: string | undefined = undefined;
+  if (input.createdById) {
+    try {
+      const userExists = await prisma.user.findUnique({
+        where: { id: input.createdById },
+        select: { id: true },
+      });
+      if (userExists) {
+        validCreatorId = userExists.id;
+      }
+    } catch {
+      validCreatorId = undefined;
+    }
+  }
+
   const record = await prisma.accessCode.create({
     data: {
       code: plainCode,
       codeHash,
       points: input.points,
       expiresAt,
-      createdById: input.createdById,
+      createdById: validCreatorId,
       status: 'ACTIVE',
     },
     select: {

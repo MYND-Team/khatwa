@@ -2377,7 +2377,7 @@ html[dir="ltr"] .khatwa-whatsapp-float:hover .khatwa-whatsapp-label {
 }
 
 /* Ensure all content containers sit cleanly above the floating mesh */
-.nav, .app-shell, .main, .container, .card, .block, .modal-overlay, .modal-card, footer {
+.nav, .app-shell, .main, .container, .card, .block, footer {
   position: relative;
   z-index: 1;
 }
@@ -2436,7 +2436,11 @@ body.dark-mode .khatwa-taskbar {
   justify-content: space-between;
   border-bottom: 1px solid var(--glass-border);
   background: transparent;
-  min-height: 58px;
+  min-height: 64px;
+}
+.khatwa-taskbar:not(:hover):not(.expanded) .khatwa-taskbar-head {
+  justify-content: center;
+  padding: 12px 6px;
 }
 .khatwa-taskbar-brand {
   display: flex;
@@ -2446,9 +2450,15 @@ body.dark-mode .khatwa-taskbar {
   text-decoration: none;
   color: var(--ink);
 }
+.khatwa-taskbar:not(:hover):not(.expanded) .khatwa-taskbar-brand {
+  justify-content: center;
+  width: 100%;
+}
 .khatwa-taskbar-logo {
-  width: 38px;
-  height: 38px;
+  width: 48px;
+  height: 48px;
+  max-width: 48px;
+  max-height: 48px;
   border-radius: 0 !important;
   object-fit: contain;
   flex-shrink: 0;
@@ -2660,7 +2670,7 @@ html[dir="ltr"] .khatwa-taskbar:not(:hover):not(.expanded) .khatwa-taskbar-item:
 
 /* Taskbar Footer / Quick Actions */
 .khatwa-taskbar-foot {
-  padding: 12px;
+  padding: 12px 10px;
   border-top: 1px solid var(--glass-border);
   display: flex;
   flex-direction: column;
@@ -2682,6 +2692,16 @@ html[dir="ltr"] .khatwa-taskbar:not(:hover):not(.expanded) .khatwa-taskbar-item:
   transition: all 0.15s;
   white-space: nowrap;
   text-decoration: none;
+  justify-content: flex-start;
+}
+/* In collapsed mode, center the bottom 3 buttons so icons align exactly on the same vertical center line as the items above */
+.khatwa-taskbar:not(:hover):not(.expanded) .khatwa-taskbar-foot-btn {
+  justify-content: center;
+  padding: 8px 6px;
+}
+.khatwa-taskbar:hover .khatwa-taskbar-foot-btn,
+.khatwa-taskbar.expanded .khatwa-taskbar-foot-btn {
+  padding: 9px 14px;
 }
 .khatwa-taskbar-foot-btn:hover {
   background: var(--glass-hover-bg);
@@ -2690,6 +2710,12 @@ html[dir="ltr"] .khatwa-taskbar:not(:hover):not(.expanded) .khatwa-taskbar-item:
 :root[data-theme="dark"] .khatwa-taskbar-foot-btn:hover {
   background: var(--glass-hover-bg);
   color: var(--primary-bright);
+}
+
+/* Ensure top horizontal admin tabs are hidden since sidebar handles navigation */
+.admin-nav-tabs,
+#adminTopNavTabs {
+  display: none !important;
 }
 
 /* Page content offset to accommodate taskbar without overlapping */
@@ -3313,15 +3339,15 @@ html[dir="rtl"] .lecture-status-pill {
   gap: 3px;
 }
 
-/* Card Footer */
 .lecture-card-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 16px;
+  padding: 10px 14px;
   border-top: 1px solid var(--line-soft);
   background: var(--bg-raised);
   gap: 8px;
+  flex-wrap: nowrap;
 }
 
 body.dark-mode .lecture-card-footer,
@@ -3330,21 +3356,35 @@ body.dark-mode .lecture-card-footer,
 }
 
 .lecture-card-price {
-  font-size: 1.05rem;
+  font-size: 1.02rem;
   font-weight: 800;
   color: var(--ink);
-  white-space: nowrap;
+  white-space: nowrap !important;
+  flex-shrink: 0;
 }
 
 .lecture-card-price.free {
   color: #10b981;
 }
 
+.lecture-card-price.enrolled {
+  color: #10b981;
+  font-size: 0.88rem;
+  font-weight: 800;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  padding: 4px 10px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .lecture-card-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
+  gap: 6px;
   background: rgba(148, 163, 184, 0.14);
   color: var(--ink);
   font-weight: 700;
@@ -3355,7 +3395,9 @@ body.dark-mode .lecture-card-footer,
   cursor: pointer;
   text-decoration: none;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  white-space: nowrap;
+  white-space: nowrap !important;
+  flex-shrink: 0;
+  box-sizing: border-box;
 }
 
 body.dark-mode .lecture-card-btn,
@@ -3373,14 +3415,16 @@ body.dark-mode .lecture-card-btn,
 }
 
 .lecture-card-btn.primary {
-  background: var(--primary);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-deep) 100%);
   color: #ffffff;
   border-color: var(--primary);
+  box-shadow: 0 2px 8px rgba(14, 75, 91, 0.25);
 }
 
 .lecture-card-btn.primary:hover {
-  background: var(--primary-deep, #8C6527);
-  box-shadow: 0 4px 14px rgba(184, 142, 79, 0.4);
+  background: var(--primary-hover);
+  box-shadow: 0 4px 14px rgba(14, 75, 91, 0.35);
+  transform: translateY(-1px);
 }
 
 /* Mobile Responsive - Lecture Grid */
@@ -3407,16 +3451,26 @@ body.dark-mode .lecture-card-btn,
     font-size: 0.75rem;
   }
   .lecture-card-footer {
-    padding: 8px 12px;
-    flex-wrap: wrap;
+    padding: 8px 10px;
+    flex-wrap: nowrap;
     gap: 6px;
+    align-items: center;
+    justify-content: space-between;
   }
   .lecture-card-price {
-    font-size: 0.92rem;
+    font-size: 0.86rem;
+    white-space: nowrap !important;
+    flex-shrink: 0;
+  }
+  .lecture-card-price.enrolled {
+    font-size: 0.78rem;
+    padding: 3px 8px;
   }
   .lecture-card-btn {
     font-size: 0.75rem;
     padding: 6px 10px;
+    white-space: nowrap !important;
+    flex-shrink: 0;
   }
   .lecture-lock-disc {
     width: 44px;

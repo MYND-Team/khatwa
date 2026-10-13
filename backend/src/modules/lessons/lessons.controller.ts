@@ -32,6 +32,7 @@ const createLessonSchema = z.object({
     description: z.string().optional(),
     pointCost: z.coerce.number().int().min(0),
     orderIndex: z.coerce.number().int().optional(),
+    imageUrl: z.string().optional().nullable(),
   }),
 });
 
@@ -43,6 +44,7 @@ const updateLessonSchema = z.object({
     pointCost: z.coerce.number().int().min(0).optional(),
     price: z.coerce.number().min(0).optional(),
     orderIndex: z.coerce.number().int().optional(),
+    imageUrl: z.string().optional().nullable(),
     videoUrl: z.string().optional().nullable(),
     pdfUrl: z.string().optional().nullable(),
     pdfFileName: z.string().optional().nullable(),

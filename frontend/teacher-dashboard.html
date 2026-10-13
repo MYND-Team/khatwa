@@ -319,6 +319,7 @@
       </div>
       <div class="form-group" style="margin-bottom:14px;">
         <label class="form-label">🖼️ رفع صورة غلاف جديدة للكورس (اختياري)</label>
+        <div id="editCourseCoverPreview" style="margin-bottom:8px;display:none;"></div>
         <input type="file" id="editCourseCoverFile" accept="image/*" class="form-control">
       </div>
       <div class="form-group" style="margin-bottom:14px;">
@@ -743,6 +744,7 @@
 
       <div class="form-group" style="margin-bottom:12px;">
         <label class="form-label">🖼️ تحديث صورة / بوستر المحاضرة (Thumbnail)</label>
+        <div id="editLessonCoverPreview" style="margin-bottom:8px;display:none;"></div>
         <input type="file" class="form-control" id="editLessonCoverFile" accept="image/*">
       </div>
 
@@ -945,7 +947,7 @@
     
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;border-bottom:1px solid var(--line-soft);padding-bottom:16px;">
       <div style="display:flex;align-items:center;gap:14px;">
-        <div style="width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,var(--primary) 0%,var(--primary-deep) 100%);display:flex;align-items:center;justify-content:center;font-size:1.6rem;color:#fff;box-shadow:0 4px 14px rgba(184,142,79,0.35);">
+        <div id="detLessonIconBox" style="width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,var(--primary) 0%,var(--primary-deep) 100%);display:flex;align-items:center;justify-content:center;font-size:1.6rem;color:#fff;overflow:hidden;box-shadow:0 4px 14px rgba(184,142,79,0.35);flex-shrink:0;">
           🎬
         </div>
         <div>
@@ -1205,7 +1207,8 @@
           <div class="card" style="padding:22px;border-radius:18px;">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
               <div>
-                <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap;">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;flex-wrap:wrap;">
+                  ${c.imageUrl ? `<img src="${escapeHtml(c.imageUrl)}" alt="${escapeHtml(c.title)}" style="width:52px;height:38px;border-radius:8px;object-fit:cover;border:1px solid var(--line-soft);flex-shrink:0;">` : ''}
                   <h2 style="margin:0;font-size:1.3rem;">${escapeHtml(c.title)}</h2>
                   <span class="tag tag-ok">${escapeHtml(c.subject)}</span>
                   <span class="tag" style="background:rgba(59,130,246,0.12);color:#2563eb;border:1px solid rgba(59,130,246,0.3);font-weight:700;">👥 ${c._count?.lessonSubscriptions || 0} اشتراك بالكورس</span>
@@ -1247,7 +1250,7 @@
                           const isNew = createdTime > 0 && (Date.now() - createdTime) < (24 * 60 * 60 * 1000);
                           const newBadgeHtml = isNew ? '<span class="lecture-new-badge">جديد</span>' : '';
 
-                          const coverUrl = l.coverImage || c.coverImage || '';
+                          const coverUrl = l.imageUrl || l.coverImage || c.imageUrl || c.coverImage || '';
                           const durationMin = (l.durationMinutes && Number(l.durationMinutes) > 0) ? Number(l.durationMinutes) : null;
                           const teacherName = currentTeacherProfile?.displayName || user?.name || user?.username || 'أستاذ المادة';
                           const teacherInitial = teacherName.trim().charAt(0) || 'أ';
@@ -1300,7 +1303,7 @@
                                 </div>
                               </div>
                               <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
-                                <button type="button" class="btn btn-sm" style="padding:4px 10px;font-size:.8rem;background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;border-radius:8px;font-weight:700;display:inline-flex;align-items:center;gap:4px;" onclick="openLessonFullDetailsModal('${l.id}')">📊 بيانات المحاضرة والطلاب</button>
+                                <button type="button" class="btn btn-sm" style="padding:4px 10px;font-size:.8rem;background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;border-radius:8px;font-weight:700;display:inline-flex;align-items:center;gap:4px;" onclick="event.stopPropagation();openLessonFullDetailsModal('${l.id}')">📊 بيانات المحاضرة والطلاب</button>
                                 ${isDraft ? `<button type="button" class="btn btn-sm" style="padding:3px 10px;font-size:.8rem;background:#16a34a;color:#fff;border-radius:8px;font-weight:700;" onclick="quickPublishLesson('${l.id}')">🚀 نشر للطلاب</button>` : `<button type="button" class="btn btn-line btn-sm" style="padding:3px 10px;font-size:.8rem;color:#6b7280;border-color:rgba(107,114,128,0.4);" onclick="quickHideLesson('${l.id}')">👁️ إخفاء عن الطلاب</button>`}
                                 <button type="button" class="btn btn-line btn-sm" style="padding:3px 10px;font-size:.8rem;color:var(--primary);" onclick="openEditLessonModal('${l.id}')">✏️ تعديل السعر والبيانات</button>
                                 <button type="button" class="btn btn-text btn-sm" onclick="openQuizBuilderForLesson('${l.id}', 'assignment')">📝 الواجب</button>
@@ -1460,14 +1463,37 @@
   }
 
   async function openLessonFullDetailsModal(lessonId) {
-    const lesson = cachedLessonsMap.get(lessonId);
+    const lesson = (lessonId && typeof lessonId === 'object')
+      ? lessonId
+      : (cachedLessonsMap.get(lessonId) || cachedLessonsMap.get(String(lessonId)) || cachedLessonsMap.get(Number(lessonId)) || null);
+
     if (!lesson) {
       alert('لم يتم العثور على بيانات المحاضرة');
       return;
     }
 
     const modal = document.getElementById('lessonFullDetailsModal');
+    if (!modal) {
+      console.error('Modal lessonFullDetailsModal not found');
+      return;
+    }
+    modal.style.display = 'flex';
+    modal.classList.add('active', 'open', 'show');
+    modal.onclick = (e) => {
+      if (e.target === modal) closeLessonFullDetailsModal();
+    };
+
     document.getElementById('detLessonTitle').textContent = lesson.title || 'المحاضرة';
+    
+    const iconBox = document.getElementById('detLessonIconBox');
+    if (iconBox) {
+      const thumbUrl = lesson.imageUrl || lesson.coverImage || '';
+      if (thumbUrl) {
+        iconBox.innerHTML = `<img src="${escapeHtml(thumbUrl)}" style="width:100%;height:100%;object-fit:cover;">`;
+      } else {
+        iconBox.innerHTML = '🎬';
+      }
+    }
     
     const priceEGP = Number(lesson.price) || 0;
     const priceBadge = document.getElementById('detLessonPriceBadge');
@@ -1581,7 +1607,10 @@
 
   function closeLessonFullDetailsModal() {
     const modal = document.getElementById('lessonFullDetailsModal');
-    if (modal) modal.style.display = 'none';
+    if (modal) {
+      modal.style.display = 'none';
+      modal.classList.remove('active', 'open', 'show');
+    }
   }
 
   // ─── Calendar View ──────────────────────────────────────────────────────────
@@ -2138,6 +2167,37 @@
     document.getElementById('createCourseModal').style.display = 'none';
   }
 
+  function compressImageFile(file, maxWidth = 1200, maxHeight = 800, quality = 0.85) {
+    return new Promise((resolve) => {
+      if (!file || !file.type.startsWith('image/')) {
+        resolve(null);
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          let { width, height } = img;
+          if (width > maxWidth || height > maxHeight) {
+            const ratio = Math.min(maxWidth / width, maxHeight / height);
+            width = Math.round(width * ratio);
+            height = Math.round(height * ratio);
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = () => resolve(e.target.result);
+        img.src = e.target.result;
+      };
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(file);
+    });
+  }
+
   async function submitCreateCourse(e) {
     e.preventDefault();
     const title = document.getElementById('courseTitleInput').value.trim();
@@ -2154,11 +2214,7 @@
 
     let imageUrl = null;
     if (coverFile) {
-      imageUrl = await new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onload = (e) => resolve(e.target.result);
-        reader.readAsDataURL(coverFile);
-      });
+      imageUrl = await compressImageFile(coverFile);
     }
 
     try {
@@ -2196,6 +2252,20 @@
     document.getElementById('editCoursePriceInput').value = (course.price !== undefined && course.price !== null) ? course.price : 0;
     document.getElementById('editCourseDescInput').value = course.description || '';
     document.getElementById('editCourseIsPublished').checked = course.isPublished !== false;
+
+    const prevEl = document.getElementById('editCourseCoverPreview');
+    if (prevEl) {
+      if (course.imageUrl) {
+        prevEl.style.display = 'block';
+        prevEl.innerHTML = `<div style="display:flex;align-items:center;gap:10px;background:var(--bg-raised);padding:6px 12px;border-radius:10px;border:1px solid var(--line-soft);"><img src="${escapeHtml(course.imageUrl)}" style="width:60px;height:40px;object-fit:cover;border-radius:6px;"><span style="font-size:0.8rem;color:var(--ink-dim);">غلاف الكورس الحالي</span></div>`;
+      } else {
+        prevEl.style.display = 'none';
+        prevEl.innerHTML = '';
+      }
+    }
+    const coverInput = document.getElementById('editCourseCoverFile');
+    if (coverInput) coverInput.value = '';
+
     document.getElementById('editCourseModal').style.display = 'flex';
   }
 
@@ -2220,11 +2290,7 @@
 
     let imageUrl = undefined;
     if (coverFile) {
-      imageUrl = await new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onload = (ev) => resolve(ev.target.result);
-        reader.readAsDataURL(coverFile);
-      });
+      imageUrl = await compressImageFile(coverFile);
     }
 
     try {
@@ -2750,6 +2816,12 @@
         pdfUrl = cleanPdf;
       }
 
+      const coverFile = document.getElementById('lessonCoverFile')?.files[0];
+      let imageUrl = null;
+      if (coverFile) {
+        imageUrl = await compressImageFile(coverFile);
+      }
+
       let lesson;
       try {
         lesson = await window.KhatwaAPI.teacher.createLesson(chapterId, {
@@ -2757,6 +2829,7 @@
           price,
           pointCost,
           description,
+          imageUrl,
           videoUrl,
           pdfUrl,
           isPublished,
@@ -2772,6 +2845,7 @@
             price,
             pointCost,
             description,
+            imageUrl,
             videoUrl,
             pdfUrl,
             isPublished,
@@ -2918,6 +2992,20 @@
     document.getElementById('editLessonPdfUrlInput').value = lesson.pdfUrl || '';
     document.getElementById('editLessonDescInput').value = lesson.description || '';
     document.getElementById('editLessonIsPublished').checked = lesson.isPublished !== false;
+
+    const prevEl = document.getElementById('editLessonCoverPreview');
+    if (prevEl) {
+      if (lesson.imageUrl) {
+        prevEl.style.display = 'block';
+        prevEl.innerHTML = `<div style="display:flex;align-items:center;gap:10px;background:var(--bg-raised);padding:6px 12px;border-radius:10px;border:1px solid var(--line-soft);"><img src="${escapeHtml(lesson.imageUrl)}" style="width:60px;height:40px;object-fit:cover;border-radius:6px;"><span style="font-size:0.8rem;color:var(--ink-dim);">الصورة الحالية للمحاضرة</span></div>`;
+      } else {
+        prevEl.style.display = 'none';
+        prevEl.innerHTML = '';
+      }
+    }
+    const coverInput = document.getElementById('editLessonCoverFile');
+    if (coverInput) coverInput.value = '';
+
     document.getElementById('editLessonModal').style.display = 'flex';
   }
 
@@ -2937,10 +3025,16 @@
     const description = document.getElementById('editLessonDescInput').value.trim() || null;
     const isPublished = document.getElementById('editLessonIsPublished').checked;
     const newPdfFile = document.getElementById('editLessonPdfFile')?.files[0];
+    const editCoverFile = document.getElementById('editLessonCoverFile')?.files[0];
 
     const btn = document.getElementById('saveEditLessonBtn');
     btn.disabled = true;
     btn.textContent = 'جارٍ الحفظ...';
+
+    let newImageUrl = undefined;
+    if (editCoverFile) {
+      newImageUrl = await compressImageFile(editCoverFile);
+    }
 
     try {
       await window.KhatwaAPI.teacher.updateLesson(id, {
@@ -2951,7 +3045,11 @@
         pdfUrl,
         description,
         isPublished,
+        ...(newImageUrl !== undefined && { imageUrl: newImageUrl }),
       });
+      if (newImageUrl !== undefined && activeEditingLesson) {
+        activeEditingLesson.imageUrl = newImageUrl;
+      }
 
       if (newPdfFile) {
         const editProgressWrapper = document.getElementById('editPdfProgressWrapper');

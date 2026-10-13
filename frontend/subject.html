@@ -263,7 +263,7 @@
     const teacherName = currentCourse?.teacherProfile?.displayName || currentCourse?.teacherName || 'مدرس المادة';
     const teacherInitial = teacherName.trim().charAt(0) || 'م';
     const teacherPhoto = currentCourse?.teacherProfile?.photoUrl || currentCourse?.teacherPhoto || '';
-    const coverUrl = lesson.coverImage || currentCourse?.coverImage || '';
+    const coverUrl = lesson.imageUrl || lesson.coverImage || currentCourse?.imageUrl || currentCourse?.coverImage || '';
 
     const durationMin = (lesson.durationMinutes && Number(lesson.durationMinutes) > 0) ? Number(lesson.durationMinutes) : null;
 

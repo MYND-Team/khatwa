@@ -222,14 +222,10 @@
     }
   }
 
-  /* Admin Navigation Tabs Styling */
-  .admin-nav-tabs {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    border-bottom: 2px solid rgba(255, 255, 255, 0.08);
-    padding-bottom: 12px;
-    margin-bottom: 24px;
+  /* Admin Navigation Tabs Styling (Hidden because already present in sidebar) */
+  .admin-nav-tabs,
+  #adminTopNavTabs {
+    display: none !important;
   }
   .admin-nav-tab {
     background: rgba(255, 255, 255, 0.035);
@@ -3596,43 +3592,59 @@
 
   async function handleGenerateAccessCodes(event) {
     event.preventDefault();
-    const points = parseInt(document.getElementById('accessCodePoints').value, 10);
-    const count = parseInt(document.getElementById('accessCodeCount').value, 10);
-    const expiryHours = parseInt(document.getElementById('accessCodeExpiryHours').value, 10) || undefined;
+    const pointsInput = document.getElementById('accessCodePoints');
+    const countInput = document.getElementById('accessCodeCount');
+    const expiryInput = document.getElementById('accessCodeExpiryHours');
 
-    if (!points || points < 1) {
+    const points = pointsInput ? parseInt(pointsInput.value, 10) : 0;
+    const count = countInput ? parseInt(countInput.value, 10) : 0;
+    const expiryHoursRaw = expiryInput ? expiryInput.value.trim() : '';
+    const expiryHours = expiryHoursRaw ? parseInt(expiryHoursRaw, 10) : undefined;
+
+    if (!points || isNaN(points) || points < 1) {
       alert('يرجى تحديد قيمة رصيد صحيحة بالجنيه للكارت');
       return;
     }
-    if (!count || count < 1 || count > 50) {
+    if (!count || isNaN(count) || count < 1 || count > 50) {
       alert('يرجى تحديد عدد كروت بين 1 و 50');
       return;
     }
 
     const btn = document.getElementById('btnGenerateCodes');
-    const originalText = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = '<span>جارٍ التوليد... ⏳</span>';
+    const originalText = btn ? btn.innerHTML : 'توليد الكروت';
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<span>جارٍ التوليد... ⏳</span>';
+    }
 
     try {
-      const res = await window.KhatwaAPI.admin.createAccessCode({
-        points,
-        count,
-        expiresInHours: expiryHours,
-      });
+      const payload = { points, count };
+      if (expiryHours && !isNaN(expiryHours) && expiryHours > 0) {
+        payload.expiresInHours = expiryHours;
+      }
 
-      const codes = res.codes || [res];
+      const res = await window.KhatwaAPI.admin.createAccessCode(payload);
+
+      const codes = Array.isArray(res) ? res : (res?.codes || (res?.code ? [res] : []));
+      if (!codes || codes.length === 0) {
+        throw new Error('لم يتم استلام أكواد مولدة من الخادم');
+      }
       newlyGeneratedCodes = codes;
 
       await loadAccessCodes();
-      await loadAnalytics();
+      if (typeof loadAnalytics === 'function') {
+        await loadAnalytics().catch(() => {});
+      }
 
       openPrintCodesModal(codes, points);
     } catch (err) {
-      alert(err.message || 'حدث خطأ أثناء توليد الكروت');
+      console.error('Error generating access codes:', err);
+      alert(err.message || 'حدث خطأ أثناء توليد الكروت. يرجى مراجعة الاتصال بالخادم والمحاولة مجدداً.');
     } finally {
-      btn.disabled = false;
-      btn.innerHTML = originalText;
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
     }
   }
 

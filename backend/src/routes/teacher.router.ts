@@ -812,6 +812,7 @@ router.post(
     const {
       title,
       description,
+      imageUrl,
       price,
       pointCost,
       orderIndex,
@@ -894,6 +895,7 @@ router.post(
           academicStage: chapter.course.academicStage,
           title,
           description: description || null,
+          imageUrl: imageUrl || null,
           price: price !== undefined ? parseFloat(price) : 0.0,
           pointCost: pointCost !== undefined ? parseInt(pointCost) : 0,
           orderIndex: orderIndex !== undefined ? parseInt(orderIndex) : nextOrder,
@@ -952,6 +954,7 @@ router.post(
     const {
       title,
       description,
+      imageUrl,
       price,
       pointCost,
       orderIndex,
@@ -1046,6 +1049,7 @@ router.post(
           academicStage: course.academicStage,
           title,
           description: description || null,
+          imageUrl: imageUrl || null,
           price: price !== undefined ? parseFloat(price) : 0.0,
           pointCost: pointCost !== undefined ? parseInt(pointCost) : 0,
           orderIndex: orderIndex !== undefined ? parseInt(orderIndex) : nextOrder,

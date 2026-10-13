@@ -344,7 +344,7 @@
 
       const stageName = STAGE_NAMES[c.academicStage] || c.academicStage || '';
 
-      const coverUrl = c.imageUrl || '';
+      const coverUrl = c.imageUrl || c.coverImage || '';
       const posterHtml = coverUrl
         ? `<img src="${escapeHtml(coverUrl)}" alt="${escapeHtml(c.title)}" class="course-cover-img" data-subject="${escapeHtml(c.subject || 'خطوة')}">`
         : `<div class="lecture-card-poster-fallback">
@@ -375,11 +375,11 @@
         ? `<img src="${escapeHtml(teacherPhoto)}" alt="${escapeHtml(teacherName)}">`
         : `<span>${escapeHtml(teacherInitial)}</span>`;
 
-      const priceText = isEnrolled ? 'مشترك بالفعل' : (isFree ? '' : `${price} ج.م`);
-      const priceClass = (isEnrolled || isFree) ? 'free' : '';
+      const priceText = isEnrolled ? '✓ مشترك' : (isFree ? 'مجاني' : `${price} ج.م`);
+      const priceClass = isEnrolled ? 'enrolled' : (isFree ? 'free' : '');
 
       const buttonHtml = isEnrolled
-        ? `<a href="subject.html?courseId=${c.id}" class="lecture-card-btn primary">دخول الكورس ↗</a>`
+        ? `<a href="subject.html?courseId=${c.id}" class="lecture-card-btn primary enrolled-btn">دخول الكورس ↗</a>`
         : `<a href="subject.html?courseId=${c.id}" class="lecture-card-btn">عرض الكورس ↗</a>`;
 
       return `

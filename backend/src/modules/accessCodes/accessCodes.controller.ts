@@ -7,8 +7,14 @@ import { z } from 'zod';
 const createAccessCodeSchema = z.object({
   body: z.object({
     points: z.coerce.number().int().min(1, 'Points must be at least 1'),
-    expiresInHours: z.coerce.number().min(1).optional(),
-    count: z.coerce.number().int().min(1).max(100).optional(),
+    expiresInHours: z.preprocess(
+      (val) => (val === '' || val === null || val === undefined || Number(val) <= 0 || isNaN(Number(val)) ? undefined : val),
+      z.coerce.number().min(1).optional()
+    ),
+    count: z.preprocess(
+      (val) => (val === '' || val === null || val === undefined || isNaN(Number(val)) ? 1 : val),
+      z.coerce.number().int().min(1).max(100).optional().default(1)
+    ),
   }),
 });
 

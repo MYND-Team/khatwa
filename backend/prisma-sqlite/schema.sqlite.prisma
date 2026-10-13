@@ -258,6 +258,7 @@ model Lesson {
   isPublished        Boolean   @default(true)
   scheduledPublishAt DateTime?
 
+  imageUrl      String?
   videoUrl      String?
   driveFileId   String?
   driveFileName String?
