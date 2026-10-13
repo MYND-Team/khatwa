@@ -10,7 +10,22 @@ document.addEventListener('DOMContentLoaded', () => {
   const toggle = document.querySelector('.nav-toggle');
   const links = document.querySelector('.nav-links');
   if (toggle && links) {
-    toggle.addEventListener('click', () => links.classList.toggle('open'));
+    toggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      links.classList.toggle('open');
+    });
+
+    document.addEventListener('click', (e) => {
+      if (links.classList.contains('open') && !links.contains(e.target) && !toggle.contains(e.target)) {
+        links.classList.remove('open');
+      }
+    });
+
+    links.querySelectorAll('a').forEach(a => {
+      a.addEventListener('click', () => {
+        links.classList.remove('open');
+      });
+    });
   }
 
   // ─── Password show/hide ────────────────────────────────────────────────────
@@ -573,9 +588,10 @@ function initCollapsibleTaskbar() {
     });
   }
 
-  // Hook mobile toggle button if on page
+  // Hook mobile toggle button if on page and no top nav-links exists
   const navToggle = document.querySelector('.nav-toggle');
-  if (navToggle) {
+  const hasNavLinks = document.querySelector('.nav-links');
+  if (navToggle && !hasNavLinks) {
     navToggle.addEventListener('click', () => {
       taskbar.classList.toggle('mobile-open');
       backdrop.classList.toggle('show');
