@@ -1042,6 +1042,16 @@
     ALL: 'جميع المراحل (المجموع الشامل)'
   };
 
+  const stageShortTitles = {
+    PREPARATORY: '3 إعدادي',
+    SECONDARY_1: '1 ثانوي',
+    SECONDARY_2: '2 ثانوي',
+    BACCALAUREATE_2: '2 باكلوريا',
+    SECONDARY_3: '3 ثانوي',
+    BACCALAUREATE_3: '3 باكلوريا',
+    ALL: 'جميع المراحل'
+  };
+
   document.addEventListener('DOMContentLoaded', async () => {
     let user = window.KhatwaAPI.getUser();
     if (!user || (user.role !== 'TEACHER' && user.role !== 'ADMIN')) {
@@ -1102,6 +1112,32 @@
     }
   }
 
+  async function updateWorkspaceTabsBadges() {
+    try {
+      const wsRes = await window.KhatwaAPI.teacher.getWorkspaces().catch(() => null);
+      if (wsRes) {
+        const stageCounts = wsRes.stageCounts || {};
+        const totalUnique = wsRes.totalUniqueStudents !== undefined ? wsRes.totalUniqueStudents : 0;
+        document.querySelectorAll('.stage-folder-tab').forEach(b => {
+          const onclickAttr = b.getAttribute('onclick') || '';
+          const match = onclickAttr.match(/switchStage\('([^']+)'/);
+          if (match && match[1]) {
+            const st = match[1];
+            const base = stageShortTitles[st] || b.textContent.split('(')[0].trim();
+            if (st === 'ALL') {
+              b.innerHTML = `🌐 جميع المراحل <span style="font-size:0.75rem;font-weight:700;opacity:0.9;background:rgba(217,119,6,0.18);padding:1px 6px;border-radius:10px;margin-right:3px;">👥 ${totalUnique}</span>`;
+            } else {
+              const count = stageCounts[st] !== undefined ? stageCounts[st] : 0;
+              b.innerHTML = `${base} <span style="font-size:0.75rem;font-weight:700;opacity:0.9;background:rgba(14,75,91,0.18);padding:1px 6px;border-radius:10px;margin-right:3px;">👥 ${count}</span>`;
+            }
+          }
+        });
+      }
+    } catch (e) {
+      console.warn('Workspace badges error', e);
+    }
+  }
+
   async function refreshWorkspace() {
     if (document.getElementById('activeWorkspaceLabel')) {
       document.getElementById('activeWorkspaceLabel').textContent = stageTitles[currentStage] || 'الصف الأول الثانوي';
@@ -1117,6 +1153,7 @@
     await Promise.all([
       loadStageOverview(),
       loadStageCourses(),
+      updateWorkspaceTabsBadges(),
     ]);
   }
 
@@ -1139,8 +1176,15 @@
       const elStudents = document.getElementById('statStudents');
       if (elStudents) elStudents.textContent = overviewData.uniqueStudents || 0;
 
+      const studentCount = overviewData.uniqueStudents !== undefined ? overviewData.uniqueStudents : 0;
+      const totalSubs = overviewData.totalSubscriptions || 0;
+
+      if (document.getElementById('activeWorkspaceLabel')) {
+        document.getElementById('activeWorkspaceLabel').innerHTML = `${stageTitles[currentStage] || ''} <span style="color:var(--primary);font-weight:700;margin-right:6px;">(👥 ${studentCount} طالب فريد بالمرحلة)</span>`;
+      }
+
       if (document.getElementById('currentStageTitle')) {
-        const studentBadge = overviewData.uniqueStudents !== undefined ? ` <span class="tag" style="background:rgba(14,75,91,0.12);color:var(--primary);font-size:0.85rem;font-weight:700;margin-right:8px;border:1px solid rgba(14,75,91,0.25);">👥 ${overviewData.uniqueStudents} طالب مسجل بالمرحلة</span>` : '';
+        const studentBadge = ` <span class="tag" style="background:rgba(14,75,91,0.12);color:var(--primary);font-size:0.85rem;font-weight:700;margin-right:8px;border:1px solid rgba(14,75,91,0.25);" title="عدد الطلاب الفريدين المسجلين في هذه المرحلة بدون تكرار">👥 ${studentCount} طالب مسجل بالمرحلة (بدون تكرار)</span><span class="tag" style="background:rgba(107,114,128,0.1);color:var(--ink-dim);font-size:0.8rem;border:1px solid var(--line-soft);margin-right:6px;" title="إجمالي عدد مرات حضور الطلاب لكافة محاضرات المرحلة">📚 ${totalSubs} إجمالي حضور المحاضرات</span>`;
         document.getElementById('currentStageTitle').innerHTML = `📁 كورسات ${stageTitles[currentStage] || ''}${studentBadge}`;
       }
 
@@ -1211,7 +1255,8 @@
                   ${c.imageUrl ? `<img src="${escapeHtml(c.imageUrl)}" alt="${escapeHtml(c.title)}" style="width:52px;height:38px;border-radius:8px;object-fit:cover;border:1px solid var(--line-soft);flex-shrink:0;">` : ''}
                   <h2 style="margin:0;font-size:1.3rem;">${escapeHtml(c.title)}</h2>
                   <span class="tag tag-ok">${escapeHtml(c.subject)}</span>
-                  <span class="tag" style="background:rgba(59,130,246,0.12);color:#2563eb;border:1px solid rgba(59,130,246,0.3);font-weight:700;">👥 ${c._count?.lessonSubscriptions || 0} اشتراك بالكورس</span>
+                  <span class="tag" style="background:rgba(59,130,246,0.12);color:#2563eb;border:1px solid rgba(59,130,246,0.3);font-weight:700;" title="عدد الطلاب الفريدين المسجلين في هذا الكورس بدون تكرار">👥 ${c.uniqueStudentsCount !== undefined ? c.uniqueStudentsCount : (c._count?.lessonSubscriptions || 0)} طالب بالكورس (بدون تكرار)</span>
+                  ${(c.totalSubscriptionsCount || c._count?.lessonSubscriptions || 0) > 0 ? `<span class="tag" style="background:rgba(107,114,128,0.08);color:var(--ink-dim);font-size:0.8rem;border:1px solid var(--line-soft);" title="إجمالي مرات حضور واشتراك الطلاب في محاضرات هذا الكورس">📚 ${c.totalSubscriptionsCount || c._count?.lessonSubscriptions || 0} إجمالي حضور المحاضرات</span>` : ''}
                   ${c.price > 0 ? `<span class="tag" style="background:rgba(34,197,94,0.12);color:#16a34a;border:1px solid rgba(34,197,94,0.35);font-weight:700;">💵 سعر الكورس بالكامل: ${c.price} ج.م</span>` : ''}
                 </div>
                 <span class="meta">${stageTitles[c.academicStage]} · ${chapters.length} فصول / وحدات</span>
@@ -1288,7 +1333,7 @@
                               </div>
 
                               <div class="lecture-card-meta">
-                                <span class="lecture-card-meta-item" style="color:var(--primary);font-weight:700;background:rgba(217,119,6,0.08);padding:2px 8px;border-radius:6px;">👥 ${l._count?.subscriptions || 0} مشترك</span>
+                                <span class="lecture-card-meta-item" style="color:var(--primary);font-weight:700;background:rgba(217,119,6,0.08);padding:2px 8px;border-radius:6px;" title="عدد الطلاب الفريدين الحاضرين لهذه المحاضرة بدون تكرار">👥 ${l._count?.subscriptions || 0} طالب حاضر (بدون تكرار)</span>
                                 ${durationMin ? `<span class="lecture-card-meta-item">⏱️ ${durationMin} دقيقة</span>` : ((l.videoUrl || l.driveFileId) ? `<span class="lecture-card-meta-item">🎬 فيديو المحاضرة</span>` : '')}
                                 ${l.pdfUrl ? '<span class="lecture-card-meta-item">📄 PDF</span>' : ''}
                                 ${l.assignmentQuizId ? '<span class="lecture-card-meta-item">📝 واجب</span>' : ''}
@@ -1550,30 +1595,22 @@
     modal.style.display = 'flex';
 
     try {
-      const [students, revenueData] = await Promise.all([
-        window.KhatwaAPI.teacher.getWorkspaceStudents(currentStage).catch(() => []),
+      const [lessonStudentsRes, revenueData] = await Promise.all([
+        window.KhatwaAPI.teacher.getLessonStudents(lesson.id).catch(() => ({ totalUniqueStudents: 0, students: [] })),
         window.KhatwaAPI.teacher.getWorkspaceRevenue(currentStage).catch(() => []),
       ]);
 
+      const lessonStudents = lessonStudentsRes?.students || [];
+      const actualCount = lessonStudentsRes?.totalUniqueStudents !== undefined ? lessonStudentsRes.totalUniqueStudents : lessonStudents.length;
+
       // Filter revenue for this lesson
       const lessonRevItems = (revenueData || []).filter(r => r.lessonId === lesson.id || (r.description && r.description.includes(lesson.title)));
-      const grossRev = lessonRevItems.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0) || (lesson.subscriptions?.length ? (lesson.subscriptions.length * priceEGP) : 0);
+      const grossRev = lessonRevItems.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0) || (actualCount * priceEGP);
       const platformFeePct = 0.10; // 10% platform share standard
       const platformCut = Math.round(grossRev * platformFeePct);
       const netRev = grossRev - platformCut;
 
-      // Filter students subscribed or having grades for this lesson
-      const lessonStudents = (students || []).filter(s => {
-        if (!s) return false;
-        if (s.lessonId === lesson.id) return true;
-        if (s.enrolledLessons && s.enrolledLessons.includes(lesson.id)) return true;
-        if (s.completedLessons && s.completedLessons.includes(lesson.id)) return true;
-        return true;
-      });
-
-      const actualCount = lesson.subscriptions?.length || (grossRev > 0 && priceEGP > 0 ? Math.round(grossRev / priceEGP) : (lessonStudents.length > 0 ? Math.min(lessonStudents.length, 5) : 0));
-
-      document.getElementById('detLessonStudentsCount').textContent = `${actualCount} طالب`;
+      document.getElementById('detLessonStudentsCount').textContent = `${actualCount} طالب حاضر (بدون تكرار)`;
       document.getElementById('detLessonGrossRevenue').textContent = `${grossRev} ج.م`;
       document.getElementById('detLessonPlatformCut').textContent = `-${platformCut} ج.م (10%)`;
       document.getElementById('detLessonNetRevenue').textContent = `${netRev} ج.م`;
@@ -1581,16 +1618,17 @@
       if (!lessonStudents || lessonStudents.length === 0) {
         tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--ink-dim);">لا يوجد طلاب مسجلون في هذه المحاضرة بعد.</td></tr>';
       } else {
-        tbody.innerHTML = lessonStudents.slice(0, 15).map((st, i) => {
-          const name = st.name || st.username || `طالب #${i+1}`;
-          const phone = st.phone || st.studentProfile?.phone || '—';
-          const attended = i < actualCount ? '✅ شاهد المحاضرة' : '⏳ مشترك جديد';
-          const hwScore = st.assignmentScore !== undefined ? `${st.assignmentScore}%` : (lesson.assignmentQuizId ? '85%' : '—');
-          const examScore = st.examScore !== undefined ? `${st.examScore}%` : (lesson.examQuizId ? '90%' : '—');
-          const subDate = st.createdAt ? new Date(st.createdAt).toLocaleDateString('ar-EG') : new Date().toLocaleDateString('ar-EG');
+        tbody.innerHTML = lessonStudents.map((sub, i) => {
+          const st = sub.student || {};
+          const name = st.displayName || st.name || st.username || `طالب #${i+1}`;
+          const phone = st.studentProfile?.studentPhoneNumber || '—';
+          const attended = '✅ حاضر ومسجل';
+          const subDate = sub.subscribedAt ? new Date(sub.subscribedAt).toLocaleDateString('ar-EG') : '—';
+          const hwScore = lesson.assignmentQuizId ? 'تم التسليم' : '—';
+          const examScore = lesson.examQuizId ? 'تم الحل' : '—';
           return `
             <tr style="border-bottom:1px solid var(--line-soft);">
-              <td style="padding:10px 14px;font-weight:700;">${escapeHtml(name)}</td>
+              <td style="padding:10px 14px;font-weight:700;">${escapeHtml(name)} <span style="font-size:0.75rem;color:var(--ink-dim);">(@${escapeHtml(st.username || '')})</span></td>
               <td style="padding:10px 14px;color:var(--ink-dim);">${escapeHtml(phone)}</td>
               <td style="padding:10px 14px;"><span class="tag tag-ok" style="font-size:0.75rem;">${attended}</span></td>
               <td style="padding:10px 14px;"><b style="color:#f59e0b;">${hwScore}</b></td>
@@ -1723,25 +1761,144 @@
   }
 
   let cachedStageStudents = [];
+  let studentsViewMode = 'deduped'; // 'deduped' | 'all'
 
+  window.switchStudentsViewMode = function(mode) {
+    studentsViewMode = mode;
+    renderStudentsTable();
+  };
 
   async function loadStageStudents() {
     const container = document.getElementById('stageStudentsList');
     try {
+      container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--ink-dim);">جارٍ جلب بيانات الطلاب...</div>';
       const students = await window.KhatwaAPI.teacher.getWorkspaceStudents(currentStage);
       cachedStageStudents = students || [];
-      if (!students || students.length === 0) {
-        container.innerHTML = '<div style="text-align:center;padding:24px;color:var(--ink-dim);">لا يوجد طلاب مشتركون في هذه المرحلة حتى الآن.</div>';
-        return;
-      }
+      renderStudentsTable();
+    } catch (e) {
+      container.innerHTML = '<div style="color:var(--err);text-align:center;padding:24px;">فشل تحميل قائمة الطلاب.</div>';
+    }
+  }
 
-      container.innerHTML = `
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
-          <span style="font-size:0.88rem;color:var(--ink-dim);">إجمالي المشتركين في هذه البيئة: <b>${students.length}</b> اشتراك</span>
-          <button class="btn btn-line btn-sm" onclick="exportTeacherStudentsToExcel()" style="color:#059669;border-color:rgba(5,150,105,0.4);font-weight:700;display:inline-flex;align-items:center;gap:6px;">
-            <span>📊 تصدير طلاب المرحلة إلى Excel</span>
-          </button>
+  function renderStudentsTable() {
+    const container = document.getElementById('stageStudentsList');
+    if (!container) return;
+    const students = cachedStageStudents || [];
+    if (students.length === 0) {
+      container.innerHTML = '<div style="text-align:center;padding:24px;color:var(--ink-dim);">لا يوجد طلاب مشتركون في هذه المرحلة حتى الآن.</div>';
+      return;
+    }
+
+    // Deduplicate students
+    const studentMap = new Map();
+    for (const sub of students) {
+      const stId = sub.studentId || sub.student?.id;
+      if (!stId) continue;
+      if (!studentMap.has(stId)) {
+        studentMap.set(stId, {
+          student: sub.student,
+          subscriptions: [],
+          totalPaid: 0,
+          totalPoints: 0,
+          firstSubscribedAt: sub.subscribedAt,
+          lastSubscribedAt: sub.subscribedAt,
+        });
+      }
+      const entry = studentMap.get(stId);
+      entry.subscriptions.push(sub);
+      entry.totalPaid += Number(sub.pricePaid) || 0;
+      entry.totalPoints += Number(sub.pointsPaid) || 0;
+      if (new Date(sub.subscribedAt) > new Date(entry.lastSubscribedAt)) {
+        entry.lastSubscribedAt = sub.subscribedAt;
+      }
+    }
+    const dedupedList = Array.from(studentMap.values());
+    const isDeduped = studentsViewMode === 'deduped';
+
+    container.innerHTML = `
+      <!-- Dedup Summary Cards -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:16px;">
+        <div style="background:var(--bg-card);border:1px solid rgba(14,75,91,0.25);border-radius:14px;padding:14px 18px;">
+          <div style="font-size:0.82rem;color:var(--ink-dim);">👥 الطلاب الفريدون بالمرحلة</div>
+          <div style="font-size:1.5rem;font-weight:800;color:var(--primary);margin-top:2px;">${dedupedList.length} <span style="font-size:0.85rem;font-weight:600;">طالب (بدون تكرار)</span></div>
         </div>
+        <div style="background:var(--bg-card);border:1px solid var(--line-soft);border-radius:14px;padding:14px 18px;">
+          <div style="font-size:0.82rem;color:var(--ink-dim);">📚 إجمالي حضور واشتراكات المحاضرات</div>
+          <div style="font-size:1.5rem;font-weight:800;color:var(--ink);margin-top:2px;">${students.length} <span style="font-size:0.85rem;font-weight:600;">حضور / اشتراك</span></div>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid var(--line-soft);border-radius:14px;padding:14px 18px;">
+          <div style="font-size:0.82rem;color:var(--ink-dim);">📊 معدل حضور الطالب في المحاضرات</div>
+          <div style="font-size:1.5rem;font-weight:800;color:#10b981;margin-top:2px;">${(students.length / (dedupedList.length || 1)).toFixed(1)} <span style="font-size:0.85rem;font-weight:600;">محاضرة / طالب</span></div>
+        </div>
+      </div>
+
+      <!-- Mode Toggle & Export Bar -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
+        <div style="display:inline-flex;background:var(--bg-card);padding:4px;border-radius:12px;border:1px solid var(--line-soft);gap:4px;">
+          <button type="button" class="btn btn-sm ${isDeduped ? 'btn-primary' : 'btn-text'}" style="padding:6px 14px;border-radius:8px;font-size:0.85rem;font-weight:700;" onclick="switchStudentsViewMode('deduped')">👥 عرض الطلاب الفريدين (${dedupedList.length} طالب بدون تكرار)</button>
+          <button type="button" class="btn btn-sm ${!isDeduped ? 'btn-primary' : 'btn-text'}" style="padding:6px 14px;border-radius:8px;font-size:0.85rem;font-weight:700;" onclick="switchStudentsViewMode('all')">📋 سجل الاشتراكات التفصيلي (${students.length} حضور)</button>
+        </div>
+        <button class="btn btn-line btn-sm" onclick="exportTeacherStudentsToExcel()" style="color:#059669;border-color:rgba(5,150,105,0.4);font-weight:700;display:inline-flex;align-items:center;gap:6px;">
+          <span>📊 تصدير Excel (${isDeduped ? 'الطلاب بدون تكرار' : 'كافة الاشتراكات'})</span>
+        </button>
+      </div>
+
+      <!-- Tables -->
+      ${isDeduped ? `
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>اسم الطالب</th>
+                <th>اسم المستخدم</th>
+                <th>رقم هاتف الطالب</th>
+                <th>رقم ولي الأمر</th>
+                <th>وظيفة الأب</th>
+                <th>المحاضرات التي حضرها</th>
+                <th>إجمالي المدفوع</th>
+                <th>تاريخ آخر اشتراك</th>
+                <th>تواصل سريع</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${dedupedList.map(entry => {
+                const st = entry.student || {};
+                const sPhone = st.studentProfile?.studentPhoneNumber || '—';
+                const pPhone = st.studentProfile?.parentInfo?.parentPhoneNumber || '—';
+                const fJob = st.studentProfile?.parentInfo?.fatherJob || '—';
+                const priceStr = entry.totalPaid > 0 ? `${entry.totalPaid} ج.م` : (entry.totalPoints > 0 ? `${entry.totalPoints} نقطة` : 'مجاني');
+                const lastDate = entry.lastSubscribedAt ? new Date(entry.lastSubscribedAt).toLocaleDateString('ar-EG') : '—';
+                const lecturesCount = entry.subscriptions.length;
+                const cleanPhone = (sPhone || '').replace(/[^0-9]/g, '');
+                const cleanParentPhone = (pPhone || '').replace(/[^0-9]/g, '');
+                const lectureTitles = entry.subscriptions.map(s => s.lesson?.title || 'محاضرة').slice(0, 3).join(' · ');
+                const moreCount = lecturesCount > 3 ? ` +${lecturesCount - 3}` : '';
+                return `
+                  <tr>
+                    <td><b>${escapeHtml(st.displayName || st.name || st.username || 'طالب')}</b></td>
+                    <td>@${escapeHtml(st.username || '—')}</td>
+                    <td>${escapeHtml(sPhone)}</td>
+                    <td>${escapeHtml(pPhone)}</td>
+                    <td>${escapeHtml(fJob)}</td>
+                    <td>
+                      <span class="tag tag-ok" style="font-weight:700;font-size:0.82rem;" title="${escapeHtml(entry.subscriptions.map(s => s.lesson?.title).join(', '))}">🎓 ${lecturesCount} ${lecturesCount === 1 ? 'محاضرة' : 'محاضرات'}</span>
+                      <div style="font-size:0.75rem;color:var(--ink-dim);margin-top:3px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(lectureTitles)}${moreCount}</div>
+                    </td>
+                    <td><b style="color:var(--ink);">${priceStr}</b></td>
+                    <td style="color:var(--ink-dim);font-size:0.82rem;">${lastDate}</td>
+                    <td>
+                      <div style="display:flex;gap:4px;flex-wrap:wrap;">
+                        ${cleanPhone ? `<a href="https://wa.me/2${cleanPhone.startsWith('0') ? cleanPhone.substring(1) : cleanPhone}" target="_blank" rel="noopener noreferrer" class="btn btn-line btn-sm" style="padding:2px 8px;font-size:0.75rem;color:#16a34a;border-color:rgba(22,163,74,0.35);">طالب 💬</a>` : ''}
+                        ${cleanParentPhone ? `<a href="https://wa.me/2${cleanParentPhone.startsWith('0') ? cleanParentPhone.substring(1) : cleanParentPhone}" target="_blank" rel="noopener noreferrer" class="btn btn-line btn-sm" style="padding:2px 8px;font-size:0.75rem;color:#0284c7;border-color:rgba(2,132,199,0.35);">ولي الأمر 💬</a>` : ''}
+                      </div>
+                    </td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      ` : `
         <div class="table-container">
           <table class="data-table">
             <thead>
@@ -1764,7 +1921,7 @@
                 const earningStr = s.paymentTransaction?.teacherEarning !== undefined ? `${s.paymentTransaction.teacherEarning} ج.م` : (s.pricePaid > 0 ? `${Math.round(s.pricePaid * 0.8)} ج.م` : '—');
                 return `
                   <tr>
-                    <td><b>${escapeHtml(s.student?.name || s.student?.username || 'طالب')}</b></td>
+                    <td><b>${escapeHtml(s.student?.displayName || s.student?.name || s.student?.username || 'طالب')}</b></td>
                     <td>@${escapeHtml(s.student?.username || '—')}</td>
                     <td>${escapeHtml(s.student?.studentProfile?.studentPhoneNumber || '—')}</td>
                     <td><span class="tag tag-ok">${escapeHtml(s.lesson?.title || 'محاضرة')}</span></td>
@@ -1779,10 +1936,8 @@
             </tbody>
           </table>
         </div>
-      `;
-    } catch (e) {
-      container.innerHTML = '<div style="color:var(--err);">فشل تحميل قائمة الطلاب.</div>';
-    }
+      `}
+    `;
   }
 
   function exportTeacherStudentsToExcel() {
@@ -1797,33 +1952,88 @@
       return `"${str}"`;
     };
 
-    const headers = [
-      'اسم الطالب',
-      'اسم المستخدم',
-      'رقم هاتف الطالب',
-      'رقم هاتف ولي الأمر',
-      'وظيفة الأب',
-      'المحاضرة',
-      'الكورس',
-      'المبلغ المدفوع',
-      'طريقة الدفع',
-      'أرباح المدرس',
-      'تاريخ الاشتراك'
-    ];
+    let headers = [];
+    let rows = [];
 
-    const rows = cachedStageStudents.map(s => [
-      s.student?.name || s.student?.username || 'طالب',
-      s.student?.username || '',
-      s.student?.studentProfile?.studentPhoneNumber || '',
-      s.student?.studentProfile?.parentInfo?.parentPhoneNumber || '',
-      s.student?.studentProfile?.parentInfo?.fatherJob || '',
-      s.lesson?.title || '',
-      s.course?.title || '',
-      s.pricePaid > 0 ? `${s.pricePaid} ج.م` : (s.pointsPaid > 0 ? `${s.pointsPaid} نقطة` : 'مجانية'),
-      s.paymentMethod || 'FREE',
-      s.paymentTransaction?.teacherEarning !== undefined ? `${s.paymentTransaction.teacherEarning} ج.م` : (s.pricePaid > 0 ? `${Math.round(s.pricePaid * 0.8)} ج.م` : '—'),
-      s.subscribedAt ? new Date(s.subscribedAt).toLocaleDateString('ar-EG') : ''
-    ]);
+    if (studentsViewMode === 'deduped') {
+      // Deduplicate for Excel
+      const studentMap = new Map();
+      for (const sub of cachedStageStudents) {
+        const stId = sub.studentId || sub.student?.id;
+        if (!stId) continue;
+        if (!studentMap.has(stId)) {
+          studentMap.set(stId, {
+            student: sub.student,
+            subscriptions: [],
+            totalPaid: 0,
+            totalPoints: 0,
+            firstDate: sub.subscribedAt,
+            lastDate: sub.subscribedAt,
+          });
+        }
+        const entry = studentMap.get(stId);
+        entry.subscriptions.push(sub);
+        entry.totalPaid += Number(sub.pricePaid) || 0;
+        entry.totalPoints += Number(sub.pointsPaid) || 0;
+        if (new Date(sub.subscribedAt) > new Date(entry.lastDate)) {
+          entry.lastDate = sub.subscribedAt;
+        }
+      }
+
+      headers = [
+        'اسم الطالب',
+        'اسم المستخدم',
+        'رقم هاتف الطالب',
+        'رقم هاتف ولي الأمر',
+        'وظيفة الأب',
+        'عدد المحاضرات التي حضرها',
+        'قائمة المحاضرات',
+        'إجمالي المدفوع بالجنيه',
+        'إجمالي النقاط',
+        'تاريخ آخر اشتراك'
+      ];
+
+      rows = Array.from(studentMap.values()).map(entry => [
+        entry.student?.displayName || entry.student?.name || entry.student?.username || 'طالب',
+        entry.student?.username || '',
+        entry.student?.studentProfile?.studentPhoneNumber || '',
+        entry.student?.studentProfile?.parentInfo?.parentPhoneNumber || '',
+        entry.student?.studentProfile?.parentInfo?.fatherJob || '',
+        entry.subscriptions.length,
+        entry.subscriptions.map(s => s.lesson?.title || 'محاضرة').join(' | '),
+        entry.totalPaid,
+        entry.totalPoints,
+        entry.lastDate ? new Date(entry.lastDate).toLocaleDateString('ar-EG') : ''
+      ]);
+    } else {
+      headers = [
+        'اسم الطالب',
+        'اسم المستخدم',
+        'رقم هاتف الطالب',
+        'رقم هاتف ولي الأمر',
+        'وظيفة الأب',
+        'المحاضرة',
+        'الكورس',
+        'المبلغ المدفوع',
+        'طريقة الدفع',
+        'أرباح المدرس',
+        'تاريخ الاشتراك'
+      ];
+
+      rows = cachedStageStudents.map(s => [
+        s.student?.displayName || s.student?.name || s.student?.username || 'طالب',
+        s.student?.username || '',
+        s.student?.studentProfile?.studentPhoneNumber || '',
+        s.student?.studentProfile?.parentInfo?.parentPhoneNumber || '',
+        s.student?.studentProfile?.parentInfo?.fatherJob || '',
+        s.lesson?.title || '',
+        s.course?.title || '',
+        s.pricePaid > 0 ? `${s.pricePaid} ج.م` : (s.pointsPaid > 0 ? `${s.pointsPaid} نقطة` : 'مجانية'),
+        s.paymentMethod || 'FREE',
+        s.paymentTransaction?.teacherEarning !== undefined ? `${s.paymentTransaction.teacherEarning} ج.م` : (s.pricePaid > 0 ? `${Math.round(s.pricePaid * 0.8)} ج.م` : '—'),
+        s.subscribedAt ? new Date(s.subscribedAt).toLocaleDateString('ar-EG') : ''
+      ]);
+    }
 
     const csvContent = '\uFEFF' + [
       headers.map(escapeCsv).join(','),
@@ -1834,7 +2044,8 @@
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.setAttribute('href', url);
-    link.setAttribute('download', `طلاب_${stageTitles[currentStage] || currentStage}_${new Date().toISOString().slice(0, 10)}.csv`);
+    const filenamePrefix = studentsViewMode === 'deduped' ? 'طلاب_بدون_تكرار' : 'سجل_اشتراكات_الطلاب';
+    link.setAttribute('download', `${filenamePrefix}_${stageTitles[currentStage] || currentStage}_${new Date().toISOString().slice(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

@@ -650,6 +650,7 @@
       async getWorkspaceCourses(stage) { const res = await request('/teacher/workspace/' + stage + '/courses'); return res.data || []; },
       async getWorkspaceStudents(stage) { const res = await request('/teacher/workspace/' + stage + '/students'); return res.data || []; },
       async getWorkspaceRevenue(stage) { const res = await request('/teacher/workspace/' + stage + '/revenue'); return res.data || []; },
+      async getLessonStudents(lessonId) { const res = await request('/teacher/lessons/' + lessonId + '/students'); return res.data || { students: [] }; },
       async previewLesson(id) { const res = await request('/teacher/lessons/' + id + '/preview'); return res.data; },
       async createQuiz(data) { const res = await request('/teacher/quizzes', { method: 'POST', body: data }); return res.data; },
       async addQuizQuestion(quizId, data) { const res = await request('/teacher/quizzes/' + quizId + '/questions', { method: 'POST', body: data }); return res.data; },

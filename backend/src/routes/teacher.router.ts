@@ -132,7 +132,36 @@ router.get(
       orderBy: { stage: 'asc' },
     });
 
-    res.status(200).json({ success: true, data: updated });
+    // Compute unique student counts per stage (preventing double counting)
+    const activeSubs = await prisma.lessonSubscription.findMany({
+      where: { teacherProfileId: teacherProfile.id, status: 'ACTIVE' },
+      select: { academicStage: true, studentId: true },
+    });
+
+    const stageStudentMap = new Map<string, Set<string>>();
+    const allUniqueStudentIds = new Set<string>();
+
+    for (const sub of activeSubs) {
+      allUniqueStudentIds.add(sub.studentId);
+      if (!stageStudentMap.has(sub.academicStage)) {
+        stageStudentMap.set(sub.academicStage, new Set());
+      }
+      stageStudentMap.get(sub.academicStage)!.add(sub.studentId);
+    }
+
+    const workspacesWithStats = updated.map((w) => ({
+      ...w,
+      uniqueStudentsCount: stageStudentMap.get(w.stage)?.size || 0,
+    }));
+
+    res.status(200).json({
+      success: true,
+      data: workspacesWithStats,
+      totalUniqueStudents: allUniqueStudentIds.size,
+      stageCounts: Object.fromEntries(
+        Array.from(stageStudentMap.entries()).map(([st, set]) => [st, set.size])
+      ),
+    });
   })
 );
 
@@ -249,17 +278,43 @@ router.get(
             lessons: {
               orderBy: { orderIndex: 'asc' },
               include: {
-                _count: { select: { subscriptions: true } },
+                _count: { select: { subscriptions: { where: { status: 'ACTIVE' } } } },
               },
             },
           },
         },
-        _count: { select: { lessonSubscriptions: true } },
+        _count: { select: { lessonSubscriptions: { where: { status: 'ACTIVE' } } } },
       },
       orderBy: { createdAt: 'desc' },
     });
 
-    res.status(200).json({ success: true, data: courses });
+    // Compute unique students per course (preventing double-counting when students attend multiple lessons in a course)
+    const courseIds = courses.map((c) => c.id);
+    const activeCourseSubs = await prisma.lessonSubscription.findMany({
+      where: {
+        teacherProfileId: teacherProfile.id,
+        courseId: { in: courseIds },
+        status: 'ACTIVE',
+      },
+      select: { courseId: true, studentId: true },
+    });
+
+    const courseStudentsMap = new Map<string, Set<string>>();
+    for (const sub of activeCourseSubs) {
+      if (!sub.courseId) continue;
+      if (!courseStudentsMap.has(sub.courseId)) {
+        courseStudentsMap.set(sub.courseId, new Set());
+      }
+      courseStudentsMap.get(sub.courseId)!.add(sub.studentId);
+    }
+
+    const coursesWithStats = courses.map((c) => ({
+      ...c,
+      uniqueStudentsCount: courseStudentsMap.get(c.id)?.size || 0,
+      totalSubscriptionsCount: c._count?.lessonSubscriptions || 0,
+    }));
+
+    res.status(200).json({ success: true, data: coursesWithStats });
   })
 );
 
@@ -444,6 +499,22 @@ router.get(
     const totalRevenue = payments._sum.teacherEarning || 0.0;
     const totalPoints = payments._sum.pointsUsed || 0;
 
+    const courseIds = courses.map((c) => c.id);
+    const activeCourseSubs = await prisma.lessonSubscription.findMany({
+      where: {
+        teacherProfileId: teacherProfile.id,
+        courseId: { in: courseIds },
+        status: 'ACTIVE',
+      },
+      select: { courseId: true, studentId: true },
+    });
+    const courseStudentsMap = new Map<string, Set<string>>();
+    for (const sub of activeCourseSubs) {
+      if (!sub.courseId) continue;
+      if (!courseStudentsMap.has(sub.courseId)) courseStudentsMap.set(sub.courseId, new Set());
+      courseStudentsMap.get(sub.courseId)!.add(sub.studentId);
+    }
+
     res.status(200).json({
       success: true,
       data: {
@@ -455,8 +526,100 @@ router.get(
           id: c.id,
           title: c.title,
           academicStage: c.academicStage,
+          uniqueStudentsCount: courseStudentsMap.get(c.id)?.size || 0,
           subscriptionsCount: c._count.lessonSubscriptions,
         })),
+      },
+    });
+  })
+);
+
+// ─── Lesson Unique Students (Prevent Double-Counting) ──────────────────────────
+
+router.get(
+  '/lessons/:lessonId/students',
+  asyncHandler(async (req, res) => {
+    const lessonId = req.params.lessonId;
+    const teacherProfile = await getTeacherProfile(req.user!.sub);
+    if (!teacherProfile) {
+      res.status(403).json({ success: false, error: { code: 'FORBIDDEN', message: 'Teacher profile not found' } });
+      return;
+    }
+
+    const lesson = await prisma.lesson.findFirst({
+      where: {
+        id: lessonId,
+        ...(req.user!.role !== 'ADMIN' ? { teacherProfileId: teacherProfile.id } : {}),
+      },
+      select: {
+        id: true,
+        title: true,
+        price: true,
+        pointCost: true,
+        academicStage: true,
+        courseId: true,
+        assignmentQuizId: true,
+        examQuizId: true,
+      },
+    });
+
+    if (!lesson) {
+      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Lesson not found' } });
+      return;
+    }
+
+    const subscriptions = await prisma.lessonSubscription.findMany({
+      where: { lessonId, status: 'ACTIVE' },
+      include: {
+        student: {
+          select: {
+            id: true,
+            username: true,
+            isActive: true,
+            studentProfile: {
+              select: {
+                studentPhoneNumber: true,
+                parentInfo: {
+                  select: {
+                    parentPhoneNumber: true,
+                    fatherJob: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        paymentTransaction: {
+          select: {
+            transactionNumber: true,
+            amount: true,
+            pointsUsed: true,
+            paymentMethod: true,
+            teacherEarning: true,
+            createdAt: true,
+          },
+        },
+      },
+      orderBy: { subscribedAt: 'desc' },
+    });
+
+    // Deduplicate so each student is counted and displayed exactly once
+    const seen = new Set<string>();
+    const uniqueStudents: typeof subscriptions = [];
+    for (const sub of subscriptions) {
+      if (!seen.has(sub.studentId)) {
+        seen.add(sub.studentId);
+        uniqueStudents.push(sub);
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        lesson,
+        totalUniqueStudents: uniqueStudents.length,
+        totalSubscriptions: subscriptions.length,
+        students: uniqueStudents,
       },
     });
   })
@@ -481,16 +644,43 @@ router.get(
           include: {
             lessons: {
               orderBy: { orderIndex: 'asc' },
-              select: { id: true, title: true, price: true, pointCost: true, orderIndex: true, isPublished: true, pdfUrl: true, videoUrl: true, driveFileId: true },
+              include: {
+                _count: { select: { subscriptions: { where: { status: 'ACTIVE' } } } },
+              },
             },
           },
         },
-        _count: { select: { lessonSubscriptions: true } },
+        _count: { select: { lessonSubscriptions: { where: { status: 'ACTIVE' } } } },
       },
       orderBy: { createdAt: 'desc' },
     });
 
-    res.status(200).json({ success: true, data: courses });
+    const courseIds = courses.map((c) => c.id);
+    const activeCourseSubs = await prisma.lessonSubscription.findMany({
+      where: {
+        teacherProfileId: teacherProfile.id,
+        courseId: { in: courseIds },
+        status: 'ACTIVE',
+      },
+      select: { courseId: true, studentId: true },
+    });
+
+    const courseStudentsMap = new Map<string, Set<string>>();
+    for (const sub of activeCourseSubs) {
+      if (!sub.courseId) continue;
+      if (!courseStudentsMap.has(sub.courseId)) {
+        courseStudentsMap.set(sub.courseId, new Set());
+      }
+      courseStudentsMap.get(sub.courseId)!.add(sub.studentId);
+    }
+
+    const coursesWithStats = courses.map((c) => ({
+      ...c,
+      uniqueStudentsCount: courseStudentsMap.get(c.id)?.size || 0,
+      totalSubscriptionsCount: c._count?.lessonSubscriptions || 0,
+    }));
+
+    res.status(200).json({ success: true, data: coursesWithStats });
   })
 );
 
@@ -574,12 +764,12 @@ router.get(
               include: {
                 assignmentQuiz: { include: { questions: true } },
                 examQuiz: { include: { questions: true } },
-                _count: { select: { subscriptions: true } },
+                _count: { select: { subscriptions: { where: { status: 'ACTIVE' } } } },
               },
             },
           },
         },
-        _count: { select: { lessonSubscriptions: true } },
+        _count: { select: { lessonSubscriptions: { where: { status: 'ACTIVE' } } } },
       },
     });
 
@@ -588,7 +778,20 @@ router.get(
       return;
     }
 
-    res.status(200).json({ success: true, data: course });
+    const activeCourseSubs = await prisma.lessonSubscription.findMany({
+      where: { courseId: course.id, status: 'ACTIVE' },
+      select: { studentId: true },
+    });
+    const uniqueStudentsCount = new Set(activeCourseSubs.map((s) => s.studentId)).size;
+
+    res.status(200).json({
+      success: true,
+      data: {
+        ...course,
+        uniqueStudentsCount,
+        totalSubscriptionsCount: course._count?.lessonSubscriptions || 0,
+      },
+    });
   })
 );
 
