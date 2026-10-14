@@ -630,6 +630,56 @@
       grid-template-columns: 1fr;
     }
   }
+  /* ─── Voucher / Recharge Cards ─────────────────────────────────────────── */
+  .voucher-card {
+    border-radius: 16px;
+    padding: 18px 20px;
+    background: linear-gradient(135deg, #0b2545 0%, #134074 60%, #1a5276 100%);
+    border: 1.5px solid rgba(255,255,255,0.12);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+    position: relative;
+    overflow: hidden;
+    color: #fff;
+    transition: transform 0.2s;
+  }
+  .voucher-card:hover { transform: translateY(-2px); }
+  .voucher-code-box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    background: rgba(0,0,0,0.35);
+    border: 1.5px solid rgba(255,255,255,0.18);
+    border-radius: 10px;
+    padding: 10px 16px;
+    font-size: 1.35rem;
+    font-weight: 900;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 3px;
+    color: #fde68a;
+    margin: 12px 0;
+  }
+  /* Theme variants */
+  .voucher-theme-bw {
+    background: #fff !important;
+    color: #111 !important;
+    border-color: #ccc !important;
+    box-shadow: none !important;
+  }
+  .voucher-theme-bw .voucher-code-box { background: #f5f5f5 !important; color: #111 !important; border-color: #aaa !important; }
+  .voucher-theme-navy {
+    background: linear-gradient(135deg, #0d1b2a 0%, #1b2838 100%) !important;
+  }
+  .voucher-theme-platform {
+    background: linear-gradient(135deg, #0b2545 0%, #134074 60%, #1a5276 100%) !important;
+  }
+  /* Print rules */
+  @media print {
+    .print-hide { display: none !important; }
+    #printVouchersModal { position: static !important; background: none !important; }
+    #printVouchersModal > div { box-shadow: none !important; max-height: none !important; }
+    #generatedVouchersGrid { grid-template-columns: repeat(2, 1fr) !important; }
+  }
 </style>
 </head>
 <body>
@@ -777,6 +827,7 @@
     </button>
     <button type="button" class="admin-nav-tab" data-tab="tabAccessCodes" onclick="switchAdminTab('tabAccessCodes', this)">
       <span>🎟️ كروت الشحن والأكواد</span>
+      <span class="tab-count-badge" id="tabBadgeAccessCodes" style="display:none;">0</span>
     </button>
     <button type="button" class="admin-nav-tab" data-tab="tabPointRequests" onclick="switchAdminTab('tabPointRequests', this)">
       <span>⚡ طلبات الشحن</span>
@@ -1832,6 +1883,48 @@
       <button type="button" class="btn btn-line btn-sm" onclick="closeAdminTeacherCoursesModal()">إغلاق النافذة</button>
     </div>
 
+  </div>
+</div>
+
+<!-- ═══ Print Vouchers Modal ══════════════════════════════════════════════ -->
+<div id="printVouchersModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.72);align-items:center;justify-content:center;padding:20px;">
+  <div style="background:var(--bg-card);border-radius:20px;width:100%;max-width:860px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.5);">
+
+    <!-- Header -->
+    <div style="padding:20px 26px;border-bottom:1px solid var(--line-soft);display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <h3 style="margin:0 0 4px;display:flex;align-items:center;gap:8px;">🎟️ كروت الشحن المولّدة — جاهزة للطباعة أو النسخ</h3>
+        <p id="printModalSubTitle" style="margin:0;font-size:0.86rem;color:var(--ink-dim);"></p>
+      </div>
+      <button type="button" class="btn btn-line btn-sm print-hide" onclick="closePrintCodesModal()" style="font-size:1.2rem;padding:4px 12px;">✕</button>
+    </div>
+
+    <!-- Style picker -->
+    <div class="print-hide" style="padding:12px 26px;border-bottom:1px solid var(--line-soft);display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+      <span style="font-size:0.85rem;color:var(--ink-dim);">نمط الطباعة:</span>
+      <select id="voucherPrintStyleSelect" class="form-control" style="width:auto;font-size:0.85rem;padding:5px 10px;border-radius:8px;" onchange="changeVoucherPrintStyle(this.value)">
+        <option value="platform">🎨 ألوان المنصة (افتراضي)</option>
+        <option value="navy">🌊 أزرق داكن</option>
+        <option value="bw">⬛ أسود وأبيض (للطباعة الاقتصادية)</option>
+      </select>
+      <button class="btn btn-line btn-sm print-hide" onclick="copyAllGeneratedCodes()">📋 نسخ كل الأكواد</button>
+      <button class="btn btn-primary btn-sm print-hide" onclick="printVoucherCards()" style="display:flex;align-items:center;gap:6px;">
+        🖨️ طباعة الكروت
+      </button>
+    </div>
+
+    <!-- Cards grid (scrollable) -->
+    <div style="padding:20px 26px;overflow-y:auto;flex:1;">
+      <div id="generatedVouchersGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;">
+        <!-- voucher cards injected here -->
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="print-hide" style="padding:14px 26px;border-top:1px solid var(--line-soft);display:flex;justify-content:flex-end;gap:10px;">
+      <button type="button" class="btn btn-line btn-sm" onclick="closePrintCodesModal()">إغلاق</button>
+      <button type="button" class="btn btn-primary btn-sm" onclick="printVoucherCards()">🖨️ طباعة</button>
+    </div>
   </div>
 </div>
 
@@ -3491,7 +3584,11 @@
   async function loadAccessCodes() {
     try {
       allAccessCodes = await window.KhatwaAPI.admin.getAccessCodes(currentAccessCodeFilter);
-      document.getElementById('tabBadgeAccessCodes').textContent = allAccessCodes.length;
+      const badge = document.getElementById('tabBadgeAccessCodes');
+      if (badge) {
+        badge.textContent = allAccessCodes.length;
+        badge.style.display = allAccessCodes.length > 0 ? '' : 'none';
+      }
       renderAccessCodes(allAccessCodes);
     } catch (e) {
       console.error('Failed to load access codes:', e);

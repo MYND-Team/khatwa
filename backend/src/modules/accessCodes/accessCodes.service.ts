@@ -19,10 +19,37 @@ export function generateRandomCode(): string {
 }
 
 /**
+ * Normalizes an access code to handle mobile copy-paste quirks:
+ * - Invisible characters (zero-width spaces, RTL/LTR marks, BOM, non-breaking spaces)
+ * - Leading/trailing and internal whitespace
+ * - Lowercase letters -> uppercase
+ * - Missing hyphens (e.g. FGABCD1234 -> FG-ABCD-1234, or ABCD1234 -> FG-ABCD-1234)
+ */
+export function normalizeAccessCode(rawCode: string): string {
+  if (!rawCode) return '';
+  let cleaned = String(rawCode)
+    .replace(/[\u200B-\u200F\uFEFF\u202A-\u202E\u00A0]/g, '')
+    .trim()
+    .toUpperCase();
+  cleaned = cleaned.replace(/\s+/g, '');
+  cleaned = cleaned.replace(/_/g, '-');
+
+  if (/^FG[A-Z0-9]{8}$/.test(cleaned)) {
+    cleaned = `FG-${cleaned.slice(2, 6)}-${cleaned.slice(6, 10)}`;
+  } else if (/^OFF[A-Z0-9]{8}$/.test(cleaned)) {
+    cleaned = `OFF-${cleaned.slice(3, 7)}-${cleaned.slice(7, 11)}`;
+  } else if (/^[A-Z0-9]{8}$/.test(cleaned)) {
+    cleaned = `FG-${cleaned.slice(0, 4)}-${cleaned.slice(4, 8)}`;
+  }
+  return cleaned;
+}
+
+/**
  * Hashes an access code using SHA-256 for secure storage.
  */
 export function hashCode(code: string): string {
-  return crypto.createHash('sha256').update(code.trim().toUpperCase()).digest('hex');
+  const normalized = normalizeAccessCode(code);
+  return crypto.createHash('sha256').update(normalized || code.trim().toUpperCase()).digest('hex');
 }
 
 export interface CreateAccessCodeInput {
@@ -102,17 +129,27 @@ export async function batchCreateAccessCodes(input: CreateAccessCodeInput & { co
 // ─── Redeem points access code (STUDENT) ─────────────────────────────────────
 
 export async function redeemAccessCode(rawCode: string, studentId: string) {
-  const formattedCode = rawCode.trim().toUpperCase();
-  if (!formattedCode) {
+  if (!rawCode || !String(rawCode).trim()) {
     throw BadRequestError('Access code is required');
   }
 
-  const codeHash = hashCode(formattedCode);
+  const normalized = normalizeAccessCode(rawCode);
+  const rawClean = String(rawCode).trim().toUpperCase();
+
+  const primaryHash = hashCode(normalized || rawClean);
+  const rawHash = crypto.createHash('sha256').update(rawClean).digest('hex');
 
   return prisma.$transaction(async (tx: any) => {
-    // 1. Find matching access code
-    const accessCode = await tx.accessCode.findUnique({
-      where: { codeHash },
+    // 1. Find matching access code - check normalized hash, raw hash, and plaintext codes
+    const accessCode = await tx.accessCode.findFirst({
+      where: {
+        OR: [
+          { codeHash: primaryHash },
+          { codeHash: rawHash },
+          ...(normalized ? [{ code: normalized }] : []),
+          { code: rawClean },
+        ],
+      },
     });
 
     if (!accessCode) {
