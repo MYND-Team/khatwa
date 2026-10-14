@@ -263,7 +263,7 @@
     const teacherName = currentCourse?.teacherProfile?.displayName || currentCourse?.teacherName || 'مدرس المادة';
     const teacherInitial = teacherName.trim().charAt(0) || 'م';
     const teacherPhoto = currentCourse?.teacherProfile?.photoUrl || currentCourse?.teacherPhoto || '';
-    const coverUrl = lesson.imageUrl || lesson.coverImage || currentCourse?.imageUrl || currentCourse?.coverImage || '';
+    const coverUrl = lesson.imageUrl || lesson.coverImage || '';
 
     const durationMin = (lesson.durationMinutes && Number(lesson.durationMinutes) > 0) ? Number(lesson.durationMinutes) : null;
 
@@ -288,7 +288,7 @@
     if (isSubscribed) {
       statusPillHtml = `<span class="lecture-status-pill tag-ok" style="background:rgba(16,185,129,0.9);color:#fff;">✓ مشترك</span>`;
     } else if (isFree) {
-      statusPillHtml = `<span class="lecture-status-pill tag-ok" style="background:rgba(14,165,233,0.9);color:#fff;">مجانية</span>`;
+      statusPillHtml = '';
     }
 
     // Poster cover
@@ -323,7 +323,7 @@
       priceText = 'تم الشراء';
       priceClass = 'free';
     } else if (isFree) {
-      priceText = 'مجانية';
+      priceText = '';
       priceClass = 'free';
     } else {
       priceText = `${priceEGP} ج.م`;

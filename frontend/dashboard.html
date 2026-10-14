@@ -100,10 +100,10 @@
       <button class="dark-mode-toggle-btn" data-dark-toggle onclick="toggleDarkMode()" title="تبديل الوضع الليلي/النهاري">🌙 الليلي</button>
       <button class="lang-switcher-btn" onclick="window.KhatwaI18n.toggleLanguage()">🌐 English</button>
       <a href="profile.html" class="user-line" id="navUserLine">
-        <span class="avatar" id="navAvatar">ط</span>
+        <span class="avatar" id="navAvatar"></span>
         <span>
-          <span class="name" id="navName">الطالب</span>
-          <span class="role" id="navRole">طالب</span>
+          <span class="name" id="navName"></span>
+          <span class="role" id="navRole">طالب خطوة</span>
         </span>
       </a>
     </div>
@@ -254,9 +254,9 @@
     const welcomeEl = document.getElementById('welcomeHeading');
     if (welcomeEl) welcomeEl.textContent = `أهلًا ${studentName}، اختر معلّميك`;
     const navNameEl = document.getElementById('navName');
-    if (navNameEl) navNameEl.textContent = studentName;
+    if (navNameEl) navNameEl.textContent = `أهلا ${studentName}`;
     const navAvatarEl = document.getElementById('navAvatar');
-    if (navAvatarEl) navAvatarEl.textContent = studentName.charAt(0);
+    if (navAvatarEl) navAvatarEl.textContent = studentName.charAt(0) || 'ط';
 
     const grid = document.getElementById('homeTeachersGrid');
 

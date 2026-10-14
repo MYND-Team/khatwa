@@ -456,7 +456,14 @@
         const avatarEl = navUser.querySelector('.avatar');
 
         const firstLetter = (user.name || user.username || 'م').charAt(0);
-        if (nameEl) nameEl.textContent = user.name || user.username;
+        const displayName = user.name || user.username || '';
+        if (nameEl) {
+          if (!isAdmin && !isTeacher) {
+            nameEl.textContent = displayName ? ('أهلا ' + displayName) : '';
+          } else {
+            nameEl.textContent = displayName;
+          }
+        }
         if (roleEl) {
           if (isAdmin) {
             roleEl.textContent = window.KhatwaI18n ? window.KhatwaI18n.t('مدير عام المنصة') : 'مدير عام المنصة';

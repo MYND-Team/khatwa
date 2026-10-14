@@ -375,7 +375,7 @@
         ? `<img src="${escapeHtml(teacherPhoto)}" alt="${escapeHtml(teacherName)}">`
         : `<span>${escapeHtml(teacherInitial)}</span>`;
 
-      const priceText = isEnrolled ? '✓ مشترك' : (isFree ? 'مجاني' : `${price} ج.م`);
+      const priceText = isEnrolled ? '✓ مشترك' : (isFree ? '' : `${price} ج.م`);
       const priceClass = isEnrolled ? 'enrolled' : (isFree ? 'free' : '');
 
       const buttonHtml = isEnrolled

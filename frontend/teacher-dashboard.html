@@ -1250,7 +1250,7 @@
                           const isNew = createdTime > 0 && (Date.now() - createdTime) < (24 * 60 * 60 * 1000);
                           const newBadgeHtml = isNew ? '<span class="lecture-new-badge">جديد</span>' : '';
 
-                          const coverUrl = l.imageUrl || l.coverImage || c.imageUrl || c.coverImage || '';
+                          const coverUrl = l.imageUrl || l.coverImage || '';
                           const durationMin = (l.durationMinutes && Number(l.durationMinutes) > 0) ? Number(l.durationMinutes) : null;
                           const teacherName = currentTeacherProfile?.displayName || user?.name || user?.username || 'أستاذ المادة';
                           const teacherInitial = teacherName.trim().charAt(0) || 'أ';
@@ -1299,7 +1299,7 @@
                             <div class="lecture-card-footer" onclick="event.stopPropagation();" style="flex-direction:column;align-items:stretch;gap:12px;padding:12px;">
                               <div style="display:flex;justify-content:space-between;align-items:center;width:100%;">
                                 <div class="lecture-card-price ${l.price === 0 ? 'free' : ''}">
-                                  ${l.price > 0 ? l.price + ' ج.م' : 'مجانية'}
+                                  ${l.price > 0 ? l.price + ' ج.م' : ''}
                                 </div>
                               </div>
                               <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
@@ -3078,6 +3078,9 @@
 
       alert('تم تحديث سعر وبيانات المحاضرة بنجاح! ✅');
       closeEditLessonModal();
+      // Clear caches so refreshed data from server is used
+      cachedLessonsMap.clear();
+      cachedCoursesMap.clear();
       await refreshWorkspace();
     } catch (err) {
       alert(err.message || 'حدث خطأ أثناء حفظ التعديلات');
