@@ -157,6 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initDarkMode();
   initCollapsibleTaskbar();
   initTransparentLogos();
+  initStudentBottomNav();
 
 });
 
@@ -666,7 +667,110 @@ window.KhatwaUI = {
   initBackgroundMesh,
   initCollapsibleTaskbar,
   isLectureNew,
+  initStudentBottomNav,
 };
+
+/**
+ * Modern Native-Like Bottom Navigation Dock for Students on Mobile Devices
+ * Injected automatically on mobile screens (<= 768px) across student views.
+ */
+function initStudentBottomNav() {
+  if (document.getElementById('khatwaStudentBottomNav')) return;
+
+  const currentPath = window.location.pathname.split('/').pop() || 'index.html';
+
+  // Do not show on admin, teacher dashboard, login, or signup
+  if (
+    currentPath === 'admin.html' ||
+    currentPath === 'teacher-dashboard.html' ||
+    currentPath === 'login.html' ||
+    currentPath === 'signup.html'
+  ) {
+    return;
+  }
+
+  // Check user role: if user is logged in as TEACHER or ADMIN, they have their own dashboards
+  let user = null;
+  try {
+    user = window.KhatwaAPI?.getUser?.();
+  } catch (_) {}
+
+  if (user && (user.role === 'TEACHER' || user.role === 'ADMIN')) {
+    return;
+  }
+
+  const isEn = window.KhatwaI18n?.getLanguage?.() === 'en';
+
+  const navItems = [
+    {
+      id: 'nav-home',
+      href: 'dashboard.html',
+      ar: 'الرئيسية',
+      en: 'Home',
+      icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>`,
+      matches: ['dashboard.html', 'index.html']
+    },
+    {
+      id: 'nav-courses',
+      href: 'courses.html',
+      ar: 'محاضراتي',
+      en: 'Courses',
+      icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>`,
+      matches: ['courses.html', 'subject.html', 'lesson.html']
+    },
+    {
+      id: 'nav-wallet',
+      href: 'points.html',
+      ar: 'المحفظة',
+      en: 'Wallet',
+      icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>`,
+      matches: ['points.html', 'request-points.html', 'request-offline.html']
+    },
+    {
+      id: 'nav-results',
+      href: 'results.html',
+      ar: 'نتائجي',
+      en: 'Grades',
+      icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10"></path><path d="M12 20V4"></path><path d="M6 20v-6"></path></svg>`,
+      matches: ['results.html', 'exam.html', 'homework.html']
+    },
+    {
+      id: 'nav-profile',
+      href: 'profile.html',
+      ar: 'حسابي',
+      en: 'Profile',
+      icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`,
+      matches: ['profile.html', 'notifications.html']
+    }
+  ];
+
+  const bottomNav = document.createElement('nav');
+  bottomNav.id = 'khatwaStudentBottomNav';
+  bottomNav.className = 'khatwa-student-bottom-nav';
+  bottomNav.setAttribute('aria-label', isEn ? 'Student Mobile Navigation' : 'شريط تنقل الطالب');
+
+  bottomNav.innerHTML = navItems.map(item => {
+    const isActive = item.matches.includes(currentPath);
+    const label = isEn ? item.en : item.ar;
+    return `
+      <a href="${item.href}" class="student-bottom-nav-item ${isActive ? 'active' : ''}" data-id="${item.id}">
+        <span class="student-bottom-nav-icon">${item.icon}</span>
+        <span class="student-bottom-nav-label" data-ar="${item.ar}" data-en="${item.en}">${label}</span>
+      </a>
+    `;
+  }).join('');
+
+  document.body.appendChild(bottomNav);
+  document.body.classList.add('has-student-bottom-nav');
+
+  // Sync language updates
+  window.addEventListener('khatwa:langchange', (e) => {
+    const isNowEn = (e.detail?.lang || 'ar') === 'en';
+    bottomNav.querySelectorAll('.student-bottom-nav-label').forEach(el => {
+      el.textContent = isNowEn ? el.dataset.en : el.dataset.ar;
+    });
+  });
+}
 
 /**
  * Initializes the floating WhatsApp Technical Support button

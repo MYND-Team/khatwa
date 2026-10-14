@@ -4147,3 +4147,295 @@ body.dark-mode .lecture-card-btn,
   }
 }
 
+/* ==========================================================================
+   STUDENT MOBILE BOTTOM NAVIGATION DOCK & ADVANCED MOBILE STYLING
+   Provides native app-like UX for students on smartphones (iOS & Android)
+   ========================================================================== */
+.khatwa-student-bottom-nav {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  /* Prevent horizontal bounce/scroll on mobile */
+  html, body {
+    overflow-x: hidden !important;
+    max-width: 100vw !important;
+  }
+
+  /* Safe Area & Content Clearance for Bottom Dock */
+  body.has-student-bottom-nav {
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  /* Native Bottom Navigation Bar */
+  .khatwa-student-bottom-nav {
+    display: flex !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    height: calc(60px + env(safe-area-inset-bottom, 0px)) !important;
+    padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+    background: rgba(255, 255, 255, 0.94) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    border-top: 1px solid var(--line-soft, rgba(0, 0, 0, 0.08)) !important;
+    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.07) !important;
+    z-index: 10000 !important;
+    align-items: center !important;
+    justify-content: space-around !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    direction: rtl !important;
+  }
+
+  html[dir="ltr"] .khatwa-student-bottom-nav {
+    direction: ltr !important;
+  }
+
+  :root[data-theme="dark"] .khatwa-student-bottom-nav,
+  body.dark-mode .khatwa-student-bottom-nav {
+    background: rgba(15, 23, 42, 0.96) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.5) !important;
+  }
+
+  .student-bottom-nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    text-decoration: none !important;
+    color: var(--ink-dim, #64748b) !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    padding: 6px 2px 4px;
+    gap: 2px;
+  }
+
+  .student-bottom-nav-item:active {
+    transform: scale(0.92);
+  }
+
+  .student-bottom-nav-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), color 0.2s ease;
+  }
+
+  .student-bottom-nav-icon svg {
+    width: 21px;
+    height: 21px;
+    stroke: currentColor;
+    stroke-width: 2.1;
+  }
+
+  .student-bottom-nav-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    line-height: 1.2;
+    transition: color 0.2s ease, font-weight 0.2s ease;
+    white-space: nowrap;
+    letter-spacing: -0.2px;
+  }
+
+  .student-bottom-nav-item.active {
+    color: var(--primary, #0b2545) !important;
+  }
+
+  :root[data-theme="dark"] .student-bottom-nav-item.active,
+  body.dark-mode .student-bottom-nav-item.active {
+    color: #fcd34d !important;
+  }
+
+  .student-bottom-nav-item.active .student-bottom-nav-icon {
+    transform: translateY(-2px);
+  }
+
+  .student-bottom-nav-item.active::before {
+    content: '';
+    position: absolute;
+    top: 3px;
+    width: 24px;
+    height: 3px;
+    border-radius: 999px;
+    background: currentColor;
+    box-shadow: 0 2px 6px currentColor;
+  }
+
+  /* Reposition Floating WhatsApp support above bottom nav */
+  .khatwa-whatsapp-float {
+    bottom: calc(74px + env(safe-area-inset-bottom, 0px)) !important;
+    z-index: 9999 !important;
+    transition: bottom 0.22s ease !important;
+  }
+
+  /* Prevent iOS automatic input zoom (requires 16px on inputs) */
+  input[type="text"],
+  input[type="password"],
+  input[type="number"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="search"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  /* Touch-friendly Minimum Tap Areas */
+  button, 
+  .btn,
+  .opt,
+  .stage-filter-tab,
+  .stage-folder-tab {
+    min-height: 42px;
+  }
+
+  /* Mobile Stepper in Lessons */
+  .progression-stepper {
+    padding: 10px 12px !important;
+    gap: 6px !important;
+    border-radius: 14px !important;
+    margin-bottom: 16px !important;
+  }
+  .progression-step {
+    font-size: 0.76rem !important;
+    gap: 6px !important;
+  }
+  .progression-step-circle {
+    width: 26px !important;
+    height: 26px !important;
+    font-size: 0.74rem !important;
+    flex-shrink: 0;
+  }
+  .progression-divider {
+    margin: 0 4px !important;
+  }
+
+  /* Quiz MCQ options stack to 1 column on mobile */
+  .quiz-options-grid,
+  #lessonContentContainer div[style*="grid-template-columns:1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Exam shell on mobile */
+  .exam-shell {
+    padding: 20px 14px 40px !important;
+  }
+  .exam-top h1 {
+    font-size: 1.25rem !important;
+  }
+  .exam-nav {
+    gap: 10px !important;
+  }
+  .exam-nav .btn {
+    flex: 1 !important;
+    padding: 12px 14px !important;
+    justify-content: center !important;
+    text-align: center !important;
+  }
+  .opt {
+    padding: 13px 16px !important;
+    margin-bottom: 10px !important;
+  }
+
+  /* Points & Voucher Card on Mobile */
+  #redeemCodeForm {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+  #redeemCodeForm > div {
+    width: 100% !important;
+    min-width: 100% !important;
+  }
+  #btnRedeemCode {
+    width: 100% !important;
+    height: 46px !important;
+    justify-content: center !important;
+  }
+  .balance-block {
+    padding: 18px 16px !important;
+    gap: 12px !important;
+  }
+  .balance-block .amount {
+    font-size: 2.1rem !important;
+  }
+
+  /* Stats grid on mobile */
+  .stat-row {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+    border: none !important;
+    background: transparent !important;
+  }
+  .stat-cell {
+    flex: none !important;
+    border: 1px solid var(--line-soft) !important;
+    border-radius: 14px !important;
+    padding: 14px 10px !important;
+    text-align: center !important;
+    background: var(--bg-card) !important;
+  }
+  .stat-row .stat-cell:last-child:nth-child(odd) {
+    grid-column: span 2 !important;
+  }
+
+  /* Subscribed Teachers Courses container on mobile */
+  .teacher-courses-group {
+    padding: 16px 14px !important;
+    border-radius: 18px !important;
+    margin-bottom: 20px !important;
+  }
+  .teacher-courses-group > div:first-child {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+  .teacher-courses-group > div:first-child > div:last-child {
+    width: 100% !important;
+  }
+  .teacher-courses-group > div:first-child button {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  /* Support Card banner on Mobile */
+  .support-card-section {
+    flex-direction: column !important;
+    text-align: center !important;
+    padding: 18px 16px !important;
+    gap: 16px !important;
+  }
+  .support-card-section > div {
+    width: 100% !important;
+    justify-content: center !important;
+    flex-direction: column !important;
+    align-items: center !important;
+  }
+  .support-whatsapp-btn {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  /* Responsive Tables on Mobile */
+  .table-responsive-wrapper,
+  .block > table,
+  #requestsTableContainer,
+  #resultsTableContainer {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    max-width: 100% !important;
+    display: block !important;
+  }
+}
+
+
