@@ -46,7 +46,7 @@
     <ul class="nav-links">
       <li><a href="dashboard.html">الرئيسية</a></li>
       <li><a href="courses.html">الكورسات والمواد</a></li>
-      <li><a href="points.html">النقاط</a></li>
+      <li><a href="points.html">المحفظة</a></li>
     </ul>
     <div class="nav-cta" style="display:flex;align-items:center;gap:10px;">
       <button class="dark-mode-toggle-btn" data-dark-toggle onclick="toggleDarkMode()" title="تبديل الوضع الليلي/النهاري">🌙 الليلي</button>
@@ -238,7 +238,11 @@
 
         container.innerHTML = `
           <div class="card" style="padding:32px;border-radius:20px;text-align:center;max-width:540px;margin:0 auto;box-shadow:0 10px 30px rgba(0,0,0,0.15);">
-            <div style="font-size:3rem;margin-bottom:10px;">💳</div>
+            ${access.imageUrl ? `
+              <div style="margin-bottom:18px;border-radius:14px;overflow:hidden;max-height:220px;border:1px solid var(--line-soft);background:#000;">
+                <img src="${escapeHtml(access.imageUrl)}" alt="المحاضرة" style="width:100%;max-height:220px;object-fit:cover;display:block;">
+              </div>
+            ` : '<div style="font-size:3rem;margin-bottom:10px;">💳</div>'}
             <h2 style="margin:0 0 8px;font-size:1.45rem;">تفعيل واشتراك المحاضرة</h2>
             <p style="color:var(--ink-dim);margin-bottom:20px;font-size:0.92rem;">اشترك في المحاضرة لمتابعة الشرح والفيديو والمرفقات فوراً:</p>
             
@@ -488,14 +492,14 @@
       `;
     } else if (streamSrc) {
       playerHtml = `
-        <video controls playsinline controlsList="nodownload" style="width:100%;max-height:540px;display:block;background:#000;border-radius:14px;">
+        <video controls playsinline poster="${escapeHtml(lesson.imageUrl || '')}" controlsList="nodownload" style="width:100%;max-height:540px;display:block;background:#000;border-radius:14px;">
           <source src="${streamSrc}" type="video/mp4">
           متصفحك لا يدعم تشغيل هذا الفيديو.
         </video>
       `;
     } else if (videoUrl) {
       playerHtml = `
-        <video controls playsinline controlsList="nodownload" style="width:100%;max-height:540px;display:block;background:#000;border-radius:14px;">
+        <video controls playsinline poster="${escapeHtml(lesson.imageUrl || '')}" controlsList="nodownload" style="width:100%;max-height:540px;display:block;background:#000;border-radius:14px;">
           <source src="${videoUrl}" type="video/mp4">
           متصفحك لا يدعم تشغيل هذا الفيديو.
         </video>

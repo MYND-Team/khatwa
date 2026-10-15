@@ -43,7 +43,7 @@
     <ul class="nav-links">
       <li><a href="dashboard.html">الرئيسية</a></li>
       <li><a href="courses.html" class="active">الكورسات والمواد</a></li>
-      <li><a href="points.html">النقاط والمحفظة</a></li>
+      <li><a href="points.html">المحفظة والرصيد</a></li>
     </ul>
     <div class="nav-cta">
       <button class="dark-mode-toggle-btn" data-dark-toggle onclick="toggleDarkMode()" title="تبديل الوضع الليلي/النهاري">🌙 الليلي</button>
@@ -70,7 +70,7 @@
     </div>
     <div class="side-group">
       <h6>المحفظة</h6>
-      <a href="points.html" class="side-link">رصيد النقاط</a>
+      <a href="points.html" class="side-link">رصيد المحفظة</a>
       <a href="request-points.html" class="side-link">طلب شحن رصيد</a>
     </div>
     <div class="side-group">
@@ -99,7 +99,7 @@
 
     <div class="block">
       <div class="block-head">
-        <h3>الوحدات والمحاضرات الدراسية (الشراء بالدرس)</h3>
+        <h3>الوحدات والمحاضرات</h3>
       </div>
 
       <div id="unitsContainer">
@@ -112,7 +112,7 @@
 <!-- Purchase Confirmation Modal -->
 <div class="modal-overlay" id="purchaseModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:999;align-items:center;justify-content:center;">
   <div style="background:var(--bg-card);border:1px solid var(--line);border-radius:20px;max-width:440px;width:90%;padding:24px;">
-    <h3 style="margin-top:0;" id="modalLessonTitle">شراء المحاضرة</h3>
+    <h3 style="margin-top:0;" id="modalLessonTitle">الاشتراك في المحاضرة</h3>
     <p style="color:var(--ink-dim);font-size:0.9rem;" id="modalLessonDesc">اختر وسيلة الدفع لإتمام الاشتراك في المحاضرة فورًا.</p>
 
     <div style="background:var(--bg-raised);padding:14px;border-radius:12px;margin:16px 0;border:1px solid var(--line-soft);">
@@ -130,7 +130,7 @@
 
     <div style="display:flex;gap:10px;justify-content:flex-end;">
       <button type="button" class="btn btn-line btn-sm" onclick="closePurchaseModal()">إلغاء</button>
-      <button type="button" class="btn btn-primary btn-sm" id="confirmPurchaseBtn" onclick="executeLessonPurchase()">تأكيد الشراء والاشتراك ✓</button>
+      <button type="button" class="btn btn-primary btn-sm" id="confirmPurchaseBtn" onclick="executeLessonPurchase()">تأكيد الاشتراك ✓</button>
     </div>
   </div>
 </div>
@@ -141,6 +141,37 @@
 <script>
   let currentCourse = null;
   let activeLessonToPurchase = null;
+
+  window._courseLessonsMap = window._courseLessonsMap || {};
+
+  function normalizeImageUrl(url) {
+    if (!url || typeof url !== 'string') return '';
+    url = url.trim();
+    const driveMatch = url.match(/(?:drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?id=)|docs\.google\.com\/file\/d\/)([a-zA-Z0-9_-]+)/);
+    if (driveMatch && driveMatch[1]) {
+      return `https://drive.google.com/uc?export=view&id=${driveMatch[1]}`;
+    }
+    return url;
+  }
+
+  function cleanRedundantWords(str) {
+    if (!str || typeof str !== 'string') return '';
+    return str.replace(/\s*\(\s*الشراء بالدرس\s*\)/gi, '')
+              .replace(/\s*الشراء بالدرس/gi, '')
+              .replace(/\s*\(\s*بالدرس\s*\)/gi, '')
+              .replace(/\s*بالدرس/gi, '')
+              .replace(/\s*\(\s*الشراء بالحصة\s*\)/gi, '')
+              .replace(/\s*الشراء بالحصة/gi, '')
+              .replace(/\s*\(\s*بالحصة\s*\)/gi, '')
+              .replace(/\s*بالحصة/gi, '')
+              .trim();
+  }
+
+  function openPurchaseModalById(id) {
+    const lesson = window._courseLessonsMap[id];
+    if (lesson) openPurchaseModal(lesson);
+  }
+
 
   function getQueryParam(param) {
     const urlParams = new URLSearchParams(window.location.search);
@@ -154,7 +185,7 @@
     if (user) {
       document.getElementById('navName').textContent = user.name || user.username;
       document.getElementById('navAvatar').textContent = (user.name || user.username || 'ط').charAt(0);
-      document.getElementById('studentBalanceTag').textContent = `رصيدك: ${user.walletBalance || 0} ج.م · ${user.pointsBalance || 0} نقطة`;
+      document.getElementById('studentBalanceTag').textContent = `رصيدك: ${user.walletBalance ?? user.pointsBalance ?? 0} ج.م`;
     }
 
     if (courseId) {
@@ -185,9 +216,9 @@
     const stageLabel = currentCourse.academicStage || 'المرحلة الدراسية';
 
     document.title = `${currentCourse.title} | خطوة`;
-    document.getElementById('courseBreadcrumbTitle').textContent = currentCourse.title;
-    document.getElementById('courseHeaderTitle').textContent = currentCourse.title;
-    document.getElementById('courseHeaderSubtitle').textContent = `${teacherName} · ${currentCourse.subject} (${stageLabel})`;
+    document.getElementById('courseBreadcrumbTitle').textContent = cleanRedundantWords(currentCourse.title);
+    document.getElementById('courseHeaderTitle').textContent = cleanRedundantWords(currentCourse.title);
+    document.getElementById('courseHeaderSubtitle').textContent = `${teacherName} · ${cleanRedundantWords(currentCourse.subject)} (${stageLabel})`;
 
     // Render Chapters & Lessons
     const container = document.getElementById('unitsContainer');
@@ -213,8 +244,8 @@
           <div class="unit-box">
             <div class="unit-head">
               <div>
-                <b style="font-size:1rem;color:var(--primary);">الوحدة ${chIdx + 1}: ${escapeHtml(ch.title)}</b>
-                ${ch.description ? `<p style="font-size:0.82rem;color:var(--ink-dim);margin:2px 0 0;">${escapeHtml(ch.description)}</p>` : ''}
+                <b style="font-size:1rem;color:var(--primary);">الوحدة ${chIdx + 1}: ${escapeHtml(cleanRedundantWords(ch.title))}</b>
+                ${ch.description ? `<p style="font-size:0.82rem;color:var(--ink-dim);margin:2px 0 0;">${escapeHtml(cleanRedundantWords(ch.description))}</p>` : ''}
               </div>
             </div>
             <div class="unit-lessons">
@@ -375,7 +406,7 @@
     const user = window.KhatwaAPI.getUser();
     const priceEGP = Number(lesson.price) || 0;
 
-    document.getElementById('modalLessonTitle').textContent = `شراء: ${lesson.title}`;
+    document.getElementById('modalLessonTitle').textContent = `الاشتراك: ${cleanRedundantWords(lesson.title)}`;
     document.getElementById('modalPriceEGP').textContent = `${priceEGP} ج.م`;
     if (document.getElementById('modalUserBalance')) {
       document.getElementById('modalUserBalance').textContent = `${user?.walletBalance || 0} ج.م`;
@@ -398,15 +429,15 @@
 
     try {
       const res = await window.KhatwaAPI.student.purchaseLesson(activeLessonToPurchase.id, method);
-      alert(res.message || 'تم شراء المحاضرة بنجاح! 🎉');
+      alert(res.message || 'تم تفعيل المحاضرة بنجاح! 🎉');
       closePurchaseModal();
       await window.KhatwaAPI.fetchLiveUser();
       await renderCourseDetails();
     } catch (err) {
-      alert(err.message || 'فشل إتمام الشراء. يرجى التأكد من رصيدك.');
+      alert(err.message || 'فشل إتمام العملية. يرجى التأكد من رصيدك.');
     } finally {
       btn.disabled = false;
-      btn.textContent = 'تأكيد الشراء والاشتراك ✓';
+      btn.textContent = 'تأكيد الاشتراك ✓';
     }
   }
 

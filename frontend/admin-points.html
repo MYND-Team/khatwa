@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>إدارة ومراجعة طلبات شحن النقاط | خطوة</title>
+<title>إدارة ومراجعة طلبات شحن الرصيد | خطوة</title>
 <link rel="icon" type="image/png" href="logo/logo-khatwa-transparent.png">
 <link rel="stylesheet" href="css/style.css">
   <script src="js/theme-init.js"></script>
@@ -40,7 +40,7 @@
     <div class="breadcrumb" style="margin:0;">
       <a href="dashboard.html">الرئيسية</a>
       <span class="sep">›</span>
-      <span>مراجعة وشحن طلبات النقاط (Staff / Admin)</span>
+      <span>مراجعة وشحن طلبات الرصيد (Staff / Admin)</span>
     </div>
     <div class="nav-cta">
       <button class="lang-switcher-btn" onclick="window.KhatwaI18n.toggleLanguage()">🌐 English</button>
@@ -70,7 +70,7 @@
   <div class="page-head">
     <div>
       <h1>لوحة مراجعة طلبات الشحن</h1>
-      <p class="page-sub" style="margin:4px 0 0;">راجع صور إثباتات الدفع المحولة من الطلاب، وحدد عدد النقاط واشحنها فورًا إلى محفظة الطالب.</p>
+      <p class="page-sub" style="margin:4px 0 0;">راجع صور إثباتات الدفع المحولة من الطلاب، وحدد المبلغ واشحنه فورًا إلى محفظة الطالب.</p>
     </div>
     <div style="display:flex;gap:10px;align-items:center;">
       <button class="btn btn-primary btn-sm" onclick="loadRequests()">تحديث القائمة 🔄</button>
@@ -206,11 +206,11 @@
           <tr style="background:var(--bg);border-bottom:1px solid var(--line-soft);color:var(--ink-dim);">
             <th style="padding:12px 14px;">الطالب</th>
             <th style="padding:12px 14px;">أرقام التواصل</th>
-            <th style="padding:12px 14px;">النقاط المطلوبة</th>
+            <th style="padding:12px 14px;">المبلغ المطلوب</th>
             <th style="padding:12px 14px;">المبلغ المطلوب</th>
             <th style="padding:12px 14px;">إثبات التحويل</th>
             <th style="padding:12px 14px;">تاريخ الطلب</th>
-            <th style="padding:12px 14px;">تحديد النقاط والشحن</th>
+            <th style="padding:12px 14px;">تحديد المبلغ والشحن</th>
           </tr>
         </thead>
         <tbody>
@@ -236,7 +236,7 @@
                 </td>
 
                 <td style="padding:12px 14px;">
-                  <span class="points-tag" style="font-size:.8rem;padding:3px 8px;">${r.requestedPoints} نقطة</span>
+                  <span class="points-tag" style="font-size:.8rem;padding:3px 8px;">${r.requestedPoints} ج.م</span>
                 </td>
 
                 <td style="padding:12px 14px;">
@@ -259,12 +259,12 @@
                 <td style="padding:12px 14px;">
                   ${r.status === 'PENDING' ? `
                     <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-                      <input type="number" id="grantPts_${r.id}" value="${r.requestedPoints}" min="1" style="width:70px;padding:6px 8px;font-size:.85rem;border-radius:4px;border:1px solid var(--line-soft);background:var(--bg);color:var(--ink);" title="حدد عدد النقاط المراد شحنها للطالب">
+                      <input type="number" id="grantPts_${r.id}" value="${r.requestedPoints}" min="1" style="width:70px;padding:6px 8px;font-size:.85rem;border-radius:4px;border:1px solid var(--line-soft);background:var(--bg);color:var(--ink);" title="حدد المبلغ المراد شحنه للطالب">
                       <button type="button" class="btn btn-primary btn-sm" style="padding:6px 10px;" onclick="handleApprove('${r.id}')">✓ شحن</button>
                       <button type="button" class="btn btn-text btn-sm" style="color:var(--err);padding:6px 8px;" onclick="handleReject('${r.id}')">✕ رفض</button>
                     </div>
                   ` : (r.status === 'APPROVED' ? `
-                    <span class="tag tag-ok">✓ تم شحن +${r.grantedPoints || r.requestedPoints} نقطة</span>
+                    <span class="tag tag-ok">✓ تم شحن +${r.grantedPoints || r.requestedPoints} ج.م</span>
                   ` : `
                     <span class="tag tag-err">✕ تم الرفض</span>
                   `)}
@@ -281,7 +281,7 @@
     document.getElementById('receiptModalTitle').textContent = `إثبات تحويل الطالب: ${studentName}`;
     document.getElementById('modalReceiptInfo').innerHTML = `
       <b>الطالب:</b> ${studentName} &nbsp;|&nbsp; 
-      <b>النقاط المطلوبة:</b> ${pts} نقطة &nbsp;|&nbsp; 
+      <b>المبلغ المطلوب:</b> ${pts} ج.م &nbsp;|&nbsp; 
       <b>المبلغ المستحق:</b> ${pts * 10} جنيه مصري
     `;
     document.getElementById('modalReceiptImg').src = imgSrc;
@@ -297,20 +297,20 @@
     const pts = Number(input.value) || 0;
 
     if (pts < 1) {
-      alert('يرجى إدخال عدد نقاط صحيح أكبر من 0');
+      alert('يرجى إدخال مبلغ صحيح أكبر من 0');
       return;
     }
 
-    if (!confirm(`هل أنت متأكد من رغبتك في شحن ${pts} نقطة لهذا الطالب؟`)) {
+    if (!confirm(`هل أنت متأكد من رغبتك في شحن ${pts} ج.م لهذا الطالب؟`)) {
       return;
     }
 
     try {
       await window.KhatwaAPI.pointRequests.approve(requestId, pts);
-      showToast(`✓ تم شحن ${pts} نقطة للطالب بنجاح!`);
+      showToast(`✓ تم شحن ${pts} ج.م للطالب بنجاح!`);
       await loadRequests();
     } catch (err) {
-      alert('تعذر شحن النقاط: ' + err.message);
+      alert('تعذر شحن الرصيد: ' + err.message);
     }
   }
 

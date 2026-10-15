@@ -256,6 +256,8 @@ router.get(
                 description: true,
                 price: true,
                 pointCost: true,
+                imageUrl: true,
+                createdAt: true,
                 orderIndex: true,
                 accessType: true,
                 accessDurationDays: true,
@@ -296,6 +298,8 @@ router.get(
           description: l.description,
           price: l.price,
           pointCost: l.pointCost,
+          imageUrl: l.imageUrl,
+          createdAt: l.createdAt,
           orderIndex: l.orderIndex,
           isSubscribed: l.subscriptions.length > 0 || l.unlockedBy.length > 0,
           subscriptionDetails: l.subscriptions[0] || null,
@@ -872,6 +876,8 @@ router.get(
                 orderIndex: true,
                 pointCost: true,
                 price: true,
+                imageUrl: true,
+                createdAt: true,
                 isPublished: true,
                 scheduledPublishAt: true,
                 assignmentQuizId: true,
@@ -905,6 +911,8 @@ router.get(
             orderIndex: true,
             pointCost: true,
             price: true,
+            imageUrl: true,
+            createdAt: true,
             isPublished: true,
             scheduledPublishAt: true,
             assignmentQuizId: true,
@@ -1008,6 +1016,8 @@ router.get(
         openingQuizId: true,
         pointCost: true,
         price: true,
+        imageUrl: true,
+        createdAt: true,
         scheduledPublishAt: true,
       },
     });
@@ -1067,6 +1077,7 @@ router.get(
             step: 'purchase',
             price: lesson.price,
             pointCost: lesson.pointCost,
+            imageUrl: lesson.imageUrl,
             hasAssignment,
             hasExam,
           },
@@ -1227,7 +1238,7 @@ router.get(
     // All gates passed
     res.status(200).json({
       success: true,
-      data: { canAccess: true, reason: 'ALL_CLEAR', step: 'lesson', nextLesson, hasAssignment, hasExam },
+      data: { canAccess: true, reason: 'ALL_CLEAR', step: 'lesson', nextLesson, hasAssignment, hasExam, imageUrl: lesson.imageUrl },
     });
   })
 );

@@ -2199,7 +2199,7 @@
         const teacherName = s.teacherProfile?.displayName || 'المدرس';
         const courseName = s.course?.title || '—';
         const lessonName = s.lesson?.title || 'محاضرة';
-        const priceStr = s.pricePaid > 0 ? `${s.pricePaid} ج.م` : (s.pointsPaid > 0 ? `${s.pointsPaid} نقطة` : 'مجانية');
+        const priceStr = s.pricePaid > 0 ? `${s.pricePaid} ج.م` : (s.pointsPaid > 0 ? `${s.pointsPaid} ج.م` : 'مجانية');
         const isActive = s.status === 'ACTIVE';
 
         return `
@@ -4617,23 +4617,23 @@
   async function submitQuickPoints() {
     if (!currentActiveStudentId) return;
     const amount = Number(document.getElementById('quickPointsAmount').value);
-    const reason = document.getElementById('quickPointsReason').value || 'تعديل نقاط بواسطة المدير';
+    const reason = document.getElementById('quickPointsReason').value || 'تعديل رصيد بواسطة المدير';
 
     if (isNaN(amount) || amount === 0) {
-      alert('أدخل عدداً صحيحاً للنقاط');
+      alert('أدخل عدداً صحيحاً للرصيد');
       return;
     }
 
     try {
       await window.KhatwaAPI.admin.adjustPoints(currentActiveStudentId, amount, reason);
-      alert(`تم تعديل النقاط (${amount > 0 ? '+' : ''}${amount}) وحفظ المعاملة بنجاح! ✅`);
+      alert(`تم تعديل الرصيد (${amount > 0 ? '+' : ''}${amount}) وحفظ المعاملة بنجاح! ✅`);
       document.getElementById('quickPointsAmount').value = '';
       document.getElementById('quickPointsReason').value = '';
       await openStudentDossier(currentActiveStudentId);
       await loadStudents();
       await loadAnalytics();
     } catch (err) {
-      alert(err.message || 'فشلت عملية تعديل النقاط');
+      alert(err.message || 'فشلت عملية تعديل الرصيد');
     }
   }
 

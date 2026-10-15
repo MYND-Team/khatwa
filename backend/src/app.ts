@@ -143,6 +143,79 @@ app.get(['/courses', '/api/courses'], asyncHandler(async (req, res) => {
   res.status(200).json({ success: true, data: courses });
 }));
 
+app.get(['/courses/:id', '/api/courses/:id'], asyncHandler(async (req, res) => {
+  const courseId = req.params.id;
+  const course = await prisma.course.findUnique({
+    where: { id: courseId },
+    include: {
+      teacherProfile: {
+        select: { id: true, displayName: true, avatarUrl: true, rating: true, subject: true, bio: true },
+      },
+      chapters: {
+        orderBy: { orderIndex: 'asc' },
+        include: {
+          lessons: {
+            where: {
+              isPublished: true,
+              OR: [
+                { scheduledPublishAt: null },
+                { scheduledPublishAt: { lte: new Date() } },
+              ],
+            },
+            orderBy: { orderIndex: 'asc' },
+            select: {
+              id: true,
+              title: true,
+              description: true,
+              orderIndex: true,
+              pointCost: true,
+              price: true,
+              imageUrl: true,
+              createdAt: true,
+              isPublished: true,
+              scheduledPublishAt: true,
+              assignmentQuizId: true,
+              examQuizId: true,
+            },
+          },
+        },
+      },
+      lessons: {
+        where: {
+          isPublished: true,
+          chapterId: null,
+          OR: [
+            { scheduledPublishAt: null },
+            { scheduledPublishAt: { lte: new Date() } },
+          ],
+        },
+        orderBy: { orderIndex: 'asc' },
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          orderIndex: true,
+          pointCost: true,
+          price: true,
+          imageUrl: true,
+          createdAt: true,
+          isPublished: true,
+          scheduledPublishAt: true,
+          assignmentQuizId: true,
+          examQuizId: true,
+        },
+      },
+    },
+  });
+
+  if (!course) {
+    res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Course not found' } });
+    return;
+  }
+
+  res.status(200).json({ success: true, data: course });
+}));
+
 app.get(['/teachers', '/api/teachers'], asyncHandler(async (req, res) => {
   const { stage } = req.query as Record<string, string>;
   const courseWhere: any = { isPublished: true };

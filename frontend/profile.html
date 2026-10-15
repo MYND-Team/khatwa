@@ -39,7 +39,7 @@
       <a href="results.html" class="side-link">النتائج والامتحانات</a>
     </div>
     <div class="side-group">
-      <h6>المحفظة والنقاط</h6>
+      <h6>المحفظة</h6>
       <a href="points.html" class="side-link">الرصيد والمعاملات</a>
       <a href="request-points.html" class="side-link">طلب شحن رصيد</a>
       <a href="request-offline.html" class="side-link">طلب سيشن أوفلاين 🏢</a>
@@ -84,7 +84,6 @@
     <!-- Live Stat Row -->
     <div class="stat-row">
       <div class="stat-cell"><b id="statWallet">0 ج.م</b><span>رصيد المحفظة</span></div>
-      <div class="stat-cell"><b id="statPoints">0 نقطة</b><span>رصيد النقاط</span></div>
       <div class="stat-cell"><b id="statCompleted">0</b><span>حصة مكتملة</span></div>
       <div class="stat-cell"><b id="statPassedExams">0</b><span>امتحان مجتاز</span></div>
       <div class="stat-cell"><b id="statAvgScore">—</b><span>متوسط الامتحانات</span></div>
@@ -147,7 +146,7 @@
       <div class="block-head">
         <div>
           <h3 style="margin:0 0 4px;">💳 السجل المالي والمدفوعات</h3>
-          <p style="margin:0;font-size:0.86rem;color:var(--ink-dim);">رصيد محفظتك، شحنات النقاط، وآخر عمليات شراء المحاضرات.</p>
+          <p style="margin:0;font-size:0.86rem;color:var(--ink-dim);">رصيد محفظتك، شحنات الرصيد، وآخر عمليات شراء المحاضرات.</p>
         </div>
         <div style="display:flex;gap:8px;">
           <a href="request-points.html" class="btn btn-primary btn-sm">⚡ طلب شحن رصيد</a>
@@ -395,7 +394,7 @@
       const walletVal = stats.walletBalance ?? user.walletBalance ?? 0;
       const pointsVal = stats.pointsBalance ?? user.pointsBalance ?? 0;
       document.getElementById('statWallet').textContent = `${walletVal} ج.م`;
-      document.getElementById('statPoints').textContent = `${pointsVal} نقطة`;
+      if (document.getElementById('statPoints')) document.getElementById('statPoints').textContent = `${walletVal} ج.م`;
       document.getElementById('statCompleted').textContent = stats.completedLectures || 0;
       document.getElementById('statPassedExams').textContent = stats.passedQuizzes || (stats.quizAttempts?.length || 0);
       document.getElementById('statAvgScore').textContent = stats.averageScore || '—';

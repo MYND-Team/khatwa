@@ -964,7 +964,7 @@
           ]);
           return [
             ...notifs.map(n => ({ id: n.id, title: n.title, desc: n.message, time: n.createdAt, icon: '🔔', type: 'info' })),
-            ...txs.map(t => ({ id: t.id, title: t.type === 'CREDIT' ? 'شحن نقاط' : 'استخدام نقاط', desc: (t.reason || 'معاملة') + ' (' + (t.type === 'CREDIT' ? '+' : '-') + t.amount + ' نقطة)', time: t.createdAt, icon: t.type === 'CREDIT' ? '💎' : '⚡', type: t.type === 'CREDIT' ? 'success' : 'warn' })),
+            ...txs.map(t => ({ id: t.id, title: t.type === 'CREDIT' ? 'شحن رصيد' : 'استخدام رصيد', desc: (t.reason || 'معاملة') + ' (' + (t.type === 'CREDIT' ? '+' : '-') + t.amount + ' ج.م)', time: t.createdAt, icon: t.type === 'CREDIT' ? '💳' : '⚡', type: t.type === 'CREDIT' ? 'success' : 'warn' })),
             ...payments.map(p => ({ id: p.id, title: 'شراء محاضرة', desc: (p.lesson?.title || 'محاضرة') + ' (' + p.amount + ' ج.م)', time: p.createdAt, icon: '💳', type: 'success' })),
           ].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
         } catch { return []; }

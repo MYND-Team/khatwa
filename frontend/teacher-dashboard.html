@@ -453,8 +453,11 @@
 
         <div class="form-group" style="margin-bottom:10px;">
           <label class="form-label" style="font-size:0.84rem;">🖼️ صورة / بوستر المحاضرة (Thumbnail)</label>
-          <input type="file" class="form-control" id="lessonCoverFile" accept="image/*">
-          <span style="font-size:0.75rem;color:var(--ink-dim);display:block;margin-top:2px;">صورة توضيحية للمحاضرة تظهر للطلاب في بطاقة المحاضرة.</span>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <input type="file" class="form-control" id="lessonCoverFile" accept="image/*">
+            <input type="text" class="form-control" id="lessonCoverUrlInput" placeholder="أو رابط مباشر / Google Drive للصورة (اختياري)" style="font-size:0.82rem;">
+          </div>
+          <span style="font-size:0.75rem;color:var(--ink-dim);display:block;margin-top:2px;">صورة توضيحية للمحاضرة تظهر للطلاب في بطاقة المحاضرة. يمكنك رفع ملف أو وضع رابط صورة.</span>
         </div>
         
         <div class="form-group" style="margin-bottom:8px;">
@@ -745,7 +748,10 @@
       <div class="form-group" style="margin-bottom:12px;">
         <label class="form-label">🖼️ تحديث صورة / بوستر المحاضرة (Thumbnail)</label>
         <div id="editLessonCoverPreview" style="margin-bottom:8px;display:none;"></div>
-        <input type="file" class="form-control" id="editLessonCoverFile" accept="image/*">
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <input type="file" class="form-control" id="editLessonCoverFile" accept="image/*">
+          <input type="text" class="form-control" id="editLessonCoverUrlInput" placeholder="أو رابط مباشر / Google Drive للصورة (اختياري)" style="font-size:0.82rem;">
+        </div>
       </div>
 
       <div class="form-group" style="margin-bottom:12px;">
@@ -1195,7 +1201,7 @@
       if (elRevenue) elRevenue.textContent = (overviewData.totalRevenueEGP || 0).toLocaleString('ar-EG') + ' ج.م';
 
       const elPoints = document.getElementById('statPoints');
-      if (elPoints) elPoints.textContent = (overviewData.totalPointsEarned || 0).toLocaleString('ar-EG') + ' نقطة';
+      if (elPoints) elPoints.textContent = (overviewData.totalPointsEarned || 0).toLocaleString('ar-EG') + ' ج.م';
 
       // Show commission %
       const localUser = window.KhatwaAPI.getUser();
@@ -1290,9 +1296,9 @@
                           const isDraft = l.isPublished === false;
                           const isScheduled = Boolean(l.scheduledPublishAt && new Date(l.scheduledPublishAt) > new Date());
 
-                          // "جديد" badge for recently created lessons (< 24h)
-                          const createdTime = l.createdAt ? new Date(l.createdAt).getTime() : 0;
-                          const isNew = createdTime > 0 && (Date.now() - createdTime) < (24 * 60 * 60 * 1000);
+                          // Requirement 2: "جديد" badge for lectures (< 24h from publish time)
+                          const publishTime = Math.max(l.createdAt ? new Date(l.createdAt).getTime() : 0, l.scheduledPublishAt ? new Date(l.scheduledPublishAt).getTime() : 0);
+                          const isNew = !isScheduled && publishTime > 0 && (Date.now() - publishTime) >= 0 && (Date.now() - publishTime) < (24 * 60 * 60 * 1000);
                           const newBadgeHtml = isNew ? '<span class="lecture-new-badge">جديد</span>' : '';
 
                           const coverUrl = l.imageUrl || l.coverImage || '';
@@ -1866,7 +1872,7 @@
                 const sPhone = st.studentProfile?.studentPhoneNumber || '—';
                 const pPhone = st.studentProfile?.parentInfo?.parentPhoneNumber || '—';
                 const fJob = st.studentProfile?.parentInfo?.fatherJob || '—';
-                const priceStr = entry.totalPaid > 0 ? `${entry.totalPaid} ج.م` : (entry.totalPoints > 0 ? `${entry.totalPoints} نقطة` : 'مجاني');
+                const priceStr = entry.totalPaid > 0 ? `${entry.totalPaid} ج.م` : (entry.totalPoints > 0 ? `${entry.totalPoints} ج.م` : 'مجاني');
                 const lastDate = entry.lastSubscribedAt ? new Date(entry.lastSubscribedAt).toLocaleDateString('ar-EG') : '—';
                 const lecturesCount = entry.subscriptions.length;
                 const cleanPhone = (sPhone || '').replace(/[^0-9]/g, '');
@@ -1916,8 +1922,8 @@
             </thead>
             <tbody>
               ${students.map(s => {
-                const priceStr = s.pricePaid > 0 ? `${s.pricePaid} ج.م` : (s.pointsPaid > 0 ? `${s.pointsPaid} نقطة` : 'مجانية');
-                const methodStr = s.paymentMethod === 'WALLET_EGP' ? '💳 محفظة EGP' : (s.paymentMethod === 'POINTS' ? '💎 نقاط' : 'مجاني');
+                const priceStr = s.pricePaid > 0 ? `${s.pricePaid} ج.م` : (s.pointsPaid > 0 ? `${s.pointsPaid} ج.م` : 'مجانية');
+                const methodStr = s.paymentMethod === 'WALLET_EGP' ? '💳 محفظة EGP' : (s.paymentMethod === 'POINTS' ? '💳 رصيد' : 'مجاني');
                 const earningStr = s.paymentTransaction?.teacherEarning !== undefined ? `${s.paymentTransaction.teacherEarning} ج.م` : (s.pricePaid > 0 ? `${Math.round(s.pricePaid * 0.8)} ج.م` : '—');
                 return `
                   <tr>
@@ -1989,7 +1995,7 @@
         'عدد المحاضرات التي حضرها',
         'قائمة المحاضرات',
         'إجمالي المدفوع بالجنيه',
-        'إجمالي النقاط',
+        'إجمالي الرصيد',
         'تاريخ آخر اشتراك'
       ];
 
@@ -2028,7 +2034,7 @@
         s.student?.studentProfile?.parentInfo?.fatherJob || '',
         s.lesson?.title || '',
         s.course?.title || '',
-        s.pricePaid > 0 ? `${s.pricePaid} ج.م` : (s.pointsPaid > 0 ? `${s.pointsPaid} نقطة` : 'مجانية'),
+        s.pricePaid > 0 ? `${s.pricePaid} ج.م` : (s.pointsPaid > 0 ? `${s.pointsPaid} ج.م` : 'مجانية'),
         s.paymentMethod || 'FREE',
         s.paymentTransaction?.teacherEarning !== undefined ? `${s.paymentTransaction.teacherEarning} ج.م` : (s.pricePaid > 0 ? `${Math.round(s.pricePaid * 0.8)} ج.م` : '—'),
         s.subscribedAt ? new Date(s.subscribedAt).toLocaleDateString('ar-EG') : ''
@@ -2295,7 +2301,7 @@
 
       let previewContent = `
         <div style="background:var(--bg-raised);padding:14px;border-radius:12px;margin-bottom:16px;border:1px solid var(--line-soft);">
-          <b>الكورس:</b> ${escapeHtml(data.course?.title || 'عام')} · <b>المرحلة:</b> ${stageTitles[data.academicStage] || data.academicStage} · <b>السعر:</b> ${data.price || 0} ج.م (${data.pointCost || 0} نقطة)
+          <b>الكورس:</b> ${escapeHtml(data.course?.title || 'عام')} · <b>المرحلة:</b> ${stageTitles[data.academicStage] || data.academicStage} · <b>السعر:</b> ${data.price || data.pointCost || 0} ج.م
         </div>
       `;
 
@@ -2376,6 +2382,16 @@
   }
   function closeCreateCourseModal() {
     document.getElementById('createCourseModal').style.display = 'none';
+  }
+
+  function normalizeImageUrl(url) {
+    if (!url || typeof url !== 'string') return '';
+    url = url.trim();
+    const driveMatch = url.match(/(?:drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?id=)|docs\.google\.com\/file\/d\/)([a-zA-Z0-9_-]+)/);
+    if (driveMatch && driveMatch[1]) {
+      return `https://drive.google.com/uc?export=view&id=${driveMatch[1]}`;
+    }
+    return url;
   }
 
   function compressImageFile(file, maxWidth = 1200, maxHeight = 800, quality = 0.85) {
@@ -2922,6 +2938,10 @@
     if (vidFile) vidFile.value = '';
     const pdfFile = document.getElementById('lessonPdfFile');
     if (pdfFile) pdfFile.value = '';
+    const coverFile = document.getElementById('lessonCoverFile');
+    if (coverFile) coverFile.value = '';
+    const coverUrlInput = document.getElementById('lessonCoverUrlInput');
+    if (coverUrlInput) coverUrlInput.value = '';
 
     const hasAssignCb = document.getElementById('lessonAddHasAssignment');
     if (hasAssignCb) hasAssignCb.checked = false;
@@ -3028,9 +3048,12 @@
       }
 
       const coverFile = document.getElementById('lessonCoverFile')?.files[0];
+      const coverUrlVal = document.getElementById('lessonCoverUrlInput')?.value?.trim() || null;
       let imageUrl = null;
       if (coverFile) {
         imageUrl = await compressImageFile(coverFile);
+      } else if (coverUrlVal) {
+        imageUrl = normalizeImageUrl(coverUrlVal);
       }
 
       let lesson;
@@ -3216,6 +3239,8 @@
     }
     const coverInput = document.getElementById('editLessonCoverFile');
     if (coverInput) coverInput.value = '';
+    const editUrlInput = document.getElementById('editLessonCoverUrlInput');
+    if (editUrlInput) editUrlInput.value = (lesson.imageUrl && !lesson.imageUrl.startsWith('data:')) ? lesson.imageUrl : '';
 
     document.getElementById('editLessonModal').style.display = 'flex';
   }
@@ -3242,9 +3267,12 @@
     btn.disabled = true;
     btn.textContent = 'جارٍ الحفظ...';
 
+    const editCoverUrlVal = document.getElementById('editLessonCoverUrlInput')?.value?.trim() || null;
     let newImageUrl = undefined;
     if (editCoverFile) {
       newImageUrl = await compressImageFile(editCoverFile);
+    } else if (editCoverUrlVal) {
+      newImageUrl = normalizeImageUrl(editCoverUrlVal);
     }
 
     try {

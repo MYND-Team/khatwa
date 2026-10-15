@@ -258,6 +258,7 @@ export async function getLessonContent(lessonId: string, studentId: string) {
     videoUrl: lesson.videoUrl,
     pdfUrl: lesson.pdfUrl,
     pdfFileName: lesson.pdfFileName,
+    imageUrl: lesson.imageUrl,
     hasVideo: !!(lesson.driveFileId || lesson.videoUrl),
     assignmentGrade,
     examGrade,
