@@ -4540,7 +4540,14 @@ body.dark-mode .lecture-card-btn,
 }
 
 @media (max-width: 768px) {
-  /* On tablets and mobile screens, ensure teacher lecture cards have enough width for buttons or show 1 column */
+  /* Global Content Padding on Mobile */
+  .main, .admin-main-wrapper {
+    padding: 16px 14px 90px !important;
+  }
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     1. TEACHER DASHBOARD MOBILE ENHANCEMENTS
+     ══════════════════════════════════════════════════════════════════════════ */
   .teacher-lecture-grid {
     grid-template-columns: 1fr !important;
     gap: 16px !important;
@@ -4549,25 +4556,102 @@ body.dark-mode .lecture-card-btn,
     max-width: 100% !important;
   }
   .teacher-card-footer {
-    padding: 12px 14px !important;
+    padding: 12px 12px !important;
   }
   .teacher-card-btn-group {
     display: grid !important;
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 8px !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 6px !important;
     width: 100% !important;
   }
   .teacher-card-btn-group > button:first-child {
     grid-column: 1 / -1 !important;
     justify-content: center !important;
+    font-size: 0.84rem !important;
+    padding: 8px 10px !important;
   }
   .teacher-card-btn-group .btn {
     width: 100% !important;
     justify-content: center !important;
     text-align: center !important;
-    padding: 7px 8px !important;
-    font-size: 0.8rem !important;
-    min-height: 34px !important;
+    padding: 6px 4px !important;
+    font-size: 0.74rem !important;
+    min-height: 32px !important;
+    white-space: normal !important; /* Allow clean multi-line wrapping so no text is ever clipped */
+    line-height: 1.25 !important;
+    border-radius: 8px !important;
+  }
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     2. ADMIN DASHBOARD MOBILE ENHANCEMENTS
+     ══════════════════════════════════════════════════════════════════════════ */
+  /* Admin Navigation Tabs as smooth horizontal swipe bar on mobile */
+  .admin-nav-tabs,
+  #adminTopNavTabs {
+    display: flex !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    gap: 8px !important;
+    padding: 6px 2px 14px !important;
+    margin-bottom: 12px !important;
+    scrollbar-width: none !important;
+  }
+  .admin-nav-tabs::-webkit-scrollbar,
+  #adminTopNavTabs::-webkit-scrollbar {
+    display: none !important;
+  }
+  .admin-nav-tab {
+    flex-shrink: 0 !important;
+    padding: 8px 14px !important;
+    font-size: 0.82rem !important;
+    border-radius: 10px !important;
+    white-space: nowrap !important;
+  }
+  .modern-stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+    margin-bottom: 18px !important;
+  }
+  .modern-stat-card {
+    padding: 12px 12px !important;
+  }
+  .modern-stat-card .stat-value {
+    font-size: 1.35rem !important;
+  }
+  .modern-stat-card .stat-label {
+    font-size: 0.78rem !important;
+  }
+  .modern-stat-card .stat-sub {
+    font-size: 0.72rem !important;
+  }
+
+  /* Admin search & filter rows */
+  .search-box {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+  .table-container {
+    border-radius: 14px !important;
+    margin-top: 10px !important;
+  }
+  .data-table th, .data-table td {
+    padding: 10px 12px !important;
+    font-size: 0.82rem !important;
+  }
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     3. STUDENT EXPERIENCE MOBILE ENHANCEMENTS
+     ══════════════════════════════════════════════════════════════════════════ */
+  .lecture-card-btn {
+    white-space: nowrap !important;
+    font-size: 0.72rem !important;
+    padding: 6px 8px !important;
+  }
+  .khatwa-pdf-teacher-card .teacher-card-main-title {
+    font-size: 0.96rem !important;
+  }
+  .khatwa-pdf-teacher-card .teacher-card-subject-tag {
+    font-size: 0.78rem !important;
   }
 }
 
