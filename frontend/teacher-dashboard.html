@@ -1314,7 +1314,7 @@
 
                     <!-- Lessons inside chapter -->
                     ${ch.lessons && ch.lessons.length > 0 ? `
-                      <div class="lecture-grid">
+                      <div class="lecture-grid teacher-lecture-grid">
                         ${ch.lessons.map((l, lIdx) => {
                           cachedLessonsMap.set(l.id, l);
                           const isDraft = l.isPublished === false;
@@ -1343,7 +1343,7 @@
 
                           const lSubs = l._count?.subscriptions || 0;
                           return `
-                          <div class="lecture-card" onclick="openLessonFullDetailsModal('${l.id}')">
+                          <div class="lecture-card teacher-lecture-card" onclick="openLessonFullDetailsModal('${l.id}')">
                             <div class="lecture-card-poster">
                               ${posterHtml}
                               <div class="lecture-lock-disc" title="إدارة تفاصيل المحاضرة">
@@ -1372,13 +1372,13 @@
                               </div>
                             </div>
 
-                            <div class="lecture-card-footer" onclick="event.stopPropagation();" style="flex-direction:column;align-items:stretch;gap:12px;padding:12px;">
+                            <div class="lecture-card-footer teacher-card-footer" onclick="event.stopPropagation();">
                               <div style="display:flex;justify-content:space-between;align-items:center;width:100%;">
                                 <div class="lecture-card-price ${l.price === 0 ? 'free' : ''}">
                                   ${l.price > 0 ? l.price + ' ج.م' : ''}
                                 </div>
                               </div>
-                              <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+                              <div class="teacher-card-btn-group">
                                 <button type="button" class="btn btn-sm" style="padding:4px 10px;font-size:.8rem;background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;border-radius:8px;font-weight:700;display:inline-flex;align-items:center;gap:4px;" onclick="event.stopPropagation();openLessonFullDetailsModal('${l.id}')">📊 بيانات المحاضرة والطلاب</button>
                                 ${isDraft ? `<button type="button" class="btn btn-sm" style="padding:3px 10px;font-size:.8rem;background:#16a34a;color:#fff;border-radius:8px;font-weight:700;" onclick="quickPublishLesson('${l.id}')">🚀 نشر للطلاب</button>` : `<button type="button" class="btn btn-line btn-sm" style="padding:3px 10px;font-size:.8rem;color:#6b7280;border-color:rgba(107,114,128,0.4);" onclick="quickHideLesson('${l.id}')">👁️ إخفاء عن الطلاب</button>`}
                                 <button type="button" class="btn btn-line btn-sm" style="padding:3px 10px;font-size:.8rem;color:var(--primary);" onclick="openEditLessonModal('${l.id}')">✏️ تعديل السعر والبيانات</button>

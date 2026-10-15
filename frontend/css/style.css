@@ -4514,3 +4514,60 @@ body.dark-mode .lecture-card-btn,
 }
 
 
+
+
+/* Teacher Dashboard Lesson Card Responsiveness */
+.teacher-lecture-card {
+  cursor: pointer;
+}
+.teacher-card-footer {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 10px !important;
+  padding: 12px !important;
+  background: var(--bg-raised) !important;
+}
+.teacher-card-btn-group {
+  display: flex !important;
+  gap: 6px !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+}
+.teacher-card-btn-group .btn {
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+}
+
+@media (max-width: 768px) {
+  /* On tablets and mobile screens, ensure teacher lecture cards have enough width for buttons or show 1 column */
+  .teacher-lecture-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+  .teacher-lecture-card {
+    max-width: 100% !important;
+  }
+  .teacher-card-footer {
+    padding: 12px 14px !important;
+  }
+  .teacher-card-btn-group {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+  .teacher-card-btn-group > button:first-child {
+    grid-column: 1 / -1 !important;
+    justify-content: center !important;
+  }
+  .teacher-card-btn-group .btn {
+    width: 100% !important;
+    justify-content: center !important;
+    text-align: center !important;
+    padding: 7px 8px !important;
+    font-size: 0.8rem !important;
+    min-height: 34px !important;
+  }
+}
+
