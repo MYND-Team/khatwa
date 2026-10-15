@@ -380,7 +380,10 @@
 
       const buttonHtml = isEnrolled
         ? `<a href="subject.html?courseId=${c.id}" class="lecture-card-btn primary enrolled-btn">دخول الكورس ↗</a>`
-        : `<a href="subject.html?courseId=${c.id}" class="lecture-card-btn">عرض الكورس ↗</a>`;
+        : (!isFree
+            ? `<button type="button" class="lecture-card-btn primary" onclick="event.stopPropagation(); enrollInCourse('${c.id}', '${escapeHtml(c.title)}', ${price})">اشتراك الآن 💳</button>`
+            : `<a href="subject.html?courseId=${c.id}" class="lecture-card-btn">عرض الكورس ↗</a>`
+          );
 
       return `
       <div class="lecture-card" onclick="window.location.href='subject.html?courseId=${c.id}'">

@@ -1292,12 +1292,13 @@ router.get(
     }
 
     const stage = req.query.stage as string | undefined;
-    if (stage && !VALID_STAGES.includes(stage)) {
+    const isAll = !stage || stage === 'ALL';
+    if (!isAll && !VALID_STAGES.includes(stage)) {
       res.status(400).json({ success: false, error: { code: 'INVALID_STAGE', message: `stage must be one of: ${VALID_STAGES.join(', ')}` } });
       return;
     }
     const where: any = { teacherProfileId: teacherProfile.id };
-    if (stage) where.academicStage = stage;
+    if (!isAll && stage) where.academicStage = stage;
 
     const lessons = await prisma.lesson.findMany({
       where,

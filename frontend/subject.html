@@ -94,6 +94,7 @@
       </div>
       <div style="display:flex;gap:10px;align-items:center;">
         <span class="points-tag" id="studentBalanceTag">رصيدك: 0 ج.م</span>
+        <button id="enrollCourseBtn" class="btn btn-primary btn-sm" style="display:none;font-weight:700;" onclick="enrollInCurrentCourse()">💳 الاشتراك في الكورس بالكامل</button>
       </div>
     </div>
 
@@ -219,6 +220,32 @@
     document.getElementById('courseBreadcrumbTitle').textContent = cleanRedundantWords(currentCourse.title);
     document.getElementById('courseHeaderTitle').textContent = cleanRedundantWords(currentCourse.title);
     document.getElementById('courseHeaderSubtitle').textContent = `${teacherName} · ${cleanRedundantWords(currentCourse.subject)} (${stageLabel})`;
+
+    // Check enrollment and show enroll button if paid & not enrolled
+    try {
+      const isEnrolled = await window.KhatwaAPI.courses.isEnrolled(courseId);
+      const enrollBtn = document.getElementById('enrollCourseBtn');
+      const coursePrice = Number(currentCourse.price) || 0;
+      if (enrollBtn) {
+        if (isEnrolled) {
+          enrollBtn.style.display = 'inline-flex';
+          enrollBtn.className = 'btn btn-sm';
+          enrollBtn.style.background = 'rgba(16,185,129,0.15)';
+          enrollBtn.style.color = '#10b981';
+          enrollBtn.style.border = '1px solid #10b981';
+          enrollBtn.disabled = true;
+          enrollBtn.textContent = '✓ أنت مشترك في هذا الكورس';
+        } else if (coursePrice > 0) {
+          enrollBtn.style.display = 'inline-flex';
+          enrollBtn.className = 'btn btn-primary btn-sm';
+          enrollBtn.disabled = false;
+          enrollBtn.innerHTML = `💳 الاشتراك في الكورس بالكامل (${coursePrice} ج.م)`;
+        } else {
+          enrollBtn.style.display = 'none';
+        }
+      }
+    } catch (e) { console.warn(e); }
+
 
     // Render Chapters & Lessons
     const container = document.getElementById('unitsContainer');
@@ -417,6 +444,50 @@
   function closePurchaseModal() {
     document.getElementById('purchaseModal').style.display = 'none';
     activeLessonToPurchase = null;
+  }
+
+  
+  async function enrollInCurrentCourse() {
+    if (!currentCourse) return;
+    const user = window.KhatwaAPI.getUser();
+    const token = window.KhatwaAPI.getToken();
+    if (!user || !token) {
+      alert('يرجى تسجيل الدخول أولاً للاشتراك في الكورس.');
+      window.location.href = 'login.html';
+      return;
+    }
+
+    const price = Number(currentCourse.price) || 0;
+    const userBalance = Number(user.walletBalance ?? user.pointsBalance ?? 0);
+
+    if (price > 0 && userBalance < price) {
+      alert('رصيد محفظتك (' + userBalance + ' ج.م) غير كافٍ للاشتراك في هذا الكورس (' + price + ' ج.م).\nيرجى شحن رصيد المحفظة أولاً.');
+      window.location.href = 'request-points.html';
+      return;
+    }
+
+    if (!confirm('هل ترغب في الاشتراك في كورس: "' + currentCourse.title + '"' + (price > 0 ? ' وخصم ' + price + ' ج.م من محفظتك' : '') + '؟')) {
+      return;
+    }
+
+    const btn = document.getElementById('enrollCourseBtn');
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = 'جارٍ معالجة الاشتراك والخصم...';
+    }
+
+    try {
+      const res = await window.KhatwaAPI.student.enrollCourse(currentCourse.id);
+      alert(res?.message || 'تم الاشتراك في الكورس بنجاح وخصم القيمة من محفظتك! ✅');
+      await window.KhatwaAPI.fetchLiveUser();
+      await renderCourseDetails();
+    } catch (err) {
+      alert(err.message || 'حدث خطأ أثناء الاشتراك في الكورس.');
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '💳 الاشتراك في الكورس بالكامل (' + price + ' ج.م)';
+      }
+    }
   }
 
   async function executeLessonPurchase() {
