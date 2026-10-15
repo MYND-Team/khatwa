@@ -5,8 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>بياناتي | خطوة</title>
 <link rel="icon" type="image/png" href="logo/logo-khatwa-transparent.png">
-<link rel="stylesheet" href="css/style.css">
-  <script src="js/theme-init.js"></script>
+<link rel="stylesheet" href="css/style.css?v=2.5">
+<style>
+  .block-head a.btn-primary,
+  .block-head a.btn-primary *,
+  .btn-primary,
+  .btn-primary * {
+    color: #FFFFFF !important;
+    -webkit-text-fill-color: #FFFFFF !important;
+  }
+</style>
+<script src="js/theme-init.js"></script>
 </head>
 <body>
 
@@ -149,7 +158,10 @@
           <p style="margin:0;font-size:0.86rem;color:var(--ink-dim);">رصيد محفظتك، شحنات الرصيد، وآخر عمليات شراء المحاضرات.</p>
         </div>
         <div style="display:flex;gap:8px;">
-          <a href="request-points.html" class="btn btn-primary btn-sm" style="color:#ffffff !important;">⚡ طلب شحن رصيد</a>
+          <a href="request-points.html" class="btn btn-primary btn-sm" style="background:var(--primary) !important;color:#FFFFFF !important;-webkit-text-fill-color:#FFFFFF !important;display:inline-flex;align-items:center;gap:6px;">
+            <span style="color:#FFFFFF !important;-webkit-text-fill-color:#FFFFFF !important;">⚡</span>
+            <span style="color:#FFFFFF !important;-webkit-text-fill-color:#FFFFFF !important;font-weight:700;">طلب شحن رصيد</span>
+          </a>
           <a href="points.html" class="btn btn-line btn-sm">عرض سجل المحفظة</a>
         </div>
       </div>
@@ -624,7 +636,9 @@
             <span style="color:var(--ink-dim);">لا توجد عمليات شراء مسجلة بعد في حسابك</span>
           </div>
           <div class="ri-side">
-            <a href="request-points.html" class="btn btn-primary btn-sm" style="color:#ffffff !important;">شحن الرصيد</a>
+            <a href="request-points.html" class="btn btn-primary btn-sm" style="background:var(--primary) !important;color:#ffffff !important;-webkit-text-fill-color:#ffffff !important;">
+              <span style="color:#ffffff !important;-webkit-text-fill-color:#ffffff !important;font-weight:700;">شحن الرصيد</span>
+            </a>
           </div>
         </div>
       `;

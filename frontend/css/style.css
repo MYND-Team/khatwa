@@ -741,8 +741,11 @@ html[data-theme="dark"] .lang-switcher-btn:hover {
 .block-head a:not(.btn){font-size:.84rem;color:var(--primary);font-weight:700;}
 .block-head a:not(.btn):hover{text-decoration:underline;}
 .block-head a.btn-primary,
-.block-head .btn-primary{
+.block-head a.btn-primary *,
+.block-head .btn-primary,
+.block-head .btn-primary *{
   color: #FFFFFF !important;
+  -webkit-text-fill-color: #FFFFFF !important;
 }
 
 /* Row list */
