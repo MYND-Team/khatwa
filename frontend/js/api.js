@@ -643,9 +643,26 @@
         localStorage.setItem(STORAGE_KEYS.TEACHER_WORKSPACE, stage);
       },
       async getProfile() { const res = await request('/teacher/profile'); return res.data || {}; },
-      async updateProfile(data) { const res = await request('/teacher/profile', { method: 'PATCH', body: data }); return res.data; },
-      async getWorkspaces() { const res = await request('/teacher/workspaces'); return res.data || []; },
-      async addWorkspace(stage) { const res = await request('/teacher/workspaces', { method: 'POST', body: { stage } }); return res.data; },
+      async getWorkspaces() {
+        const res = await request('/teacher/workspaces');
+        const list = res.data || [];
+        const stageCounts = res.stageCounts || {};
+        if (Array.isArray(list)) {
+          list.forEach(w => {
+            if (w && w.stage && w.uniqueStudentsCount !== undefined) {
+              if (stageCounts[w.stage] === undefined) {
+                stageCounts[w.stage] = w.uniqueStudentsCount;
+              }
+            }
+          });
+        }
+        return {
+          workspaces: list,
+          data: list,
+          stageCounts: stageCounts,
+          totalUniqueStudents: res.totalUniqueStudents !== undefined ? res.totalUniqueStudents : Object.values(stageCounts).reduce((a, b) => a + b, 0),
+        };
+      },
       async getWorkspaceOverview(stage) { const res = await request('/teacher/workspace/' + stage + '/overview'); return res.data || {}; },
       async getWorkspaceCourses(stage) { const res = await request('/teacher/workspace/' + stage + '/courses'); return res.data || []; },
       async getWorkspaceStudents(stage) { const res = await request('/teacher/workspace/' + stage + '/students'); return res.data || []; },

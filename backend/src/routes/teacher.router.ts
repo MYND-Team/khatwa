@@ -154,13 +154,16 @@ router.get(
       uniqueStudentsCount: stageStudentMap.get(w.stage)?.size || 0,
     }));
 
+    const stageCounts: Record<string, number> = {};
+    for (const st of VALID_STAGES) {
+      stageCounts[st] = stageStudentMap.get(st)?.size || 0;
+    }
+
     res.status(200).json({
       success: true,
       data: workspacesWithStats,
       totalUniqueStudents: allUniqueStudentIds.size,
-      stageCounts: Object.fromEntries(
-        Array.from(stageStudentMap.entries()).map(([st, set]) => [st, set.size])
-      ),
+      stageCounts,
     });
   })
 );

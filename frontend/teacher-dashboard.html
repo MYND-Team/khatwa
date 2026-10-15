@@ -116,7 +116,7 @@
     <div style="display:flex;align-items:center;gap:10px;">
       <span style="font-size:1.4rem;">📁</span>
       <div>
-        <b style="font-size:0.95rem;display:block;">بيئة العمل الحالية (Stage Workspace):</b>
+        <b style="font-size:0.95rem;display:block;">بيئة العمل الحالية:</b>
         <span style="font-size:0.8rem;color:var(--ink-dim);" id="activeWorkspaceLabel">الصف الأول الثانوي</span>
       </div>
     </div>
@@ -127,7 +127,7 @@
       <button class="stage-folder-tab" onclick="switchStage('BACCALAUREATE_2', this)">2 باكلوريا</button>
       <button class="stage-folder-tab" onclick="switchStage('SECONDARY_3', this)">3 ثانوي</button>
       <button class="stage-folder-tab" onclick="switchStage('BACCALAUREATE_3', this)">3 باكلوريا</button>
-      <button class="stage-folder-tab" onclick="switchStage('ALL', this)" style="background:rgba(217,119,6,0.12);color:#d97706;border-color:rgba(217,119,6,0.3);">🌐 جميع المراحل (إجمالي)</button>
+      <button class="stage-folder-tab" onclick="switchStage('ALL', this)" style="background:rgba(217,119,6,0.12);color:#d97706;border-color:rgba(217,119,6,0.3);">🌐 جميع المراحل</button>
     </div>
   </div>
 
@@ -1039,13 +1039,13 @@
   let currentTeacherProfile = null;
 
   const stageTitles = {
-    PREPARATORY: 'الصف الثالث الإعدادي (3 إعدادي)',
-    SECONDARY_1: 'الصف الأول الثانوي (1 ثانوي)',
-    SECONDARY_2: 'الصف الثاني الثانوي (2 ثانوي)',
-    BACCALAUREATE_2: 'الصف الثاني باكلوريا (2 باكلوريا)',
-    SECONDARY_3: 'الصف الثالث الثانوي (3 ثانوي)',
-    BACCALAUREATE_3: 'الصف الثالث باكلوريا (3 باكلوريا)',
-    ALL: 'جميع المراحل (المجموع الشامل)'
+    PREPARATORY: 'الصف الثالث الإعدادي',
+    SECONDARY_1: 'الصف الأول الثانوي',
+    SECONDARY_2: 'الصف الثاني الثانوي',
+    BACCALAUREATE_2: 'الصف الثاني باكلوريا',
+    SECONDARY_3: 'الصف الثالث الثانوي',
+    BACCALAUREATE_3: 'الصف الثالث باكلوريا',
+    ALL: 'جميع المراحل'
   };
 
   const stageShortTitles = {
@@ -1057,6 +1057,14 @@
     BACCALAUREATE_3: '3 باكلوريا',
     ALL: 'جميع المراحل'
   };
+
+  function formatStudentCount(count) {
+    const isEn = document.documentElement.getAttribute('data-lang') === 'en' || localStorage.getItem('khatwa_lang') === 'en';
+    if (isEn) {
+      return `${count} ${count === 1 ? 'Student' : 'Students'}`;
+    }
+    return `${count} طالب`;
+  }
 
   document.addEventListener('DOMContentLoaded', async () => {
     let user = window.KhatwaAPI.getUser();
@@ -1123,13 +1131,20 @@
       const wsRes = await window.KhatwaAPI.teacher.getWorkspaces().catch(() => null);
       if (wsRes) {
         const stageCounts = wsRes.stageCounts || {};
-        const totalUnique = wsRes.totalUniqueStudents !== undefined ? wsRes.totalUniqueStudents : 0;
+        const list = Array.isArray(wsRes) ? wsRes : (Array.isArray(wsRes.data) ? wsRes.data : (Array.isArray(wsRes.workspaces) ? wsRes.workspaces : []));
+        list.forEach(w => {
+          if (w && w.stage && w.uniqueStudentsCount !== undefined) {
+            stageCounts[w.stage] = w.uniqueStudentsCount;
+          }
+        });
+        const totalUnique = wsRes.totalUniqueStudents !== undefined ? wsRes.totalUniqueStudents : Object.values(stageCounts).reduce((a, b) => a + b, 0);
+
         document.querySelectorAll('.stage-folder-tab').forEach(b => {
           const onclickAttr = b.getAttribute('onclick') || '';
           const match = onclickAttr.match(/switchStage\('([^']+)'/);
           if (match && match[1]) {
             const st = match[1];
-            const base = stageShortTitles[st] || b.textContent.split('(')[0].trim();
+            const base = stageShortTitles[st] || b.textContent.split('(')[0].replace(/👥.*/, '').trim();
             if (st === 'ALL') {
               b.innerHTML = `🌐 جميع المراحل <span style="font-size:0.75rem;font-weight:700;opacity:0.9;background:rgba(217,119,6,0.18);padding:1px 6px;border-radius:10px;margin-right:3px;">👥 ${totalUnique}</span>`;
             } else {
@@ -1185,12 +1200,19 @@
       const studentCount = overviewData.uniqueStudents !== undefined ? overviewData.uniqueStudents : 0;
       const totalSubs = overviewData.totalSubscriptions || 0;
 
+      // Immediately sync current active tab badge with overview count
+      const activeTab = document.querySelector(`.stage-folder-tab[onclick*="'${currentStage}'"]`);
+      if (activeTab) {
+        const base = stageShortTitles[currentStage] || 'المرحلة';
+        activeTab.innerHTML = `${base} <span style="font-size:0.75rem;font-weight:700;opacity:0.9;background:rgba(14,75,91,0.18);padding:1px 6px;border-radius:10px;margin-right:3px;">👥 ${studentCount}</span>`;
+      }
+
       if (document.getElementById('activeWorkspaceLabel')) {
-        document.getElementById('activeWorkspaceLabel').innerHTML = `${stageTitles[currentStage] || ''} <span style="color:var(--primary);font-weight:700;margin-right:6px;">(👥 ${studentCount} طالب فريد بالمرحلة)</span>`;
+        document.getElementById('activeWorkspaceLabel').innerHTML = `${stageTitles[currentStage] || ''} <span style="color:var(--primary);font-weight:700;margin-right:6px;">(👥 ${formatStudentCount(studentCount)})</span>`;
       }
 
       if (document.getElementById('currentStageTitle')) {
-        const studentBadge = ` <span class="tag" style="background:rgba(14,75,91,0.12);color:var(--primary);font-size:0.85rem;font-weight:700;margin-right:8px;border:1px solid rgba(14,75,91,0.25);" title="عدد الطلاب الفريدين المسجلين في هذه المرحلة بدون تكرار">👥 ${studentCount} طالب مسجل بالمرحلة (بدون تكرار)</span><span class="tag" style="background:rgba(107,114,128,0.1);color:var(--ink-dim);font-size:0.8rem;border:1px solid var(--line-soft);margin-right:6px;" title="إجمالي عدد مرات حضور الطلاب لكافة محاضرات المرحلة">📚 ${totalSubs} إجمالي حضور المحاضرات</span>`;
+        const studentBadge = ` <span class="tag" style="background:rgba(14,75,91,0.12);color:var(--primary);font-size:0.85rem;font-weight:700;margin-right:8px;border:1px solid rgba(14,75,91,0.25);" title="عدد الطلاب">👥 ${formatStudentCount(studentCount)}</span><span class="tag" style="background:rgba(107,114,128,0.1);color:var(--ink-dim);font-size:0.8rem;border:1px solid var(--line-soft);margin-right:6px;" title="إجمالي الحضور">📚 ${totalSubs} حضور</span>`;
         document.getElementById('currentStageTitle').innerHTML = `📁 كورسات ${stageTitles[currentStage] || ''}${studentBadge}`;
       }
 
@@ -1242,9 +1264,9 @@
         container.innerHTML = `
           <div style="text-align:center;padding:50px;background:var(--bg-card);border-radius:16px;border:1px solid var(--line-soft);">
             <div style="font-size:3rem;margin-bottom:8px;">📁</div>
-            <h3>لا توجد كورسات في بيئة عمل ${stageTitles[currentStage]}</h3>
+            <h3>لا توجد كورسات في ${stageTitles[currentStage]}</h3>
             <p style="color:var(--ink-dim);margin:6px 0 16px;">ابدأ بإضافة أول كورس لتنظيم فصولك ومحاضراتك في هذه المرحلة.</p>
-            <button class="btn btn-primary btn-sm" onclick="openCreateCourseModal()">＋ إنشاء كورس في هذه المرحلة</button>
+            <button class="btn btn-primary btn-sm" onclick="openCreateCourseModal()">＋ إنشاء كورس جديد</button>
           </div>
         `;
         return;
@@ -1253,6 +1275,8 @@
       container.innerHTML = courses.map(c => {
         cachedCoursesMap.set(c.id, c);
         const chapters = c.chapters || [];
+        const cStudents = c.uniqueStudentsCount !== undefined ? c.uniqueStudentsCount : (c._count?.lessonSubscriptions || 0);
+        const cSubs = c.totalSubscriptionsCount || c._count?.lessonSubscriptions || 0;
         return `
           <div class="card" style="padding:22px;border-radius:18px;">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
@@ -1261,15 +1285,15 @@
                   ${c.imageUrl ? `<img src="${escapeHtml(c.imageUrl)}" alt="${escapeHtml(c.title)}" style="width:52px;height:38px;border-radius:8px;object-fit:cover;border:1px solid var(--line-soft);flex-shrink:0;">` : ''}
                   <h2 style="margin:0;font-size:1.3rem;">${escapeHtml(c.title)}</h2>
                   <span class="tag tag-ok">${escapeHtml(c.subject)}</span>
-                  <span class="tag" style="background:rgba(59,130,246,0.12);color:#2563eb;border:1px solid rgba(59,130,246,0.3);font-weight:700;" title="عدد الطلاب الفريدين المسجلين في هذا الكورس بدون تكرار">👥 ${c.uniqueStudentsCount !== undefined ? c.uniqueStudentsCount : (c._count?.lessonSubscriptions || 0)} طالب بالكورس (بدون تكرار)</span>
-                  ${(c.totalSubscriptionsCount || c._count?.lessonSubscriptions || 0) > 0 ? `<span class="tag" style="background:rgba(107,114,128,0.08);color:var(--ink-dim);font-size:0.8rem;border:1px solid var(--line-soft);" title="إجمالي مرات حضور واشتراك الطلاب في محاضرات هذا الكورس">📚 ${c.totalSubscriptionsCount || c._count?.lessonSubscriptions || 0} إجمالي حضور المحاضرات</span>` : ''}
-                  ${c.price > 0 ? `<span class="tag" style="background:rgba(34,197,94,0.12);color:#16a34a;border:1px solid rgba(34,197,94,0.35);font-weight:700;">💵 سعر الكورس بالكامل: ${c.price} ج.م</span>` : ''}
+                  <span class="tag" style="background:rgba(59,130,246,0.12);color:#2563eb;border:1px solid rgba(59,130,246,0.3);font-weight:700;" title="عدد الطلاب">👥 ${formatStudentCount(cStudents)}</span>
+                  ${cSubs > 0 ? `<span class="tag" style="background:rgba(107,114,128,0.08);color:var(--ink-dim);font-size:0.8rem;border:1px solid var(--line-soft);" title="إجمالي الحضور">📚 ${cSubs} حضور</span>` : ''}
+                  ${c.price > 0 ? `<span class="tag" style="background:rgba(34,197,94,0.12);color:#16a34a;border:1px solid rgba(34,197,94,0.35);font-weight:700;">💵 ${c.price} ج.م</span>` : ''}
                 </div>
-                <span class="meta">${stageTitles[c.academicStage]} · ${chapters.length} فصول / وحدات</span>
+                <span class="meta">${stageTitles[c.academicStage] || ''} · ${chapters.length} فصول / وحدات</span>
               </div>
               <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-                <button class="btn btn-primary btn-sm" onclick="addLessonDirectToCourse('${c.id}')" style="font-weight:700;background:linear-gradient(135deg,var(--primary) 0%,var(--primary-deep) 100%);">＋ إضافة محاضرة مباشرة للكورس 🎬</button>
-                <button class="btn btn-line btn-sm" onclick="openAddChapterModal('${c.id}')">＋ وحدة / فصل (اختياري)</button>
+                <button class="btn btn-primary btn-sm" onclick="addLessonDirectToCourse('${c.id}')" style="font-weight:700;background:linear-gradient(135deg,var(--primary) 0%,var(--primary-deep) 100%);">＋ إضافة محاضرة 🎬</button>
+                <button class="btn btn-line btn-sm" onclick="openAddChapterModal('${c.id}')">＋ إضافة فصل</button>
                 <button class="btn btn-line btn-sm" style="color:var(--primary);" onclick="openEditCourseModal('${c.id}')">✏️ تعديل الكورس</button>
                 <button class="btn btn-line btn-sm" style="color:var(--err);" onclick="deleteCourse('${c.id}')">حذف</button>
               </div>
@@ -1314,9 +1338,10 @@
                               : '<span class="lecture-status-pill tag-ok" style="background:rgba(16,185,129,0.9);color:#fff;">منشورة</span>');
 
                           const posterHtml = coverUrl
-                            ? `<img src="${escapeHtml(coverUrl)}" alt="${escapeHtml(l.title)}" onerror="this.onerror=null;this.parentElement.innerHTML='<div class=&quot;lecture-card-poster-fallback&quot;>🎬</div>';">`
+                            ? `<img src="${escapeHtml(coverUrl)}" alt="${escapeHtml(l.title)}" onerror="this.parentElement.innerHTML='<div class=&quot;lecture-card-poster-fallback&quot;>🎬</div>';">`
                             : `<div class="lecture-card-poster-fallback"><div class="lecture-card-poster-pattern"></div><span style="font-size:2.4rem;">🎬</span><span style="font-size:.82rem;font-weight:700;margin-top:6px;opacity:.8;">${escapeHtml(c.subject || 'خطوة')}</span></div>`;
 
+                          const lSubs = l._count?.subscriptions || 0;
                           return `
                           <div class="lecture-card" onclick="openLessonFullDetailsModal('${l.id}')">
                             <div class="lecture-card-poster">
@@ -1339,7 +1364,7 @@
                               </div>
 
                               <div class="lecture-card-meta">
-                                <span class="lecture-card-meta-item" style="color:var(--primary);font-weight:700;background:rgba(217,119,6,0.08);padding:2px 8px;border-radius:6px;" title="عدد الطلاب الفريدين الحاضرين لهذه المحاضرة بدون تكرار">👥 ${l._count?.subscriptions || 0} طالب حاضر (بدون تكرار)</span>
+                                <span class="lecture-card-meta-item" style="color:var(--primary);font-weight:700;background:rgba(217,119,6,0.08);padding:2px 8px;border-radius:6px;" title="عدد الطلاب">👥 ${formatStudentCount(lSubs)}</span>
                                 ${durationMin ? `<span class="lecture-card-meta-item">⏱️ ${durationMin} دقيقة</span>` : ((l.videoUrl || l.driveFileId) ? `<span class="lecture-card-meta-item">🎬 فيديو المحاضرة</span>` : '')}
                                 ${l.pdfUrl ? '<span class="lecture-card-meta-item">📄 PDF</span>' : ''}
                                 ${l.assignmentQuizId ? '<span class="lecture-card-meta-item">📝 واجب</span>' : ''}
@@ -1377,7 +1402,7 @@
             ` : `
               <div style="padding:16px;background:var(--bg-raised);border-radius:12px;border:1px dashed var(--line-soft);margin-top:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
                 <span style="color:var(--ink-dim);font-size:.88rem;">لم تضف فصولاً بعد. يمكنك إضافة محاضراتك مباشرة بضغطة زر دون الحاجة لإنشاء فصول.</span>
-                <button class="btn btn-primary btn-sm" onclick="addLessonDirectToCourse('${c.id}')">＋ إضافة أول محاضرة في الكورس الآن 🎬</button>
+                <button class="btn btn-primary btn-sm" onclick="addLessonDirectToCourse('${c.id}')">＋ إضافة محاضرة 🎬</button>
               </div>
             `}
           </div>
@@ -1616,7 +1641,7 @@
       const platformCut = Math.round(grossRev * platformFeePct);
       const netRev = grossRev - platformCut;
 
-      document.getElementById('detLessonStudentsCount').textContent = `${actualCount} طالب حاضر (بدون تكرار)`;
+      document.getElementById('detLessonStudentsCount').textContent = formatStudentCount(actualCount);
       document.getElementById('detLessonGrossRevenue').textContent = `${grossRev} ج.م`;
       document.getElementById('detLessonPlatformCut').textContent = `-${platformCut} ج.م (10%)`;
       document.getElementById('detLessonNetRevenue').textContent = `${netRev} ج.م`;
@@ -1825,12 +1850,12 @@
       <!-- Dedup Summary Cards -->
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:16px;">
         <div style="background:var(--bg-card);border:1px solid rgba(14,75,91,0.25);border-radius:14px;padding:14px 18px;">
-          <div style="font-size:0.82rem;color:var(--ink-dim);">👥 الطلاب الفريدون بالمرحلة</div>
-          <div style="font-size:1.5rem;font-weight:800;color:var(--primary);margin-top:2px;">${dedupedList.length} <span style="font-size:0.85rem;font-weight:600;">طالب (بدون تكرار)</span></div>
+          <div style="font-size:0.82rem;color:var(--ink-dim);">👥 الطلاب بالمرحلة</div>
+          <div style="font-size:1.5rem;font-weight:800;color:var(--primary);margin-top:2px;">${dedupedList.length} <span style="font-size:0.85rem;font-weight:600;">طالب</span></div>
         </div>
         <div style="background:var(--bg-card);border:1px solid var(--line-soft);border-radius:14px;padding:14px 18px;">
-          <div style="font-size:0.82rem;color:var(--ink-dim);">📚 إجمالي حضور واشتراكات المحاضرات</div>
-          <div style="font-size:1.5rem;font-weight:800;color:var(--ink);margin-top:2px;">${students.length} <span style="font-size:0.85rem;font-weight:600;">حضور / اشتراك</span></div>
+          <div style="font-size:0.82rem;color:var(--ink-dim);">📚 إجمالي الحضور والاشتراكات</div>
+          <div style="font-size:1.5rem;font-weight:800;color:var(--ink);margin-top:2px;">${students.length} <span style="font-size:0.85rem;font-weight:600;">حضور</span></div>
         </div>
         <div style="background:var(--bg-card);border:1px solid var(--line-soft);border-radius:14px;padding:14px 18px;">
           <div style="font-size:0.82rem;color:var(--ink-dim);">📊 معدل حضور الطالب في المحاضرات</div>
@@ -1841,11 +1866,11 @@
       <!-- Mode Toggle & Export Bar -->
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
         <div style="display:inline-flex;background:var(--bg-card);padding:4px;border-radius:12px;border:1px solid var(--line-soft);gap:4px;">
-          <button type="button" class="btn btn-sm ${isDeduped ? 'btn-primary' : 'btn-text'}" style="padding:6px 14px;border-radius:8px;font-size:0.85rem;font-weight:700;" onclick="switchStudentsViewMode('deduped')">👥 عرض الطلاب الفريدين (${dedupedList.length} طالب بدون تكرار)</button>
-          <button type="button" class="btn btn-sm ${!isDeduped ? 'btn-primary' : 'btn-text'}" style="padding:6px 14px;border-radius:8px;font-size:0.85rem;font-weight:700;" onclick="switchStudentsViewMode('all')">📋 سجل الاشتراكات التفصيلي (${students.length} حضور)</button>
+          <button type="button" class="btn btn-sm ${isDeduped ? 'btn-primary' : 'btn-text'}" style="padding:6px 14px;border-radius:8px;font-size:0.85rem;font-weight:700;" onclick="switchStudentsViewMode('deduped')">👥 عرض الطلاب (${dedupedList.length})</button>
+          <button type="button" class="btn btn-sm ${!isDeduped ? 'btn-primary' : 'btn-text'}" style="padding:6px 14px;border-radius:8px;font-size:0.85rem;font-weight:700;" onclick="switchStudentsViewMode('all')">📋 سجل الاشتراكات (${students.length})</button>
         </div>
         <button class="btn btn-line btn-sm" onclick="exportTeacherStudentsToExcel()" style="color:#059669;border-color:rgba(5,150,105,0.4);font-weight:700;display:inline-flex;align-items:center;gap:6px;">
-          <span>📊 تصدير Excel (${isDeduped ? 'الطلاب بدون تكرار' : 'كافة الاشتراكات'})</span>
+          <span>📊 تصدير Excel (${isDeduped ? 'الطلاب' : 'الاشتراكات'})</span>
         </button>
       </div>
 

@@ -114,6 +114,16 @@
   "عام": "General",
   "أخرى": "Other",
   "نظرة عامة": "Overview",
+  "بيئة العمل الحالية:": "Current Workspace:",
+  "بيئة العمل الحالية": "Current Workspace",
+  "كورسات المرحلة": "Stage Courses",
+  "إضافة كورس جديد": "Add New Course",
+  "إنشاء كورس جديد": "Create New Course",
+  "إضافة محاضرة": "Add Lecture",
+  "إضافة فصل": "Add Chapter",
+  "إضافة وحدة": "Add Chapter",
+  "إجمالي الحضور": "Total Attendance",
+  "حضور": "Attendance",
   "طلب شحن رصيد": "Recharge Balance Request",
   "حصة مكتملة": "Completed lecture",
   "حصص مكتملة": "Completed Lectures",
@@ -1782,7 +1792,17 @@
       if (/([0-9٠-٩]+)\s*من\s*([0-9٠-٩]+)/.test(result)) { result = result.replace(/([0-9٠-٩]+)\s*من\s*([0-9٠-٩]+)/g, '$1 of $2'); matchedRegex = true; }
       if (/من إجمالي\s*([0-9٠-٩]+)\s*أسئلة/.test(result)) { result = result.replace(/من إجمالي\s*([0-9٠-٩]+)\s*أسئلة/g, 'out of $1 questions'); matchedRegex = true; }
 
-      if (/([0-9٠-٩]+)\s+طالب/.test(result)) { result = result.replace(/([0-9٠-٩]+)\s+طالب/g, '$1 Students'); matchedRegex = true; }
+      if (/([0-9٠-٩]+)\s+طالب/.test(result)) {
+        result = result.replace(/([0-9٠-٩]+)\s+طالب/g, (_, num) => {
+          const latin = num.replace(/[٠-٩]/g, d => ARABIC_DIGITS[d] || d);
+          return `${num} ${Number(latin) === 1 ? 'Student' : 'Students'}`;
+        });
+        matchedRegex = true;
+      }
+      if (/([0-9٠-٩]+)\s+حضور/.test(result)) {
+        result = result.replace(/([0-9٠-٩]+)\s+حضور/g, '$1 Attendance');
+        matchedRegex = true;
+      }
       if (/([0-9٠-٩]+)\s+مدرس/.test(result)) { result = result.replace(/([0-9٠-٩]+)\s+مدرس/g, '$1 Teachers'); matchedRegex = true; }
       if (/([0-9٠-٩]+)\s+كورس/.test(result)) { result = result.replace(/([0-9٠-٩]+)\s+كورس/g, '$1 Courses'); matchedRegex = true; }
       if (/([0-9٠-٩]+)\s+محاضرات?/.test(result)) { result = result.replace(/([0-9٠-٩]+)\s+محاضرات?/g, '$1 Lectures'); matchedRegex = true; }
