@@ -474,22 +474,33 @@ function initCollapsibleTaskbar() {
   taskbar.dataset.role = role;
   taskbar.setAttribute('aria-label', 'شريط المهام والتنقل الجانبي');
 
-  // Check pinned state
+  // Check pinned state and apply body offset only on desktop screens (>980px)
   const isPinned = localStorage.getItem('khatwa_taskbar_pinned') === 'true';
-  if (isPinned) {
-    taskbar.classList.add('expanded');
-    document.body.classList.add('taskbar-pinned');
+  function syncTaskbarDesktopState() {
+    if (window.innerWidth > 980) {
+      document.body.classList.add('has-khatwa-taskbar');
+      if (isPinned) {
+        taskbar.classList.add('expanded');
+        document.body.classList.add('taskbar-pinned');
+      }
+    } else {
+      document.body.classList.remove('has-khatwa-taskbar', 'taskbar-pinned', 'taskbar-hovered');
+      taskbar.classList.remove('expanded');
+    }
   }
-  document.body.classList.add('has-khatwa-taskbar');
+  syncTaskbarDesktopState();
+  window.addEventListener('resize', syncTaskbarDesktopState);
 
-  // Add hover behavior to dynamically expand body padding so taskbar NEVER overlaps website content
+  // Add hover behavior on desktop so taskbar never overlaps website content
   taskbar.addEventListener('mouseenter', () => {
-    if (!taskbar.classList.contains('expanded')) {
+    if (window.innerWidth > 980 && !taskbar.classList.contains('expanded')) {
       document.body.classList.add('taskbar-hovered');
     }
   });
   taskbar.addEventListener('mouseleave', () => {
-    document.body.classList.remove('taskbar-hovered');
+    if (window.innerWidth > 980) {
+      document.body.classList.remove('taskbar-hovered');
+    }
   });
 
   // Backdrop for mobile

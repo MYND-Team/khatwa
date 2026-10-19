@@ -1197,8 +1197,16 @@ body.dark-mode .modal-backdrop {
   .subject-row{grid-template-columns:1fr;gap:10px;}
   .stat-row{flex-wrap:wrap;}
   .stat-cell{flex:1 1 50%;border-block-start:1px solid var(--line-soft);}
-  .khatwa-taskbar { width: 60px; }
-  .khatwa-taskbar-label { display: none; }
+  body.has-khatwa-taskbar,
+  html[dir="rtl"] body.has-khatwa-taskbar,
+  html[dir="ltr"] body.has-khatwa-taskbar,
+  body.taskbar-pinned,
+  body.taskbar-hovered {
+    padding-inline-start: 0 !important;
+    padding-inline-end: 0 !important;
+    padding-right: 0 !important;
+    padding-left: 0 !important;
+  }
   .stage-folder-tabs { gap: 8px; }
   .stage-folder-tab { padding: 9px 14px; font-size: 0.85rem; }
 }
@@ -2857,8 +2865,10 @@ html[dir="ltr"] body.has-khatwa-taskbar:has(.khatwa-taskbar:hover) {
     max-width: 100% !important;
     box-sizing: border-box !important;
   }
-  body:has(.nav-links) .khatwa-taskbar,
-  body:has(.nav-links) .khatwa-taskbar-backdrop {
+  body.has-student-bottom-nav .khatwa-taskbar,
+  body.has-student-bottom-nav .khatwa-taskbar-backdrop,
+  .khatwa-student-bottom-nav ~ .khatwa-taskbar,
+  body.has-student-bottom-nav .khatwa-right-taskbar {
     display: none !important;
   }
   .khatwa-taskbar {
@@ -2900,12 +2910,16 @@ html[dir="ltr"] body.has-khatwa-taskbar:has(.khatwa-taskbar:hover) {
     justify-content: flex-start !important;
     padding: 9px 12px !important;
   }
+  body,
   body.has-khatwa-taskbar,
+  html[dir="rtl"] body,
   html[dir="rtl"] body.has-khatwa-taskbar,
+  html[dir="ltr"] body,
   html[dir="ltr"] body.has-khatwa-taskbar,
+  body.taskbar-pinned,
+  body.taskbar-hovered,
   body.has-khatwa-taskbar.taskbar-pinned,
-  body.has-khatwa-taskbar.taskbar-hovered,
-  body.has-khatwa-taskbar:has(.khatwa-taskbar:hover) {
+  body.has-khatwa-taskbar.taskbar-hovered {
     padding-inline-start: 0 !important;
     padding-inline-end: 0 !important;
     padding-right: 0 !important;
@@ -3548,7 +3562,7 @@ body.dark-mode .lecture-card-btn,
   transform: translateY(-1px);
 }
 
-/* Mobile Responsive - Lecture Grid */
+/* Mobile Responsive - Lecture Grid & Side-by-Side Cards (2 Columns) */
 @media (max-width: 900px) {
   .lecture-grid {
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -3556,97 +3570,135 @@ body.dark-mode .lecture-card-btn,
   }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   .lecture-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+    margin-top: 14px !important;
+    margin-bottom: 20px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
   }
   .lecture-card {
-    border-radius: 16px;
+    border-radius: 16px !important;
+    overflow: hidden !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+  .lecture-card-poster {
+    aspect-ratio: 16 / 10 !important;
+    width: 100% !important;
   }
   .lecture-card-body {
-    padding: 10px 10px 8px;
+    padding: 10px 10px 8px !important;
   }
   .lecture-card-title {
-    font-size: 0.84rem;
-    min-height: 2.2em;
-    margin-bottom: 6px;
+    font-size: 0.88rem !important;
+    line-height: 1.35 !important;
+    margin-bottom: 6px !important;
+    min-height: auto !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
   }
   .lecture-card-teacher {
-    gap: 6px;
-    margin-bottom: 6px;
+    gap: 6px !important;
+    margin-bottom: 6px !important;
   }
   .lecture-card-teacher-avatar {
-    width: 22px;
-    height: 22px;
-    font-size: 0.70rem;
+    width: 24px !important;
+    height: 24px !important;
+    font-size: 0.72rem !important;
+    flex-shrink: 0 !important;
   }
   .lecture-card-teacher-name {
-    font-size: 0.74rem;
+    font-size: 0.76rem !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+  .lecture-card-meta {
+    display: none !important;
   }
   .lecture-card-footer {
-    padding: 8px 8px;
-    flex-wrap: nowrap;
-    gap: 4px;
-    align-items: center;
-    justify-content: space-between;
-    overflow: hidden;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 6px !important;
+    padding: 8px 10px 10px !important;
+    border-top: 1px solid var(--line-soft) !important;
+    background: var(--bg-raised) !important;
   }
   .lecture-card-price {
-    font-size: 0.78rem !important;
-    font-weight: 800;
+    font-size: 0.88rem !important;
+    font-weight: 800 !important;
+    color: var(--primary) !important;
+    text-align: right !important;
     white-space: nowrap !important;
-    flex-shrink: 0;
-    line-height: 1.1;
+    line-height: 1.2 !important;
+  }
+  :root[data-theme="dark"] .lecture-card-price,
+  body.dark-mode .lecture-card-price {
+    color: #38bdf8 !important;
   }
   .lecture-card-price.enrolled {
-    font-size: 0.70rem !important;
-    padding: 3px 6px;
-    gap: 2px;
+    font-size: 0.74rem !important;
+    padding: 3px 6px !important;
+    text-align: center !important;
+    justify-content: center !important;
   }
   .lecture-card-btn {
-    font-size: 0.68rem !important;
-    padding: 5px 6px !important;
-    min-width: 0 !important;
+    width: 100% !important;
+    justify-content: center !important;
+    text-align: center !important;
+    padding: 7px 8px !important;
+    font-size: 0.78rem !important;
+    font-weight: 700 !important;
+    border-radius: 8px !important;
     white-space: nowrap !important;
-    flex-shrink: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    border-radius: 8px;
-    gap: 2px;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
   }
   .lecture-lock-disc {
-    width: 40px;
-    height: 40px;
+    width: 42px !important;
+    height: 42px !important;
   }
   .lecture-lock-disc svg {
-    width: 18px;
-    height: 18px;
+    width: 18px !important;
+    height: 18px !important;
   }
   .lecture-new-badge {
-    font-size: 0.68rem;
-    padding: 2px 7px;
+    font-size: 0.68rem !important;
+    padding: 2px 7px !important;
+  }
+  .unit-box {
+    padding: 12px 10px !important;
+    border-radius: 16px !important;
+    margin-bottom: 16px !important;
   }
 }
 
 @media (max-width: 380px) {
   .lecture-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
   }
   .lecture-card-body {
-    padding: 8px 8px 6px;
+    padding: 8px 8px 6px !important;
   }
   .lecture-card-footer {
-    padding: 6px 6px;
-    gap: 3px;
+    padding: 6px 8px 8px !important;
+    gap: 4px !important;
   }
   .lecture-card-price {
-    font-size: 0.72rem !important;
+    font-size: 0.82rem !important;
   }
   .lecture-card-btn {
-    font-size: 0.64rem !important;
-    padding: 4px 5px !important;
+    font-size: 0.74rem !important;
+    padding: 6px 6px !important;
   }
 }
 
@@ -4640,12 +4692,14 @@ body.dark-mode .lecture-card-btn,
   }
 
   /* ══════════════════════════════════════════════════════════════════════════
-     3. STUDENT EXPERIENCE MOBILE ENHANCEMENTS
+     3. STUDENT EXPERIENCE & PROFILE MOBILE ENHANCEMENTS
      ══════════════════════════════════════════════════════════════════════════ */
   .lecture-card-btn {
+    width: 100% !important;
     white-space: nowrap !important;
-    font-size: 0.72rem !important;
-    padding: 6px 8px !important;
+    font-size: 0.78rem !important;
+    padding: 7px 8px !important;
+    box-sizing: border-box !important;
   }
   .khatwa-pdf-teacher-card .teacher-card-main-title {
     font-size: 0.96rem !important;
@@ -4653,5 +4707,79 @@ body.dark-mode .lecture-card-btn,
   .khatwa-pdf-teacher-card .teacher-card-subject-tag {
     font-size: 0.78rem !important;
   }
-}
+
+  /* Profile page specific responsiveness */
+  .page-head {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+    margin-bottom: 20px !important;
+  }
+  .page-head h1 {
+    font-size: 1.35rem !important;
+    line-height: 1.3 !important;
+  }
+  .page-head .btn,
+  .page-head #openEditModalBtn {
+    width: 100% !important;
+    justify-content: center !important;
+    text-align: center !important;
+    padding: 11px 16px !important;
+    font-size: 0.9rem !important;
+  }
+  .block-head {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+    margin-bottom: 14px !important;
+  }
+  .block-head > div:first-child {
+    width: 100% !important;
+  }
+  .block-head > div:last-child {
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+  .block-head > div:last-child .btn,
+  .block-head > a.btn {
+    width: 100% !important;
+    justify-content: center !important;
+    text-align: center !important;
+  }
+  .block-head .tag {
+    align-self: flex-start !important;
+  }
+  #profileDetailsList .row-item {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 12px 14px !important;
+    gap: 10px !important;
+  }
+  #profileDetailsList .row-item .ri-text {
+    flex-shrink: 0 !important;
+    font-size: 0.88rem !important;
+  }
+  #profileDetailsList .row-item span {
+    text-align: left !important;
+    max-width: 62% !important;
+    word-break: break-word !important;
+    font-size: 0.86rem !important;
+  }
+  #openEditModalBtn2 {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+  #editProfileModal .modal-card,
+  #profileTeacherCoursesModal > div {
+    width: 95% !important;
+    max-width: 95% !important;
+    padding: 18px 14px !important;
+    border-radius: 18px !important;
+    margin: 0 auto !important;
+    box-sizing: border-box !important;
+  }
 

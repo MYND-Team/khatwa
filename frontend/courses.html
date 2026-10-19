@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>تصفح المعلمين والكورسات | خطوة</title>
   <link rel="icon" type="image/png" href="logo/logo-khatwa-transparent.png">
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css?v=2.6">
   <script src="js/theme-init.js"></script>
 </head>
 
@@ -536,8 +536,8 @@
             document.getElementById('studentPointsTag').textContent = `رصيد المحفظة: ${profile.walletBalance || 0} ج.م`;
           }
         } catch (_) { }
-        await Promise.all([loadEnrolledCourses(), loadAllCourses()]);
-        switchTab('panel-enrolled', document.getElementById('tabEnrolledBtn'));
+        await window.KhatwaAPI.fetchLiveUser().catch(() => {});
+        window.location.href = `subject.html?courseId=${courseId}`;
       } catch (err) {
         if (err.status === 401 || err.message?.includes('جلسة الدخول')) {
           alert('انتهت صلاحية جلسة تسجيل الدخول. يرجى تسجيل الدخول مرة أخرى.');

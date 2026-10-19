@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>لوحة الطالب | خطوة</title>
 <link rel="icon" type="image/png" href="logo/logo-khatwa-transparent.png">
-<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/style.css?v=2.6">
 <script src="js/theme-init.js"></script>
 <style>
   .sub-teacher-group {
@@ -431,7 +431,7 @@
         coursesList.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:24px;color:var(--ink-dim);background:var(--bg-raised);border-radius:12px;">لا توجد كورسات منشورة لهذا المعلم حالياً.</div>';
       } else {
         coursesList.innerHTML = courses.map(c => `
-          <div style="background:var(--bg-raised);border:1px solid var(--line-soft);border-radius:14px;padding:14px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 2px 8px rgba(0,0,0,0.03);">
+          <div onclick="window.location.href='subject.html?courseId=' + c.id" style="background:var(--bg-raised);border:1px solid var(--line-soft);border-radius:14px;padding:14px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 2px 8px rgba(0,0,0,0.03);cursor:pointer;" title="اضغط للتسجيل ودخول الكورس">
             <div>
               <div style="font-size:0.75rem;color:var(--primary);font-weight:700;margin-bottom:4px;">${escapeHtml(c.academicStage || 'عام')}</div>
               <h4 style="margin:0 0 6px;font-size:0.95rem;color:var(--ink);">${escapeHtml(c.title)}</h4>

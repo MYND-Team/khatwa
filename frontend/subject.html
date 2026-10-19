@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>تفاصيل الكورس والمحاضرات | خطوة</title>
 <link rel="icon" type="image/png" href="logo/logo-khatwa-transparent.png">
-<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/style.css?v=2.6">
   <script src="js/theme-init.js"></script>
 <style>
   .unit-box {
@@ -223,7 +223,9 @@
 
     // Check enrollment and show enroll button if paid & not enrolled
     try {
-      const isEnrolled = await window.KhatwaAPI.courses.isEnrolled(courseId);
+      window._isCourseEnrolled = false;
+    const isEnrolled = await window.KhatwaAPI.courses.isEnrolled(courseId);
+    window._isCourseEnrolled = !!isEnrolled;
       const enrollBtn = document.getElementById('enrollCourseBtn');
       const coursePrice = Number(currentCourse.price) || 0;
       if (enrollBtn) {
@@ -310,7 +312,7 @@
       return '';
     }
 
-    const isSubscribed = (lesson.subscriptions && lesson.subscriptions.length > 0) || (lesson.unlockedBy && lesson.unlockedBy.length > 0);
+    const isSubscribed = window._isCourseEnrolled || (lesson.subscriptions && lesson.subscriptions.length > 0) || (lesson.unlockedBy && lesson.unlockedBy.length > 0);
     const priceEGP = Number(lesson.price) || 0;
     const isFree = priceEGP === 0;
 
