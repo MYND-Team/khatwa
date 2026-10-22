@@ -59,6 +59,75 @@
   "استوديو إدارة المعلم": "Teacher Management Studio",
   "استوديو إدارة المحتوى والمراحل الدراسية": "Content & Academic Stages Studio",
   "إدارة الكورسات وفق المراحل الدراسية، رفع مذكرات الـ PDF، فيديوهات المحاضرات، وبناء الواجبات والامتحانات.": "Manage courses by academic stage, upload lecture videos, PDF notes, and build quizzes.",
+  "استوديو إدارة المحتوى وبيئات المراحل المستقلة": "Content Management Studio & Independent Stage Workspaces",
+  "كل مرحلة دراسية تمثل بيئة عمل ومساحة مستقلة تمامًا لكورساتك ومحاضراتك وأرباحك وطلابك.": "Each academic stage is an independent workspace for your courses, lectures, earnings, and students.",
+  "الدعم الفني للمدرسين (01111343693)": "Teacher Technical Support (01111343693)",
+  "＋ إنشاء كورس في المرحلة المحددة": "＋ Create Course in Selected Stage",
+  "🔒 تعديل بيانات الحساب متاح فقط من قِبل إدارة المنصة": "🔒 Account details can only be edited by platform administration",
+  "بيئة العمل الحالية:": "Current Workspace:",
+  "3 إعدادي": "Grade 3 Prep",
+  "1 ثانوي": "Grade 1 Sec",
+  "2 ثانوي": "Grade 2 Sec",
+  "2 باكلوريا": "Grade 2 Bac",
+  "3 ثانوي": "Grade 3 Sec",
+  "3 باكلوريا": "Grade 3 Bac",
+  "🌐 جميع المراحل": "🌐 All Stages",
+  "📁 الكورسات والمحاضرات": "📁 Courses & Lectures",
+  "📅 التقويم والمواعيد": "📅 Schedule & Calendar",
+  "👨‍🎓 الطلاب والاشتراكات": "👨‍🎓 Students & Subscriptions",
+  "💵 سجل الأرباح والمبيعات": "💵 Revenue & Sales Log",
+  "📅 تقويم ومواعيد نزول المحاضرات": "📅 Lectures Release Schedule & Calendar",
+  "المحاضرات المنشورة والمجدولة في هذه المرحلة": "Published and scheduled lectures in this stage",
+  "منشورة حالياً": "Currently Published",
+  "مجدولة (في الانتظار)": "Scheduled (Pending)",
+  "مسودة (مخفية)": "Draft (Hidden)",
+  "تحديد يوم من التقويم:": "Select Date from Calendar:",
+  "عرض كافة الأيام": "Show All Days",
+  "عرض كافة محاضرات المرحلة المحددة": "Showing all lectures for selected stage",
+  "📁 كورسات المرحلة": "📁 Stage Courses",
+  "＋ إضافة كورس جديد": "＋ Add New Course",
+  "👨‍🎓 طلاب المرحلة المشتركون في محاضراتك": "👨‍🎓 Enrolled Students in this Stage",
+  "💵 سجل المعاملات المالية وأرباح الحصص": "💵 Financial Transactions & Revenue Log",
+  "تفاصيل المبيعات وأرباح كل كورس ومحاضرة في هذه المرحلة الأكاديمية.": "Sales breakdown and revenue for each course and lecture in this academic stage.",
+  "📊 تصدير ملف إكسيل": "📊 Export Excel File",
+  "📊 تصدير شيت إكسيل (Excel / CSV)": "📊 Export Excel File",
+  "تحديث 🔄": "Refresh 🔄",
+  "📋 تفاصيل جميع المعاملات في المرحلة:": "📋 All Transactions in this Stage:",
+  "لا توجد معاملات شراء مسجلة في هذه المرحلة بعد.": "No purchase transactions recorded in this stage yet.",
+  "مركز الدعم الفني وخدمة مدرسي المنصة": "Teacher Technical Support Center",
+  "فريق الدعم الفني جاهز لمساعدتك في رفع المحاضرات، إدارة الامتحانات والواجبات، استفسارات الأرباح وتصفية المستحقات.": "The support team is ready to assist you in uploading lectures, managing quizzes and assignments, and handling revenue inquiries.",
+  "خط الدعم المباشر للمعلمين عبر واتساب:": "Direct Teacher Support WhatsApp Line:",
+  "تواصل مع الدعم الفني للمعلمين (واتساب)": "Contact Teacher Support (WhatsApp)",
+  "💰 إجمالي مبيعات الحصص": "💰 Total Lecture Sales",
+  "إجمالي المبالغ المدفوعة من الطلاب": "Total amounts paid by students",
+  "🟢 صافي مستحقاتك (أرباح المدرس)": "🟢 Net Earnings (Teacher Share)",
+  "أرباحك المعتمدة القابلة للصرف": "Your approved payable earnings",
+  "🏛️ عمولة المنصة (الإدارة)": "🏛️ Platform Commission (Admin)",
+  "حصة إدارة المنصة التشغيلية": "Platform operational share",
+  "👥 إجمالي عمليات الشراء": "👥 Total Purchase Orders",
+  "عبر": "Across",
+  "كورس نشط": "Active Courses",
+  "📊 جدول توزيع الإيرادات بين المدرس والمنصة حسب كل كورس:": "📊 Revenue Distribution by Course (Teacher vs Platform):",
+  "اسم الكورس": "Course Name",
+  "عدد المشتركين": "Subscribers Count",
+  "المبلغ الإجمالي": "Total Amount",
+  "صافي أرباح المدرس": "Teacher Net Earnings",
+  "عمولة المنصة": "Platform Commission",
+  "نسبة المدرس": "Teacher %",
+  "رقم المعاملة": "Transaction ID",
+  "الطالب": "Student",
+  "المحاضرة": "Lecture",
+  "أرباحك (حصة المدرس)": "Your Earnings (Teacher Share)",
+  "نسبة أرباحك": "Your Revenue %",
+  "طريقة الدفع": "Payment Method",
+  "التاريخ": "Date",
+  "مدرس معتمد": "Certified Teacher",
+  "معلم": "Teacher",
+  "المعلم": "Teacher",
+  "طالب": "Student",
+  "مجانية": "Free",
+  "محاضرة": "Lecture",
+  "كورس": "Course",
   "المحفظة": "Wallet",
   "المحفظة": "Wallet",
   "الرصيد والمعاملات": "Balance & Transactions",
@@ -428,7 +497,8 @@
   "الرصيد المقابل": "Equivalent Balance",
   "رفع صورة إيصال التحويل": "Upload Transfer Receipt Image",
   "اسحب الصورة هنا أو اضغط للاختيار": "Drag image here or click to browse",
-  "إرسال طلب الشحن للمراجعة": "Submit Recharge Request for Review",
+  "إرسال طلب الشحن للمراجعة": "Submit Recharge Request",
+  "🚀 إرسال طلب الشحن للمراجعة": "Submit Recharge Request 🚀",
   "ملاحظات إضافية": "Additional Notes",
   "شحن المحفظة والرصيد | خطوة": "Recharge Wallet & Balance | Khatwa",
   "الرصيد المتاح حاليًا": "Currently Available Balance",
@@ -438,13 +508,24 @@
   "سجل استخدام وحركات المحفظة": "Wallet Usage & Transaction History",
   "ارفع إيصال التحويل وأدخل المبلغ والكود لتأكيد الشحن فورياً.": "Upload transfer receipt, enter amount and code to confirm recharge immediately.",
   "العودة للمحفظة": "Back to Wallet",
-  "1. صورة إيصال التحويل (Upload Receipt)": "1. Upload Receipt Image",
+  "1. صورة إيصال التحويل": "1. Upload Transfer Receipt",
+  "1. صورة إيصال التحويل (Upload Receipt)": "1. Upload Transfer Receipt",
   "اضغط لاختيار صورة الإيصال أو اسحب الصورة هنا": "Click to select receipt image or drag image here",
   "يدعم JPG, PNG, WebP (لقطة شاشة التحويل)": "Supports JPG, PNG, WebP (Transfer screenshot)",
   "✕ تغيير الصورة": "✕ Change Image",
-  "2. المبلغ المدفوع (Amount)": "2. Paid Amount (Amount)",
+  "2. المبلغ المدفوع بالجنيه": "2. Amount Paid (EGP)",
+  "2. المبلغ المدفوع (Amount)": "2. Amount Paid (EGP)",
   "المبلغ الذي قمت بتحويله بالجنيه": "Amount transferred in EGP",
+  "3. كود المعاملة أو التحويل": "3. Transaction / Reference Code",
   "3. كود المعاملة / التحويل (Code)": "3. Transaction / Reference Code",
+  "الدفع عبر إنستاباي 💳": "Pay via InstaPay 💳",
+  "امسح رمز الاستجابة السريعة (QR Code) للدفع المباشر": "Scan QR Code for direct payment",
+  "الدفع المباشر عبر تطبيق إنستاباي": "Direct payment via InstaPay app",
+  "حساب إنستاباي للدفع المباشر": "InstaPay Account for Direct Payment",
+  "تم نسخ الحساب بنجاح ✓": "Account copied successfully ✓",
+  "محاضراتي": "Courses",
+  "حسابي": "Profile",
+  "نتائجي": "Results",
   "الرقم المرجعي أو كود العملية من رسالة التحويل": "Reference number from transfer SMS",
   "ملاحظات إضافية (اختياري)": "Additional Notes (Optional)",
   "أي تفاصيل تود إضافتها للإدارة...": "Any details you want to add for administration...",
@@ -1221,7 +1302,7 @@
   "لديك حساب بالفعل؟": "Already have an account?",
   "تأكيد كلمة المرور": "Confirm Password",
 
-  // ── Dashboard page ────────────────────────────────────────
+  // ── Dashboard / Teachers page ─────────────────────────────
   "لوحة اشتراكاتي": "My Subscriptions Dashboard",
   "الكورسات والمدرسين": "Courses & Teachers",
   "تصفح الكورسات والمحاضرات": "Browse Courses & Lectures",
@@ -1242,21 +1323,81 @@
   "قسم الدعم الفني وخدمة الطلاب": "Technical Support & Student Services",
   "تواجهك مشكلة في تشغيل المحاضرة، شحن المحفظة، أو فتح الامتحانات؟ فريق الدعم متواجد لمساعدتك عبر واتساب:": "Having trouble playing a lecture, charging your wallet, or opening exams? Support is available via WhatsApp:",
   "تواصل مع الدعم الفني (واتساب)": "Contact Technical Support (WhatsApp)",
+  "نخبة مدرسي المنصة": "Elite Platform Teachers",
+  "الرئيسية / معلمو المنصة": "Home / Platform Teachers",
+  "معلمو المنصة": "Platform Teachers",
+  "اختر معلّميك واشترك معهم لمتابعة كورساتهم وحصصهم في صفحة \"محاضراتي وكورساتي\".": "Choose your teachers and subscribe to follow their courses and lessons in \"My Courses & Lectures\" page.",
+  "اختر معلّميك واشترك معهم لمتابعة كورساتهم وحصصهم في صفحة 'محاضراتي وكورساتي'.": "Choose your teachers and subscribe to follow their courses and lessons in 'My Courses & Lectures' page.",
+  "اختر معلّميك": "Choose Your Teachers",
+  "اختر معلميك": "Choose Your Teachers",
+  "📚 الذهاب لمحاضراتي وكورساتي": "📚 Go to My Courses & Lectures",
+  "الذهاب لمحاضراتي وكورساتي": "Go to My Courses & Lectures",
+  "محاضراتي وكورساتي": "My Courses & Lectures",
+  "محاضراتي وكورساتي الدراسية": "My Academic Lectures & Courses",
+  "كورسات ومحاضرات المدرسين المشترك معهم، مجمّعة حسب كل مدرس.": "Courses & lectures of subscribed teachers, grouped by teacher.",
+  "جارٍ جلب معلّمي المنصة...": "Loading platform teachers...",
+  "جارٍ تحميل كورسات معلميك المشترك معهم...": "Loading courses from your subscribed teachers...",
+  "جارٍ جلب كورسات المعلم...": "Loading teacher's courses...",
+  "أستاذ المادة": "Subject Teacher",
+  "التخصص الأكاديمي": "Academic Specialty",
+  "المادة الدراسية": "Subject",
+  "تقييم الطلاب 5.0": "Student Rating 5.0",
+  "(تقييم الطلاب 5.0)": "(Student Rating 5.0)",
+  "نبذة عن المعلم:": "About Teacher:",
+  "نبذة عن المعلم": "About Teacher",
+  "نخبة من معلمي منصة خطوة التعليمية يقدم أفضل الشروحات والتدريبات التفاعلية.": "Elite teachers of Khatwa platform provide top explanations and interactive practice.",
+  "نبذة عن المدرس والخبرات الأكاديمية.": "About the teacher and academic experience.",
+  "📚 الكورسات والمناهج المتاحة للمعلم:": "📚 Available Courses & Curricula for Teacher:",
+  "الكورسات والمناهج المتاحة للمعلم:": "Available Courses & Curricula for Teacher:",
+  "الكورسات والمناهج المتاحة للمعلم": "Available Courses & Curricula for Teacher",
+  "اشتراك مع المعلم الآن ＋": "Subscribe to Teacher Now ＋",
+  "اشتراك مع المعلم الآن": "Subscribe to Teacher Now",
+  "✓ مشترك معك": "✓ Subscribed",
+  "مشترك معك": "Subscribed",
+  "متاح للاشتراك": "Available to enroll",
+  "مشترك": "Subscribed",
+  "اشتراك": "Subscribe",
+  "الكورسات ↗": "Courses ↗",
+  "مشترك بالفعل": "Already Subscribed",
+  "مشترك بالفعل (اضغط لإلغاء المتابعة)": "Already subscribed (click to unfollow)",
+  "اضغط للاشتراك مع المعلم": "Click to subscribe with teacher",
+  "عرض كورسات وحصص المعلم": "View teacher's courses & lessons",
+  "معلم متميز": "Featured Teacher",
+  "مشترك مع المعلم ✓": "Subscribed to Teacher ✓",
+  "لا يوجد معلمون مسجلون لمرحلتك الدراسية حالياً": "No teachers registered for your academic stage currently",
+  "سيتم إضافة نخبة مدرسي مرحلتك الدراسية قريباً.": "Elite teachers for your academic stage will be added soon.",
+  "لم تقم بالاشتراك مع أي مدرس بعد": "You haven't subscribed to any teacher yet",
+  "تصفح معلمي المنصة في الصفحة الرئيسية واشترك معهم لتظهر لك كافة كورساتهم وحصصهم هنا.": "Browse teachers on the home page and subscribe to see all their courses and lessons here.",
+  "🏠 الذهاب إلى الرئيسية للاشتراك مع المدرسين": "🏠 Go to Home to subscribe with teachers",
+  "الذهاب إلى الرئيسية للاشتراك مع المدرسين": "Go to Home to subscribe with teachers",
+  "لا توجد كورسات لمرحلتك الدراسية حالياً": "No courses currently available for your academic stage",
+  "تصفح معلمي المنصة في الصفحة الرئيسية واشترك مع معلمي مرحلتك الدراسية لتظهر حصصهم هنا.": "Browse platform teachers on the home page and subscribe to your stage teachers to view lessons here.",
+  "تواجهك مشكلة في تفعيل الاشتراك، شحن المحفظة، أو تشغيل الحصص؟ فريق الدعم متواجد لمساعدتك عبر واتساب:": "Having trouble activating subscription, recharging wallet, or playing lessons? Support is available via WhatsApp:",
 
   // ── Courses page ──────────────────────────────────────────
   "الدعم والمساعدة": "Support & Help",
   "💬 الدعم الفني (واتساب)": "💬 Technical Support (WhatsApp)",
   "رصيد المحفظة: 0 ج.م": "Wallet Balance: 0 EGP",
   "📚 الكورسات والمحاضرات المتاحة:": "📚 Available Courses & Lectures:",
+  "حدث خطأ أثناء تحميل الكورسات. يرجى إعادة المحاولة.": "An error occurred while loading courses. Please try again.",
 
   // ── Points page ───────────────────────────────────────────
-  "رصيدك بالجنيه المصري (EGP) للاشتراك في المواد والمحاضرات المدفوعة وفتح الامتحانات.": "Your EGP balance for subscribing to paid courses, lectures, and opening exams.",
-  "الرصيد المتاح حاليًا بالمحفظة": "Currently Available Wallet Balance",
-  "🧾 شحن بإيصال تحويل": "🧾 Charge via Transfer Receipt",
-  "🎟️ شحن كود مسبق الدفع (كروت الشحن)": "🎟️ Charge with Prepaid Code (Voucher Cards)",
-  "شحن فوري": "Instant Charge",
-  "إذا كان لديك كارت شحن من المدرس أو المركز التعليمي، أدخل الكود المكون من الحروف والأرقام للشحن الفوري.": "If you have a voucher card from your teacher or center, enter the alphanumeric code for instant charging.",
-  "⚡ شحن الرصيد الآن": "⚡ Charge Balance Now",
+  "رصيدك بالجنيه المصري (EGP) للاشتراك في المواد والمحاضرات المدفوعة وفتح الامتحانات.": "Your balance in Egyptian Pounds (EGP) to enroll in paid subjects, lectures, and unlock exams.",
+  "الرصيد المتاح حاليًا بالمحفظة": "Available Wallet Balance",
+  "🧾 شحن بإيصال تحويل": "🧾 Recharge via Transfer Receipt",
+  "شحن بإيصال تحويل": "Recharge via Transfer Receipt",
+  "🎟️ شحن كود مسبق الدفع (كروت الشحن)": "🎟️ Prepaid Voucher Code Recharge",
+  "شحن كود مسبق الدفع (كروت الشحن)": "Prepaid Voucher Code Recharge",
+  "شحن فوري": "Instant Recharge",
+  "إذا كان لديك كارت شحن من المدرس أو المركز التعليمي، أدخل الكود المكون من الحروف والأرقام للشحن الفوري.": "If you have a voucher card from teacher or center, enter code for instant recharge.",
+  "⚡ شحن الرصيد الآن": "⚡ Recharge Balance Now",
+  "شحن الرصيد الآن": "Recharge Balance Now",
+  "طلبات الشحن وحالة المراجعة": "Recharge Requests & Review Status",
+  "＋ طلب شحن جديد": "＋ New Recharge Request",
+  "طلب شحن جديد": "New Recharge Request",
+  "سجل استخدام وحركات المحفظة": "Wallet Usage & Transaction History",
+  "لا توجد طلبات شحن سابقة": "No previous recharge requests",
+  "لا توجد حركات محفظة سابقة": "No previous wallet transactions",
 
   // ── Profile page ──────────────────────────────────────────
   "طالب خطوة": "Khatwa Student",
@@ -1663,6 +1804,29 @@
     }
   }
 
+  function normAr(s) {
+    if (!s || typeof s !== 'string') return '';
+    return s
+      .replace(/[أإآٱ]/g, 'ا')
+      .replace(/ة/g, 'ه')
+      .replace(/ى/g, 'ي')
+      .replace(/[ًٌٍَُِّْـ]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  const NORM_DICTIONARY = {};
+  for (const [ar, en] of Object.entries(DICTIONARY)) {
+    const k = normAr(ar);
+    if (!NORM_DICTIONARY[k]) NORM_DICTIONARY[k] = en;
+  }
+
+  const NORM_REVERSE_DICT = {};
+  for (const [en, ar] of Object.entries(REVERSE_DICT)) {
+    const k = en.toLowerCase().replace(/\s+/g, ' ').trim();
+    if (!NORM_REVERSE_DICT[k]) NORM_REVERSE_DICT[k] = ar;
+  }
+
   const ARABIC_DIGITS = { '٠':'0', '١':'1', '٢':'2', '٣':'3', '٤':'4', '٥':'5', '٦':'6', '٧':'7', '٨':'8', '٩':'9' };
 
   const textNodeMap = new WeakMap();
@@ -1722,13 +1886,37 @@
       if (DICTIONARY[normalized]) {
         return str.replace(trimmed, DICTIONARY[normalized]);
       }
+      const normK = normAr(trimmed);
+      if (NORM_DICTIONARY[normK]) {
+        return str.replace(trimmed, NORM_DICTIONARY[normK]);
+      }
+
+      // Dynamic greetings
+      const welcomeMatch = trimmed.match(/^(?:أهلًا|أهلا|أهلاً)\s*(?:بك\s*)?(?:يا\s*)?([^،,\n]+?)(?:،|,)?\s*(اختر معلّميك|اختر معلميك)?$/i);
+      if (welcomeMatch) {
+        const studentName = welcomeMatch[1].trim();
+        const hasChoose = Boolean(welcomeMatch[2]);
+        return str.replace(trimmed, `Welcome ${studentName}${hasChoose ? ', choose your teachers' : ''}`);
+      }
+      const simpleWelcome = trimmed.match(/^(?:أهلًا|أهلا|أهلاً)\s+(.+)$/i);
+      if (simpleWelcome) {
+        return str.replace(trimmed, `Welcome ${simpleWelcome[1].trim()}`);
+      }
+      const resultsMatch = trimmed.match(/^نتائج الطالب:\s*(.+)$/i);
+      if (resultsMatch) {
+        return str.replace(trimmed, `Student Results: ${resultsMatch[1].trim()}`);
+      }
+      const viewCoursesMatch = trimmed.match(/^اضغط لعرض كورسات وحصص\s*(.+)$/i);
+      if (viewCoursesMatch) {
+        return str.replace(trimmed, `Click to view courses & lessons of ${viewCoursesMatch[1].trim()}`);
+      }
 
       // Specific notification & alert patterns first
-      if (/رصيد محفظتك\s*\(([0-9٠-٩]+)\s*ج\.م\)\s*غير كافٍ للاشتراك\s*\(([0-9٠-٩]+)\s*ج\.م\)\.\s*يرجى شحن رصيد المحفظة أولاً\./.test(str)) {
-        return str.replace(/رصيد محفظتك\s*\(([0-9٠-٩]+)\s*ج\.م\)\s*غير كافٍ للاشتراك\s*\(([0-9٠-٩]+)\s*ج\.م\)\.\s*يرجى شحن رصيد المحفظة أولاً\./g, 'Your wallet balance ($1 EGP) is insufficient to enroll ($2 EGP). Please recharge your wallet first.');
+      if (/رصيد محفظتك\s*\(([0-9٠-٩]+(?:\.[0-9٠-٩]+)?)\s*ج\.م\)\s*غير كافٍ للاشتراك\s*\(([0-9٠-٩]+(?:\.[0-9٠-٩]+)?)\s*ج\.م\)\.\s*يرجى شحن رصيد المحفظة أولاً\./.test(str)) {
+        return str.replace(/رصيد محفظتك\s*\(([0-9٠-٩]+(?:\.[0-9٠-٩]+)?)\s*ج\.م\)\s*غير كافٍ للاشتراك\s*\(([0-9٠-٩]+(?:\.[0-9٠-٩]+)?)\s*ج\.م\)\.\s*يرجى شحن رصيد المحفظة أولاً\./g, 'Your wallet balance ($1 EGP) is insufficient to enroll ($2 EGP). Please recharge your wallet first.');
       }
-      if (/تم شحن\s*([0-9٠-٩]+)\s*ج\.م\s*بنجاح إلى رصيد محفظتك!\s*🎉?/.test(str)) {
-        return str.replace(/تم شحن\s*([0-9٠-٩]+)\s*ج\.م\s*بنجاح إلى رصيد محفظتك!\s*🎉?/g, '$1 EGP has been successfully credited to your wallet! 🎉');
+      if (/تم شحن\s*([0-9٠-٩]+(?:\.[0-9٠-٩]+)?)\s*ج\.م\s*بنجاح إلى رصيد محفظتك!\s*🎉?/.test(str)) {
+        return str.replace(/تم شحن\s*([0-9٠-٩]+(?:\.[0-9٠-٩]+)?)\s*ج\.م\s*بنجاح إلى رصيد محفظتك!\s*🎉?/g, '$1 EGP has been successfully credited to your wallet! 🎉');
       }
       if (/هل تريد تفعيل الكود\s*\((.*?)\)\s*الآن لحسابك\?/.test(str)) {
         return str.replace(/هل تريد تفعيل الكود\s*\((.*?)\)\s*الآن لحسابك\?/g, 'Do you want to activate the voucher code ($1) now for your account?');
@@ -1747,33 +1935,36 @@
       if (/أحسنت!\s*حققت نسبة نجاح\s*([0-9٠-٩]+)%\s*وتم حفظ النتيجة في سجلك\./.test(str)) {
         return str.replace(/أحسنت!\s*حققت نسبة نجاح\s*([0-9٠-٩]+)%\s*وتم حفظ النتيجة في سجلك\./g, 'Well done! You achieved a score of $1% and the result was saved to your record.');
       }
-      if (/رصيدك:\s*([0-9٠-٩]+)\s*ج\.م/.test(str)) {
-        return str.replace(/رصيدك:\s*([0-9٠-٩]+)\s*ج\.م/g, 'Your Balance: $1 EGP');
+      if (/رصيدك:\s*([0-9٠-٩]+(?:\.[0-9٠-٩]+)?)\s*ج\.م/.test(str)) {
+        return str.replace(/رصيدك:\s*([0-9٠-٩]+(?:\.[0-9٠-٩]+)?)\s*ج\.م/g, 'Your Balance: $1 EGP');
       }
-      if (/رصيد المحفظة:\s*([0-9٠-٩]+)\s*ج\.م/.test(str)) {
-        return str.replace(/رصيد المحفظة:\s*([0-9٠-٩]+)\s*ج\.م/g, 'Wallet Balance: $1 EGP');
+      if (/رصيد المحفظة:\s*([0-9٠-٩]+(?:\.[0-9٠-٩]+)?)\s*ج\.م/.test(str)) {
+        return str.replace(/رصيد المحفظة:\s*([0-9٠-٩]+(?:\.[0-9٠-٩]+)?)\s*ج\.م/g, 'Wallet Balance: $1 EGP');
       }
-      if (/سعر المحاضرة:\s*([0-9٠-٩]+)\s*ج\.م/.test(str)) {
-        return str.replace(/سعر المحاضرة:\s*([0-9٠-٩]+)\s*ج\.م/g, 'Lecture Price: $1 EGP');
+      if (/سعر المحاضرة:\s*([0-9٠-٩]+(?:\.[0-9٠-٩]+)?)\s*ج\.م/.test(str)) {
+        return str.replace(/سعر المحاضرة:\s*([0-9٠-٩]+(?:\.[0-9٠-٩]+)?)\s*ج\.م/g, 'Lecture Price: $1 EGP');
       }
 
       // Symbols and Parentheses
       const { prefix, core, suffix, paren } = splitSymbols(str);
-      if (paren && (DICTIONARY[paren.main] || DICTIONARY[paren.inside])) {
-        const mainEn = DICTIONARY[paren.main] || translateString(paren.main, 'en');
-        const insideEn = DICTIONARY[paren.inside] || translateString(paren.inside, 'en');
+      if (paren && (DICTIONARY[paren.main] || DICTIONARY[paren.inside] || NORM_DICTIONARY[normAr(paren.main)] || NORM_DICTIONARY[normAr(paren.inside)])) {
+        const mainEn = DICTIONARY[paren.main] || NORM_DICTIONARY[normAr(paren.main)] || translateString(paren.main, 'en');
+        const insideEn = DICTIONARY[paren.inside] || NORM_DICTIONARY[normAr(paren.inside)] || translateString(paren.inside, 'en');
         return prefix + mainEn + ' (' + insideEn + ')' + paren.punct;
       }
 
       if (core) {
         const normCore = core.replace(/\s+/g, ' ');
+        const normArCore = normAr(core);
+        const enSuffix = suffix.replace(/؟/g, '?').replace(/،/g, ',').replace(/؛/g, ';');
         if (DICTIONARY[core]) {
-          const enSuffix = suffix.replace(/؟/g, '?').replace(/،/g, ',').replace(/؛/g, ';');
           return prefix + DICTIONARY[core] + enSuffix;
         }
         if (DICTIONARY[normCore]) {
-          const enSuffix = suffix.replace(/؟/g, '?').replace(/،/g, ',').replace(/؛/g, ';');
           return prefix + DICTIONARY[normCore] + enSuffix;
+        }
+        if (NORM_DICTIONARY[normArCore]) {
+          return prefix + NORM_DICTIONARY[normArCore] + enSuffix;
         }
       }
 
@@ -1881,7 +2072,22 @@
         }
       });
 
-      // 4. Text Nodes
+      // 4. Select options
+      const selects = rootNode.querySelectorAll ? rootNode.querySelectorAll('select') : [];
+      selects.forEach(sel => {
+        sel.querySelectorAll('option').forEach(opt => {
+          if (!textNodeMap.has(opt)) textNodeMap.set(opt, opt.textContent);
+          const orig = textNodeMap.get(opt);
+          if (lang === 'en') {
+            opt.textContent = translateString(orig, 'en');
+          } else {
+            const ar = (orig && /[a-zA-Z]/.test(orig)) ? translateString(orig, 'ar') : null;
+            opt.textContent = ar || orig;
+          }
+        });
+      });
+
+      // 5. Text Nodes
       const walker = document.createTreeWalker(
         rootNode,
         NodeFilter.SHOW_TEXT,
@@ -1890,7 +2096,10 @@
             const parent = node.parentElement;
             if (!parent) return NodeFilter.FILTER_REJECT;
             const tag = parent.tagName.toLowerCase();
-            if (['script', 'style', 'code', 'pre', 'svg', 'noscript'].includes(tag)) {
+            if (['script', 'style', 'code', 'pre', 'svg', 'noscript', 'option'].includes(tag)) {
+              return NodeFilter.FILTER_REJECT;
+            }
+            if (parent.closest && parent.closest('.khatwa-student-bottom-nav, .student-bottom-nav-label, .student-bottom-nav-item, #instapayUsernameDisplay, .instapay-username')) {
               return NodeFilter.FILTER_REJECT;
             }
             if (!node.nodeValue || !node.nodeValue.trim()) {
@@ -1911,7 +2120,8 @@
         if (lang === 'en') {
           currentNode.nodeValue = translateString(origValue, 'en');
         } else {
-          currentNode.nodeValue = origValue;
+          const ar = (origValue && /[a-zA-Z]/.test(origValue)) ? translateString(origValue, 'ar') : null;
+          currentNode.nodeValue = ar || origValue;
         }
       }
 

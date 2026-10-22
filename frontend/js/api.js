@@ -489,6 +489,17 @@
           navLinks.innerHTML = '<li><a href="admin.html" class="active">' + label + '</a></li>';
         });
         document.querySelectorAll('#studentPointsTag, .student-only, .teacher-only').forEach(el => el.style.display = 'none');
+      } else {
+        // Ensure student & teacher pages have the logout link in mobile/top nav-links
+        document.querySelectorAll('.nav-links').forEach(navLinks => {
+          if (!navLinks.querySelector('.nav-logout-item, .nav-logout-link')) {
+            const logoutLi = document.createElement('li');
+            logoutLi.className = 'nav-logout-item';
+            const logoutLabel = window.KhatwaI18n ? window.KhatwaI18n.t('تسجيل الخروج') : 'تسجيل الخروج';
+            logoutLi.innerHTML = `<a href="#logout" class="nav-logout-link" onclick="window.KhatwaAPI && window.KhatwaAPI.auth && window.KhatwaAPI.auth.logout(); return false;"><span class="nav-logout-icon">🚪</span><span class="nav-logout-text">${logoutLabel}</span></a>`;
+            navLinks.appendChild(logoutLi);
+          }
+        });
       }
     },
 

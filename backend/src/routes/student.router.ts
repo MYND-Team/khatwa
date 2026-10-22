@@ -990,6 +990,20 @@ router.get(
       }
     }
 
+    const courseEnrollment = await prisma.courseEnrollment.findUnique({
+      where: { studentId_courseId: { studentId, courseId } },
+    });
+    const isEnrolled = !!courseEnrollment;
+    (course as any).isEnrolled = isEnrolled;
+
+    if (isEnrolled) {
+      for (const l of allCourseLessons) {
+        if (!l.subscriptions || l.subscriptions.length === 0) {
+          l.subscriptions = [{ id: 'course_enrollment', status: 'ACTIVE', pricePaid: 0, pointsPaid: 0 }];
+        }
+      }
+    }
+
     res.status(200).json({ success: true, data: course });
   })
 );
@@ -1019,6 +1033,8 @@ router.get(
         imageUrl: true,
         createdAt: true,
         scheduledPublishAt: true,
+        teacherProfileId: true,
+        academicStage: true,
       },
     });
 
@@ -1059,30 +1075,65 @@ router.get(
 
     const isFree = lesson.price === 0 && lesson.pointCost === 0;
 
-    // 1. Check active subscription
+    // 1. Check active subscription or course enrollment
     if (!isFree) {
-      const subscription = await prisma.lessonSubscription.findUnique({
-        where: { studentId_lessonId: { studentId, lessonId } },
-      });
-      const legacyUnlocked = await prisma.unlockedLesson.findUnique({
-        where: { studentId_lessonId: { studentId, lessonId } },
-      });
-
-      if ((!subscription || subscription.status !== 'ACTIVE') && !legacyUnlocked) {
-        res.status(200).json({
-          success: true,
-          data: {
-            canAccess: false,
-            reason: 'LESSON_LOCKED',
-            step: 'purchase',
-            price: lesson.price,
-            pointCost: lesson.pointCost,
-            imageUrl: lesson.imageUrl,
-            hasAssignment,
-            hasExam,
-          },
+      let isEnrolledInCourse = false;
+      let effectiveCourseId = lesson.courseId;
+      if (!effectiveCourseId && lesson.chapterId) {
+        const ch = await prisma.chapter.findUnique({
+          where: { id: lesson.chapterId },
+          select: { courseId: true },
         });
-        return;
+        effectiveCourseId = ch?.courseId || null;
+      }
+
+      if (effectiveCourseId) {
+        const courseEnrollment = await prisma.courseEnrollment.findUnique({
+          where: { studentId_courseId: { studentId, courseId: effectiveCourseId } },
+        });
+        if (courseEnrollment) {
+          isEnrolledInCourse = true;
+          await prisma.lessonSubscription.upsert({
+            where: { studentId_lessonId: { studentId, lessonId } },
+            create: {
+              studentId,
+              lessonId,
+              teacherProfileId: lesson.teacherProfileId,
+              academicStage: lesson.academicStage,
+              status: 'ACTIVE',
+              paymentMethod: 'COURSE_ENROLLMENT',
+              pricePaid: 0,
+              pointsPaid: 0,
+            },
+            update: { status: 'ACTIVE' },
+          }).catch(() => null);
+        }
+      }
+
+      if (!isEnrolledInCourse) {
+        const subscription = await prisma.lessonSubscription.findUnique({
+          where: { studentId_lessonId: { studentId, lessonId } },
+        });
+        const legacyUnlocked = await prisma.unlockedLesson.findUnique({
+          where: { studentId_lessonId: { studentId, lessonId } },
+        });
+
+        if ((!subscription || subscription.status !== 'ACTIVE') && !legacyUnlocked) {
+          res.status(200).json({
+            success: true,
+            data: {
+              canAccess: false,
+              reason: 'LESSON_LOCKED',
+              step: 'purchase',
+              price: lesson.price,
+              pointCost: lesson.pointCost,
+              imageUrl: lesson.imageUrl,
+              hasAssignment,
+              hasExam,
+            },
+          });
+          return;
+        }
       }
     }
 

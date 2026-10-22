@@ -17,7 +17,7 @@ export async function createLesson(input: {
   imageUrl?: string | null;
   isPublished?: boolean;
 }) {
-  return prisma.lesson.create({
+  const newLesson = await prisma.lesson.create({
     data: {
       teacherProfileId: input.teacherProfileId,
       courseId: input.courseId,
@@ -32,6 +32,43 @@ export async function createLesson(input: {
       isPublished: input.isPublished ?? true,
     },
   });
+
+  // If lesson belongs to a course (directly or via chapter), grant access to all enrolled students
+  let targetCourseId = input.courseId;
+  if (!targetCourseId && input.chapterId) {
+    const chapter = await prisma.chapter.findUnique({
+      where: { id: input.chapterId },
+      select: { courseId: true },
+    });
+    if (chapter?.courseId) {
+      targetCourseId = chapter.courseId;
+    }
+  }
+
+  if (targetCourseId) {
+    const enrollments = await prisma.courseEnrollment.findMany({
+      where: { courseId: targetCourseId },
+      select: { studentId: true },
+    });
+
+    if (enrollments.length > 0) {
+      await prisma.lessonSubscription.createMany({
+        data: enrollments.map((e) => ({
+          studentId: e.studentId,
+          lessonId: newLesson.id,
+          teacherProfileId: input.teacherProfileId,
+          academicStage: input.academicStage || 'SECONDARY_1',
+          status: 'ACTIVE',
+          paymentMethod: 'COURSE_ENROLLMENT',
+          pricePaid: 0,
+          pointsPaid: 0,
+        })),
+        skipDuplicates: true,
+      }).catch((err) => console.error('Failed to auto-enroll course students for new lesson:', err));
+    }
+  }
+
+  return newLesson;
 }
 
 // ─── Update lesson ────────────────────────────────────────────────────────────
@@ -98,23 +135,58 @@ export async function getLessonContent(lessonId: string, studentId: string) {
 
   const isFree = lesson.price === 0 && lesson.pointCost === 0;
 
-  // Gate 1: Must have active subscription or unlocked lesson
+  // Gate 1: Must have active subscription, unlocked lesson, or be enrolled in the course
   if (!isFree) {
-    const subscription = await prisma.lessonSubscription.findUnique({
-      where: { studentId_lessonId: { studentId, lessonId } },
-    });
+    let isEnrolledInCourse = false;
+    let effectiveCourseId = lesson.courseId;
+    if (!effectiveCourseId && lesson.chapterId) {
+      const ch = await prisma.chapter.findUnique({
+        where: { id: lesson.chapterId },
+        select: { courseId: true },
+      });
+      effectiveCourseId = ch?.courseId || null;
+    }
 
-    const legacyUnlocked = await prisma.unlockedLesson.findUnique({
-      where: { studentId_lessonId: { studentId, lessonId } },
-    });
+    if (effectiveCourseId) {
+      const courseEnrollment = await prisma.courseEnrollment.findUnique({
+        where: { studentId_courseId: { studentId, courseId: effectiveCourseId } },
+      });
+      if (courseEnrollment) {
+        isEnrolledInCourse = true;
+        await prisma.lessonSubscription.upsert({
+          where: { studentId_lessonId: { studentId, lessonId } },
+          create: {
+            studentId,
+            lessonId,
+            teacherProfileId: lesson.teacherProfileId,
+            academicStage: lesson.academicStage,
+            status: 'ACTIVE',
+            paymentMethod: 'COURSE_ENROLLMENT',
+            pricePaid: 0,
+            pointsPaid: 0,
+          },
+          update: { status: 'ACTIVE' },
+        }).catch(() => null);
+      }
+    }
 
-    if (!subscription || subscription.status !== 'ACTIVE') {
-      if (!legacyUnlocked) {
-        const gate: GateReasonCode = 'LESSON_LOCKED';
-        throw Object.assign(
-          new Error(`يجب شراء هذه المحاضرة أولاً للوصول إلى محتواها`),
-          { statusCode: 403, code: gate }
-        );
+    if (!isEnrolledInCourse) {
+      const subscription = await prisma.lessonSubscription.findUnique({
+        where: { studentId_lessonId: { studentId, lessonId } },
+      });
+
+      const legacyUnlocked = await prisma.unlockedLesson.findUnique({
+        where: { studentId_lessonId: { studentId, lessonId } },
+      });
+
+      if (!subscription || subscription.status !== 'ACTIVE') {
+        if (!legacyUnlocked) {
+          const gate: GateReasonCode = 'LESSON_LOCKED';
+          throw Object.assign(
+            new Error(`يجب شراء هذه المحاضرة أولاً للوصول إلى محتواها`),
+            { statusCode: 403, code: gate }
+          );
+        }
       }
     }
   }

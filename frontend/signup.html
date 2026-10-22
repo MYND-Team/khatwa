@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
@@ -125,7 +125,7 @@
     e.preventDefault();
     const btn = document.getElementById('signupSubmitBtn');
     const alertBox = document.getElementById('signupAlert');
-    const uname = document.getElementById('uname').value.trim();
+    const uname = document.getElementById('uname').value.trim().replace(/\s+/g, '').toLowerCase();
     const pass = document.getElementById('pass').value;
     const pass2 = document.getElementById('pass2').value;
 

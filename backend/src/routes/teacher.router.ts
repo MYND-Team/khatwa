@@ -1274,6 +1274,31 @@ router.post(
       });
     });
 
+    // Auto-enroll existing students of the course into the new lesson
+    try {
+      const enrollments = await prisma.courseEnrollment.findMany({
+        where: { courseId: course.id },
+        select: { studentId: true },
+      });
+      if (enrollments.length > 0) {
+        await prisma.lessonSubscription.createMany({
+          data: enrollments.map((e) => ({
+            studentId: e.studentId,
+            lessonId: lesson.id,
+            teacherProfileId: teacherProfile.id,
+            academicStage: course.academicStage,
+            status: 'ACTIVE',
+            paymentMethod: 'COURSE_ENROLLMENT',
+            pricePaid: 0,
+            pointsPaid: 0,
+          })),
+          skipDuplicates: true,
+        });
+      }
+    } catch (e) {
+      console.error('Failed to auto-subscribe course students to new lesson:', e);
+    }
+
     res.status(201).json({ success: true, data: lesson });
   })
 );

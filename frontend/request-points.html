@@ -52,9 +52,11 @@
       <a href="index.html" class="brand"><img src="logo/logo-khatwa-transparent.png" alt="خطوة" class="brand-logo"><span
           class="brand-text">خطوة</span></a>
       <ul class="nav-links">
-        <li><a href="dashboard.html">لوحة التحكم</a></li>
-        <li><a href="courses.html">الكورسات</a></li>
-        <li><a href="points.html">المحفظة والرصيد</a></li>
+        <li><a href="dashboard.html">الرئيسية</a></li>
+        <li><a href="courses.html">الكورسات والمدرسين</a></li>
+        <li><a href="points.html" class="active">المحفظة والرصيد</a></li>
+        <li><a href="results.html">النتائج والتقارير</a></li>
+        <li class="nav-logout-item"><a href="#logout" class="nav-logout-link" onclick="window.KhatwaAPI && window.KhatwaAPI.auth && window.KhatwaAPI.auth.logout(); return false;"><span class="nav-logout-icon">🚪</span><span class="nav-logout-text">تسجيل الخروج</span></a></li>
       </ul>
       <div class="nav-cta" style="display:flex;align-items:center;gap:10px;">
       <button class="dark-mode-toggle-btn" data-dark-toggle onclick="toggleDarkMode()" title="تبديل الوضع الليلي/النهاري">🌙 الليلي</button>
@@ -67,6 +69,7 @@
           </span>
         </a>
       </div>
+      <button class="nav-toggle">القائمة</button>
     </div>
   </nav>
 
@@ -82,12 +85,13 @@
 
 
     <!-- InstaPay Direct Payment Card -->
-    <div class="card"
-      style="padding:24px 28px;border-radius:20px;margin-bottom:28px;background:var(--bg-card);border:1px solid var(--line-soft);box-shadow:var(--shadow-md);">
+    <!-- InstaPay Direct Payment Card -->
+    <div class="card instapay-main-card"
+      style="padding:22px 24px;border-radius:20px;margin-bottom:24px;background:var(--bg-card);border:1px solid var(--line-soft);box-shadow:var(--shadow-md);">
       <div
         style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
         <h3 style="margin:0;display:flex;align-items:center;gap:8px;font-size:1.25rem;">
-          <span>Pay via InstaPay 💳</span>
+          <span>الدفع عبر إنستاباي 💳</span>
         </h3>
         <span class="tag tag-ok" style="font-weight:700;">تحويل فوري بدون رسوم ⚡</span>
       </div>
@@ -97,42 +101,37 @@
         <div
           style="display:inline-block;padding:12px;background:#FFFFFF;border-radius:18px;border:1.5px solid var(--line-soft);box-shadow:0 4px 18px rgba(0,0,0,0.06);">
           <img id="instapayQrImage" src="images/instapay-qr.png" alt="InstaPay QR Code"
-            style="width:190px;height:auto;max-width:100%;border-radius:10px;display:block;margin:0 auto;">
+            style="width:180px;height:auto;max-width:100%;border-radius:10px;display:block;margin:0 auto;">
         </div>
-        <p style="margin:10px 0 2px;font-size:0.92rem;font-weight:700;color:var(--ink);">Scan the QR Code to pay
-          directly</p>
-        <span style="font-size:0.82rem;color:var(--ink-faint);display:block;">امسح رمز الاستجابة السريعة (QR Code) للدفع
-          المباشر عبر تطبيق إنستاباي</span>
+        <p style="margin:10px 0 2px;font-size:0.92rem;font-weight:700;color:var(--ink);">امسح رمز الاستجابة السريعة (QR Code) للدفع المباشر</p>
+        <span style="font-size:0.82rem;color:var(--ink-faint);display:block;">الدفع المباشر عبر تطبيق إنستاباي</span>
       </div>
 
       <!-- 3, 4 & 5: InstaPay Account Box, Copy Button & Open InstaPay Button -->
-      <div
-        style="background:var(--bg-raised);border:1.5px solid var(--line-soft);border-radius:14px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
-        <div style="display:flex;align-items:center;gap:10px;">
-          <span style="font-size:1.4rem;">📱</span>
-          <div>
-            <span style="font-size:0.78rem;color:var(--ink-faint);display:block;font-weight:700;">حساب إنستاباي للدفع
-              المباشر (InstaPay Account)</span>
-            <div style="display:flex;align-items:center;gap:6px;margin-top:2px;">
-              <span style="font-weight:600;font-size:0.92rem;color:var(--ink-dim);">InstaPay:</span>
-              <b id="instapayUsernameDisplay"
-                style="font-family:monospace;font-size:1.05rem;color:var(--primary);direction:ltr;display:inline-block;letter-spacing:0.5px;">samiryasser99@instapay</b>
+      <div class="instapay-account-card">
+        <div class="instapay-account-header">
+          <span style="font-size:1.4rem;flex-shrink:0;">📱</span>
+          <div style="min-width:0;flex:1;">
+            <span style="font-size:0.78rem;color:var(--ink-faint);display:block;font-weight:700;">حساب إنستاباي للدفع المباشر</span>
+            <div class="instapay-account-username-box">
+              <span style="font-weight:600;font-size:0.88rem;color:var(--ink-dim);">InstaPay:</span>
+              <b id="instapayUsernameDisplay" class="instapay-username">samiryasser99@instapay</b>
             </div>
           </div>
         </div>
-        <div style="display:flex;align-items:center;gap:8px;position:relative;">
+        <div class="instapay-account-actions">
           <button type="button" id="copyInstapayBtn" class="btn btn-line btn-sm" onclick="copyInstapayAccount()"
-            style="font-weight:700;padding:7px 14px;border-radius:8px;display:inline-flex;align-items:center;gap:6px;">
-            <span>📋 Copy</span>
+            style="font-weight:700;border-radius:8px;display:inline-flex;align-items:center;gap:6px;">
+            <span>📋 نسخ</span>
           </button>
           <a id="openInstapayBtn" href="https://ipn.eg/S/samiryasser99/instapay/7u8kgC" target="_blank"
             rel="noopener noreferrer" class="btn btn-primary btn-sm"
-            style="font-weight:700;padding:7px 14px;border-radius:8px;display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg, #10b981 0%, #059669 100%);border-color:#059669;">
-            <span>Open InstaPay 🔗</span>
+            style="font-weight:700;border-radius:8px;display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg, #10b981 0%, #059669 100%);border-color:#059669;">
+            <span>فتح إنستاباي 🔗</span>
           </a>
           <div id="instapayCopyToast"
             style="display:none;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#1E293B;color:#FFFFFF;padding:6px 14px;border-radius:8px;font-size:0.8rem;font-weight:600;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:10;pointer-events:none;">
-            InstaPay account copied ✓
+            تم نسخ الحساب بنجاح ✓
           </div>
         </div>
       </div>
@@ -141,32 +140,26 @@
       <div
         style="background:rgba(217, 119, 6, 0.06);border:1px solid rgba(217, 119, 6, 0.25);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:10px;font-size:0.88rem;color:var(--ink);">
         <span style="font-size:1.2rem;flex-shrink:0;">💡</span>
-        <span>After completing the transfer, keep your receipt and upload it below. <span
-            style="color:var(--ink-dim);font-size:0.84rem;">(بعد إتمام التحويل، يرجى الاحتفاظ بصورة الإيصال ورفعها في
-            النموذج بالأسفل لتأكيد الشحن فورياً).</span></span>
+        <span>بعد إتمام التحويل، يرجى الاحتفاظ بصورة الإيصال ورفعها في النموذج بالأسفل لتأكيد الشحن فورياً.</span>
       </div>
     </div>
 
     <!-- Simplified Recharge Form Card (Upload Receipt -> Enter Amount -> Enter Code -> Submit) -->
-    <div class="card" style="padding:28px;border-radius:20px;margin-bottom:32px;">
+    <div class="card recharge-form-card" style="padding:22px 24px;border-radius:20px;margin-bottom:28px;">
       <div style="margin-bottom:18px;">
         <h3 style="margin:0 0 4px;">📤 أو أرسل إيصال تحويل المحفظة الإلكترونية (فودافون كاش / إنستاباي)</h3>
-        <p style="margin:0;color:var(--ink-dim);font-size:0.86rem;">إذا قمت بتحويل بنكي أو فودافون كاش، ارفع لقطة الشاشة
-          مع رقم المعاملة للمراجعة.</p>
+        <p style="margin:0;color:var(--ink-dim);font-size:0.86rem;">إذا قمت بتحويل بنكي أو فودافون كاش، ارفع لقطة الشاشة مع رقم المعاملة للمراجعة.</p>
       </div>
       <form id="simplifiedRechargeForm" onsubmit="submitRecharge(event)">
 
         <!-- Step 1: Upload Receipt -->
         <div class="field" style="margin-bottom:20px;">
-          <label style="font-weight:700;font-size:0.95rem;margin-bottom:8px;display:block;">1. صورة إيصال التحويل
-            (Upload Receipt)</label>
+          <label style="font-weight:700;font-size:0.95rem;margin-bottom:8px;display:block;">1. صورة إيصال التحويل</label>
           <div class="upload-dropzone" id="receiptDropzone" onclick="document.getElementById('receiptFile').click()">
             <div id="dropzonePrompt">
               <div style="font-size:2.2rem;margin-bottom:6px;">🧾</div>
-              <p style="margin:0;font-weight:600;font-size:0.95rem;color:var(--ink);">اضغط لاختيار صورة الإيصال أو اسحب
-                الصورة هنا</p>
-              <span style="font-size:0.8rem;color:var(--ink-dim);display:block;margin-top:4px;">يدعم JPG, PNG, WebP
-                (لقطة شاشة التحويل)</span>
+              <p style="margin:0;font-weight:600;font-size:0.95rem;color:var(--ink);">اضغط لاختيار صورة الإيصال أو اسحب الصورة هنا</p>
+              <span style="font-size:0.8rem;color:var(--ink-dim);display:block;margin-top:4px;">يدعم JPG, PNG, WebP (لقطة شاشة التحويل)</span>
             </div>
             <input type="file" id="receiptFile" accept="image/*" style="display:none;"
               onchange="handleReceiptFile(this)" required>
@@ -187,26 +180,25 @@
 
         <!-- Step 2: Amount -->
         <div class="field" style="margin-bottom:18px;">
-          <label for="rechargeAmount" style="font-weight:700;font-size:0.95rem;">2. المبلغ المدفوع (Amount)</label>
+          <label for="rechargeAmount" style="font-weight:700;font-size:0.95rem;">2. المبلغ المدفوع بالجنيه</label>
           <div style="position:relative;">
             <input type="number" id="rechargeAmount" class="form-control" placeholder="مثال: 50 أو 100 أو 150" min="1"
               step="any" required style="font-size:1.1rem;font-weight:700;padding-inline-end:60px;">
             <span
-              style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-weight:700;color:var(--ink-dim);pointer-events:none;">ج.م
-              EGP</span>
+              style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-weight:700;color:var(--ink-dim);pointer-events:none;">ج.م EGP</span>
           </div>
         </div>
 
         <!-- Step 3: Code -->
         <div class="field" style="margin-bottom:24px;">
-          <label for="rechargeCode" style="font-weight:700;font-size:0.95rem;">3. كود المعاملة / التحويل (Code)</label>
+          <label for="rechargeCode" style="font-weight:700;font-size:0.95rem;">3. كود المعاملة أو التحويل</label>
           <input type="text" id="rechargeCode" class="form-control"
             placeholder="أدخل كود التحويل المرجعي من رسالة الدفع" required
             style="font-family:monospace;font-size:1.05rem;">
         </div>
 
         <button type="submit" class="btn btn-primary btn-block" id="submitRechargeBtn"
-          style="padding:14px;font-size:1.05rem;font-weight:700;">
+          style="padding:14px;font-size:1.02rem;font-weight:700;white-space:normal;line-height:1.35;text-align:center;">
           🚀 إرسال طلب الشحن للمراجعة
         </button>
       </form>

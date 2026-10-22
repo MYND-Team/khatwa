@@ -194,10 +194,11 @@
   <div class="container nav-inner">
     <a href="index.html" class="brand"><img src="logo/logo-khatwa-transparent.png" alt="خطوة" class="brand-logo"><span class="brand-text">خطوة</span></a>
     <ul class="nav-links">
-      <li><a href="dashboard.html">لوحة التحكم</a></li>
-      <li><a href="courses.html">الكورسات</a></li>
+      <li><a href="dashboard.html">الرئيسية</a></li>
+      <li><a href="courses.html">الكورسات والمدرسين</a></li>
       <li><a href="points.html">المحفظة والرصيد</a></li>
-      <li><a href="results.html">النتائج</a></li>
+      <li><a href="results.html">النتائج والتقارير</a></li>
+      <li class="nav-logout-item"><a href="#logout" class="nav-logout-link" onclick="window.KhatwaAPI && window.KhatwaAPI.auth && window.KhatwaAPI.auth.logout(); return false;"><span class="nav-logout-icon">🚪</span><span class="nav-logout-text">تسجيل الخروج</span></a></li>
     </ul>
     <div class="nav-cta">
       <button class="dark-mode-toggle-btn" data-dark-toggle onclick="toggleDarkMode()" title="تبديل الوضع الليلي/النهاري">🌙 الليلي</button>
@@ -207,6 +208,7 @@
         <span class="user-name" id="navName">طالب خطوة</span>
       </div>
     </div>
+    <button class="nav-toggle">القائمة</button>
   </div>
 </nav>
 
@@ -246,7 +248,10 @@
         <h1 id="profileHeadName">بياناتي الشخصية</h1>
         <p class="page-sub" style="margin:4px 0 0;">إدارة وتعديل بيانات حسابك المسجلة على المنصة.</p>
       </div>
-      <button class="btn btn-primary btn-sm" id="openEditModalBtn" style="font-weight:700;white-space:nowrap;box-shadow:0 3px 12px rgba(14,75,91,0.25);">✏️ طلب تعديل البيانات</button>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <button class="btn btn-primary btn-sm" id="openEditModalBtn" style="font-weight:700;white-space:nowrap;box-shadow:0 3px 12px rgba(14,75,91,0.25);">✏️ طلب تعديل البيانات</button>
+        <button class="btn btn-line btn-sm" onclick="window.KhatwaAPI && window.KhatwaAPI.auth && window.KhatwaAPI.auth.logout()" style="font-weight:700;color:var(--err,#ef4444);border-color:rgba(239,68,68,0.35);white-space:nowrap;">🚪 تسجيل الخروج</button>
+      </div>
     </div>
 
     <!-- Profile Request Status Banner -->

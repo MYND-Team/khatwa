@@ -396,6 +396,8 @@ body.dark-mode .brand-text, html[data-theme="dark"] .brand-text { color: var(--p
 .mobile-drawer-auth-item{display:none;}
 .nav-links a{color:var(--header-text);opacity:0.85;font-weight:600;font-size:.95rem;transition:all .15s;}
 .nav-links a:hover,.nav-links a.active{color:var(--header-link-hover);opacity:1;font-weight:700;}
+.nav-links .nav-logout-link{color:var(--err,#ef4444) !important;font-weight:700;display:inline-flex;align-items:center;gap:6px;opacity:0.9;}
+.nav-links .nav-logout-link:hover{opacity:1;color:#dc2626 !important;}
 .nav-cta{display:flex;gap:8px;align-items:center;flex-shrink:0;white-space:nowrap;}
 .nav-toggle{display:none;border:1px solid var(--glass-border);color:var(--header-text);border-radius:8px;padding:7px 10px;background:var(--glass-btn-bg);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);white-space:nowrap;flex-shrink:0;}
 
@@ -1450,6 +1452,30 @@ body.dark-mode .modal-backdrop {
   html[dir="rtl"] .nav-links a:hover,
   html[dir="rtl"] .nav-links a.active {
     transform: translateX(-4px);
+  }
+  /* Mobile In-Drawer Logout Link */
+  .nav-links .nav-logout-link {
+    color: #ef4444 !important;
+    background: rgba(239, 68, 68, 0.08) !important;
+    border: 1px solid rgba(239, 68, 68, 0.22) !important;
+    font-weight: 700 !important;
+    margin-top: 6px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    border-radius: 12px !important;
+    padding: 12px 16px !important;
+  }
+  .nav-links .nav-logout-link:hover {
+    background: rgba(239, 68, 68, 0.16) !important;
+    color: #dc2626 !important;
+    border-color: rgba(239, 68, 68, 0.35) !important;
+  }
+  :root[data-theme="dark"] .nav-links .nav-logout-link,
+  body.dark-mode .nav-links .nav-logout-link {
+    background: rgba(239, 68, 68, 0.14) !important;
+    border-color: rgba(239, 68, 68, 0.32) !important;
+    color: #fca5a5 !important;
   }
   /* Mobile In-Drawer Auth Action Buttons */
   .mobile-drawer-auth-item {
@@ -4782,4 +4808,135 @@ body.dark-mode .lecture-card-btn,
     margin: 0 auto !important;
     box-sizing: border-box !important;
   }
+
+/* ==========================================================================
+   Mobile Form, Card & Button Responsive Polish (Resolving Mobile View Issues)
+   ========================================================================== */
+
+/* Buttons: Prevent text overflow on mobile */
+@media (max-width: 768px) {
+  .btn {
+    white-space: normal !important;
+    text-align: center !important;
+    line-height: 1.35 !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    word-break: break-word !important;
+  }
+  .btn-block {
+    width: 100% !important;
+  }
+
+  /* Responsive card padding on mobile */
+  .card {
+    padding: 20px 16px !important;
+    border-radius: 16px !important;
+    box-sizing: border-box !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+}
+
+/* InstaPay Account Card Component */
+.instapay-account-card {
+  background: var(--bg-raised);
+  border: 1.5px solid var(--line-soft);
+  border-radius: 14px;
+  padding: 14px 18px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+.instapay-account-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1 1 220px;
+  max-width: 100%;
+}
+
+.instapay-account-username-box {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+  flex-wrap: wrap;
+}
+
+.instapay-username {
+  font-family: monospace;
+  font-size: 1rem;
+  color: var(--primary);
+  direction: ltr !important;
+  unicode-bidi: isolate !important;
+  display: inline-block;
+  letter-spacing: 0.5px;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+  max-width: 100%;
+}
+
+.instapay-account-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  .instapay-account-card {
+    padding: 14px 12px !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+
+  .instapay-account-header {
+    width: 100% !important;
+  }
+
+  .instapay-account-actions {
+    width: 100% !important;
+    display: flex !important;
+    gap: 8px !important;
+  }
+
+  .instapay-account-actions > button,
+  .instapay-account-actions > a {
+    flex: 1 1 0 !important;
+    justify-content: center !important;
+    padding: 8px 10px !important;
+    font-size: 0.84rem !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+  }
+
+  .instapay-username {
+    font-size: 0.9rem !important;
+  }
+
+  .revenue-actions-wrap {
+    width: 100% !important;
+    display: flex !important;
+    gap: 8px !important;
+  }
+
+  .revenue-actions-wrap > button {
+    flex: 1 1 0 !important;
+    justify-content: center !important;
+    padding: 8px 10px !important;
+    font-size: 0.84rem !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+  }
+}
+
 

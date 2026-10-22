@@ -140,7 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ─── Global logout handler (any element with #logoutBtn) ──────────────────
   // (Individual pages handle their own logout button; this is a global fallback)
-  document.querySelectorAll('a[href="#logout"], #logoutBtn').forEach(link => {
+  document.querySelectorAll('a[href="#logout"], #logoutBtn, .nav-logout-link').forEach(link => {
     link.addEventListener('click', async (e) => {
       e.preventDefault();
       if (window.KhatwaAPI?.auth?.logout) await window.KhatwaAPI.auth.logout();
@@ -158,6 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initCollapsibleTaskbar();
   initTransparentLogos();
   initStudentBottomNav();
+  initTeacherBottomNav();
 
 });
 
@@ -724,7 +725,7 @@ function initStudentBottomNav() {
     {
       id: 'nav-courses',
       href: 'courses.html',
-      ar: 'محاضراتي',
+      ar: 'المحاضرات',
       en: 'Courses',
       icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>`,
       matches: ['courses.html', 'subject.html', 'lesson.html']
@@ -741,7 +742,7 @@ function initStudentBottomNav() {
       id: 'nav-results',
       href: 'results.html',
       ar: 'نتائجي',
-      en: 'Grades',
+      en: 'My Results',
       icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10"></path><path d="M12 20V4"></path><path d="M6 20v-6"></path></svg>`,
       matches: ['results.html', 'exam.html', 'homework.html']
     },
@@ -775,6 +776,92 @@ function initStudentBottomNav() {
   document.body.classList.add('has-student-bottom-nav');
 
   // Sync language updates
+  window.addEventListener('khatwa:langchange', (e) => {
+    const isNowEn = (e.detail?.lang || 'ar') === 'en';
+    bottomNav.querySelectorAll('.student-bottom-nav-label').forEach(el => {
+      const txt = isNowEn ? el.getAttribute('data-en') : el.getAttribute('data-ar');
+      if (txt) el.textContent = txt;
+    });
+  });
+}
+
+/**
+ * Modern Native-Like Bottom Navigation Dock for Teachers on Mobile Devices
+ * Injected automatically on mobile screens (<= 768px) across teacher-dashboard.html.
+ */
+function initTeacherBottomNav() {
+  if (document.getElementById('khatwaTeacherBottomNav')) return;
+
+  const currentPath = window.location.pathname.split('/').pop() || 'index.html';
+  if (currentPath !== 'teacher-dashboard.html') return;
+
+  const isEn = window.KhatwaI18n?.getLanguage?.() === 'en';
+
+  const navItems = [
+    {
+      id: 'teacher-nav-courses',
+      viewId: 'view-courses',
+      ar: 'الكورسات',
+      en: 'Courses',
+      icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>`
+    },
+    {
+      id: 'teacher-nav-calendar',
+      viewId: 'view-calendar',
+      ar: 'التقويم',
+      en: 'Calendar',
+      icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>`
+    },
+    {
+      id: 'teacher-nav-students',
+      viewId: 'view-students',
+      ar: 'الطلاب',
+      en: 'Students',
+      icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>`
+    },
+    {
+      id: 'teacher-nav-revenue',
+      viewId: 'view-revenue',
+      ar: 'الأرباح',
+      en: 'Revenue',
+      icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>`
+    },
+    {
+      id: 'teacher-nav-logout',
+      isLogout: true,
+      ar: 'خروج',
+      en: 'Logout',
+      icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>`
+    }
+  ];
+
+  const bottomNav = document.createElement('nav');
+  bottomNav.id = 'khatwaTeacherBottomNav';
+  bottomNav.className = 'khatwa-student-bottom-nav';
+  bottomNav.setAttribute('aria-label', isEn ? 'Teacher Mobile Navigation' : 'شريط تنقل المدرس');
+
+  bottomNav.innerHTML = navItems.map((item, idx) => {
+    const isActive = idx === 0;
+    const label = isEn ? item.en : item.ar;
+    if (item.isLogout) {
+      return `
+        <a href="#logout" class="student-bottom-nav-item" data-id="${item.id}" onclick="window.KhatwaAPI && window.KhatwaAPI.auth && window.KhatwaAPI.auth.logout(); return false;" style="color:var(--err) !important;">
+          <span class="student-bottom-nav-icon">${item.icon}</span>
+          <span class="student-bottom-nav-label" data-ar="${item.ar}" data-en="${item.en}">${label}</span>
+        </a>
+      `;
+    }
+    return `
+      <a href="#${item.viewId}" class="student-bottom-nav-item ${isActive ? 'active' : ''}" data-id="${item.id}" data-view="${item.viewId}" onclick="if (window.switchMainView) { window.switchMainView('${item.viewId}'); } return false;">
+        <span class="student-bottom-nav-icon">${item.icon}</span>
+        <span class="student-bottom-nav-label" data-ar="${item.ar}" data-en="${item.en}">${label}</span>
+      </a>
+    `;
+  }).join('');
+
+  document.body.appendChild(bottomNav);
+  document.body.classList.add('has-student-bottom-nav');
+
   window.addEventListener('khatwa:langchange', (e) => {
     const isNowEn = (e.detail?.lang || 'ar') === 'en';
     bottomNav.querySelectorAll('.student-bottom-nav-label').forEach(el => {

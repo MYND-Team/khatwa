@@ -39,15 +39,18 @@ async function issueTokens(userId: string, username: string, role: Role) {
 
 export async function registerStudent(input: RegisterStudentInput) {
   const { username, password, studentPhoneNumber, academicStage, parentInfo } = input as any;
+  const cleanUsername = String(username || '').trim().toLowerCase();
 
-  const existing = await prisma.user.findUnique({ where: { username } });
+  const existing = await prisma.user.findFirst({
+    where: { username: { equals: cleanUsername, mode: 'insensitive' } },
+  });
   if (existing) throw ConflictError('Username already taken');
 
   const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
 
   const user = await prisma.user.create({
     data: {
-      username,
+      username: cleanUsername,
       passwordHash,
       role: 'STUDENT',
       studentProfile: {
@@ -77,6 +80,7 @@ export async function registerStudent(input: RegisterStudentInput) {
 
 export async function registerWithCode(input: RegisterWithCodeInput) {
   const { username, password, displayName, role = 'STAFF' } = input as any;
+  const cleanUsername = String(username || '').trim().toLowerCase();
 
   const targetRole = (role === 'TEACHER' ? 'TEACHER' : role === 'ADMIN' ? 'ADMIN' : 'STAFF') as Role;
 
@@ -92,7 +96,9 @@ export async function registerWithCode(input: RegisterWithCodeInput) {
     }
   }
 
-  const existing = await prisma.user.findUnique({ where: { username } });
+  const existing = await prisma.user.findFirst({
+    where: { username: { equals: cleanUsername, mode: 'insensitive' } },
+  });
   if (existing) throw ConflictError('Username already taken');
 
   const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
@@ -100,7 +106,7 @@ export async function registerWithCode(input: RegisterWithCodeInput) {
   const user = await prisma.$transaction(async (tx: any) => {
     const newUser = await tx.user.create({
       data: {
-        username,
+        username: cleanUsername,
         passwordHash,
         role: targetRole,
         ...(targetRole === 'TEACHER' && displayName
@@ -128,9 +134,10 @@ export async function registerWithCode(input: RegisterWithCodeInput) {
 
 export async function login(input: LoginInput) {
   const { username, password, academicStage } = input as any;
+  const cleanUsername = String(username || '').trim();
 
-  const user = await prisma.user.findUnique({
-    where: { username },
+  const user = await prisma.user.findFirst({
+    where: { username: { equals: cleanUsername, mode: 'insensitive' } },
     include: { teacherProfile: true, studentProfile: true },
   });
 
@@ -144,13 +151,14 @@ export async function login(input: LoginInput) {
   // ─── Protected admin override ─────────────────────────────────────────────
   // If this is a known admin username but DB has wrong role, fix it silently.
   let effectiveRole = user.role as Role;
-  if (ADMIN_USERNAMES.includes(username) && user.role !== 'ADMIN') {
+  const normUser = user.username.toLowerCase();
+  if (ADMIN_USERNAMES.some(adm => adm.toLowerCase() === normUser) && user.role !== 'ADMIN') {
     await prisma.user.update({
       where: { id: user.id },
       data: { role: 'ADMIN' },
     });
     effectiveRole = 'ADMIN';
-    console.warn(`⚠️  Auto-corrected role for protected admin account: ${username} → ADMIN`);
+    console.warn(`⚠️  Auto-corrected role for protected admin account: ${user.username} → ADMIN`);
   }
 
   let studentProfile = user.studentProfile;
