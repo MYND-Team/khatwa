@@ -157,20 +157,29 @@
     }
 
     // Dynamic Multi-Tone Diagonal Wave Gradient Engine
-    const angle = waveAngle || '135deg';
-    const start = gradStart || '#9db3cc';
-    const mid = gradMid || '#c7d8e8';
-    const end = gradEnd || backgroundColor || '#edf4fa';
-
-    if (start) root.style.setProperty('--bg-grad-start', start);
-    if (mid) root.style.setProperty('--bg-grad-mid', mid);
-    if (end) root.style.setProperty('--bg-grad-end', end);
-
-    if (backgroundGradient) {
-      root.style.setProperty('--bg-gradient', backgroundGradient);
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark' || (document.body && document.body.classList.contains('dark-mode'));
+    if (isDark) {
+      root.style.setProperty('--bg', '#0a1324');
+      root.style.setProperty('--bg-grad-start', '#0a1324');
+      root.style.setProperty('--bg-grad-mid', '#101c33');
+      root.style.setProperty('--bg-grad-end', '#172744');
+      root.style.setProperty('--bg-gradient', 'linear-gradient(135deg, #0a1324 0%, #101c33 50%, #172744 100%)');
     } else {
-      const generatedGrad = `linear-gradient(${angle}, ${start} 0%, ${mid} 50%, ${end} 100%)`;
-      root.style.setProperty('--bg-gradient', generatedGrad);
+      const angle = waveAngle || '135deg';
+      const start = gradStart || '#9db3cc';
+      const mid = gradMid || '#c7d8e8';
+      const end = gradEnd || backgroundColor || '#edf4fa';
+
+      if (start) root.style.setProperty('--bg-grad-start', start);
+      if (mid) root.style.setProperty('--bg-grad-mid', mid);
+      if (end) root.style.setProperty('--bg-grad-end', end);
+
+      if (backgroundGradient) {
+        root.style.setProperty('--bg-gradient', backgroundGradient);
+      } else {
+        const generatedGrad = `linear-gradient(${angle}, ${start} 0%, ${mid} 50%, ${end} 100%)`;
+        root.style.setProperty('--bg-gradient', generatedGrad);
+      }
     }
 
     if (shapesColor1) root.style.setProperty('--bg-shapes-color1', shapesColor1);

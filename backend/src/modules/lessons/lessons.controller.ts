@@ -29,7 +29,7 @@ export const upload = multer({
 const createLessonSchema = z.object({
   body: z.object({
     title: z.string().min(1),
-    description: z.string().optional(),
+    description: z.string().optional().nullable(),
     pointCost: z.coerce.number().int().min(0),
     orderIndex: z.coerce.number().int().optional(),
     imageUrl: z.string().optional().nullable(),
@@ -40,7 +40,7 @@ const updateLessonSchema = z.object({
   params: z.object({ id: z.string() }),
   body: z.object({
     title: z.string().optional(),
-    description: z.string().optional(),
+    description: z.string().optional().nullable(),
     pointCost: z.coerce.number().int().min(0).optional(),
     price: z.coerce.number().min(0).optional(),
     orderIndex: z.coerce.number().int().optional(),
@@ -48,9 +48,10 @@ const updateLessonSchema = z.object({
     videoUrl: z.string().optional().nullable(),
     pdfUrl: z.string().optional().nullable(),
     pdfFileName: z.string().optional().nullable(),
-    openingQuizId: z.string().optional(),
-    homeworkId: z.string().optional(),
+    openingQuizId: z.string().optional().nullable(),
+    homeworkId: z.string().optional().nullable(),
     isPublished: z.boolean().optional(),
+    scheduledPublishAt: z.any().optional().nullable(),
   }),
 });
 

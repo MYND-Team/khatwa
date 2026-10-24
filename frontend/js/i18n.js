@@ -1892,7 +1892,7 @@
       }
 
       // Dynamic greetings
-      const welcomeMatch = trimmed.match(/^(?:أهلًا|أهلا|أهلاً)\s*(?:بك\s*)?(?:يا\s*)?([^،,\n]+?)(?:،|,)?\s*(اختر معلّميك|اختر معلميك)?$/i);
+      const welcomeMatch = trimmed.match(/^(?:أهلًا|أهلا|أهلاً)\s*(?:بك)?(?:\s*،|\s*,)?(?:\s*يا\s*)?([^،,\n]+?)(?:،|,)?\s*(اختر معلّميك|اختر معلميك)?$/i);
       if (welcomeMatch) {
         const studentName = welcomeMatch[1].trim();
         const hasChoose = Boolean(welcomeMatch[2]);

@@ -58,16 +58,24 @@
         r.style.setProperty('--accent-color', d.accentColor);
       }
 
-      const bg = d.gradEnd || d.backgroundColor || '#edf4fa';
-      const start = d.gradStart || '#9db3cc';
-      const mid = d.gradMid || '#c7d8e8';
-      const ang = d.waveAngle || '135deg';
+      if (isDark) {
+        r.style.setProperty('--bg', '#0a1324');
+        r.style.setProperty('--bg-grad-start', '#0a1324');
+        r.style.setProperty('--bg-grad-mid', '#101c33');
+        r.style.setProperty('--bg-grad-end', '#172744');
+        r.style.setProperty('--bg-gradient', 'linear-gradient(135deg, #0a1324 0%, #101c33 50%, #172744 100%)');
+      } else {
+        const bg = d.gradEnd || d.backgroundColor || '#edf4fa';
+        const start = d.gradStart || '#9db3cc';
+        const mid = d.gradMid || '#c7d8e8';
+        const ang = d.waveAngle || '135deg';
 
-      r.style.setProperty('--bg', bg);
-      r.style.setProperty('--bg-grad-start', start);
-      r.style.setProperty('--bg-grad-mid', mid);
-      r.style.setProperty('--bg-grad-end', bg);
-      r.style.setProperty('--bg-gradient', `linear-gradient(${ang}, ${start} 0%, ${mid} 50%, ${bg} 100%)`);
+        r.style.setProperty('--bg', bg);
+        r.style.setProperty('--bg-grad-start', start);
+        r.style.setProperty('--bg-grad-mid', mid);
+        r.style.setProperty('--bg-grad-end', bg);
+        r.style.setProperty('--bg-gradient', `linear-gradient(${ang}, ${start} 0%, ${mid} 50%, ${bg} 100%)`);
+      }
     }
   } catch (_) {}
 })();

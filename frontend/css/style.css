@@ -195,7 +195,13 @@
 }
 
 *,*::before,*::after{box-sizing:border-box;}
-html{scroll-behavior:smooth;}
+html {
+  scroll-behavior: smooth;
+  background-color: var(--bg, #edf4fa);
+}
+:root[data-theme="dark"], html[data-theme="dark"] {
+  background-color: #0a1324 !important;
+}
 body{
   margin:0;
   font-family:var(--font-main);
@@ -216,10 +222,11 @@ body{
 }
 /* Dark mode body blobs */
 body.dark-mode, html[data-theme="dark"] body, :root[data-theme="dark"] body {
+  background-color: #0a1324 !important;
   background:
-    radial-gradient(50rem 40rem at 88% 8%,  rgba(var(--primary-rgb, 184, 142, 79), 0.20), transparent 65%),
-    radial-gradient(45rem 38rem at 8%  92%, rgba(56, 189, 248, 0.15),  transparent 65%),
-    radial-gradient(30rem 25rem at 55% 55%, rgba(168, 85, 247, 0.12),  transparent 65%),
+    radial-gradient(50rem 40rem at 88% 8%,  rgba(var(--primary-rgb, 184, 142, 79), 0.12), transparent 65%),
+    radial-gradient(45rem 38rem at 8%  92%, rgba(56, 189, 248, 0.10),  transparent 65%),
+    radial-gradient(30rem 25rem at 55% 55%, rgba(168, 85, 247, 0.08),  transparent 65%),
     linear-gradient(135deg, #0a1324 0%, #101c33 50%, #172744 100%);
   background-attachment:fixed;
 }
@@ -392,8 +399,8 @@ img[src*="logo-khatwa"] {
   flex-shrink:0 !important;
 }
 body.dark-mode .brand-text, html[data-theme="dark"] .brand-text { color: var(--primary-bright); }
-.nav-links{display:flex;align-items:center;gap:28px;}
-.mobile-drawer-auth-item{display:none;}
+.nav-links{display:none !important;}
+.mobile-drawer-auth-item{display:none !important;}
 .nav-links a{color:var(--header-text);opacity:0.85;font-weight:600;font-size:.95rem;transition:all .15s;}
 .nav-links a:hover,.nav-links a.active{color:var(--header-link-hover);opacity:1;font-weight:700;}
 .nav-links .nav-logout-link{color:var(--err,#ef4444) !important;font-weight:700;display:inline-flex;align-items:center;gap:6px;opacity:0.9;}
@@ -650,8 +657,20 @@ html[data-theme="dark"] .lang-switcher-btn:hover {
 .breadcrumb a{color:var(--ink-dim);transition:color .15s;}
 .breadcrumb a:hover{color:var(--primary);}
 .breadcrumb .sep{margin:0 6px;}
-.page-head h1{font-family:var(--serif);font-size:1.6rem;font-weight:700;color:var(--ink);}
+.page-head h1{font-family:var(--serif);font-size:1.6rem;font-weight:700;color:var(--ink);transition:color .2s ease;}
+body.dark-mode .page-head h1,
+:root[data-theme="dark"] .page-head h1,
+body.dark-mode #teacherGreeting,
+:root[data-theme="dark"] #teacherGreeting {
+  color: #FFFFFF !important;
+  text-shadow: 0 1px 14px rgba(0, 0, 0, 0.85) !important;
+}
 .page-sub{color:var(--ink-faint);font-size:.88rem;margin:6px 0 30px;}
+body.dark-mode .page-sub,
+:root[data-theme="dark"] .page-sub {
+  color: #CBD5E1 !important;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6) !important;
+}
 
 .user-line{display:flex;align-items:center;gap:10px;}
 .avatar{width:34px;height:34px;border-radius:50%;background:var(--primary-faint);border:1.5px solid var(--primary-border);display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--primary);font-size:.82rem;flex-shrink:0;}
@@ -1403,8 +1422,7 @@ body.dark-mode .modal-backdrop {
     box-shadow: 0 20px 45px rgba(0, 0, 0, 0.65), 0 2px 10px rgba(0, 0, 0, 0.2) !important;
   }
   .nav-links.open {
-    display: flex !important;
-    animation: mobileNavFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    display: none !important;
   }
   @keyframes mobileNavFadeIn {
     from {
@@ -2841,9 +2859,16 @@ html[dir="ltr"] .khatwa-taskbar:not(:hover):not(.expanded) .khatwa-taskbar-item:
   color: var(--primary-bright);
 }
 
-/* Ensure top horizontal admin tabs are hidden since sidebar handles navigation */
+/* Ensure top horizontal admin/teacher tabs and redundant navbar links are hidden across all pages since sidebar handles navigation */
 .admin-nav-tabs,
-#adminTopNavTabs {
+#adminTopNavTabs,
+.teacher-view-tabs,
+#teacherTopNavTabs,
+.nav-links {
+  display: none !important;
+}
+
+body.has-student-bottom-nav .nav-toggle {
   display: none !important;
 }
 
@@ -2878,6 +2903,14 @@ html[dir="ltr"] body.has-khatwa-taskbar.taskbar-hovered,
 html[dir="ltr"] body.has-khatwa-taskbar:has(.khatwa-taskbar:hover) {
   padding-left: var(--sidebar-w, 260px);
   padding-right: 0;
+}
+
+@media (max-width: 980px) {
+  body,
+  body.dark-mode,
+  html[data-theme="dark"] body {
+    background-attachment: scroll !important;
+  }
 }
 
 @media (max-width: 768px) {
@@ -3829,7 +3862,7 @@ body.dark-mode .lecture-card-btn,
 }
 .khatwa-pdf-teacher-card .teacher-card-poster-wrap {
   width: 100%;
-  height: 220px;
+  height: 255px;
   position: relative;
   overflow: hidden;
   background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
@@ -3841,6 +3874,8 @@ body.dark-mode .lecture-card-btn,
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center top;
+  transform-origin: center top;
   transition: transform 0.35s ease;
 }
 .khatwa-pdf-teacher-card:hover .teacher-card-poster-wrap img {
@@ -4035,7 +4070,7 @@ body.dark-mode .lecture-card-btn,
     border-radius: 16px;
   }
   .khatwa-pdf-teacher-card .teacher-card-poster-wrap {
-    height: 140px;
+    height: 175px;
   }
   .khatwa-pdf-teacher-card .teacher-card-info-box {
     padding: 10px 10px 12px;
@@ -4086,7 +4121,7 @@ body.dark-mode .lecture-card-btn,
     gap: 8px;
   }
   .khatwa-pdf-teacher-card .teacher-card-poster-wrap {
-    height: 125px;
+    height: 160px;
   }
   .khatwa-pdf-teacher-card .teacher-card-info-box {
     padding: 8px 8px 10px;

@@ -330,10 +330,36 @@ function toggleDarkMode() {
   if (newDark) {
     document.documentElement.setAttribute('data-theme', 'dark');
     document.body.classList.add('dark-mode');
+    document.documentElement.style.setProperty('--bg', '#0a1324');
+    document.documentElement.style.setProperty('--bg-grad-start', '#0a1324');
+    document.documentElement.style.setProperty('--bg-grad-mid', '#101c33');
+    document.documentElement.style.setProperty('--bg-grad-end', '#172744');
+    document.documentElement.style.setProperty('--bg-gradient', 'linear-gradient(135deg, #0a1324 0%, #101c33 50%, #172744 100%)');
     localStorage.setItem('khatwa_theme', 'dark');
   } else {
     document.documentElement.removeAttribute('data-theme');
     document.body.classList.remove('dark-mode');
+    const cached = localStorage.getItem('khatwa_branding_cache');
+    if (cached) {
+      try {
+        const d = JSON.parse(cached);
+        const bg = d.gradEnd || d.backgroundColor || '#edf4fa';
+        const start = d.gradStart || '#9db3cc';
+        const mid = d.gradMid || '#c7d8e8';
+        const ang = d.waveAngle || '135deg';
+        document.documentElement.style.setProperty('--bg', bg);
+        document.documentElement.style.setProperty('--bg-grad-start', start);
+        document.documentElement.style.setProperty('--bg-grad-mid', mid);
+        document.documentElement.style.setProperty('--bg-grad-end', bg);
+        document.documentElement.style.setProperty('--bg-gradient', `linear-gradient(${ang}, ${start} 0%, ${mid} 50%, ${bg} 100%)`);
+      } catch (_) {}
+    } else {
+      document.documentElement.style.removeProperty('--bg');
+      document.documentElement.style.removeProperty('--bg-grad-start');
+      document.documentElement.style.removeProperty('--bg-grad-mid');
+      document.documentElement.style.removeProperty('--bg-grad-end');
+      document.documentElement.style.removeProperty('--bg-gradient');
+    }
     localStorage.setItem('khatwa_theme', 'light');
   }
 
@@ -620,11 +646,11 @@ function initCollapsibleTaskbar() {
     });
   }
 
-  // Hook mobile toggle button if on page and no top nav-links exists
+  // Hook mobile toggle button to open the sidebar taskbar
   const navToggle = document.querySelector('.nav-toggle');
-  const hasNavLinks = document.querySelector('.nav-links');
-  if (navToggle && !hasNavLinks) {
-    navToggle.addEventListener('click', () => {
+  if (navToggle) {
+    navToggle.addEventListener('click', (e) => {
+      e.stopPropagation();
       taskbar.classList.toggle('mobile-open');
       backdrop.classList.toggle('show');
     });
