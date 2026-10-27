@@ -1,6 +1,7 @@
 import { prisma } from '../../config/prisma';
-import { ForbiddenError, NotFoundError } from '../../utils/errors';
+import { ForbiddenError, NotFoundError, BadRequestError } from '../../utils/errors';
 import { hasPassed } from '../quizEngine/quizEngine.service';
+import { AcademicStage } from '@prisma/client';
 
 // ─── Create lesson ────────────────────────────────────────────────────────────
 
@@ -8,7 +9,7 @@ export async function createLesson(input: {
   teacherProfileId: string;
   courseId?: string | null;
   chapterId?: string | null;
-  academicStage?: any;
+  academicStage?: AcademicStage;
   title: string;
   description?: string | null;
   price?: number;
@@ -17,11 +18,43 @@ export async function createLesson(input: {
   imageUrl?: string | null;
   isPublished?: boolean;
 }) {
+  const courseId = input.courseId?.trim() || null;
+  const chapterId = input.chapterId?.trim() || null;
+
+  if (courseId) {
+    const course = await prisma.course.findUnique({
+      where: { id: courseId },
+      select: { id: true, teacherProfileId: true },
+    });
+    if (!course) throw NotFoundError('Course');
+    if (course.teacherProfileId !== input.teacherProfileId) {
+      throw ForbiddenError('Not your course');
+    }
+  }
+
+  if (chapterId) {
+    const chapter = await prisma.chapter.findUnique({
+      where: { id: chapterId },
+      select: {
+        id: true,
+        courseId: true,
+        course: { select: { teacherProfileId: true } },
+      },
+    });
+    if (!chapter) throw NotFoundError('Chapter');
+    if (chapter.course?.teacherProfileId !== input.teacherProfileId) {
+      throw ForbiddenError('Not your chapter');
+    }
+    if (courseId && chapter.courseId !== courseId) {
+      throw BadRequestError('Chapter does not belong to the specified course');
+    }
+  }
+
   const newLesson = await prisma.lesson.create({
     data: {
       teacherProfileId: input.teacherProfileId,
-      courseId: input.courseId,
-      chapterId: input.chapterId,
+      courseId,
+      chapterId,
       academicStage: input.academicStage || 'SECONDARY_1',
       title: input.title,
       description: input.description,
@@ -34,10 +67,10 @@ export async function createLesson(input: {
   });
 
   // If lesson belongs to a course (directly or via chapter), grant access to all enrolled students
-  let targetCourseId = input.courseId;
-  if (!targetCourseId && input.chapterId) {
+  let targetCourseId = courseId;
+  if (!targetCourseId && chapterId) {
     const chapter = await prisma.chapter.findUnique({
-      where: { id: input.chapterId },
+      where: { id: chapterId },
       select: { courseId: true },
     });
     if (chapter?.courseId) {

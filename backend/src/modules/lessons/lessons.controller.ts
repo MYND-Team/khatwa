@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { AcademicStage } from '@prisma/client';
 import { asyncHandler } from '../../utils/asyncHandler';
 import { validate } from '../../utils/validate';
 import * as LessonsService from './lessons.service';
@@ -36,7 +37,7 @@ const createLessonSchema = z.object({
     imageUrl: z.string().optional().nullable(),
     courseId: z.string().optional().nullable(),
     chapterId: z.string().optional().nullable(),
-    academicStage: z.any().optional(),
+    academicStage: z.nativeEnum(AcademicStage).optional(),
     isPublished: z.boolean().optional(),
   }),
 });
