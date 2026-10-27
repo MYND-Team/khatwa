@@ -6,11 +6,11 @@ import { hasPassed } from '../quizEngine/quizEngine.service';
 
 export async function createLesson(input: {
   teacherProfileId: string;
-  courseId?: string;
-  chapterId?: string;
+  courseId?: string | null;
+  chapterId?: string | null;
   academicStage?: any;
   title: string;
-  description?: string;
+  description?: string | null;
   price?: number;
   pointCost?: number;
   orderIndex?: number;

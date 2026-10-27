@@ -30,9 +30,14 @@ const createLessonSchema = z.object({
   body: z.object({
     title: z.string().min(1),
     description: z.string().optional().nullable(),
-    pointCost: z.coerce.number().int().min(0),
+    pointCost: z.coerce.number().int().min(0).optional().default(0),
+    price: z.coerce.number().min(0).optional(),
     orderIndex: z.coerce.number().int().optional(),
     imageUrl: z.string().optional().nullable(),
+    courseId: z.string().optional().nullable(),
+    chapterId: z.string().optional().nullable(),
+    academicStage: z.any().optional(),
+    isPublished: z.boolean().optional(),
   }),
 });
 
