@@ -194,44 +194,56 @@
 
   function renderHwQuestions() {
     const container = document.getElementById('hwQuestionsContainer');
-    container.innerHTML = activeQuestions.map((q, idx) => `
+    container.innerHTML = activeQuestions.map((q, idx) => {
+      const isEssay = q.questionType === 'ESSAY' || q.questionType === 'EQUATION' || (!q.optionA && !q.optionB);
+      return `
       <div class="q-block" id="hwQ_${idx}" style="${idx === 0 ? '' : 'display:none;'}">
         <p class="q-text" style="font-size:1.05rem;font-weight:600;margin-bottom:16px;">
           <span style="color:var(--gold-light);">س ${idx + 1}:</span> ${escapeHtml(q.text || q.questionText || '')}
         </p>
 
-        ${q.equationLatex ? `<div style="margin-bottom:14px;font-size:1.1rem;direction:ltr;text-align:center;">$$${escapeHtml(q.equationLatex)}$$</div>` : ''}
+        ${q.equationLatex ? `<div style="margin-bottom:14px;font-size:1.1rem;direction:ltr;text-align:center;">$${escapeHtml(q.equationLatex)}$</div>` : ''}
 
-        <div style="display:flex;flex-direction:column;gap:10px;">
-          <label class="opt">
-            <input type="radio" name="hq_${q.id}" value="A">
-            <span class="letter">أ</span>
-            <span>${escapeHtml(q.optionA || '')}</span>
-          </label>
-          <label class="opt">
-            <input type="radio" name="hq_${q.id}" value="B">
-            <span class="letter">ب</span>
-            <span>${escapeHtml(q.optionB || '')}</span>
-          </label>
-          ${q.optionC ? `
+        ${!isEssay ? `
+          <div style="display:flex;flex-direction:column;gap:10px;">
             <label class="opt">
-              <input type="radio" name="hq_${q.id}" value="C">
-              <span class="letter">ج</span>
-              <span>${escapeHtml(q.optionC)}</span>
+              <input type="radio" name="hq_${q.id}" value="A">
+              <span class="letter">أ</span>
+              <span>${escapeHtml(q.optionA || '')}</span>
             </label>
-          ` : ''}
-          ${q.optionD ? `
             <label class="opt">
-              <input type="radio" name="hq_${q.id}" value="D">
-              <span class="letter">د</span>
-              <span>${escapeHtml(q.optionD)}</span>
+              <input type="radio" name="hq_${q.id}" value="B">
+              <span class="letter">ب</span>
+              <span>${escapeHtml(q.optionB || '')}</span>
             </label>
-          ` : ''}
-        </div>
+            ${q.optionC ? `
+              <label class="opt">
+                <input type="radio" name="hq_${q.id}" value="C">
+                <span class="letter">ج</span>
+                <span>${escapeHtml(q.optionC)}</span>
+              </label>
+            ` : ''}
+            ${q.optionD ? `
+              <label class="opt">
+                <input type="radio" name="hq_${q.id}" value="D">
+                <span class="letter">د</span>
+                <span>${escapeHtml(q.optionD)}</span>
+              </label>
+            ` : ''}
+          </div>
+        ` : `
+          <div style="margin-top:10px;">
+            <textarea name="hq_${q.id}" class="essay-answer-box math-enabled-input" rows="4" placeholder="اكتب إجابتك أو خطوات الحل الرياضي هنا... يمكنك استخدام أزرار المعادلات بالأعلى أو زر [ √x ]"></textarea>
+          </div>
+        `}
       </div>
-    `).join('');
+    `;
+    }).join('');
 
     renderHwLatexMath(container);
+    if (window.KhatwaMath) {
+      window.KhatwaMath.init(container);
+    }
     updateProgress();
   }
 
@@ -494,5 +506,6 @@
   document.addEventListener('DOMContentLoaded', initHomework);
 </script>
 <script src="js/i18n.js"></script>
+<script src="js/math-assistant.js"></script>
 </body>
 </html>

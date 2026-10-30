@@ -386,7 +386,7 @@
                   </div>
                 ` : `
                   <div style="margin-top:10px;">
-                    <textarea name="q_${q.id}" class="essay-answer-box" placeholder="اكتب إجابتك هنا..." required></textarea>
+                    <textarea name="q_${q.id}" class="essay-answer-box math-enabled-input" placeholder="اكتب إجابتك أو خطوات الحل الرياضي هنا... يمكنك استخدام أزرار المعادلات بالأعلى أو زر [ √x ]" required></textarea>
                   </div>
                 `}
               </div>
@@ -403,6 +403,7 @@
     `;
 
     renderLatexMath(container);
+    if (window.KhatwaMath) { window.KhatwaMath.init(container); }
   }
 
   function renderLatexMath(element) {
@@ -762,5 +763,6 @@
     }
   }
 </script>
+<script src="js/math-assistant.js"></script>
 </body>
 </html>

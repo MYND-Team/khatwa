@@ -4974,4 +4974,470 @@ body.dark-mode .lecture-card-btn,
   }
 }
 
+/* ===========================================================
+   Khatwa Math & Physics Equation Assistant UI Styles
+   =========================================================== */
+.khatwa-math-answer-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 12px 0 16px;
+  border-radius: 14px;
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--line-soft, #e2e8f0);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.khatwa-math-answer-wrapper:focus-within {
+  border-color: var(--primary, #0E4B5B);
+  box-shadow: 0 0 0 3px rgba(14, 75, 91, 0.12);
+}
+
+.khatwa-math-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--bg-raised, #f8fafc);
+  border-bottom: 1px solid var(--line-soft, #e2e8f0);
+  flex-wrap: wrap;
+}
+
+.math-tb-left,
+.math-tb-right {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.math-tb-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--line-soft, #e2e8f0);
+  background: var(--bg-card, #ffffff);
+  color: var(--ink, #1e293b);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  user-select: none;
+}
+
+.math-tb-btn:hover {
+  background: var(--primary-faint, #f0f7fa);
+  border-color: var(--primary, #0E4B5B);
+  color: var(--primary, #0E4B5B);
+  transform: translateY(-1px);
+}
+
+.math-tb-btn-primary {
+  background: linear-gradient(135deg, rgba(14, 75, 91, 0.08) 0%, rgba(37, 150, 178, 0.14) 100%);
+  border: 1.5px solid var(--primary, #0E4B5B);
+  color: var(--primary, #0E4B5B);
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(14, 75, 91, 0.08);
+}
+
+.math-tb-btn-primary:hover {
+  background: var(--primary, #0E4B5B);
+  color: #ffffff;
+  border-color: var(--primary, #0E4B5B);
+}
+
+.math-tb-btn-primary:hover .math-tb-badge {
+  background: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
+.math-tb-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: rgba(14, 75, 91, 0.12);
+  color: var(--primary, #0E4B5B);
+  font-size: 0.95rem;
+  font-family: 'Cambria Math', 'KaTeX_Main', serif;
+  font-weight: 700;
+}
+
+.math-tb-sep {
+  width: 1px;
+  height: 20px;
+  background: var(--line-soft, #cbd5e1);
+  margin: 0 3px;
+}
+
+.math-tb-photo-btn {
+  background: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.35);
+  color: #b45309;
+}
+
+.math-tb-photo-btn:hover {
+  background: rgba(245, 158, 11, 0.18);
+  border-color: #f59e0b;
+  color: #92400e;
+}
+
+/* Wrapper Textarea inside Assistant */
+.khatwa-math-answer-wrapper .essay-answer-box {
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 14px 16px;
+  background: transparent;
+  font-size: 0.96rem;
+  min-height: 110px;
+}
+
+.khatwa-math-answer-wrapper .essay-answer-box:focus {
+  outline: none !important;
+}
+
+/* Live Preview Card */
+.khatwa-math-live-preview-box {
+  background: linear-gradient(135deg, rgba(14, 75, 91, 0.03) 0%, rgba(37, 150, 178, 0.06) 100%);
+  border-top: 1px dashed var(--line-soft, #cbd5e1);
+  padding: 12px 16px;
+}
+
+.khatwa-math-preview-header {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--primary, #0E4B5B);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.khatwa-math-preview-body {
+  font-size: 1.05rem;
+  line-height: 1.7;
+  color: var(--ink, #0f172a);
+  direction: rtl;
+  text-align: right;
+  min-height: 28px;
+}
+
+.khatwa-math-preview-body .katex-display {
+  margin: 8px 0;
+  direction: ltr;
+}
+
+/* Attachment Bar */
+.khatwa-math-attachments-bar {
+  padding: 8px 16px;
+  background: var(--bg-raised, #f8fafc);
+  border-top: 1px solid var(--line-soft, #e2e8f0);
+}
+
+.khatwa-math-attached-thumb {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--line-soft, #cbd5e1);
+}
+
+.khatwa-math-attached-thumb img {
+  width: 44px;
+  height: 44px;
+  border-radius: 6px;
+  object-fit: cover;
+  border: 1px solid var(--line-soft);
+}
+
+.khatwa-math-attached-thumb .thumb-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.btn-remove-thumb {
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+  border: none;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+.btn-remove-thumb:hover {
+  background: #ef4444;
+  color: #fff;
+}
+
+/* ===========================================================
+   Equation Modal Dialog
+   =========================================================== */
+.khatwa-math-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: mathFadeIn 0.2s ease-out;
+}
+
+@keyframes mathFadeIn {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.khatwa-math-modal-dialog {
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--line, #cbd5e1);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 820px;
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+
+.khatwa-math-modal-header {
+  padding: 16px 22px;
+  border-bottom: 1px solid var(--line-soft, #e2e8f0);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-raised, #f8fafc);
+}
+
+.khatwa-math-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.math-icon-badge {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--primary, #0E4B5B) 0%, var(--primary-bright, #2596B2) 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Cambria Math', 'KaTeX_Main', serif;
+  font-size: 1.4rem;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(14, 75, 91, 0.25);
+}
+
+.khatwa-math-modal-close {
+  background: transparent;
+  border: none;
+  font-size: 1.8rem;
+  color: var(--ink-dim, #64748B);
+  cursor: pointer;
+  line-height: 1;
+  padding: 4px 8px;
+  border-radius: 8px;
+}
+
+.khatwa-math-modal-close:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.khatwa-math-modal-body {
+  padding: 18px 22px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Tabs */
+.khatwa-math-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--line-soft, #e2e8f0);
+}
+
+.math-tab-btn {
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--ink-dim, #64748B);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.18s ease;
+}
+
+.math-tab-btn:hover {
+  background: var(--bg-raised, #f8fafc);
+  color: var(--primary, #0E4B5B);
+}
+
+.math-tab-btn.active {
+  background: var(--primary-faint, #f0f7fa);
+  color: var(--primary, #0E4B5B);
+  border-color: var(--primary-border, #9ec5d0);
+  font-weight: 700;
+}
+
+.math-tab-content {
+  display: none;
+}
+
+.math-tab-content.active {
+  display: block;
+}
+
+/* Visual Builder Grid */
+.math-builder-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.math-builder-card {
+  background: var(--bg-raised, #f8fafc);
+  border: 1px solid var(--line-soft, #e2e8f0);
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+
+.math-builder-card-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--primary, #0E4B5B);
+}
+
+/* Palette Grid */
+.math-palette-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 8px;
+  max-height: 240px;
+  overflow-y: auto;
+  padding: 4px;
+}
+
+.math-palette-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 8px;
+  border-radius: 10px;
+  border: 1px solid var(--line-soft, #e2e8f0);
+  background: var(--bg-raised, #f8fafc);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  min-height: 64px;
+}
+
+.math-palette-item:hover {
+  border-color: var(--primary, #0E4B5B);
+  background: var(--primary-faint, #f0f7fa);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.math-palette-render {
+  font-size: 1.15rem;
+  color: var(--ink, #0f172a);
+  direction: ltr;
+  margin-bottom: 4px;
+}
+
+.math-palette-lbl {
+  font-size: 0.72rem;
+  color: var(--ink-dim, #64748B);
+  text-align: center;
+  line-height: 1.2;
+}
+
+/* Editor & Live Render Box */
+.khatwa-math-editor-box {
+  background: var(--bg-raised, #f8fafc);
+  border: 1px solid var(--line-soft, #e2e8f0);
+  border-radius: 14px;
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.khatwa-math-preview-area {
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--line-soft, #cbd5e1);
+  border-radius: 10px;
+  padding: 14px;
+  min-height: 70px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.khatwa-math-rendered-target {
+  font-size: 1.35rem;
+  direction: ltr;
+  text-align: center;
+  color: var(--primary-deep, #08323D);
+}
+
+.khatwa-math-modal-footer {
+  padding: 14px 22px;
+  border-top: 1px solid var(--line-soft, #e2e8f0);
+  background: var(--bg-raised, #f8fafc);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+@media (max-width: 640px) {
+  .khatwa-math-modal-dialog {
+    max-height: 96vh;
+    border-radius: 16px;
+  }
+  .khatwa-math-modal-header,
+  .khatwa-math-modal-body,
+  .khatwa-math-modal-footer {
+    padding: 12px 14px;
+  }
+  .math-palette-grid {
+    grid-template-columns: repeat(auto-fill, minmax(95px, 1fr));
+    max-height: 180px;
+  }
+}
+
+
 
