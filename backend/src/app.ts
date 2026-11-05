@@ -327,19 +327,42 @@ const uploadsDir = (process.env.VERCEL || process.env.NODE_ENV === 'production')
   ? path.join(os.tmpdir(), 'khatwa-uploads')
   : path.resolve(process.cwd(), 'uploads');
 
-try {
-  if (!fs.existsSync(uploadsDir)) {
-    fs.mkdirSync(uploadsDir, { recursive: true });
-  }
-} catch {
-  // Ignored if directory creation fails on read-only environments (e.g., Vercel / AWS Lambda)
+const candidateUploadDirs = [
+  uploadsDir,
+  path.resolve(process.cwd(), 'uploads'),
+  path.resolve(process.cwd(), '../uploads'),
+  path.resolve(__dirname, '../../uploads'),
+  path.resolve(__dirname, '../uploads'),
+  path.join(os.tmpdir(), 'khatwa-uploads'),
+];
+
+for (const dir of candidateUploadDirs) {
+  try {
+    if (fs.existsSync(dir)) {
+      app.use('/uploads', express.static(dir));
+      app.use('/api/uploads', express.static(dir));
+    }
+  } catch (_) {}
 }
 
-app.use('/uploads', express.static(uploadsDir));
-const localUploadsDir = path.resolve(process.cwd(), 'uploads');
-if (fs.existsSync(localUploadsDir) && localUploadsDir !== uploadsDir) {
-  app.use('/uploads', express.static(localUploadsDir));
-}
+// Explicit handler for student answer images
+app.get(['/uploads/answers/:filename', '/api/uploads/answers/:filename'], (req, res) => {
+  const filename = path.basename(req.params.filename);
+  const candidates = [
+    path.join(uploadsDir, 'answers', filename),
+    path.resolve(process.cwd(), 'uploads', 'answers', filename),
+    path.resolve(process.cwd(), '../uploads', 'answers', filename),
+    path.resolve(__dirname, '../../uploads', 'answers', filename),
+    path.resolve(__dirname, '../uploads', 'answers', filename),
+    path.join(os.tmpdir(), 'khatwa-uploads', 'answers', filename),
+  ];
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) {
+      return res.sendFile(candidate);
+    }
+  }
+  res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'صورة الحل غير موجودة' } });
+});
 
 app.get(['/lessons/:id/pdf', '/api/lessons/:id/pdf', '/student/lessons/:id/pdf', '/teacher/lessons/:id/pdf-view'], asyncHandler(async (req, res) => {
   const lesson = await prisma.lesson.findUnique({

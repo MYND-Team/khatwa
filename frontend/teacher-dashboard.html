@@ -947,6 +947,19 @@
         </div>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- Modal: Student Answer Image Lightbox (Full Screen Inspection) -->
+<div id="teacherSolutionImageLightbox" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:99999;align-items:center;justify-content:center;padding:20px;flex-direction:column;backdrop-filter:blur(8px);">
+  <div style="position:absolute;top:20px;right:24px;display:flex;gap:12px;z-index:100000;">
+    <a id="lightboxDownloadBtn" download="student-solution.jpg" class="btn btn-line btn-sm" style="color:#fff;border-color:rgba(255,255,255,0.4);padding:8px 16px;font-weight:700;">📥 تنزيل الصورة</a>
+    <button type="button" class="btn btn-line btn-sm" onclick="closeTeacherImageLightbox()" style="color:#fff;border-color:rgba(255,255,255,0.4);font-size:1.2rem;padding:6px 16px;">✕ إغلاق</button>
+  </div>
+  <div style="max-width:96vw;max-height:88vh;overflow:auto;display:flex;align-items:center;justify-content:center;">
+    <img id="lightboxTargetImg" src="" alt="صورة حل الطالب" style="max-width:100%;max-height:86vh;object-fit:contain;border-radius:12px;box-shadow:0 16px 50px rgba(0,0,0,0.9);border:1px solid rgba(255,255,255,0.15);">
+  </div>
+</div>
 <!-- Modal: Dedicated Lecture Analytics & Student Attendance View (PDF Page 18-20 Requirement) -->
 <div class="modal-overlay" id="lessonFullDetailsModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:1000;align-items:center;justify-content:center;backdrop-filter:blur(6px);">
   <div style="background:var(--bg-card);border:1px solid var(--line);border-radius:24px;max-width:920px;width:95%;padding:28px;max-height:92vh;overflow-y:auto;box-shadow:var(--shadow-xl);">
@@ -3669,6 +3682,119 @@
     }
   }
 
+  
+  // ─── Student Answer Image Lightbox & Safe Viewer ────────────────────────
+  window.viewTeacherStudentImage = function(src) {
+    if (!src) return;
+    const lightbox = document.getElementById('teacherSolutionImageLightbox');
+    const targetImg = document.getElementById('lightboxTargetImg');
+    const downloadBtn = document.getElementById('lightboxDownloadBtn');
+    if (targetImg) targetImg.src = src;
+    if (downloadBtn) downloadBtn.href = src;
+    if (lightbox) lightbox.style.display = 'flex';
+  };
+
+  window.closeTeacherImageLightbox = function() {
+    const lightbox = document.getElementById('teacherSolutionImageLightbox');
+    if (lightbox) lightbox.style.display = 'none';
+  };
+
+  window.openSafeImageWindow = function(src) {
+    if (!src) return;
+    if (src.startsWith('data:')) {
+      const w = window.open('', '_blank');
+      if (w) {
+        w.document.write(`
+          <!DOCTYPE html>
+          <html dir="rtl" lang="ar">
+          <head><meta charset="utf-8"><title>صورة ورقة إجابة الطالب - خطوة</title></head>
+          <body style="margin:0;background:#0b0f19;display:flex;justify-content:center;align-items:center;min-height:100vh;">
+            <img src="${src}" style="max-width:98vw;max-height:98vh;object-fit:contain;border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,0.7);">
+          </body>
+          </html>
+        `);
+        w.document.close();
+        return;
+      }
+    }
+    window.open(src, '_blank');
+  };
+
+  function renderStudentAnswerWithImages(rawText) {
+    if (!rawText || !rawText.trim()) {
+      return '<div style="font-size:0.95rem;color:var(--ink-dim);">لا توجد إجابة</div>';
+    }
+
+    const imgRegex = /\[(?:صورة_الحل|صورة الحل المرفقة|صورة الحل):\s*([^\]]+)\]/gi;
+    const mdImgRegex = /!\[([^\]]*)\]\(([^)]+)\)/gi;
+
+    let cleanedText = rawText;
+    const imageUrls = [];
+
+    let match;
+    while ((match = imgRegex.exec(rawText)) !== null) {
+      const url = match[1].trim();
+      if (url && !imageUrls.includes(url)) imageUrls.push(url);
+    }
+    while ((match = mdImgRegex.exec(rawText)) !== null) {
+      const url = match[2].trim();
+      if (url && !imageUrls.includes(url)) imageUrls.push(url);
+    }
+
+    if (imageUrls.length === 0 && rawText.includes('data:image/')) {
+      const dataMatch = rawText.match(/data:image\/[a-zA-Z]+;base64,[A-Za-z0-9+/=]+/);
+      if (dataMatch) {
+        imageUrls.push(dataMatch[0]);
+        cleanedText = cleanedText.replace(dataMatch[0], '');
+      }
+    }
+
+    cleanedText = cleanedText.replace(imgRegex, '').replace(mdImgRegex, '').trim();
+
+    let html = '';
+    if (cleanedText) {
+      html += `<div style="font-size:0.95rem;white-space:pre-wrap;font-weight:600;margin-bottom:8px;">${escapeHtml(cleanedText)}</div>`;
+    } else if (imageUrls.length === 0) {
+      html += `<div style="font-size:0.95rem;color:var(--ink-dim);">لا توجد إجابة مكتوبة</div>`;
+    }
+
+    if (imageUrls.length > 0) {
+      html += `
+        <div style="margin-top:12px;background:var(--bg-raised);border:1.5px solid var(--primary);border-radius:12px;padding:12px;">
+          <div style="font-size:0.88rem;font-weight:700;color:var(--primary);margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+            <span>📷 صورة ورقة الحل المرفقة من الطالب (اضغط لتكبير وفحص الصورة):</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+      `;
+      imageUrls.forEach((imgUrl, i) => {
+        const fullSrc = (imgUrl.startsWith('http') || imgUrl.startsWith('data:'))
+          ? imgUrl
+          : `${window.KhatwaAPI?.BASE_URL || ''}${imgUrl}`;
+        html += `
+          <div style="background:var(--bg-card);border:1.5px solid var(--line-soft);border-radius:12px;padding:12px;box-shadow:0 4px 14px rgba(0,0,0,0.06);">
+            <div style="max-width:100%;overflow:hidden;border-radius:10px;border:1px solid var(--line-soft);background:#050505;text-align:center;padding:6px;">
+              <img src="${escapeHtml(fullSrc)}" alt="صورة حل الطالب" style="max-width:100%;max-height:480px;cursor:zoom-in;object-fit:contain;display:inline-block;border-radius:6px;" onclick="window.viewTeacherStudentImage('${escapeHtml(fullSrc)}')">
+            </div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;align-items:center;">
+              <button type="button" class="btn btn-primary btn-sm" onclick="window.viewTeacherStudentImage('${escapeHtml(fullSrc)}')" style="font-size:0.82rem;padding:7px 16px;border-radius:8px;font-weight:700;">
+                🔍 تكبير وفحص الصورة
+              </button>
+              <button type="button" class="btn btn-line btn-sm" onclick="window.openSafeImageWindow('${escapeHtml(fullSrc)}')" style="font-size:0.82rem;padding:7px 16px;border-radius:8px;">
+                🌐 فتح في نافذة مستقلة ↗
+              </button>
+              <a href="${escapeHtml(fullSrc)}" download="student-solution-${i + 1}.jpg" class="btn btn-line btn-sm" style="font-size:0.82rem;padding:7px 16px;border-radius:8px;">
+                📥 تنزيل الصورة
+              </a>
+            </div>
+          </div>
+        `;
+      });
+      html += `</div></div>`;
+    }
+
+    return html;
+  }
+
   async function openRegradeAttempt(attemptId) {
     activeGradingAttemptId = attemptId;
     document.getElementById('gradingAttemptsListView').style.display = 'none';
@@ -3710,7 +3836,7 @@
           ansBody = `
             <div style="background:var(--bg-card);border:1px solid var(--line);border-radius:10px;padding:12px;margin:8px 0;">
               <div style="font-size:0.8rem;color:var(--ink-dim);margin-bottom:4px;">إجابة الطالب المكتوبة:</div>
-              <div style="font-size:0.95rem;white-space:pre-wrap;font-weight:600;">${escapeHtml(ans.textAnswer || 'لا توجد إجابة')}</div>
+              <div style="padding:4px 0;">${renderStudentAnswerWithImages(ans.textAnswer)}</div>
             </div>
             ${q.rubric || q.sampleAnswer ? `
               <div style="font-size:0.82rem;color:var(--ink-dim);margin-top:4px;">

@@ -10,6 +10,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathlive"></script>
 <style>
   .security-video-wrapper {
     position: relative;
@@ -439,7 +440,14 @@
         if (value === 'A' || value === 'B' || value === 'C' || value === 'D') {
           answers.push({ questionId, selectedOption: value });
         } else {
-          answers.push({ questionId, textAnswer: value });
+          let textVal = value || '';
+          const inputEl = form.querySelector(`[name="${key}"]`);
+          const wrapper = inputEl?.closest('.khatwa-math-answer-wrapper');
+          const attachedImg = wrapper?.getAttribute('data-attached-image');
+          if (attachedImg && !textVal.includes(attachedImg)) {
+            textVal = (textVal ? (textVal.trim() + '\n\n') : '') + `[صورة_الحل: ${attachedImg}]`;
+          }
+          answers.push({ questionId, textAnswer: textVal });
         }
       }
     }

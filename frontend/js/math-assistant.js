@@ -1,7 +1,10 @@
 /**
  * Math & Physics Equation Assistant for Khatwa Platform
- * Enables students to visually build and insert math/physics formulas (fractions, roots, powers, symbols)
- * Supports live KaTeX preview and handwritten solution image attachments.
+ * Features:
+ * - Direct in-place Visual MathField (MathLive WYSIWYG): Students see real square roots (√), powers (xⁿ), and fractions (a/b) directly while typing, without any raw LaTeX.
+ * - Framed Calculator Toolbar with structured key clusters (roots, powers, fractions, symbols, photo attachment).
+ * - Full paper-solution image attachment with backend upload (/student/upload-answer-image) & safe lightbox viewer.
+ * - Real-time sync with underlying form inputs for transparent quiz & homework submission.
  */
 
 (function () {
@@ -70,9 +73,6 @@
     ]
   };
 
-  /**
-   * Escape HTML utility
-   */
   function escapeHtml(str) {
     if (!str) return '';
     return String(str)
@@ -82,9 +82,6 @@
       .replace(/"/g, '&quot;');
   }
 
-  /**
-   * Safe KaTeX render helper
-   */
   function renderKaTeX(element, latexStr, displayMode = false) {
     if (!element) return;
     if (window.katex) {
@@ -113,7 +110,7 @@
   }
 
   /**
-   * Ensure the single global Modal is injected into body
+   * Inject Global Expanded Math Modal for full symbol palette
    */
   function ensureModalInjected() {
     if (modalInitialized || document.getElementById('khatwaMathModal')) return;
@@ -127,8 +124,8 @@
             <div class="khatwa-math-modal-title">
               <span class="math-icon-badge">√x</span>
               <div>
-                <h3 style="margin:0;font-size:1.15rem;color:var(--primary, #0E4B5B);">محرر المعادلات والرموز الرياضية والفيزيائية</h3>
-                <p style="margin:2px 0 0;font-size:0.8rem;color:var(--ink-dim, #64748B);">اختر الرموز أو استخدم القوالب لتركيب معادلتك بسهولة دون الحاجة لكتابة كود</p>
+                <h3 style="margin:0;font-size:1.15rem;color:var(--primary, #0E4B5B);">محرر الرموز والمعادلات المتقدم</h3>
+                <p style="margin:2px 0 0;font-size:0.8rem;color:var(--ink-dim, #64748B);">اختر الرموز المتقدمة لإدراجها مباشرة في لوحة المعادلة المرئية</p>
               </div>
             </div>
             <button type="button" class="khatwa-math-modal-close" id="khatwaMathCloseBtn" aria-label="إغلاق">&times;</button>
@@ -137,57 +134,38 @@
           <!-- Body -->
           <div class="khatwa-math-modal-body">
             
+            <!-- Visual Math Canvas in Modal -->
+            <div class="khatwa-math-editor-box" style="margin-bottom:16px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px;">
+                <label style="font-size:0.92rem;font-weight:700;color:var(--primary, #0E4B5B);">
+                  <span>📐 لوحة المعادلة (تظهر فيها الرموز الرياضية بشكل طبيعي):</span>
+                </label>
+                <div style="display:flex;gap:6px;">
+                  <button type="button" class="btn btn-line btn-xs" id="clearEquationBtn">🗑️ مسح</button>
+                  <button type="button" class="btn btn-line btn-xs" id="wrapParensBtn">( ) أقواس</button>
+                </div>
+              </div>
+
+              <div class="khatwa-mathfield-wrapper" id="khatwaMathfieldWrapper">
+                <math-field id="mathModalMathField" class="khatwa-visual-mathfield" style="width:100%;min-height:75px;font-size:1.4rem;padding:12px 16px;border:2px solid var(--primary, #0E4B5B);border-radius:12px;background:var(--bg-card, #ffffff);box-shadow:0 4px 16px rgba(0,0,0,0.06);direction:ltr;text-align:left;outline:none;display:block;"></math-field>
+                <input type="text" id="mathModalFormulaInput" class="form-control" placeholder="صيغة المعادلة" style="direction:ltr;font-family:monospace;font-size:0.95rem;display:none;margin-top:8px;">
+              </div>
+
+              <div id="mathModalFallbackPreview" class="khatwa-math-preview-area" style="display:none;margin-top:10px;">
+                <div style="font-size:0.75rem;color:var(--ink-dim);margin-bottom:4px;">معاينة KaTeX:</div>
+                <div id="mathModalLivePreview" class="khatwa-math-rendered-target">$$ $$</div>
+              </div>
+            </div>
+
             <!-- Category Tabs -->
             <div class="khatwa-math-tabs">
-              <button type="button" class="math-tab-btn active" data-tab="builder">✨ منشئ القوالب السريع</button>
-              <button type="button" class="math-tab-btn" data-tab="algebra">📐 الجبر والكسور والجذور</button>
+              <button type="button" class="math-tab-btn active" data-tab="algebra">📐 الجبر والكسور والجذور</button>
               <button type="button" class="math-tab-btn" data-tab="physics">⚡ الفيزياء والرموز الإغريقية</button>
               <button type="button" class="math-tab-btn" data-tab="calculus">📈 حساب المثلثات والتفاضل</button>
             </div>
 
-            <!-- Tab Content: Visual Builder -->
-            <div id="tab-builder" class="math-tab-content active">
-              <div class="math-builder-grid">
-                
-                <!-- Fraction Builder -->
-                <div class="math-builder-card">
-                  <div class="math-builder-card-title">➗ تركيب كسر (بسط / مقام)</div>
-                  <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
-                    <div style="display:flex;flex-direction:column;gap:4px;flex:1;">
-                      <input type="text" id="builderFracNum" class="form-control" placeholder="البسط (مثال: v - u)" style="font-size:0.85rem;padding:6px 10px;">
-                      <div style="height:2px;background:var(--primary, #0E4B5B);border-radius:2px;"></div>
-                      <input type="text" id="builderFracDen" class="form-control" placeholder="المقام (مثال: t)" style="font-size:0.85rem;padding:6px 10px;">
-                    </div>
-                    <button type="button" class="btn btn-sm btn-primary" id="applyFracBtn" style="height:fit-content;white-space:nowrap;">تطبيق الكسر ↵</button>
-                  </div>
-                </div>
-
-                <!-- Root Builder -->
-                <div class="math-builder-card">
-                  <div class="math-builder-card-title">√ تركيب جذر</div>
-                  <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
-                    <input type="text" id="builderRootDeg" class="form-control" placeholder="رتبة الجذر (اختياري 3, n)" style="width:110px;font-size:0.82rem;padding:6px 10px;">
-                    <input type="text" id="builderRootRad" class="form-control" placeholder="ما بداخل الجذر (مثال: b^2 - 4ac)" style="flex:1;font-size:0.85rem;padding:6px 10px;">
-                    <button type="button" class="btn btn-sm btn-primary" id="applyRootBtn" style="height:fit-content;white-space:nowrap;">تطبيق الجذر ↵</button>
-                  </div>
-                </div>
-
-                <!-- Power & Subscript Builder -->
-                <div class="math-builder-card">
-                  <div class="math-builder-card-title">xⁿ أس ودليل سفلي</div>
-                  <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
-                    <input type="text" id="builderBase" class="form-control" placeholder="الأساس (مثال: x أو v)" style="flex:1;font-size:0.85rem;padding:6px 10px;">
-                    <input type="text" id="builderPower" class="form-control" placeholder="الأس (مثال: 2)" style="width:90px;font-size:0.85rem;padding:6px 10px;">
-                    <input type="text" id="builderSub" class="form-control" placeholder="دليل سفلي (مثال: 1)" style="width:90px;font-size:0.85rem;padding:6px 10px;">
-                    <button type="button" class="btn btn-sm btn-primary" id="applyPowerBtn" style="height:fit-content;white-space:nowrap;">تطبيق ↵</button>
-                  </div>
-                </div>
-
-              </div>
-            </div>
-
             <!-- Tab Content: Algebra -->
-            <div id="tab-algebra" class="math-tab-content">
+            <div id="tab-algebra" class="math-tab-content active">
               <div class="math-palette-grid" id="paletteAlgebra"></div>
             </div>
 
@@ -201,34 +179,16 @@
               <div class="math-palette-grid" id="paletteCalculus"></div>
             </div>
 
-            <!-- Interactive Formula Editor Canvas -->
-            <div class="khatwa-math-editor-box">
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-                <label style="font-size:0.85rem;font-weight:700;color:var(--ink);">صيغة المعادلة الحالية (LaTeX):</label>
-                <div style="display:flex;gap:6px;">
-                  <button type="button" class="btn btn-line btn-xs" id="clearEquationBtn">🗑️ مسح الكل</button>
-                  <button type="button" class="btn btn-line btn-xs" id="wrapParensBtn">( ) وضع بين أقواس</button>
-                </div>
-              </div>
-              <input type="text" id="mathModalFormulaInput" class="form-control" placeholder="مثال: \\frac{1}{2} m v^2" style="direction:ltr;font-family:monospace;font-size:0.95rem;">
-              
-              <!-- Live Visual Preview of the Equation -->
-              <div class="khatwa-math-preview-area">
-                <div style="font-size:0.75rem;color:var(--ink-dim);margin-bottom:4px;">معاينة شكل المعادلة النهائي:</div>
-                <div id="mathModalLivePreview" class="khatwa-math-rendered-target">$$ $$</div>
-              </div>
-            </div>
-
           </div>
 
           <!-- Footer -->
           <div class="khatwa-math-modal-footer">
-            <div style="font-size:0.8rem;color:var(--ink-dim);display:flex;align-items:center;gap:6px;">
-              <span>💡 يمكنك أيضاً تعديل الأرقام والرموز يدوياً في خانة الكود</span>
+            <div style="font-size:0.82rem;color:var(--ink-dim);">
+              <span>💡 اضغط على الرمز لإدراجه مباشرة في مكان المؤشر بالمعادلة</span>
             </div>
             <div style="display:flex;gap:10px;">
               <button type="button" class="btn btn-line" id="khatwaMathCancelBtn">إلغاء</button>
-              <button type="button" class="btn btn-primary" id="khatwaMathInsertBtn" style="padding:8px 22px;">إدراج المعادلة في الإجابة ✓</button>
+              <button type="button" class="btn btn-primary" id="khatwaMathInsertBtn" style="padding:10px 24px;font-weight:700;">تأكيد وإدراج المعادلة ✓</button>
             </div>
           </div>
 
@@ -243,31 +203,67 @@
     populatePalettes();
   }
 
-  /**
-   * Populate palette grids with clickable mathematical symbols
-   */
+  function getMathField() {
+    return document.getElementById('mathModalMathField');
+  }
+
+  function isMathLiveActive(el) {
+    const target = el || getMathField();
+    return target && typeof target.executeCommand === 'function';
+  }
+
+  function insertIntoVisualEditor(snippet, targetMf) {
+    const mf = targetMf || getMathField();
+    const formulaInput = document.getElementById('mathModalFormulaInput');
+
+    if (isMathLiveActive(mf)) {
+      try {
+        mf.executeCommand(['insert', snippet]);
+        mf.focus();
+        if (formulaInput) formulaInput.value = mf.value;
+        return;
+      } catch (_) {}
+    }
+
+    if (formulaInput) {
+      if (formulaInput.value && !formulaInput.value.endsWith(' ')) {
+        formulaInput.value += ' ' + snippet;
+      } else {
+        formulaInput.value += snippet;
+      }
+      const livePreview = document.getElementById('mathModalLivePreview');
+      if (livePreview) renderKaTeX(livePreview, formulaInput.value, true);
+      formulaInput.focus();
+    }
+  }
+
   function populatePalettes() {
     function fillGrid(containerId, items) {
-      const el = document.getElementById(containerId);
-      if (!el) return;
-      el.innerHTML = items.map(item => `
+      const container = document.getElementById(containerId);
+      if (!container) return;
+
+      container.innerHTML = items.map(item => `
         <button type="button" class="math-palette-item" data-latex="${escapeHtml(item.latex)}" title="${escapeHtml(item.label)}">
           <span class="math-palette-render" data-katex="${escapeHtml(item.preview)}"></span>
-          <span class="math-palette-lbl">${escapeHtml(item.label)}</span>
+          <span class="math-palette-label">${escapeHtml(item.label)}</span>
         </button>
       `).join('');
 
-      // Render previews inside buttons
-      el.querySelectorAll('.math-palette-render').forEach(span => {
+      container.querySelectorAll('.math-palette-render').forEach(span => {
         const tex = span.getAttribute('data-katex');
         renderKaTeX(span, tex, false);
       });
 
-      // Click to append
-      el.querySelectorAll('.math-palette-item').forEach(btn => {
+      container.querySelectorAll('.math-palette-item').forEach(btn => {
         btn.addEventListener('click', () => {
-          const latex = btn.getAttribute('data-latex');
-          appendToModalFormula(latex);
+          let latex = btn.getAttribute('data-latex') || '';
+          if (latex === '\\sqrt{x}') latex = '\\sqrt{#0}';
+          else if (latex === '\\sqrt[3]{x}') latex = '\\sqrt[3]{#0}';
+          else if (latex === '\\frac{a}{b}') latex = '\\frac{#0}{#?}';
+          else if (latex === 'x^{2}') latex = '^{2}';
+          else if (latex === 'x_{1}') latex = '_{1}';
+
+          insertIntoVisualEditor(latex);
         });
       });
     }
@@ -277,23 +273,27 @@
     fillGrid('paletteCalculus', SYMBOL_CATEGORIES.calculus);
   }
 
-  /**
-   * Setup modal event handlers
-   */
   function setupModalEvents() {
     const modal = document.getElementById('khatwaMathModal');
     const closeBtn = document.getElementById('khatwaMathCloseBtn');
     const cancelBtn = document.getElementById('khatwaMathCancelBtn');
     const insertBtn = document.getElementById('khatwaMathInsertBtn');
-    const formulaInput = document.getElementById('mathModalFormulaInput');
-    const livePreview = document.getElementById('mathModalLivePreview');
     const clearBtn = document.getElementById('clearEquationBtn');
     const wrapBtn = document.getElementById('wrapParensBtn');
+    const formulaInput = document.getElementById('mathModalFormulaInput');
+    const livePreview = document.getElementById('mathModalLivePreview');
+    const mf = getMathField();
 
-    // Close actions
+    let modalActiveMfTarget = null;
+    window._setModalTargetMf = (target) => {
+      modalActiveMfTarget = target;
+    };
+
     const closeModal = () => {
-      modal.style.display = 'none';
-      if (activeTargetInput) {
+      if (modal) modal.style.display = 'none';
+      if (modalActiveMfTarget && typeof modalActiveMfTarget.focus === 'function') {
+        modalActiveMfTarget.focus();
+      } else if (activeTargetInput) {
         activeTargetInput.focus();
       }
     };
@@ -305,7 +305,7 @@
     });
 
     // Tab switching
-    modal.querySelectorAll('.math-tab-btn').forEach(btn => {
+    modal?.querySelectorAll('.math-tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         modal.querySelectorAll('.math-tab-btn').forEach(b => b.classList.remove('active'));
         modal.querySelectorAll('.math-tab-content').forEach(c => c.classList.remove('active'));
@@ -316,101 +316,65 @@
       });
     });
 
-    // Formula input change
-    formulaInput?.addEventListener('input', () => {
-      renderKaTeX(livePreview, formulaInput.value || '', true);
-    });
+    // MathField events
+    if (mf) {
+      mf.addEventListener('input', () => {
+        if (formulaInput) formulaInput.value = mf.value;
+      });
+    }
 
     // Clear
     clearBtn?.addEventListener('click', () => {
+      if (isMathLiveActive(mf)) {
+        mf.setValue('');
+        mf.focus();
+      }
       if (formulaInput) {
         formulaInput.value = '';
         renderKaTeX(livePreview, '', true);
-        formulaInput.focus();
       }
     });
 
-    // Wrap parens
+    // Wrap in parentheses
     wrapBtn?.addEventListener('click', () => {
-      if (formulaInput && formulaInput.value.trim()) {
+      if (isMathLiveActive(mf)) {
+        const val = mf.value.trim();
+        if (val) {
+          mf.setValue(`\\left(${val}\\right)`);
+          mf.focus();
+        }
+      } else if (formulaInput && formulaInput.value.trim()) {
         formulaInput.value = `\\left( ${formulaInput.value.trim()} \\right)`;
         renderKaTeX(livePreview, formulaInput.value, true);
       }
     });
 
-    // Builder: Fraction
-    document.getElementById('applyFracBtn')?.addEventListener('click', () => {
-      const num = document.getElementById('builderFracNum')?.value.trim() || 'a';
-      const den = document.getElementById('builderFracDen')?.value.trim() || 'b';
-      appendToModalFormula(`\\frac{${num}}{${den}}`);
-      document.getElementById('builderFracNum').value = '';
-      document.getElementById('builderFracDen').value = '';
-    });
-
-    // Builder: Root
-    document.getElementById('applyRootBtn')?.addEventListener('click', () => {
-      const deg = document.getElementById('builderRootDeg')?.value.trim();
-      const rad = document.getElementById('builderRootRad')?.value.trim() || 'x';
-      if (deg) {
-        appendToModalFormula(`\\sqrt[${deg}]{${rad}}`);
-      } else {
-        appendToModalFormula(`\\sqrt{${rad}}`);
-      }
-      document.getElementById('builderRootDeg').value = '';
-      document.getElementById('builderRootRad').value = '';
-    });
-
-    // Builder: Power & Subscript
-    document.getElementById('applyPowerBtn')?.addEventListener('click', () => {
-      const base = document.getElementById('builderBase')?.value.trim() || 'x';
-      const pwr = document.getElementById('builderPower')?.value.trim();
-      const sub = document.getElementById('builderSub')?.value.trim();
-
-      let formula = base;
-      if (sub) formula += `_{${sub}}`;
-      if (pwr) formula += `^{${pwr}}`;
-
-      appendToModalFormula(formula);
-      document.getElementById('builderBase').value = '';
-      document.getElementById('builderPower').value = '';
-      document.getElementById('builderSub').value = '';
-    });
-
-    // Insert into active textarea
+    // Final Insert Button: Syncs modal value into the active field
     insertBtn?.addEventListener('click', () => {
-      const formula = formulaInput?.value.trim();
-      if (!formula) {
-        closeModal();
-        return;
+      let formula = '';
+      if (isMathLiveActive(mf)) {
+        formula = (typeof mf.getValue === 'function' ? mf.getValue('latex-expanded') : mf.value) || '';
+      }
+      if (!formula && formulaInput) {
+        formula = formulaInput.value.trim();
       }
 
-      const formattedLatex = ` $$${formula}$$ `;
-      insertTextAtTarget(formattedLatex);
+      formula = (formula || '').trim();
+      if (modalActiveMfTarget && isMathLiveActive(modalActiveMfTarget)) {
+        if (formula) {
+          modalActiveMfTarget.setValue(formula);
+          modalActiveMfTarget.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      } else if (activeTargetInput) {
+        if (formula) {
+          insertTextAtTarget(` $$${formula}$$ `);
+        }
+      }
+
       closeModal();
     });
   }
 
-  /**
-   * Append latex fragment to modal formula input
-   */
-  function appendToModalFormula(latexSnippet) {
-    const formulaInput = document.getElementById('mathModalFormulaInput');
-    const livePreview = document.getElementById('mathModalLivePreview');
-    if (!formulaInput) return;
-
-    if (formulaInput.value && !formulaInput.value.endsWith(' ')) {
-      formulaInput.value += ' ' + latexSnippet;
-    } else {
-      formulaInput.value += latexSnippet;
-    }
-
-    renderKaTeX(livePreview, formulaInput.value, true);
-    formulaInput.focus();
-  }
-
-  /**
-   * Insert text at cursor in active textarea
-   */
   function insertTextAtTarget(snippet) {
     if (!activeTargetInput) return;
 
@@ -424,39 +388,48 @@
     el.selectionStart = newCursor;
     el.selectionEnd = newCursor;
 
-    // Trigger input event to update live previews
     el.dispatchEvent(new Event('input', { bubbles: true }));
     el.dispatchEvent(new Event('change', { bubbles: true }));
   }
 
-  /**
-   * Open the equation modal for a specific textarea
-   */
-  function openEquationModal(targetInput) {
+  function openEquationModal(targetInput, initialSnippet, targetMf) {
     ensureModalInjected();
     activeTargetInput = targetInput;
+    if (window._setModalTargetMf) {
+      window._setModalTargetMf(targetMf || null);
+    }
     activeCursorPos = {
-      start: targetInput.selectionStart || 0,
-      end: targetInput.selectionEnd || 0
+      start: targetInput?.selectionStart || 0,
+      end: targetInput?.selectionEnd || 0
     };
 
     const modal = document.getElementById('khatwaMathModal');
     const formulaInput = document.getElementById('mathModalFormulaInput');
-    const livePreview = document.getElementById('mathModalLivePreview');
-
-    if (formulaInput) formulaInput.value = '';
-    if (livePreview) renderKaTeX(livePreview, '', true);
+    const mf = getMathField();
 
     if (modal) {
       modal.style.display = 'flex';
       setTimeout(() => {
-        formulaInput?.focus();
-      }, 100);
+        const currentVal = targetMf && typeof targetMf.getValue === 'function' ? targetMf.getValue() : (targetInput?.value || '');
+        if (isMathLiveActive(mf)) {
+          mf.setValue(currentVal || '');
+          if (initialSnippet) {
+            insertIntoVisualEditor(initialSnippet, mf);
+          }
+          mf.focus();
+        } else if (formulaInput) {
+          formulaInput.value = currentVal || '';
+          if (initialSnippet) {
+            formulaInput.value += initialSnippet.replace('#0', '').replace('#?', '');
+          }
+          formulaInput.focus();
+        }
+      }, 80);
     }
   }
 
   /**
-   * Initialize Math Assistant Toolbar for all math-enabled textareas inside a container
+   * Initialize Framed Toolbars and Direct Visual MathFields
    */
   function initToolbars(rootElement) {
     ensureModalInjected();
@@ -465,11 +438,9 @@
     const inputs = root.querySelectorAll('.essay-answer-box, .math-enabled-input');
 
     inputs.forEach(input => {
-      // Avoid duplicate initialization
       if (input.getAttribute('data-math-initialized') === 'true') return;
       input.setAttribute('data-math-initialized', 'true');
 
-      // Wrap in a container if needed
       let wrapper = input.closest('.khatwa-math-answer-wrapper');
       if (!wrapper) {
         wrapper = document.createElement('div');
@@ -478,192 +449,305 @@
         wrapper.appendChild(input);
       }
 
-      // 1. Create Top Toolbar
+      // Hide original raw textarea from student view (still acts as data carrier for form submission)
+      input.style.display = 'none';
+
+      // ─── 1. Build Framed Calculator Toolbar ────────────────────────────────
       const toolbar = document.createElement('div');
-      toolbar.className = 'khatwa-math-toolbar';
+      toolbar.className = 'khatwa-math-toolbar-framed';
       toolbar.innerHTML = `
-        <div class="math-tb-left">
-          <!-- Main Button matching Screenshot -->
-          <button type="button" class="math-tb-btn math-tb-btn-primary" title="فتح نافذة كتابة المعادلات الرياضية والرموز">
-            <span class="math-tb-badge">√x</span>
-            <span>إدراج معادلة رياضية</span>
-          </button>
-
-          <span class="math-tb-sep"></span>
-
-          <!-- Quick access fraction, root, powers -->
-          <button type="button" class="math-tb-btn" data-insert="\\frac{a}{b}" title="إدراج كسر (بسط ومقام)">
-            <span style="font-size:0.95rem;font-weight:700;">a/b</span>
-          </button>
-          <button type="button" class="math-tb-btn" data-insert="\\sqrt{x}" title="جذر تربيعي">
-            <span>√x</span>
-          </button>
-          <button type="button" class="math-tb-btn" data-insert="x^{2}" title="أس تربيعي">
-            <span>x²</span>
-          </button>
-          <button type="button" class="math-tb-btn" data-insert="x_{1}" title="دليل سفلي">
-            <span>x₁</span>
-          </button>
-
-          <span class="math-tb-sep"></span>
-
-          <!-- Quick common symbols -->
-          <button type="button" class="math-tb-btn" data-insert="\\pm" title="موجب أو سالب">±</button>
-          <button type="button" class="math-tb-btn" data-insert="\\pi" title="النسبة باي">π</button>
-          <button type="button" class="math-tb-btn" data-insert="\\theta" title="الزاوية ثيتا">θ</button>
-          <button type="button" class="math-tb-btn" data-insert="\\Delta" title="التغير دلتا">Δ</button>
-          <button type="button" class="math-tb-btn" data-insert="\\times" title="علامة الضرب">×</button>
-          <button type="button" class="math-tb-btn" data-insert="\\div" title="علامة القسمة">÷</button>
-          <button type="button" class="math-tb-btn" data-insert="\\Omega" title="أوم (مقاومة كهربائية)">Ω</button>
-          <button type="button" class="math-tb-btn" data-insert="\\lambda" title="طول موجي لامدا">λ</button>
+        <div class="khatwa-math-toolbar-header">
+          <span>📐 أزرار وقوالب المعادلات الرياضية (كل زر يكتب الرمز مباشرة بالشكل الطبيعي):</span>
         </div>
+        <div class="khatwa-math-toolbar">
+          <!-- Frame 1: Core Templates (Roots, Powers, Fractions) -->
+          <div class="math-frame-box" title="الجذور والأسس والكسور">
+            <span class="math-frame-label">📐 القوالب</span>
+            <div class="math-frame-keys">
+              <button type="button" class="math-key-btn" data-insert="\\sqrt{#0}" title="جذر تربيعي (سكوير روت)">
+                <span class="math-sym-icon">√⬚</span>
+                <span class="math-key-text">جذر</span>
+              </button>
+              <button type="button" class="math-key-btn" data-insert="\\sqrt[3]{#0}" title="جذر تكعيبي">
+                <span class="math-sym-icon">∛⬚</span>
+                <span class="math-key-text">تكعيبي</span>
+              </button>
+              <button type="button" class="math-key-btn" data-insert="^{#0}" title="أس / قوى (باور)">
+                <span class="math-sym-icon">xⁿ</span>
+                <span class="math-key-text">أس</span>
+              </button>
+              <button type="button" class="math-key-btn" data-insert="^{2}" title="تربيع">
+                <span class="math-sym-icon">x²</span>
+                <span class="math-key-text">تربيع</span>
+              </button>
+              <button type="button" class="math-key-btn" data-insert="\\frac{#0}{#?}" title="كسر (بسط ومقام)">
+                <span class="math-sym-icon">a/b</span>
+                <span class="math-key-text">كسر</span>
+              </button>
+              <button type="button" class="math-key-btn" data-insert="_{#0}" title="دليل سفلي">
+                <span class="math-sym-icon">x₁</span>
+                <span class="math-key-text">دليل</span>
+              </button>
+              <button type="button" class="math-key-btn" data-insert="\\left(#0\\right)" title="أقواس">
+                <span class="math-sym-icon">( )</span>
+                <span class="math-key-text">أقواس</span>
+              </button>
+            </div>
+          </div>
 
-        <div class="math-tb-right">
-          <!-- Photo Attachment Option -->
-          <label class="math-tb-btn math-tb-photo-btn" title="التقاط أو إرفاق صورة لحلك بالخطوات في ورقة خارجية">
-            <span>📷 إرفاق صورة الحل (ورقة)</span>
-            <input type="file" accept="image/*" class="math-photo-file-input" style="display:none;">
-          </label>
+          <!-- Frame 2: Common Mathematical Symbols -->
+          <div class="math-frame-box" title="العمليات والرموز">
+            <span class="math-frame-label">🔢 الرموز</span>
+            <div class="math-frame-keys">
+              <button type="button" class="math-key-btn math-key-sm" data-insert="\\pm" title="موجب أو سالب">±</button>
+              <button type="button" class="math-key-btn math-key-sm" data-insert="\\times" title="ضرب">×</button>
+              <button type="button" class="math-key-btn math-key-sm" data-insert="\\div" title="قسمة">÷</button>
+              <button type="button" class="math-key-btn math-key-sm" data-insert="\\pi" title="باي">π</button>
+              <button type="button" class="math-key-btn math-key-sm" data-insert="\\theta" title="ثيتا">θ</button>
+              <button type="button" class="math-key-btn math-key-sm" data-insert="\\Delta" title="دلتا">Δ</button>
+              <button type="button" class="math-key-btn math-key-sm" data-insert="\\Omega" title="أوم">Ω</button>
+              <button type="button" class="math-key-btn math-key-sm" data-insert="\\lambda" title="لامدا">λ</button>
+              <button type="button" class="math-key-btn math-key-sm" data-insert="\\infty" title="ما لا نهاية">∞</button>
+            </div>
+          </div>
+
+          <!-- Frame 3: Controls & Full Palette -->
+          <div class="math-frame-box" title="إجراءات اللوحة">
+            <span class="math-frame-label">⚙️ أدوات</span>
+            <div class="math-frame-keys">
+              <button type="button" class="math-key-btn btn-clear-canvas" title="مسح لوحة المعادلة">
+                <span>🗑️ مسح</span>
+              </button>
+              <button type="button" class="math-key-btn btn-open-palette" title="فتح لوحة الرموز والفيزياء الكاملة">
+                <span>✨ كافة الرموز</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Frame 4: Handwritten Paper Photo Attachment -->
+          <div class="math-frame-box math-frame-photo" title="إرفاق صورة للحل بالخطوات في ورقة خارجية">
+            <label class="math-key-btn math-tb-photo-btn" title="التقاط أو إرفاق صورة لحلك بالخطوات في ورقة خارجية">
+              <span>📷 إرفاق ورقة الحل</span>
+              <input type="file" accept="image/*" class="math-photo-file-input" style="display:none;">
+            </label>
+          </div>
         </div>
       `;
 
-      wrapper.insertBefore(toolbar, input);
-
-      // 2. Create Live Preview Card below textarea
-      const previewCard = document.createElement('div');
-      previewCard.className = 'khatwa-math-live-preview-box';
-      previewCard.style.display = 'none';
-      previewCard.innerHTML = `
-        <div class="khatwa-math-preview-header">
-          <span>👁️ معاينة فورية لشكل الإجابة والمعادلات الرياضية:</span>
+      // ─── 2. Build In-Place Visual MathField Box ────────────────────────────
+      const mathBox = document.createElement('div');
+      mathBox.className = 'khatwa-visual-math-box';
+      mathBox.innerHTML = `
+        <div class="khatwa-visual-math-header">
+          <span>✍️ لوحة كتابة المعادلة المرئية (اكتب هنا مباشرة أو اضغط على أزرار القوالب أعلاه لتظهر الجذور والأسس والكسور بشكلها الطبيعي):</span>
         </div>
-        <div class="khatwa-math-preview-body"></div>
+        <math-field class="khatwa-visual-mathfield"></math-field>
       `;
 
-      // 3. Attachment Thumbnail Bar
+      // ─── 3. Build Optional Written Notes Box ────────────────────────────────
+      const notesBox = document.createElement('div');
+      notesBox.className = 'khatwa-written-notes-box';
+      notesBox.innerHTML = `
+        <div class="khatwa-written-notes-header">
+          <span>📝 شرح أو خطوات إضافية بالكلمات (اختياري):</span>
+        </div>
+        <textarea class="khatwa-written-notes" placeholder="اكتب هنا أي شرح بالكلمات أو خطوات تفصيلية لحلك إذا أردت..." rows="2"></textarea>
+      `;
+
+      // ─── 4. Build Paper Solution Attachment Bar ────────────────────────────
       const attachBar = document.createElement('div');
       attachBar.className = 'khatwa-math-attachments-bar';
       attachBar.style.display = 'none';
 
-      wrapper.appendChild(previewCard);
+      // Insert all UI elements into wrapper
+      wrapper.appendChild(toolbar);
+      wrapper.appendChild(mathBox);
+      wrapper.appendChild(notesBox);
       wrapper.appendChild(attachBar);
 
-      // Setup Live Preview Update
-      const previewBody = previewCard.querySelector('.khatwa-math-preview-body');
-      let previewDebounceTimer = null;
+      const mf = mathBox.querySelector('.khatwa-visual-mathfield');
+      const notesTextarea = notesBox.querySelector('.khatwa-written-notes');
 
-      const updatePreview = () => {
-        const text = input.value.trim();
-        if (!text) {
-          previewCard.style.display = 'none';
-          return;
+      // ─── Two-Way Data Synchronization ──────────────────────────────────────
+      const syncToUnderlyingInput = () => {
+        let latex = '';
+        if (mf) {
+          latex = (typeof mf.getValue === 'function' ? mf.getValue('latex-expanded') : mf.value) || '';
+        }
+        latex = (latex || '').trim();
+
+        const notes = (notesTextarea ? notesTextarea.value : '').trim();
+        const attachedImg = wrapper.getAttribute('data-attached-image') || '';
+
+        let combined = '';
+        if (notes) combined += notes;
+        if (latex) {
+          if (combined) combined += '\n\n';
+          combined += `$$${latex}$$`;
+        }
+        if (attachedImg) {
+          if (combined) combined += '\n\n';
+          combined += `[صورة_الحل: ${attachedImg}]`;
         }
 
-        previewCard.style.display = 'block';
-        previewBody.innerHTML = escapeHtml(text);
-
-        // Render math equations if KaTeX is present
-        if (window.renderMathInElement) {
-          try {
-            window.renderMathInElement(previewBody, {
-              delimiters: [
-                { left: '$$', right: '$$', display: true },
-                { left: '$', right: '$', display: false },
-                { left: '\\[', right: '\\]', display: true },
-                { left: '\\(', right: '\\)', display: false }
-              ],
-              throwOnError: false
-            });
-          } catch (_) {}
-        }
+        input.value = combined;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
       };
 
-      input.addEventListener('input', () => {
-        clearTimeout(previewDebounceTimer);
-        previewDebounceTimer = setTimeout(updatePreview, 120);
-      });
+      // Populate existing initial values if any
+      const initialRaw = (input.value || '').trim();
+      if (initialRaw) {
+        // Extract attached image
+        const imgMatch = initialRaw.match(/\[(?:صورة_الحل|صورة الحل المرفقة|صورة الحل):\s*([^\]]+)\]/i);
+        if (imgMatch) {
+          const imgUrl = imgMatch[1].trim();
+          wrapper.setAttribute('data-attached-image', imgUrl);
+          renderAttachBar(imgUrl, 'ورقة الحل');
+        }
 
-      // Toolbar Main Modal Button
-      toolbar.querySelector('.math-tb-btn-primary')?.addEventListener('click', () => {
-        openEquationModal(input);
-      });
+        // Extract math $$...$$
+        let mathPart = '';
+        const mathMatch = initialRaw.match(/\$\$([\s\S]+?)\$\$/);
+        if (mathMatch) {
+          mathPart = mathMatch[1].trim();
+          if (mf && typeof mf.setValue === 'function') {
+            mf.setValue(mathPart);
+          }
+        }
 
-      // Toolbar Quick Insert Buttons
+        // Clean notes part
+        let notesPart = initialRaw
+          .replace(/\[(?:صورة_الحل|صورة الحل المرفقة|صورة الحل):\s*[^\]]+\]/gi, '')
+          .replace(/\$\$[\s\S]+?\$\$/g, '')
+          .trim();
+
+        if (notesTextarea && notesPart) {
+          notesTextarea.value = notesPart;
+        }
+      }
+
+      // MathField input listener
+      if (mf) {
+        mf.addEventListener('input', syncToUnderlyingInput);
+      }
+
+      // Notes textarea listener
+      notesTextarea?.addEventListener('input', syncToUnderlyingInput);
+
+      // ─── Toolbar Key Click Handlers ────────────────────────────────────────
       toolbar.querySelectorAll('[data-insert]').forEach(btn => {
         btn.addEventListener('click', () => {
-          activeTargetInput = input;
-          const snippet = btn.getAttribute('data-insert');
-          insertTextAtTarget(` $${snippet}$ `);
+          const snippet = btn.getAttribute('data-insert') || '';
+          if (isMathLiveActive(mf)) {
+            mf.executeCommand(['insert', snippet]);
+            mf.focus();
+            syncToUnderlyingInput();
+          } else {
+            // Fallback if MathLive not initialized yet
+            if (notesTextarea) {
+              notesTextarea.value += ' ' + snippet;
+              notesTextarea.focus();
+              syncToUnderlyingInput();
+            }
+          }
         });
       });
 
-      // Photo Attachment File Input
+      // Clear button
+      toolbar.querySelector('.btn-clear-canvas')?.addEventListener('click', () => {
+        if (mf && typeof mf.setValue === 'function') {
+          mf.setValue('');
+          mf.focus();
+        }
+        syncToUnderlyingInput();
+      });
+
+      // Advanced Palette Modal button
+      toolbar.querySelector('.btn-open-palette')?.addEventListener('click', () => {
+        openEquationModal(input, null, mf);
+      });
+
+      // ─── Paper Photo Attachment Handler ────────────────────────────────────
+      function renderAttachBar(imgSrc, fileName) {
+        attachBar.style.display = 'flex';
+        attachBar.innerHTML = `
+          <div class="khatwa-math-attached-thumb" style="display:flex;align-items:center;gap:12px;background:var(--bg-card);border:1.5px solid var(--primary);border-radius:12px;padding:8px 12px;box-shadow:0 4px 12px rgba(0,0,0,0.06);margin-top:6px;">
+            <img src="${imgSrc}" alt="صورة حل الطالب" style="width:54px;height:54px;object-fit:cover;border-radius:8px;border:1px solid var(--line-soft);cursor:zoom-in;" onclick="window.open('${imgSrc}', '_blank')" title="اضغط لتكبير الصورة">
+            <div class="thumb-info" style="flex:1;">
+              <span style="font-size:0.86rem;font-weight:700;display:block;color:var(--ink);">📄 تم إرفاق صورة الحل الورقي (${escapeHtml(fileName || 'ورقة الإجابة')})</span>
+              <div style="display:flex;gap:8px;margin-top:4px;">
+                <button type="button" class="btn btn-line btn-xs btn-preview-thumb" onclick="window.open('${imgSrc}', '_blank')" style="font-size:0.75rem;padding:2px 8px;">🔍 تكبير</button>
+                <button type="button" class="btn btn-line btn-xs btn-remove-thumb" style="font-size:0.75rem;padding:2px 8px;color:var(--err);">🗑️ حذف الصورة</button>
+              </div>
+            </div>
+          </div>
+        `;
+
+        attachBar.querySelector('.btn-remove-thumb')?.addEventListener('click', () => {
+          attachBar.style.display = 'none';
+          attachBar.innerHTML = '';
+          wrapper.removeAttribute('data-attached-image');
+          syncToUnderlyingInput();
+          const fi = toolbar.querySelector('.math-photo-file-input');
+          if (fi) fi.value = '';
+        });
+      }
+
       const fileInput = toolbar.querySelector('.math-photo-file-input');
-      fileInput?.addEventListener('change', (e) => {
+      fileInput?.addEventListener('change', async (e) => {
         const file = e.target.files && e.target.files[0];
         if (!file) return;
 
-        // Check file size (max 5MB)
-        if (file.size > 5 * 1024 * 1024) {
-          alert('حجم الصورة كبير جداً، يرجى اختيار صورة أقل من 5 ميجابايت');
+        if (file.size > 10 * 1024 * 1024) {
+          alert('حجم الصورة كبير جداً، يرجى اختيار صورة أقل من 10 ميجابايت');
           return;
         }
 
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          const base64 = event.target.result;
-          attachBar.style.display = 'flex';
-          attachBar.innerHTML = `
-            <div class="khatwa-math-attached-thumb">
-              <img src="${base64}" alt="صورة حل الطالب">
-              <div class="thumb-info">
-                <span>📄 تم إرفاق صورة الحل الورقي (${escapeHtml(file.name)})</span>
-                <button type="button" class="btn-remove-thumb" title="حذف الصورة">&times;</button>
-              </div>
+        attachBar.style.display = 'flex';
+        attachBar.innerHTML = `
+          <div class="khatwa-math-attached-thumb uploading" style="padding:10px 14px;background:var(--bg-raised);border-radius:10px;border:1px dashed var(--primary);display:flex;align-items:center;gap:10px;">
+            <span style="font-size:1.4rem;">⏳</span>
+            <div class="thumb-info" style="font-size:0.88rem;color:var(--primary);font-weight:700;">
+              <span>جارٍ رفع وتثبيت صورة الحل (${escapeHtml(file.name)})...</span>
             </div>
-          `;
+          </div>
+        `;
 
-          // Append to input text cleanly
-          const imgMarker = `\n\n[صورة الحل المرفقة: ${file.name}]\n`;
-          if (!input.value.includes(imgMarker.trim())) {
-            input.value += imgMarker;
-            input.dispatchEvent(new Event('input', { bubbles: true }));
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+          const localBase64 = event.target.result;
+          let serverImageUrl = null;
+
+          try {
+            if (window.KhatwaAPI?.student?.uploadAnswerImage) {
+              const res = await window.KhatwaAPI.student.uploadAnswerImage(file);
+              if (res && res.imageUrl) {
+                serverImageUrl = res.imageUrl;
+              }
+            }
+          } catch (uploadErr) {
+            console.warn('Server upload failed, falling back to local base64:', uploadErr);
           }
 
-          // Attach data-img attribute to wrapper for submission handling
-          wrapper.setAttribute('data-attached-image', base64);
-
-          // Handle remove
-          attachBar.querySelector('.btn-remove-thumb')?.addEventListener('click', () => {
-            attachBar.style.display = 'none';
-            attachBar.innerHTML = '';
-            wrapper.removeAttribute('data-attached-image');
-            input.value = input.value.replace(imgMarker, '').trim();
-            input.dispatchEvent(new Event('input', { bubbles: true }));
-            fileInput.value = '';
-          });
+          const effectiveImageSrc = serverImageUrl || localBase64;
+          wrapper.setAttribute('data-attached-image', effectiveImageSrc);
+          renderAttachBar(effectiveImageSrc, file.name);
+          syncToUnderlyingInput();
         };
         reader.readAsDataURL(file);
       });
-
-      // Initial preview if has pre-filled value
-      if (input.value.trim()) {
-        updatePreview();
-      }
     });
   }
 
-  // Export to window
   window.KhatwaMath = {
     init: initToolbars,
     openModal: openEquationModal
   };
 
-  // Auto-init on DOMContentLoaded
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => initToolbars());
   } else {
-    setTimeout(() => initToolbars(), 150);
+    setTimeout(() => initToolbars(), 120);
   }
-
 })();

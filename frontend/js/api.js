@@ -977,6 +977,15 @@
         });
         return res.data;
       },
+      async uploadAnswerImage(file) {
+        const fd = new FormData();
+        fd.append('image', file);
+        const res = await request('/student/upload-answer-image', {
+          method: 'POST',
+          body: fd,
+        });
+        return res.data;
+      },
       async getQuizAttempt(quizId) { const res = await request('/student/quizzes/' + quizId + '/attempt'); return res.data; },
       async getOfflineCatalog() { const res = await request('/student/offline-catalog'); return res.data || []; },
       async getOfflineRequests() { const res = await request('/student/offline-requests'); return res.data || []; },
@@ -1092,12 +1101,16 @@
       },
       async isEnrolled(courseId) {
         try {
+          const res = await request('/student/courses/' + courseId).catch(() => null);
+          if (res && res.data) {
+            return Boolean(res.data.isEnrolled);
+          }
           const [enrolled, subs] = await Promise.all([
             request('/student/courses/enrolled').then(r => r.data || []).catch(() => []),
             KhatwaAPI.student.getSubscriptions().catch(() => [])
           ]);
-          const inEnrolled = enrolled.some(e => e.courseId === courseId || e.id === courseId || e.course?.id === courseId);
-          const inSubs = subs.some(t => t.courses?.some(c => c.id === courseId));
+          const inEnrolled = enrolled.some(e => (e.courseId === courseId || e.id === courseId || e.course?.id === courseId) && e.isCourseEnrollment === true && !e.id?.startsWith('sub-'));
+          const inSubs = subs.some(t => t.courses?.some(c => c.id === courseId && c.isEnrolled === true));
           return inEnrolled || inSubs;
         } catch { return false; }
       },

@@ -218,9 +218,8 @@
 
     // Check enrollment and show enroll button if paid & not enrolled
     try {
-      window._isCourseEnrolled = false;
-    const isEnrolled = await window.KhatwaAPI.courses.isEnrolled(courseId);
-    window._isCourseEnrolled = !!isEnrolled;
+      window._isCourseEnrolled = Boolean(currentCourse?.isEnrolled);
+      const isEnrolled = window._isCourseEnrolled;
       const enrollBtn = document.getElementById('enrollCourseBtn');
       const coursePrice = Number(currentCourse.price) || 0;
       if (enrollBtn) {
@@ -414,7 +413,7 @@
           <div class="lecture-card-price ${priceClass}">${priceText}</div>
           ${(isSubscribed || isFree)
             ? `<a href="lesson.html?lessonId=${lesson.id}" class="lecture-card-btn primary">شرح المحاضرة ▶</a>`
-            : `<button type="button" class="lecture-card-btn" onclick='openPurchaseModal(${JSON.stringify(lesson)})'>شرح المحاضرة</button>`
+            : `<button type="button" class="lecture-card-btn" style="background:var(--primary);color:#fff;border-color:var(--primary);font-weight:700;" onclick='openPurchaseModal(${JSON.stringify(lesson)})'>💳 شراء المحاضرة (${priceEGP} ج.م)</button>`
           }
         </div>
       </div>

@@ -10,6 +10,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathlive"></script>
 <style>
   .q-block {
     margin-bottom: 24px;
@@ -340,7 +341,13 @@
     let score = 0;
     activeQuestions.forEach(q => {
       const selected = document.querySelector(`input[name="q_${q.id}"]:checked`)?.value;
-      const textVal = document.querySelector(`textarea[name="q_${q.id}"]`)?.value || document.querySelector(`input[type="text"][name="q_${q.id}"]`)?.value;
+      const textInput = document.querySelector(`textarea[name="q_${q.id}"]`) || document.querySelector(`input[type="text"][name="q_${q.id}"]`);
+      let textVal = textInput?.value || '';
+      const wrapper = textInput?.closest('.khatwa-math-answer-wrapper');
+      const attachedImg = wrapper?.getAttribute('data-attached-image');
+      if (attachedImg && !textVal.includes(attachedImg)) {
+        textVal = (textVal ? (textVal.trim() + '\n\n') : '') + `[صورة_الحل: ${attachedImg}]`;
+      }
       if (selected) {
         answers.push({ questionId: q.id, selectedOption: selected });
       } else if (textVal && textVal.trim()) {
@@ -427,6 +434,30 @@
     document.getElementById('examDoneView').style.display = 'block';
   });
 
+  function renderChoiceOrImage(raw) {
+    if (!raw) return 'لم يتم تحديد إجابة';
+    const text = String(raw);
+    const imgRegex = /\[(?:صورة_الحل|صورة الحل المرفقة|صورة الحل):\s*([^\]]+)\]/gi;
+    let match = imgRegex.exec(text);
+    let imgUrl = match ? match[1].trim() : null;
+    let cleaned = text.replace(imgRegex, '').trim();
+
+    let out = '';
+    if (cleaned) {
+      out += `<span>${escapeHtml(cleaned)}</span>`;
+    }
+    if (imgUrl) {
+      const fullSrc = (imgUrl.startsWith('http') || imgUrl.startsWith('data:')) ? imgUrl : `${window.KhatwaAPI?.BASE_URL || ''}${imgUrl}`;
+      out += `
+        <div style="margin-top:6px;display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.06);padding:4px 8px;border-radius:8px;border:1px solid rgba(255,255,255,0.12);">
+          <img src="${escapeHtml(fullSrc)}" alt="صورة الحل" style="width:36px;height:36px;object-fit:cover;border-radius:6px;cursor:pointer;" onclick="window.open('${escapeHtml(fullSrc)}', '_blank')">
+          <span style="font-size:0.8rem;color:var(--primary);">📄 تم إرفاق صورة الحل</span>
+        </div>
+      `;
+    }
+    return out || escapeHtml(text);
+  }
+
   function renderExamReview(items) {
     const container = document.getElementById('examAnswersReview');
     if (!container || !items || items.length === 0) return;
@@ -500,7 +531,7 @@
           <div style="display:flex;flex-direction:column;gap:8px;font-size:0.92rem;margin-top:10px;">
             <div style="display:flex;align-items:center;gap:8px;">
               <span style="color:var(--ink-dim, #94a3b8);">إجابتك:</span>
-              <strong style="color:${isPending ? '#f59e0b' : (isOk ? '#22c55e' : '#ef4444')};">${escapeHtml(studentChoice)}</strong>
+              <strong style="color:${isPending ? '#f59e0b' : (isOk ? '#22c55e' : '#ef4444')};">${renderChoiceOrImage(studentChoice)}</strong>
             </div>
 
             ${!isOk && !isPending && item.correctOption ? `

@@ -324,7 +324,7 @@
     function renderCourseCard(c, isEnrolledOverride) {
       const isEnrolled = isEnrolledOverride !== undefined
         ? Boolean(isEnrolledOverride)
-        : enrolledCoursesList.some(e => (e.courseId === c.id || e.id === c.id || e.course?.id === c.id));
+        : enrolledCoursesList.some(e => (e.courseId === c.id || e.id === c.id || e.course?.id === c.id) && e.isCourseEnrollment === true && !e.id?.startsWith('sub-'));
 
       const teacher = c.teacherProfile || activeModalTeacher || {};
       const teacherName = teacher.displayName || c.teacherName || 'أستاذ المادة';

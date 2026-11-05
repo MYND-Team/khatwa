@@ -23,11 +23,55 @@ import * as SubscriptionService from '../services/subscription.service';
 import { asyncHandler } from '../utils/asyncHandler';
 import { prisma } from '../config/prisma';
 import multer from 'multer';
+import fs from 'fs';
+import path from 'path';
+import os from 'os';
 
 const router = Router();
 router.use(requireStudent);
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
+
+const uploadsAnswersDir = (process.env.VERCEL || process.env.NODE_ENV === 'production')
+  ? path.join(os.tmpdir(), 'khatwa-uploads', 'answers')
+  : path.resolve(process.cwd(), 'uploads', 'answers');
+
+try {
+  if (!fs.existsSync(uploadsAnswersDir)) {
+    fs.mkdirSync(uploadsAnswersDir, { recursive: true });
+  }
+} catch (_) {}
+
+const answerUploadStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, uploadsAnswersDir),
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname) || '.jpg';
+    cb(null, `ans-${Date.now()}-${Math.random().toString(36).slice(2, 8)}${ext}`);
+  },
+});
+
+const uploadAnswerImage = multer({
+  storage: answerUploadStorage,
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) cb(null, true);
+    else cb(new Error('يُسمح فقط برفع صور (JPEG, PNG, WebP)'));
+  },
+});
+
+// ─── Student Answer Image Upload ─────────────────────────────────────────────
+router.post(
+  '/upload-answer-image',
+  uploadAnswerImage.single('image'),
+  asyncHandler(async (req, res) => {
+    if (!req.file) {
+      res.status(400).json({ success: false, error: { code: 'NO_IMAGE', message: 'لم يتم استلام أي صورة' } });
+      return;
+    }
+    const imageUrl = `/uploads/answers/${req.file.filename}`;
+    res.status(200).json({ success: true, data: { imageUrl, filename: req.file.filename } });
+  })
+);
 
 // ─── Profile ──────────────────────────────────────────────────────────────────
 
@@ -682,8 +726,12 @@ router.get(
         courseId: e.courseId,
         course: e.course,
         enrolledAt: e.enrolledAt,
+        isCourseEnrollment: true,
       })),
-      ...extraCourses,
+      ...extraCourses.map((e) => ({
+        ...e,
+        isCourseEnrollment: false,
+      })),
     ];
 
     res.status(200).json({ success: true, data: allEnrolled });
